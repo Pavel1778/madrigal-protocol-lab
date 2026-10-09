@@ -359,6 +359,34 @@ def test_no_counterexamples_shows_a_note(app):
     window.close()
 
 
+def test_messages_tab_states_why_it_is_empty(app):
+    window = MainWindow()
+    table = window.validation_view.messages_table
+    assert table.rowCount() == 1
+    assert "no messages yet" in table.item(0, 0).text()
+    window.close()
+
+
+def test_file_dialogs_remember_the_last_directory(app, monkeypatch):
+    from src.ui.main_window import REPO_ROOT
+
+    window = open_window(app)
+    seen = []
+
+    def fake_open(*args, **kwargs):
+        seen.append(args[2])
+        return (str(DEFAULT_CAPTURE), "JSON (*.json)")
+
+    monkeypatch.setattr(QtWidgets.QFileDialog, "getOpenFileName", staticmethod(fake_open))
+    window.open_capture_dialog()
+    window.open_capture_dialog()
+    # The first open starts at the repository root; the second at the file's
+    # own directory, because the first open was remembered.
+    assert seen[0] == str(REPO_ROOT)
+    assert seen[1] == str(DEFAULT_CAPTURE.resolve().parent)
+    window.close()
+
+
 def test_diff_bytes_marks_a_deletion_without_crashing():
     # The left message is longer; the shared tail sits at a different offset on
     # each side, which used to read past the end of the shorter message.

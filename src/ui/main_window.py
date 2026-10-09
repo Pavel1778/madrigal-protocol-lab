@@ -48,6 +48,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._session_id: str = ""
         self._direction: str = ""
         self._corpus_report = None
+        self._last_dir: Path | None = None
 
         self._build_menu()
         self._build_central()
@@ -70,7 +71,13 @@ class MainWindow(QtWidgets.QMainWindow):
         bar = self.menuBar()
 
         file_menu = bar.addMenu("&File")
-        self._action(file_menu, "Open &normalized capture...", self.open_capture_dialog, "Ctrl+O")
+        self._action(
+            file_menu,
+            "Open &normalized capture...",
+            self.open_capture_dialog,
+            "Ctrl+O",
+            tip="Open a capture already normalized by src.capture.cli; a raw .pcap/.pcapng is not read here",
+        )
         self._action(file_menu, "Open &rule...", self.open_rule_dialog, "Ctrl+R")
         self._action(file_menu, "&Save result...", self.save_result_dialog, "Ctrl+S")
         file_menu.addSeparator()
@@ -90,10 +97,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self._action(help_menu, "&Quick help", self.show_help, "F1")
         self._action(help_menu, "&About", self.show_about)
 
-    def _action(self, menu, text, slot, shortcut: str | None = None) -> QtGui.QAction:
+    def _action(self, menu, text, slot, shortcut: str | None = None, tip: str | None = None) -> QtGui.QAction:
         action = QtGui.QAction(text, self)
         if shortcut:
             action.setShortcut(shortcut)
+        if tip:
+            action.setToolTip(tip)
+            action.setStatusTip(tip)
         action.triggered.connect(slot)
         menu.addAction(action)
         return action
@@ -205,12 +215,26 @@ class MainWindow(QtWidgets.QMainWindow):
                 model.sessions[0].session_id, model.directions(model.sessions[0].session_id)[0]
             )
 
+    def _start_dir(self, fallback: Path) -> str:
+        """The directory a file dialog should open at.
+
+        Remembers the last directory a file was opened from or saved to, so the
+        second open does not start at the repository root again.
+        """
+        return str(self._last_dir if self._last_dir is not None else fallback)
+
+    def _remember_dir(self, path: str | Path) -> None:
+        parent = Path(path).resolve().parent
+        if parent.is_dir():
+            self._last_dir = parent
+
     def open_capture_dialog(self) -> None:
         """Prompt for a normalized capture file and open it."""
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Open normalized capture", str(REPO_ROOT), "JSON (*.json)"
+            self, "Open normalized capture", self._start_dir(REPO_ROOT), "JSON (*.json)"
         )
         if path:
+            self._remember_dir(path)
             self.open_capture(path)
 
     def load_rule(self, path: str | Path) -> None:
@@ -228,9 +252,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def open_rule_dialog(self) -> None:
         """Prompt for a rule file and load it."""
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Open rule", str(REPO_ROOT / "examples"), "Rules (*.json *.yaml *.yml)"
+            self, "Open rule", self._start_dir(REPO_ROOT / "examples"), "Rules (*.json *.yaml *.yml)"
         )
         if path:
+            self._remember_dir(path)
             self.load_rule(path)
 
     def load_example_rule(self) -> None:
@@ -452,9 +477,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._rule is None or self._rule.root is None:
             self._notify("apply a rule before saving a result")
             return
-        path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save result", str(REPO_ROOT), "JSON (*.json)")
+        path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save result", self._start_dir(REPO_ROOT), "JSON (*.json)")
         if not path:
             return
+        self._remember_dir(path)
         application = self._rule.root
         capture_id = self._capture.capture_id if self._capture is not None else ""
         result = build_result(application.rule, capture_id, application.messages)

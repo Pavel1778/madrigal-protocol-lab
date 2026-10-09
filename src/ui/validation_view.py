@@ -114,6 +114,7 @@ class ValidationView(QtWidgets.QWidget):
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.messages_table.itemSelectionChanged.connect(self._on_message_selected)
         self._tabs.addTab(self.messages_table, "Messages")
+        self._show_messages_empty_state()
 
         # Counterexamples tab.
         counter_page = QtWidgets.QWidget()
@@ -242,14 +243,27 @@ class ValidationView(QtWidgets.QWidget):
 
     # -- results -----------------------------------------------------------
 
+    def _show_messages_empty_state(self) -> None:
+        """State in the table why it is empty, instead of leaving it blank."""
+        self.messages_table.setRowCount(1)
+        self.messages_table.setSpan(0, 0, 1, 4)
+        item = QtWidgets.QTableWidgetItem(
+            "no messages yet - apply a rule to this direction (F5) or to the capture (F6)"
+        )
+        item.setForeground(QtGui.QColor(theme.TEXT_SECONDARY))
+        self.messages_table.setItem(0, 0, item)
+
     def show_application(self, application: RuleApplication) -> None:
         """Fill the message table and counterexample list from *application*."""
         self._application = application
+        self.messages_table.clearSpans()
         self.messages_table.setRowCount(0)
         ordered = sorted(
             application.messages,
             key=lambda m: (_STATUS_RANK.get(m.status.value, 9), m.offset),
         )
+        if not ordered:
+            self._show_messages_empty_state()
         self.messages_table.setRowCount(len(ordered))
         for row, message in enumerate(ordered):
             self._fill_row(row, message)
@@ -307,14 +321,15 @@ class ValidationView(QtWidgets.QWidget):
             return
         row = rows[0].row()
         item = self.messages_table.item(row, 0)
-        if item is not None:
-            length = int(self.messages_table.item(row, 1).text())
-            self.counterexampleSelected.emit(
-                self._session_id,
-                self._direction,
-                int(item.data(QtCore.Qt.ItemDataRole.UserRole)),
-                length,
-            )
+        if item is None or item.data(QtCore.Qt.ItemDataRole.UserRole) is None:
+            return  # the empty-state row carries no offset
+        length = int(self.messages_table.item(row, 1).text())
+        self.counterexampleSelected.emit(
+            self._session_id,
+            self._direction,
+            int(item.data(QtCore.Qt.ItemDataRole.UserRole)),
+            length,
+        )
 
     def _on_counter_selected(self) -> None:
         items = self.counter_list.selectedItems()
