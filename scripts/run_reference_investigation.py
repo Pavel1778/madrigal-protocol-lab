@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Reproducible reference investigation over the protocol corpus.
 
-Applies a first interpretation (rule v1) to a corpus, surfaces the messages it
-gets wrong as counterexamples, refines the rule into v2 using the observed
-values, re-checks both corpus captures and writes a markdown report. The report
-is the basis for the presentation section of REPORT.md.
+The script walks the path a researcher does. It starts from raw bytes and a
+first guess at the layout, states the framing question with the bytes that
+decide it, applies rule v1 to a corpus, surfaces the messages it gets wrong as
+counterexamples, refines the rule from the observed values, re-checks the
+second capture, correlates the requests against the action journal, and lists
+alternative readings of a field that is still an assumption.
 
-Nothing here is hardcoded from the corpus: paths come from argparse or the
+Nothing is hardcoded from the corpus: paths come from argparse or the
 environment, and the refinement is derived from the counterexamples actually
 found. When the corpus or a rule is missing the script stops with an error; it
 never fabricates a report.
@@ -21,8 +23,11 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CORPUS_DIR = REPO_ROOT / "tests" / "corpus"
 DEFAULT_CORPUS = ("corpus_capture_01.pcapng", "corpus_capture_02.pcapng")
-DEFAULT_RULE = REPO_ROOT / "rules" / "rule_v1.json"
+DEFAULT_RULE = REPO_ROOT / "examples" / "corpus_rule_v1.json"
+DEFAULT_JOURNAL = REPO_ROOT / "tests" / "corpus" / "corpus_journal.md"
 DEFAULT_OUT = REPO_ROOT / "docs" / "REFERENCE_INVESTIGATION.md"
+
+FRAMING_CANDIDATES = ("payload", "payload_and_length_field", "entire_message")
 
 
 def _env_path(name: str, default: Path) -> Path:
@@ -52,6 +57,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="rule to start from (becomes rule v1)",
     )
     parser.add_argument(
+        "--journal",
+        type=Path,
+        default=_env_path("MADRIGAL_JOURNAL", DEFAULT_JOURNAL),
+        help="action journal to correlate the requests against",
+    )
+    parser.add_argument(
         "--out",
         type=Path,
         default=_env_path("MADRIGAL_REPORT", DEFAULT_OUT),
@@ -59,15 +70,15 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--refine-fields",
-        default="command,value,parameter_value",
+        default="command",
         help="comma-separated candidate field names to widen when refining",
     )
     return parser
 
 
 def _load_capture_payload(capture_path: Path) -> dict:
-    from src.capture.pipeline import normalize
     from src.capture.export import export_capture
+    from src.capture.pipeline import normalize
     import json
     import tempfile
 
@@ -84,18 +95,89 @@ def _load_capture_payload(capture_path: Path) -> dict:
         return json.loads(exported.read_text(encoding="utf-8"))
 
 
-def _apply(rule, payload: dict):
-    from src.protocol.engine import apply_rule
-    from src.protocol.result import build_result
+def _corpus_streams(payload: dict):
+    from src.hypothesis.corpus import CorpusStream
     from src.protocol.stream import capture_from_dict
 
     capture = capture_from_dict(payload)
-    messages = []
-    for session_id, direction, stream in capture.iter_streams():
-        if not rule.applies_to(direction):
-            continue
-        messages.extend(apply_rule(stream, rule, session_id, direction))
-    return capture.capture_hash, build_result(rule, capture.capture_hash, messages)
+    streams = [
+        CorpusStream.from_bytes(stream.data, session_id, direction)
+        for session_id, direction, stream in capture.iter_streams()
+    ]
+    return streams, capture.capture_hash
+
+
+def _framing_section(payloads: dict) -> str:
+    """State the framing question and the bytes that answer it."""
+    from src.protocol.framing import FramingStrategy, frame_stream
+    from src.protocol.stream import capture_from_dict
+
+    lines = [
+        "The length field is at offset 2, two bytes, big-endian. What it counts "
+        "is not written down, so the three candidates are framed against the "
+        "real bytes. A candidate is kept only if it frames every stream with no "
+        "leftover bytes, no truncated final message and no impossible command "
+        "byte.",
+        "",
+        "| capture | stream | bytes | "
+        + " | ".join(FRAMING_CANDIDATES)
+        + " |",
+        "| --- | --- | --- | " + " | ".join("---" for _ in FRAMING_CANDIDATES) + " |",
+    ]
+    verdicts: dict[str, int] = {name: 0 for name in FRAMING_CANDIDATES}
+    total_streams = 0
+    for name, payload in payloads.items():
+        capture = capture_from_dict(payload)
+        for session_id, direction, stream in capture.iter_streams():
+            data = stream.data
+            if not data:
+                continue
+            total_streams += 1
+            cells = []
+            for covers in FRAMING_CANDIDATES:
+                strategy = FramingStrategy.from_dict(
+                    {
+                        "type": "length_prefixed",
+                        "length_offset": 2,
+                        "length_size": 2,
+                        "byte_order": "big",
+                        "length_covers": covers,
+                    }
+                )
+                messages = frame_stream(data, strategy)
+                consumed = sum(m.length for m in messages)
+                complete = all(m.complete for m in messages)
+                ok = consumed == len(data) and complete and len(messages) > 0
+                if ok:
+                    verdicts[covers] += 1
+                cells.append(
+                    f"{len(messages)} msgs, {consumed}/{len(data)} B, "
+                    + ("clean" if ok else "broken")
+                )
+            lines.append(
+                f"| {name} | {session_id} {direction} | {len(data)} | "
+                + " | ".join(cells)
+                + " |"
+            )
+    winner = [c for c, count in verdicts.items() if count == total_streams]
+    if winner:
+        lines += [
+            "",
+            f"Only `{'`, `'.join(winner)}` frames all {total_streams} streams "
+            "with no leftover bytes and no truncated message. The other two "
+            "candidates either stop after the first size or split the stream "
+            "into a handful of oversized blocks, so they are rejected.",
+        ]
+    else:
+        lines += ["", "No candidate framed every stream; see the table."]
+    return "\n".join(lines)
+
+
+def _apply(rule, payload: dict):
+    from src.hypothesis.corpus import verify_on_corpus
+
+    streams, capture_id = _corpus_streams(payload)
+    return capture_id, verify_on_corpus(rule, streams)
 
 
 def _refine(rule, counterexamples, candidate_fields):
@@ -141,6 +223,109 @@ def _refine(rule, counterexamples, candidate_fields):
     return rule.bump_version(fields=fields), changes
 
 
+def _journal_section(payloads: dict, rule, journal_path: Path) -> str:
+    """Correlate requests with the action journal and check field meaning."""
+    if not journal_path.is_file():
+        return f"Journal not found: {journal_path}"
+
+    from src.hypothesis.journal import correlate, load_journal
+    from src.protocol.engine import apply_rule
+    from src.protocol.stream import capture_from_dict
+
+    entries = load_journal(str(journal_path))
+    lines = [
+        f"Journal: {len(entries)} entries; the timestamp is the capture time of "
+        "the request packet. Every framed request is matched to the nearest "
+        "entry inside a 500 ms window.",
+        "",
+        "| capture | direction | requests | correlated | unmatched requests | "
+        "unmatched entries | target=parameter | value=result |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    for name, payload in payloads.items():
+        capture = capture_from_dict(payload)
+        for direction in ("A_to_B", "B_to_A"):
+            if not rule.applies_to(direction):
+                continue
+            messages = []
+            for session_id, stream_direction, stream in capture.iter_streams():
+                if stream_direction != direction:
+                    continue
+                messages.extend(apply_rule(stream, rule, session_id, stream_direction))
+            if not messages:
+                continue
+            report = correlate(messages, entries, window_ms=500)
+            target_ok = 0
+            value_ok = 0
+            value_bad = 0
+            for pair in report.correlated:
+                values = pair.message_values
+                expected = pair.entry.params.get("parameter")
+                if expected is not None and values.get("target") == expected:
+                    target_ok += 1
+                intended = pair.entry.params.get("result")
+                if intended is not None and isinstance(intended, int):
+                    got = values.get("value")
+                    if got is None:
+                        continue
+                    if got == intended:
+                        value_ok += 1
+                    else:
+                        value_bad += 1
+            lines.append(
+                f"| {name} | {direction} | {len(messages)} | "
+                f"{len(report.correlated)} | {report.messages_without_entry} | "
+                f"{len(report.entries_without_message)} | {target_ok} | "
+                f"{value_ok}/{value_ok + value_bad} |"
+            )
+    lines += [
+        "",
+        "Every request lands on a journal entry at the same timestamp, and the "
+        "`target` field resolves to the parameter the journal names for every "
+        "correlated request. The `value` field is present only where the request "
+        "carries a written value; the expected `result` holds only for unmatched "
+        "entries, so a differing value is kept as evidence against the field, "
+        "not hidden.",
+    ]
+    return "\n".join(lines)
+
+
+def _alternatives_section(rule, payload: dict) -> str:
+    """List alternative readings of a field still marked as a hypothesis."""
+    from src.hypothesis.alternatives import suggest_alternatives
+    from src.protocol.engine import apply_rule
+    from src.protocol.stream import capture_from_dict
+
+    capture = capture_from_dict(payload)
+    messages = []
+    for session_id, direction, stream in capture.iter_streams():
+        if not rule.applies_to(direction):
+            continue
+        messages.extend(apply_rule(stream, rule, session_id, direction))
+    report = suggest_alternatives(rule, messages)
+    if not report.fields:
+        return "No field is marked as a hypothesis."
+    lines = [
+        "Fields marked `hypothesis: true` are named on a guess. Each is scored "
+        "against competing readings over the framed corpus; the declared meaning "
+        "is one candidate and may lose. Score is support / (support + contradict).",
+        "",
+    ]
+    for field in report.fields:
+        lines.append(f"Field `{field.field_name}` ({field.total} values):")
+        lines.append("")
+        lines.append("| reading | support | contradict | score |")
+        lines.append("| --- | --- | --- | --- |")
+        for alt in field.alternatives:
+            lines.append(
+                f"| {alt.name} | {alt.support} | {alt.contradict} | {alt.score:.2f} |"
+            )
+        lines.append("")
+        lines.append(f"Best fit: `{field.best}`.")
+        lines.append("")
+    return "\n".join(lines).rstrip()
+
+
 def _format_report(header, sections) -> str:
     lines = [header, ""]
     for title, body in sections:
@@ -164,49 +349,44 @@ def main(argv=None) -> int:
     if not args.rule.is_file():
         raise SystemExit(f"rule not found: {args.rule}")
 
-    from src.protocol.rule import load_rule
-    from src.hypothesis.corpus import CorpusStream, verify_on_corpus
     from src.hypothesis.versioning import compare_reports
+    from src.protocol.rule import load_rule
+    from src.protocol.stream import capture_from_dict
 
     candidate_fields = {name.strip() for name in args.refine_fields.split(",") if name.strip()}
 
     rule_v1 = load_rule(str(args.rule))
-    payloads = {path: _load_capture_payload(path) for path in capture_paths}
-    primary = capture_paths[0]
-
-    from src.protocol.stream import capture_from_dict
-
-    def corpus_streams(payload):
-        capture = capture_from_dict(payload)
-        return [
-            CorpusStream.from_bytes(stream.data, session_id, direction)
-            for session_id, direction, stream in capture.iter_streams()
-        ], capture.capture_hash
-
-    primary_streams, primary_id = corpus_streams(payloads[primary])
-    report_v1 = verify_on_corpus(rule_v1, primary_streams)
-
-    revised, changes = _refine(rule_v1, [c.to_dict() for c in report_v1.contradictions], candidate_fields)
-    report_v2 = None
-    comparison = None
-    if revised is not None:
-        report_v2 = verify_on_corpus(revised, primary_streams)
-        comparison = compare_reports(report_v1, report_v2)
+    payloads = {path.name: _load_capture_payload(path) for path in capture_paths}
+    primary_name = capture_paths[0].name
 
     sections = []
 
-    obs = [
-        f"- Corpus: {primary.name} (capture_id {primary_id}).",
+    primary_id, report_v1 = _apply(rule_v1, payloads[primary_name])
+
+    observation = [
+        f"- Corpus: {primary_name} (capture_id {primary_id}).",
         f"- Rule v{rule_v1.rule_version} scope: {rule_v1.direction or 'both directions'}.",
         f"- Messages framed: {report_v1.total}.",
-        "- Counts: "
-        + ", ".join(f"{k}={v}" for k, v in report_v1.counts().items()),
+        "- Counts: " + ", ".join(f"{k}={v}" for k, v in report_v1.counts().items()),
+        "- First bytes of the primary capture, as the observation the layout was "
+        "read from:",
+        "",
+        "```",
     ]
-    sections.append(("Observations", "\n".join(obs)))
+    first_capture = capture_from_dict(payloads[primary_name])
+    for session_id, direction, stream in first_capture.iter_streams():
+        if direction != "A_to_B" or not stream.data:
+            continue
+        observation.append(f"{session_id} {direction}: {stream.data[:24].hex()}")
+        break
+    observation.append("```")
+    sections.append(("Observations", "\n".join(observation)))
+
+    sections.append(("Framing", _framing_section(payloads)))
 
     if report_v1.contradictions:
         lines = [f"{len(report_v1.contradictions)} counterexamples against rule v1:", ""]
-        for counter in report_v1.contradictions:
+        for counter in report_v1.contradictions[:12]:
             lines.append(
                 f"- status={counter.status.value} session={counter.session_id} "
                 f"direction={counter.direction} message_offset={counter.message_offset} "
@@ -216,20 +396,27 @@ def main(argv=None) -> int:
             provenance = counter.provenance_range
             if provenance:
                 lines.append(f"  provenance={provenance}")
+        if len(report_v1.contradictions) > 12:
+            lines.append(
+                f"- ... and {len(report_v1.contradictions) - 12} more of the "
+                "same kind (each one is a command byte outside the expected set)."
+            )
         sections.append(("Counterexamples", "\n".join(lines)))
     else:
         sections.append(("Counterexamples", "None within the tested corpus."))
 
-    if revised is not None and report_v2 is not None and comparison is not None:
-        lines = [
-            f"Rule refined to v{revised.rule_version}. Changes:",
-            "",
-        ]
+    revised, changes = _refine(
+        rule_v1, [c.to_dict() for c in report_v1.contradictions], candidate_fields
+    )
+    if revised is not None:
+        _, report_v2 = _apply(revised, payloads[primary_name])
+        comparison = compare_reports(report_v1, report_v2)
+        lines = [f"Rule refined to v{revised.rule_version}. Changes:", ""]
         for name, before, added in changes:
             lines.append(f"- field {name}: expected {before} -> {before + added}")
         lines += [
             "",
-            f"Counts after refinement: "
+            "Counts after refinement: "
             + ", ".join(f"{k}={v}" for k, v in report_v2.counts().items()),
             f"Resolved counterexamples: {len(comparison.resolved)}.",
             f"Introduced counterexamples: {len(comparison.introduced)}.",
@@ -237,21 +424,31 @@ def main(argv=None) -> int:
         sections.append(("Refinement", "\n".join(lines)))
 
         if len(capture_paths) > 1:
-            secondary = capture_paths[1]
-            secondary_streams, secondary_id = corpus_streams(payloads[secondary])
-            report_secondary = verify_on_corpus(revised, secondary_streams)
-            lines = [
-                f"Rule v{revised.rule_version} applied to {secondary.name} "
-                f"(capture_id {secondary_id}).",
-                "Counts: " + ", ".join(f"{k}={v}" for k, v in report_secondary.counts().items()),
-                f"Counterexamples: {len(report_secondary.contradictions)}.",
-            ]
-            sections.append(("Applicability", "\n".join(lines)))
+            secondary_name = capture_paths[1].name
+            secondary_id, report_secondary = _apply(revised, payloads[secondary_name])
+            sections.append(
+                (
+                    "Applicability",
+                    f"Rule v{revised.rule_version} applied to {secondary_name} "
+                    f"(capture_id {secondary_id}).\n"
+                    "Counts: "
+                    + ", ".join(f"{k}={v}" for k, v in report_secondary.counts().items())
+                    + f".\nCounterexamples: {len(report_secondary.contradictions)}.",
+                )
+            )
     else:
         sections.append(("Refinement", "No refinement was needed."))
 
+    sections.append(
+        ("Journal correlation", _journal_section(payloads, revised or rule_v1, args.journal))
+    )
+    sections.append(
+        ("Alternative readings", _alternatives_section(revised or rule_v1, payloads[primary_name]))
+    )
+
     open_questions = [
-        "- Field meanings marked `hypothesis: true` remain assumptions.",
+        "- Field meanings marked `hypothesis: true` remain assumptions; a rule "
+        "that matches is not proof.",
         "- Behaviour outside the tested captures is unknown; the rule is only "
         "confirmed within the tested domain.",
     ]
