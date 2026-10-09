@@ -43,6 +43,9 @@ The first command writes the deterministic corpus into `tests/corpus/` and the
 synthetic fixtures into `tests/fixtures/`. The second produces a normalized
 capture that follows `docs/CONTRACT.md`. The third confirms the whole suite.
 
+Add `--verbose` to the normalize command to log read, session and export
+progress to stderr. Both CLIs stay quiet otherwise.
+
 ## What is implemented
 
 | Area | State |
