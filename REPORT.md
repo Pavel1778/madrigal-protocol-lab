@@ -82,6 +82,9 @@ Each hypothesis below is a conclusion from an observation, not a guess.
 H2 was the useful one: stating it too narrowly is what produced the
 counterexamples that drove the whole refinement.
 
+The same hypotheses are written out in a fixed template in section 15
+(`render_hypothesis_narrative`), filled from the corpus figures quoted above.
+
 ## 4. Framing decision
 
 The length field is two bytes at offset 2, big-endian. What it counts is not
@@ -289,3 +292,38 @@ tests over the real bytes and the real engine).
 | `presentation/slides.pdf` | the deck, fifteen slides, with the eight screenshots |
 | `presentation/screenshots/01_main.png` ... `08_diff.png` | the eight window captures |
 | `tests/ui/test_e2e.py` | the scenario as fourteen offscreen tests |
+
+The section above is produced by `render_hypothesis_narrative`; the figures are
+the same as those quoted in section 3, not a second measurement.
+
+## 15. Hypotheses in narrative form
+
+## Hypothesis 1: the two-byte big-endian length at offset 2 frames the stream
+
+Field `length` at offset 2.
+The first request bytes are 01 00 00 01 10 01 ...: byte 2 is 00 and byte 3 is 01, and the next message begins three bytes later, matching that pair. With length_covers payload this frames all ten streams of the corpus with no leftover bytes; the other two candidates frame none.
+Applicability: all ten streams of the corpus (corpus_capture_01 and corpus_capture_02). Not checked on synthetic_live.
+
+## Hypothesis 2: byte 0 is a command code
+
+Field `command` at offset 0.
+Byte 0 is 0x01 in the read traffic but 0x02 and 0x03 elsewhere in the same capture, so rule v1, which allowed only 0x01, was too narrow.
+Corpus check over 140 messages, matched 60, contradicted 80.
+Best alternative reading: entropy_enum (support 140, contradict 0, score 1.0); not contradicted in the corpus.
+Applicability: commands 0x01 read, 0x02 write, 0x03 measure, per session in corpus_capture_01. Not checked on synthetic_live.
+
+## Hypothesis 3: byte 4 is a parameter identifier (an enum)
+
+Field `target` at offset 4.
+Byte 4 is fixed within a session and maps one to one onto the parameter the journal names for that request.
+Corpus check over 140 messages, matched 140, contradicted 0.
+Best alternative reading: low_cardinality (support 140, contradict 0, score 1.0); not contradicted in the corpus.
+Applicability: 140 of 140 requests match the journal parameter. Not checked on synthetic_live.
+
+## Hypothesis 4: bytes 5 and 6 carry the written value
+
+Field `value` at offset 5.
+Bytes 5 and 6 appear only in write requests and move by small amounts between messages. The field carries no expected value, so it is present, not matched; no competing reading survived.
+Corpus check over 60 messages.
+Best alternative reading: entropy_parameter (support 60, contradict 0, score 1.0); not contradicted in the corpus.
+Applicability: writes in corpus_capture_01. Not checked on synthetic_live.

@@ -102,6 +102,14 @@ GUI works with `apply_rule` / `apply_rule_fields`, `build_result`,
   correlations=None) -> AlternativesReport`, `analyze_field(rule, messages,
   field_name, correlations=None) -> FieldAlternatives` — see the alternatives
   section below.
+- `src.hypothesis.alternatives.entropy(field_values) -> float`,
+  `periodicity(field_values) -> int | None`,
+  `bit_pattern(field_values, bit_count=4) -> dict`,
+  `delta_correlation(field_values) -> dict` — value-shape readings; see the
+  alternatives section below.
+- `src.hypothesis.narrative.render_hypothesis_narrative(investigation) -> str` —
+  write the hypotheses of an investigation dictionary (the shape in
+  `src/report/model.py`) as Markdown, filled from the figures already present.
 - `src.hypothesis.versioning.ResultStore` — `.add(rule, capture_id, payload) ->
   StoredResult`, `.results_for(rule_id, capture_id=None)`,
   `.mark_outdated(rule, capture_id=None) -> list[StoredResult]`,
@@ -562,6 +570,28 @@ Each `Alternative` carries `support`, `contradict`,
 `suggest_alternatives` runs it over every field marked `hypothesis: true`. The
 declared meaning is one candidate among them and may lose; the output is the
 evidence, not a verdict.
+
+Four further readings summarize how a numeric field *varies* rather than what it
+*means*; they use only the standard library and take only the field's values.
+Each is also offered as a candidate when its condition holds:
+
+- `entropy(field_values) -> float` — Shannon entropy in bits per value. More
+  than 6 bits suggests a nonce, hash or random field; 3 to 6 bits a value that
+  changes (counter or measurement); fewer than 2 bits an enum or flags. The
+  candidate names are `entropy_random`, `entropy_parameter`, `entropy_enum`.
+- `periodicity(field_values) -> int | None` — the smallest lag at which the
+  autocorrelation is a clear local peak, or `None`. A monotone ramp or a plain
+  counter returns `None`, because they correlate at every short lag. The
+  candidate name is `periodicity`.
+- `bit_pattern(field_values, bit_count=4) -> dict` — how stable the high-order
+  bits are (`bit_count` in `(2, 4, 6)`): `verdict` is `flags_high` above 90
+  percent stable, `contradict` at or below 50 percent, else `inconclusive`. The
+  candidate names are `bit_pattern_2`, `bit_pattern_4`, `bit_pattern_6`.
+- `delta_correlation(field_values) -> dict` — the coefficient of variation of
+  the first differences: `delta` below 0.1 (a fixed step or delta encoding),
+  `contradict` above 0.5. The candidate name is `delta_correlation`.
+
+Non-numeric values are out of scope for all four and are ignored.
 
 ```
 python -m src.protocol.cli alternatives --rule rule.json --report report.json \
