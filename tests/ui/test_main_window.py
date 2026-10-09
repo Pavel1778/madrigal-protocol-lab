@@ -245,3 +245,92 @@ def test_rule_edit_marks_the_previous_run_outdated(app):
     assert model.root is not None
     model.reload(text)
     assert model.root is None
+
+
+# -- hex view tooltip and hatching -------------------------------------------
+
+
+@corpus_required
+def test_hex_tooltip_reports_offset_hex_and_provenance(app):
+    window = open_window(app)
+    window.session_tree.select_direction("s1", "A_to_B")
+    tooltip = window.hex_view.byte_tooltip(0)
+    assert "offset 0" in tooltip
+    assert "0x01" in tooltip
+    assert "packet 3" in tooltip
+    assert "seq 1001" in tooltip
+    window.close()
+
+
+@corpus_required
+def test_hex_tooltip_names_the_field_after_apply(app):
+    window = open_window(app)
+    window.session_tree.select_direction("s1", "A_to_B")
+    window.apply_rule()
+    tooltip = window.hex_view.byte_tooltip(0)
+    assert "matched" in tooltip
+    assert "command" in tooltip
+    window.close()
+
+
+def test_hex_tooltip_is_empty_outside_the_bytes(app):
+    view = HexView()
+    view.set_stream(b"\x01\x02")
+    assert view.byte_tooltip(99) == ""
+
+
+def test_gap_and_ambiguity_use_a_hatch_brush(app):
+    from PySide6 import QtCore
+
+    from src.ui.hex_view import _brush_for
+    from src.ui.model import AMBIGUITY, GAP, MATCHED
+
+    texture = QtCore.Qt.BrushStyle.TexturePattern
+    assert _brush_for(GAP, "#000000").style() == texture
+    assert _brush_for(AMBIGUITY, "#000000").style() == texture
+    assert _brush_for(MATCHED, "#2F5D45").style() != texture
+
+
+def test_annotation_from_stream_carries_provenance():
+    from src.protocol.stream import DirectionalStream, Hole
+    from src.ui.hex_view import annotations_from_stream
+
+    stream = DirectionalStream.from_bytes(b"\x01\x02\x03\x04")
+    stream.provenance = [Hole(type="provenance", offset=0, length=4, packet_index=7, seq=42, ts=1.5)]
+    annotations = annotations_from_stream(stream)
+    assert annotations[0].packet_index == 7
+    assert annotations[3].seq == 42
+
+
+# -- corpus run fills the counterexample tab ---------------------------------
+
+
+@corpus_required
+def test_capture_run_fills_the_counterexample_tab(app):
+    window = open_window(app)
+    window.session_tree.select_direction("s1", "A_to_B")
+    window.apply_rule()
+    assert window.validation_view.counter_list.count() == 0
+    window.apply_to_capture()
+    report = window._corpus_report
+    # The tab must agree with the report, not with the earlier single-direction run.
+    assert window.validation_view.counter_list.count() == len(report.contradictions)
+    assert window.validation_view.counter_list.count() > 0
+    window.close()
+
+
+@corpus_required
+def test_corpus_counterexample_click_switches_direction(app):
+    window = open_window(app)
+    window.session_tree.select_direction("s1", "A_to_B")
+    window.apply_to_capture()
+    window.validation_view._tabs.setCurrentIndex(2)
+    window.validation_view.counter_list.setCurrentRow(0)
+    app.processEvents()
+    item = window.validation_view.counter_list.item(0)
+    session_id, direction, offset = item.data(0x0100)  # UserRole
+    # The reveal switched the window to the counterexample's own direction.
+    assert window._session_id == session_id
+    assert window._direction == direction
+    assert f"offset {offset}" in window._provenance_label.text()
+    window.close()
