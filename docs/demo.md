@@ -2,7 +2,10 @@
 
 A ten to fifteen minute walkthrough of the tool on the reference corpus. Every
 number below is produced by the code on the captures in `tests/corpus/`; nothing
-is narrated that the tool does not show.
+is narrated that the tool does not show. The window was driven through this
+scenario before writing it down, and what it shows is recorded in
+`docs/GUI_VERIFICATION.md`; the same investigation without the window is
+`docs/demo_cli.md`.
 
 ## Preparation
 
@@ -156,6 +159,21 @@ See: the report in the panel and the exported file.
 
 Say: the investigation is written up with its counterexamples, its versions and
 its limits. The project directory can be copied elsewhere and opened again.
+
+The portable project itself is driven from the command line, not from the
+window; the window has no project menu. To show it, run:
+
+```
+python -m src.project.cli pipeline \
+  --pcap tests/corpus/corpus_capture_01.pcapng \
+  --project /tmp/demo.madrigal --rule examples/corpus_rule_v2.json
+python -m src.project.cli export --project /tmp/demo.madrigal --out /tmp/demo.zip
+python -m src.project.cli import --in /tmp/demo.zip --target /tmp/demo.moved
+```
+
+See: the pipeline writes a project with the capture, the normalized JSON and the
+rendered report; the export and import round trip keeps the capture digest. The
+full command line walkthrough is `docs/demo_cli.md`.
 
 ## Fallback - command line
 

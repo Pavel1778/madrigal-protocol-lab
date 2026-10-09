@@ -5,7 +5,6 @@ import os
 import pytest
 
 from src.protocol.stream import (
-    Capture,
     CaptureError,
     DirectionalStream,
     Hole,

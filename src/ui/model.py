@@ -111,6 +111,7 @@ class CaptureModel:
 
     def _read_sessions(self) -> list[SessionInfo]:
         infos: list[SessionInfo] = []
+        diagnostics = self._read_diagnostics()
         for session in self.capture.sessions:
             sid = str(session.get("session_id", ""))
             endpoints = session.get("endpoints", [])
@@ -130,6 +131,7 @@ class CaptureModel:
                     first_ts=session.get("first_ts"),
                     last_ts=session.get("last_ts"),
                     direction_bytes=direction_bytes,
+                    diagnostics=[d for d in diagnostics if d.session_id == sid],
                     packet_count=len(session.get("packet_indices", []) or []),
                 )
             )
@@ -198,6 +200,9 @@ class RuleModel:
         self.path = path
         self.root: RuleApplication | None = None
         self.previous: RuleApplication | None = None
+        self.previous_rule: Rule | None = None
+        self.corpus_report = None
+        self.previous_report = None
         self.errors: str | None = None
 
     @classmethod
@@ -208,13 +213,23 @@ class RuleModel:
         return cls(rule, text, path=path)
 
     def reload(self, text: str) -> None:
-        """Adopt edited text as a new rule version; the old run goes outdated."""
+        """Adopt edited text as a new rule version; the old run goes outdated.
+
+        Reloading identical text is a no-op, so re-running the same rule does
+        not mark its own previous result outdated.
+        """
         new_rule = _rule_from_text(text)
-        if new_rule.rule_version == self.rule.rule_version and new_rule.to_dict() != self.rule.to_dict():
+        if new_rule.to_dict() == self.rule.to_dict():
+            self.text = text
+            self.errors = None
+            return
+        if new_rule.rule_version == self.rule.rule_version:
             new_rule = new_rule.bump_version()
         self.text = text
         self.rule = new_rule
         self.previous = self.root
+        self.previous_report = self.corpus_report
+        self.corpus_report = None
         self.root = None
         self.errors = None
 
