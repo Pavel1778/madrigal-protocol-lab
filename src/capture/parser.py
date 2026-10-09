@@ -313,14 +313,7 @@ def read_capture(
     if diagnostics is None:
         diagnostics = []
 
-    declared = _pcapng_linktypes(path)
-    if len(set(declared)) > 1:
-        diagnostics.append(
-            Diagnostic(
-                "unsupported_linktype",
-                detail=f"capture mixes link types {sorted(set(declared))}",
-            )
-        )
+    _report_mixed_linktypes(path, diagnostics)
 
     try:
         handle, reader = _open_reader(path)
@@ -335,57 +328,27 @@ def read_capture(
             return
         raise
     try:
-        linktype = reader.datalink() if callable(reader.datalink) else reader.datalink
-        linktype = int(linktype)
+        linktype = _reader_datalink(reader)
         if linktype not in _SUPPORTED_LINKTYPES:
             diagnostics.append(
                 Diagnostic("unsupported_linktype", detail=f"datalink {linktype}")
             )
             return
         index = 0
-        packet_index = 0
         torn: list[str] = []
-        for timestamp, buf in _read_rows(path, torn):
-            packet_index += 1
-            ip_bytes = _layer3_ip(linktype, buf)
-            if isinstance(ip_bytes, Diagnostic):
-                ip_bytes.packet_index = packet_index
-                diagnostics.append(ip_bytes)
-                continue
-            record = _parse_tcp(ip_bytes)
-            if isinstance(record, Diagnostic):
-                record.packet_index = packet_index
-                diagnostics.append(record)
-                continue
-            tcp = record.tcp
-            if record.truncated:
-                diagnostics.append(
-                    Diagnostic(
-                        "truncated_packet",
-                        packet_index=packet_index,
-                        detail="captured payload is shorter than the header declares",
-                    )
-                )
-            checksum_valid: bool | None = None
-            if verify_checksums:
-                try:
-                    checksum_valid = bool(tcp.sum == 0 or _tcp_checksum_ok(ip_bytes))
-                except Exception:  # noqa: BLE001 - an unreadable checksum leaves the field unknown
-                    checksum_valid = None
-            yield Packet(
+        for packet_index, (timestamp, buf) in enumerate(_read_rows(path, torn), start=1):
+            packet = _packet_from_row(
+                linktype,
+                buf,
                 index=index,
-                timestamp=float(timestamp),
-                src_ip=record.src_ip,
-                src_port=int(tcp.sport),
-                dst_ip=record.dst_ip,
-                dst_port=int(tcp.dport),
-                seq=int(tcp.seq),
-                ack=int(tcp.ack),
-                flags=int(tcp.flags),
-                payload=record.payload,
-                is_truncated=record.truncated,
-                checksum_valid=checksum_valid,
+                packet_index=packet_index,
+                timestamp=timestamp,
+                verify_checksums=verify_checksums,
+                diagnostics=diagnostics,
             )
+            if packet is None:
+                continue
+            yield packet
             index += 1
     finally:
         handle.close()
@@ -396,6 +359,89 @@ def read_capture(
                 detail=f"capture ended mid-block: {torn[0]}",
             )
         )
+
+
+def _report_mixed_linktypes(path: Path, diagnostics: list[Diagnostic]) -> None:
+    """Note a capture that declares more than one link type."""
+
+    declared = _pcapng_linktypes(path)
+    if len(set(declared)) > 1:
+        diagnostics.append(
+            Diagnostic(
+                "unsupported_linktype",
+                detail=f"capture mixes link types {sorted(set(declared))}",
+            )
+        )
+
+
+def _reader_datalink(reader: object) -> int:
+    """Return the link type of an open reader as an int."""
+
+    value = reader.datalink() if callable(reader.datalink) else reader.datalink
+    return int(value)
+
+
+def _packet_from_row(
+    linktype: int,
+    buf: bytes,
+    *,
+    index: int,
+    packet_index: int,
+    timestamp: object,
+    verify_checksums: bool,
+    diagnostics: list[Diagnostic],
+) -> Packet | None:
+    """Turn one raw frame into a packet, or record why it was skipped.
+
+    Returns ``None`` when the frame is IPv6, non-IP, or non-TCP; the reason is
+    appended to ``diagnostics``.
+    """
+
+    ip_bytes = _layer3_ip(linktype, buf)
+    if isinstance(ip_bytes, Diagnostic):
+        ip_bytes.packet_index = packet_index
+        diagnostics.append(ip_bytes)
+        return None
+    record = _parse_tcp(ip_bytes)
+    if isinstance(record, Diagnostic):
+        record.packet_index = packet_index
+        diagnostics.append(record)
+        return None
+    tcp = record.tcp
+    if record.truncated:
+        diagnostics.append(
+            Diagnostic(
+                "truncated_packet",
+                packet_index=packet_index,
+                detail="captured payload is shorter than the header declares",
+            )
+        )
+    checksum_valid = (
+        _checksum_state(tcp, ip_bytes) if verify_checksums else None
+    )
+    return Packet(
+        index=index,
+        timestamp=float(timestamp),
+        src_ip=record.src_ip,
+        src_port=int(tcp.sport),
+        dst_ip=record.dst_ip,
+        dst_port=int(tcp.dport),
+        seq=int(tcp.seq),
+        ack=int(tcp.ack),
+        flags=int(tcp.flags),
+        payload=record.payload,
+        is_truncated=record.truncated,
+        checksum_valid=checksum_valid,
+    )
+
+
+def _checksum_state(tcp: object, ip_bytes: bytes) -> bool | None:
+    """Return the TCP checksum verdict, or ``None`` when it cannot be read."""
+
+    try:
+        return bool(tcp.sum == 0 or _tcp_checksum_ok(ip_bytes))
+    except Exception:  # noqa: BLE001 - an unreadable checksum leaves the field unknown
+        return None
 
 
 def _tcp_checksum_ok(ip_bytes: bytes) -> bool:
