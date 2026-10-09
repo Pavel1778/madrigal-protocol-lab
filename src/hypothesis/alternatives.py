@@ -155,6 +155,7 @@ def analyze_field(
         return result
 
     values = [value for _, value in observations]
+    numeric = all(isinstance(v, int) and not isinstance(v, bool) for v in values)
     alternatives: list[Alternative] = []
 
     # Constant: the field never varies.
@@ -168,48 +169,52 @@ def analyze_field(
     )
 
     # Counter / sequence: values step by a fixed amount.
-    steps = [values[i + 1] - values[i] for i in range(len(values) - 1)]
-    if steps:
-        from collections import Counter
+    if numeric:
+        steps = [values[i + 1] - values[i] for i in range(len(values) - 1)]
+        if steps:
+            from collections import Counter
 
-        step, step_count = Counter(steps).most_common(1)[0]
-        if step_count >= max(1, len(steps) * 0.6) and step_count > 0:
-            checks = []
-            for index, (message, value) in enumerate(observations):
-                if index == 0:
-                    continue
-                ok = value - values[index - 1] == step
-                checks.append((message, value, ok, f"expected step {step}"))
-            _add(
-                alternatives,
-                "counter",
-                f"the field advances by {step} between successive messages",
-                checks,
-                limit,
-            )
+            step, step_count = Counter(steps).most_common(1)[0]
+            if step_count >= max(1, len(steps) * 0.6) and step_count > 0:
+                checks = []
+                for index, (message, value) in enumerate(observations):
+                    if index == 0:
+                        continue
+                    ok = value - values[index - 1] == step
+                    checks.append((message, value, ok, f"expected step {step}"))
+                _add(
+                    alternatives,
+                    "counter",
+                    f"the field advances by {step} between successive messages",
+                    checks,
+                    limit,
+                )
 
     # Length of the message, or of the region after the field.
     field_end = spec.offset + spec.size
-    _add(
-        alternatives,
-        "message_length",
-        "the field equals the length of its message",
-        [(m, v, v == m.length, f"message length {m.length}") for m, v in observations],
-        limit,
-    )
-    _add(
-        alternatives,
-        "remaining_length",
-        "the field equals the number of bytes after it in its message",
-        [(m, v, v == m.length - field_end, f"{m.length - field_end} bytes follow") for m, v in observations],
-        limit,
-    )
+    if numeric:
+        _add(
+            alternatives,
+            "message_length",
+            "the field equals the length of its message",
+            [(m, v, v == m.length, f"message length {m.length}") for m, v in observations],
+            limit,
+        )
+        _add(
+            alternatives,
+            "remaining_length",
+            "the field equals the number of bytes after it in its message",
+            [(m, v, v == m.length - field_end, f"{m.length - field_end} bytes follow") for m, v in observations],
+            limit,
+        )
 
-    # Checksum over a candidate byte range.
-    _test_checksums(alternatives, observations, spec, limit)
+        # Checksum over a candidate byte range.
+        _test_checksums(alternatives, observations, spec, limit)
 
     # Low-cardinality: a small closed set of values looks like an enum or flags.
     distinct = sorted({v for v in values if isinstance(v, int)})
+    if not distinct:
+        distinct = sorted({v for v in values}, key=str)
     if distinct and len(distinct) <= max(2, int(len(observations) * 0.3)):
         _add(
             alternatives,
