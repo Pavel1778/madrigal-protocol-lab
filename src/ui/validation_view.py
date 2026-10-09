@@ -46,7 +46,7 @@ class ValidationView(QtWidgets.QWidget):
     """Rule editor, message table and counterexample list."""
 
     applyRequested = QtCore.Signal()
-    counterexampleSelected = QtCore.Signal(int)
+    counterexampleSelected = QtCore.Signal(str, str, int)  # session_id, direction, offset
     ruleLoaded = QtCore.Signal(str)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
@@ -108,6 +108,8 @@ class ValidationView(QtWidgets.QWidget):
         self._tabs.addTab(counter_page, "Counterexamples")
 
         self._application: RuleApplication | None = None
+        self._session_id = ""
+        self._direction = ""
 
     # -- rule --------------------------------------------------------------
 
@@ -127,6 +129,8 @@ class ValidationView(QtWidgets.QWidget):
 
     def set_context(self, session_id: str, direction: str) -> None:
         """Show which session and direction the panel is working on."""
+        self._session_id = session_id
+        self._direction = direction
         self._context.setText(f"session {session_id}   {direction}")
 
     # -- results -----------------------------------------------------------
@@ -150,7 +154,10 @@ class ValidationView(QtWidgets.QWidget):
                 f"offset {message.offset}  {message.bytes_hex}  {message.reason or ''}"
             )
             item.setForeground(QtGui.QColor(theme.MISMATCHED_TEXT))
-            item.setData(QtCore.Qt.ItemDataRole.UserRole, message.offset)
+            item.setData(
+                QtCore.Qt.ItemDataRole.UserRole,
+                (application.session_id, application.direction, message.offset),
+            )
             item.setToolTip(_provenance_tooltip(message))
             self.counter_list.addItem(item)
 
@@ -187,12 +194,41 @@ class ValidationView(QtWidgets.QWidget):
             return
         item = self.messages_table.item(rows[0].row(), 0)
         if item is not None:
-            self.counterexampleSelected.emit(int(item.data(QtCore.Qt.ItemDataRole.UserRole)))
+            self.counterexampleSelected.emit(
+                self._session_id, self._direction, int(item.data(QtCore.Qt.ItemDataRole.UserRole))
+            )
 
     def _on_counter_selected(self) -> None:
         items = self.counter_list.selectedItems()
         if items:
-            self.counterexampleSelected.emit(int(items[0].data(QtCore.Qt.ItemDataRole.UserRole)))
+            item = items[0]
+            session_id, direction, offset = item.data(QtCore.Qt.ItemDataRole.UserRole)
+            self.counterexampleSelected.emit(session_id, direction, offset)
+
+    def show_corpus_report(self, report) -> None:
+        """Fill the counterexample list from a whole-capture report.
+
+        A whole-capture run frames every direction, so its counterexamples carry
+        their own session and direction. The list is filled here so the tab and
+        the status line agree after a capture-wide run, and so a corpus
+        counterexample can be jumped to. The message table is not rebuilt: it
+        shows one direction, and mixing directions into it would be misleading.
+        """
+        self.counter_list.clear()
+        for counter in sorted(report.contradictions, key=lambda c: (c.session_id, c.direction, c.message_offset)):
+            text = (
+                f"{counter.session_id} {counter.direction}  "
+                f"offset {counter.message_offset}  {counter.bytes_hex or ''}  {counter.reason or ''}"
+            )
+            item = QtWidgets.QListWidgetItem(text)
+            item.setForeground(QtGui.QColor(theme.MISMATCHED_TEXT))
+            item.setData(
+                QtCore.Qt.ItemDataRole.UserRole,
+                (counter.session_id, counter.direction, counter.message_offset),
+            )
+            item.setToolTip(_counter_provenance_tooltip(counter))
+            self.counter_list.addItem(item)
+        self._tabs.setTabText(2, f"Counterexamples ({len(report.contradictions)})")
 
     def show_message_count(self, count: int) -> None:
         """Show that the rule was applied to ``count`` messages."""
@@ -212,3 +248,19 @@ def _provenance_tooltip(message) -> str:
             label += f"\n{message.bytes_hex}"
             return label.strip()
     return message.bytes_hex
+
+
+def _counter_provenance_tooltip(counter) -> str:
+    """A tooltip for a corpus counterexample: session, direction and packets."""
+    parts = [f"{counter.session_id} {counter.direction}", f"offset {counter.message_offset}"]
+    provenance = counter.provenance_range or {}
+    packets = provenance.get("packets")
+    if packets:
+        parts.append(f"packets {packets}")
+    if provenance.get("seq") is not None:
+        parts.append(f"seq {provenance['seq']}")
+    if provenance.get("ts") is not None:
+        parts.append(f"ts {provenance['ts']}")
+    if counter.bytes_hex:
+        parts.append(counter.bytes_hex)
+    return "\n".join(str(p) for p in parts)
