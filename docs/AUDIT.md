@@ -76,31 +76,57 @@ strings in the public API.
 
 ## 4. Coverage
 
-`pytest --cov=src` over the whole suite (119 tests, 1 skipped):
+`pytest --cov=src` over the whole suite. The first table is the state at the
+start of the audit (119 tests, 1 skipped); the second is the state after the
+boundary tests added in this iteration (177 tests, 1 skipped).
 
-| Module | Cover | Note |
-| --- | --- | --- |
-| `src/capture/parser.py` | 83% | |
-| `src/capture/session.py` | 92% | |
-| `src/capture/reassembly.py` | 89% | |
-| `src/capture/provenance.py` | 95% | |
-| `src/capture/streaming.py` | 98% | |
-| `src/capture/export.py` | 100% | |
-| `src/capture/export_wireshark.py` | 100% | |
-| `src/capture/cli.py` | 79% | |
-| `src/capture/pipeline.py` | 98% | |
-| `src/project/project.py` | 93% | |
-| `src/project/manifest.py` | 88% | |
-| `src/project/pipeline.py` | 77% | |
-| `src/project/cli.py` | 82% | |
-| `src/report/html.py` | 99% | |
-| `src/report/markdown.py` | 95% | |
-| `src/report/model.py` | 93% | |
-| Total | 89% | |
+Before:
 
-Every zone is already above the 70% target, and every file is above it except
-none. The uncovered lines are mostly error and diagnostic branches, which the
-boundary tests added later in this iteration begin to exercise.
+| Module | Cover |
+| --- | --- |
+| `src/capture/parser.py` | 83% |
+| `src/capture/session.py` | 92% |
+| `src/capture/reassembly.py` | 89% |
+| `src/capture/provenance.py` | 95% |
+| `src/capture/streaming.py` | 98% |
+| `src/capture/export.py` | 100% |
+| `src/capture/export_wireshark.py` | 100% |
+| `src/capture/cli.py` | 79% |
+| `src/capture/pipeline.py` | 98% |
+| `src/project/project.py` | 93% |
+| `src/project/manifest.py` | 88% |
+| `src/project/pipeline.py` | 77% |
+| `src/project/cli.py` | 82% |
+| `src/report/html.py` | 99% |
+| `src/report/markdown.py` | 95% |
+| `src/report/model.py` | 93% |
+| Total | 89% |
+
+After:
+
+| Module | Cover |
+| --- | --- |
+| `src/capture/parser.py` | 90% |
+| `src/capture/session.py` | 93% |
+| `src/capture/reassembly.py` | 93% |
+| `src/capture/provenance.py` | 97% |
+| `src/capture/streaming.py` | 98% |
+| `src/capture/export.py` | 100% |
+| `src/capture/export_wireshark.py` | 100% |
+| `src/capture/cli.py` | 98% |
+| `src/capture/pipeline.py` | 98% |
+| `src/project/project.py` | 98% |
+| `src/project/manifest.py` | 100% |
+| `src/project/pipeline.py` | 85% |
+| `src/project/cli.py` | 94% |
+| `src/report/html.py` | 100% |
+| `src/report/markdown.py` | 100% |
+| `src/report/model.py` | 100% |
+| Total | 95% |
+
+Every zone is above the 70% target. The remaining uncovered lines are the
+error branches that need a real protocol-engine or I/O failure to reach, such
+as the `_apply_rule` import guard in `src/project/pipeline.py` (lines 89-109).
 
 ## 5. File size
 
@@ -128,7 +154,7 @@ at their pinned versions: the specification fixes the versions, and moving
 
 ## 7. Hygiene
 
-- `.openhands/` is not tracked and is ignored by `.gitignore` line 19.
+- `.openhands/` is not tracked and is ignored by `.gitignore`.
 - `git log --all -p | grep ghp_` returns nothing: no token is in history.
 - The largest tracked file is the 100 MiB benchmark output, which is not
   tracked; the largest tracked file is a 30 KiB pcapng corpus capture. The
@@ -139,7 +165,8 @@ at their pinned versions: the specification fixes the versions, and moving
 | Priority | Issue | Status |
 | --- | --- | --- |
 | Low | `scripts/run_benchmark.py` is 903 lines | Noted |
-| Low | `src/capture/cli.py` and `src/project/pipeline.py` under 85% cover | The remaining lines are error branches |
+| Low | `src/project/pipeline.py` under 85% cover | The remaining lines are the engine import guard and error branches |
+| Info | An `ambiguous` message is listed as a counterexample but does not change the hypothesis status; an `incomplete` one is treated the same way | Behaviour pinned by a test; decide whether the status rule should count them |
 | Info | `PySide6`, `jsonschema`, `PyYAML` have newer releases | Held at the pinned versions |
 | Info | The protocol engine is on another branch | One test skips until it is merged |
 
@@ -152,3 +179,11 @@ at their pinned versions: the specification fixes the versions, and moving
 - Added `[tool.ruff]` and `[tool.mypy]` configuration.
 - Raised the `pytest` pin off the advisory version and added the analysis tools
   to the `dev` extra.
+- Added boundary and negative tests for the capture, project, and report zones:
+  malformed and unusual captures, manifest validation, project lifecycle, the
+  investigation status rule, the report model, and both CLIs. Coverage rose
+  from 89% to 95%.
+- Fixed two further `mypy` findings that the earlier pass had not reached (the
+  provenance test assertions and the optional RSS comparison in the benchmark
+  script). `mypy` over the whole tree is now clean.
+- Ignored and untracked `.coverage`, which the coverage run rewrote in place.
