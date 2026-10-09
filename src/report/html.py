@@ -8,10 +8,13 @@ no external requests, so it can be copied to another machine and still render.
 from __future__ import annotations
 
 import html
+import logging
 from pathlib import Path
 from typing import Any
 
 from src.report.model import normalize, status_label
+
+logger = logging.getLogger(__name__)
 
 _STATUS_CLASS = {
     "observation": "status-observation",
@@ -235,3 +238,4 @@ def render_html(investigation: dict[str, Any], out_path: Path) -> None:
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(document, encoding="utf-8")
+    logger.info("wrote HTML report to %s", out_path)

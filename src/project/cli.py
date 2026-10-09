@@ -18,6 +18,7 @@ import json
 import sys
 from pathlib import Path
 
+from src.capture.logging_setup import configure_logging
 from src.project.manifest import ManifestError
 from src.project.pipeline import PipelineError, PipelineOutcome, run_pipeline
 from src.project.project import MANIFEST_FILE, Project, ProjectError
@@ -68,6 +69,9 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     pipeline.add_argument(
         "--quiet", action="store_true", help="do not print the summary"
+    )
+    pipeline.add_argument(
+        "--verbose", action="store_true", help="log progress to stderr"
     )
 
     create = sub.add_parser("create", help="create an empty project")
@@ -146,6 +150,7 @@ def _print_outcome(outcome: PipelineOutcome, *, quiet: bool) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
+    configure_logging(getattr(args, "verbose", False))
 
     if args.command == "pipeline":
         return _run_pipeline(args)
