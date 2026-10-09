@@ -33,16 +33,41 @@ def _build_parser() -> argparse.ArgumentParser:
         "pipeline", help="capture a PCAP into a project and write the report"
     )
     pipeline.add_argument("--pcap", required=True, type=Path, help="input capture")
-    pipeline.add_argument("--project", required=True, type=Path, help="project directory")
+    pipeline.add_argument(
+        "--project", required=True, type=Path, help="project directory"
+    )
     pipeline.add_argument("--name", default=None, help="project name")
-    pipeline.add_argument("--rule", default=None, type=Path, help="rule to apply (JSON or YAML)")
-    pipeline.add_argument("--report", default=None, type=Path, help="also write the Markdown report here")
-    pipeline.add_argument("--no-html", action="store_true", help="do not write the HTML report")
-    pipeline.add_argument("--wireshark-pcap", action="store_true", help="also write reassembled streams as a pcap")
-    pipeline.add_argument("--stream", action="store_true", help="normalize in streaming mode")
-    pipeline.add_argument("--chunk-size", type=int, default=10000, help="packets per block in streaming mode")
-    pipeline.add_argument("--force", action="store_true", help="replace the project directory if it exists")
-    pipeline.add_argument("--quiet", action="store_true", help="do not print the summary")
+    pipeline.add_argument(
+        "--rule", default=None, type=Path, help="rule to apply (JSON or YAML)"
+    )
+    pipeline.add_argument(
+        "--report", default=None, type=Path, help="also write the Markdown report here"
+    )
+    pipeline.add_argument(
+        "--no-html", action="store_true", help="do not write the HTML report"
+    )
+    pipeline.add_argument(
+        "--wireshark-pcap",
+        action="store_true",
+        help="also write reassembled streams as a pcap",
+    )
+    pipeline.add_argument(
+        "--stream", action="store_true", help="normalize in streaming mode"
+    )
+    pipeline.add_argument(
+        "--chunk-size",
+        type=int,
+        default=10000,
+        help="packets per block in streaming mode",
+    )
+    pipeline.add_argument(
+        "--force",
+        action="store_true",
+        help="replace the project directory if it exists",
+    )
+    pipeline.add_argument(
+        "--quiet", action="store_true", help="do not print the summary"
+    )
 
     create = sub.add_parser("create", help="create an empty project")
     create.add_argument("--path", required=True, type=Path, help="project directory")
@@ -61,8 +86,12 @@ def _build_parser() -> argparse.ArgumentParser:
     export.add_argument("--out", required=True, type=Path, help="output archive")
 
     import_ = sub.add_parser("import", help="import a project zip into a directory")
-    import_.add_argument("--in", dest="in_zip", required=True, type=Path, help="archive to import")
-    import_.add_argument("--target", required=True, type=Path, help="directory to create")
+    import_.add_argument(
+        "--in", dest="in_zip", required=True, type=Path, help="archive to import"
+    )
+    import_.add_argument(
+        "--target", required=True, type=Path, help="directory to create"
+    )
 
     return parser
 
@@ -119,7 +148,9 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         if args.command == "create":
-            project = Project.create(args.path, args.name or f"{args.path.name} investigation")
+            project = Project.create(
+                args.path, args.name or f"{args.path.name} investigation"
+            )
             print(json.dumps({"project": str(project.root), "name": project.name}))
             return 0
 

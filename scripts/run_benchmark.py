@@ -58,7 +58,7 @@ def _sample_rss_mib() -> float:
     """
 
     try:
-        with open("/proc/self/statm", "r", encoding="ascii") as handle:
+        with open("/proc/self/statm", encoding="ascii") as handle:
             pages = int(handle.read().split()[1])
     except (OSError, ValueError, IndexError):
         return _peak_rss_mib()
@@ -118,7 +118,7 @@ def _environment() -> dict[str, str]:
 def _version(module: str) -> str:
     try:
         return __import__(module).__version__
-    except Exception:
+    except Exception:  # noqa: BLE001 - report "unknown" for any missing or odd module
         return "unknown"
 
 
@@ -294,9 +294,11 @@ def render_markdown(result: Result, profile: dict[str, int]) -> str:
         f"- Packets read: {result.packets}",
         f"- TCP sessions: {result.sessions}",
         f"- Read diagnostics: {result.diagnostics}",
-        f"- Target profile: {profile['packets']} packets, {profile['sessions']} "
-        f"sessions, up to {profile['target_mib']} MiB, responses up to "
-        f"{profile['max_response']} bytes",
+        (
+            f"- Target profile: {profile['packets']} packets, {profile['sessions']} "
+            f"sessions, up to {profile['target_mib']} MiB, responses up to "
+            f"{profile['max_response']} bytes"
+        ),
         "",
         "## Timings",
         "",
@@ -323,8 +325,10 @@ def render_markdown(result: Result, profile: dict[str, int]) -> str:
             "| ------ | ------- | --------- |",
             f"| Total seconds | {total:.2f} | {result.stream_seconds:.2f} |",
             f"| Peak RSS (MiB) | {result.peak_rss_mib:.0f} | {result.stream_peak_rss_mib:.0f} |",
-            f"| Output JSON (MiB) | {result.output_bytes / (1024 * 1024):.2f} | "
-            f"{(result.stream_output_bytes or 0) / (1024 * 1024):.2f} |",
+            (
+                f"| Output JSON (MiB) | {result.output_bytes / (1024 * 1024):.2f} | "
+                f"{(result.stream_output_bytes or 0) / (1024 * 1024):.2f} |"
+            ),
             "",
             f"The streaming run flushed {result.stream_flushes} sessions.",
             "",
@@ -341,7 +345,9 @@ def render_markdown(result: Result, profile: dict[str, int]) -> str:
         f"- Peak process RSS: {result.peak_rss_mib:.0f} MiB",
     ]
     if result.tracemalloc_mib is not None:
-        lines.append(f"- Python allocation peak (tracemalloc): {result.tracemalloc_mib:.0f} MiB")
+        lines.append(
+            f"- Python allocation peak (tracemalloc): {result.tracemalloc_mib:.0f} MiB"
+        )
     lines += [
         f"- Output JSON: {result.output_bytes / (1024 * 1024):.2f} MiB",
         "",
@@ -373,20 +379,28 @@ def render_markdown(result: Result, profile: dict[str, int]) -> str:
         "",
         "Observations:",
         "",
-        "- The parser dominates the time. It builds one Python object per packet, "
-        "which is the cost of keeping the header fields available for provenance.",
-        f"- The normalized JSON ({result.output_bytes / (1024 * 1024):.2f} MiB) is "
-        f"larger than the input ({result.input_bytes / (1024 * 1024):.2f} MiB) "
-        "because stream bytes are stored base64 encoded and every observed range "
-        "carries a provenance record.",
-        "- Memory scales with the capture size: all packets are held in memory at "
-        "once. At this profile that is affordable; for a capture several times "
-        "larger the same approach would need to stream or use memory mapping.",
+        (
+            "- The parser dominates the time. It builds one Python object per packet, "
+            "which is the cost of keeping the header fields available for provenance."
+        ),
+        (
+            f"- The normalized JSON ({result.output_bytes / (1024 * 1024):.2f} MiB) is "
+            f"larger than the input ({result.input_bytes / (1024 * 1024):.2f} MiB) "
+            "because stream bytes are stored base64 encoded and every observed range "
+            "carries a provenance record."
+        ),
+        (
+            "- Memory scales with the capture size: all packets are held in memory at "
+            "once. At this profile that is affordable; for a capture several times "
+            "larger the same approach would need to stream or use memory mapping."
+        ),
         "",
-        "If a larger capture must be supported, the first step is to stop holding "
-        "every packet object at once: parse and reassemble session by session, and "
-        "write provenance ranges to disk as they are produced. That trades peak "
-        "memory for a second pass over the file.",
+        (
+            "If a larger capture must be supported, the first step is to stop holding "
+            "every packet object at once: parse and reassemble session by session, and "
+            "write provenance ranges to disk as they are produced. That trades peak "
+            "memory for a second pass over the file."
+        ),
         "",
     ]
     return "\n".join(lines)
@@ -602,7 +616,12 @@ def run_matrix(
     if tracemalloc_mib is not None:
         pcap = work_dir / f"matrix-{tracemalloc_mib}.pcapng"
         if not pcap.is_file():
-            data = build(tracemalloc_mib * 2500, max(1, tracemalloc_mib * 10), tracemalloc_mib, max_response)
+            data = build(
+                tracemalloc_mib * 2500,
+                max(1, tracemalloc_mib * 10),
+                tracemalloc_mib,
+                max_response,
+            )
             pcap.write_bytes(data)
         import subprocess
 
@@ -809,9 +828,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.pcap.is_file():
         from scripts.generate_benchmark_pcap import build
 
-        data = build(
-            args.packets, args.sessions, args.target_mib, args.max_response
-        )
+        data = build(args.packets, args.sessions, args.target_mib, args.max_response)
         args.pcap.parent.mkdir(parents=True, exist_ok=True)
         args.pcap.write_bytes(data)
 
@@ -828,21 +845,27 @@ def main(argv: list[str] | None = None) -> int:
         "target_mib": args.target_mib,
         "max_response": args.max_response,
     }
-    print(json.dumps({
-        "input_mib": round(result.input_bytes / (1024 * 1024), 2),
-        "packets": result.packets,
-        "sessions": result.sessions,
-        "parse_s": round(result.parse_seconds, 2),
-        "sessions_s": round(result.sessions_seconds, 2),
-        "reassembly_s": round(result.reassembly_seconds, 2),
-        "export_s": round(result.export_seconds, 2),
-        "total_s": round(result.total_seconds, 2),
-        "peak_rss_mib": round(result.peak_rss_mib),
-        "output_mib": round(result.output_bytes / (1024 * 1024), 2),
-        "stream_s": round(result.stream_seconds, 2),
-        "stream_peak_rss_mib": round(result.stream_peak_rss_mib),
-        "stream_output_mib": round((result.stream_output_bytes or 0) / (1024 * 1024), 2),
-    }))
+    print(
+        json.dumps(
+            {
+                "input_mib": round(result.input_bytes / (1024 * 1024), 2),
+                "packets": result.packets,
+                "sessions": result.sessions,
+                "parse_s": round(result.parse_seconds, 2),
+                "sessions_s": round(result.sessions_seconds, 2),
+                "reassembly_s": round(result.reassembly_seconds, 2),
+                "export_s": round(result.export_seconds, 2),
+                "total_s": round(result.total_seconds, 2),
+                "peak_rss_mib": round(result.peak_rss_mib),
+                "output_mib": round(result.output_bytes / (1024 * 1024), 2),
+                "stream_s": round(result.stream_seconds, 2),
+                "stream_peak_rss_mib": round(result.stream_peak_rss_mib),
+                "stream_output_mib": round(
+                    (result.stream_output_bytes or 0) / (1024 * 1024), 2
+                ),
+            }
+        )
+    )
 
     sweep_md = ""
     if args.matrix:

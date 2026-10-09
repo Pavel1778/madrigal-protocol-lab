@@ -125,7 +125,9 @@ def build(
         for _ in range(exchanges):
             if written + 2 > packets:
                 break
-            size = rng.randint(payload_size // 2, payload_size) if payload_size > 8 else 8
+            size = (
+                rng.randint(payload_size // 2, payload_size) if payload_size > 8 else 8
+            )
             request = bytes(rng.getrandbits(8) for _ in range(8))
             response = bytes(rng.getrandbits(8) for _ in range(size))
 
@@ -161,7 +163,9 @@ def build(
 
         ts += 0.0005
         writer.writepkt(
-            _frame(True, client_port, seq_a, seq_b, dpkt.tcp.TH_FIN | dpkt.tcp.TH_ACK, b""),
+            _frame(
+                True, client_port, seq_a, seq_b, dpkt.tcp.TH_FIN | dpkt.tcp.TH_ACK, b""
+            ),
             ts=ts,
         )
         written += 1

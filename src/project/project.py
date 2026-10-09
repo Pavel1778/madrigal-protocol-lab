@@ -67,7 +67,7 @@ class Project:
     # -- construction -----------------------------------------------------
 
     @classmethod
-    def create(cls, path: Path, name: str) -> "Project":
+    def create(cls, path: Path, name: str) -> Project:
         """Create a new project directory at ``path``.
 
         The directory must not exist yet, so a mistyped path cannot overwrite a
@@ -86,7 +86,7 @@ class Project:
         return cls(root, manifest)
 
     @classmethod
-    def open(cls, path: Path) -> "Project":
+    def open(cls, path: Path) -> Project:
         """Open the project at ``path``, validating its manifest."""
 
         root = Path(path).resolve()
@@ -196,7 +196,7 @@ class Project:
                 archive.write(path, path.relative_to(self._root).as_posix())
 
     @classmethod
-    def import_(cls, in_zip: Path, target_dir: Path) -> "Project":
+    def import_(cls, in_zip: Path, target_dir: Path) -> Project:
         """Unpack ``in_zip`` into ``target_dir`` and open it.
 
         Every registered capture is checked against its recorded digest. A
@@ -218,8 +218,7 @@ class Project:
             broken = project.verify_captures()
             if broken:
                 raise ProjectError(
-                    "capture digests do not match after import: "
-                    + ", ".join(broken)
+                    "capture digests do not match after import: " + ", ".join(broken)
                 )
             return project
         except Exception:

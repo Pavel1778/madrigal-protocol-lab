@@ -15,7 +15,7 @@ import pytest
 
 from src.project import Project
 from src.project.cli import main
-from src.project.pipeline import build_investigation, run_pipeline
+from src.project.pipeline import PipelineError, build_investigation, run_pipeline
 
 CORPUS = Path(__file__).resolve().parent.parent / "corpus"
 CAPTURE = CORPUS / "corpus_capture_01.pcapng"
@@ -75,19 +75,23 @@ def test_pipeline_streaming_matches_regular(tmp_path: Path) -> None:
     run_pipeline(CAPTURE, regular / "project.madrigal", html=False)
     run_pipeline(CAPTURE, streamed / "project.madrigal", html=False, streaming=True)
 
-    a = json.loads((regular / "project.madrigal" / "results" / "normalized.json").read_text())
-    b = json.loads((streamed / "project.madrigal" / "results" / "normalized.json").read_text())
+    a = json.loads(
+        (regular / "project.madrigal" / "results" / "normalized.json").read_text()
+    )
+    b = json.loads(
+        (streamed / "project.madrigal" / "results" / "normalized.json").read_text()
+    )
     assert len(a["sessions"]) == len(b["sessions"]) == 3
     assert a["capture_id"] == b["capture_id"]
     assert a["source_file"] == b["source_file"]
-    for left, right in zip(a["sessions"], b["sessions"]):
+    for left, right in zip(a["sessions"], b["sessions"], strict=True):
         assert left["directions"] == right["directions"]
 
 
 def test_pipeline_refuses_existing_project_without_force(tmp_path: Path) -> None:
     project_path = tmp_path / "project.madrigal"
     run_pipeline(CAPTURE, project_path)
-    with pytest.raises(Exception):
+    with pytest.raises(PipelineError):
         run_pipeline(CAPTURE, project_path)
     # force replaces it cleanly
     outcome = run_pipeline(CAPTURE, project_path, force=True)
@@ -98,7 +102,10 @@ def test_pipeline_wireshark_export(tmp_path: Path) -> None:
     project_path = tmp_path / "project.madrigal"
     outcome = run_pipeline(CAPTURE, project_path, wireshark=True)
     assert outcome.wireshark is not None and outcome.wireshark.is_file()
-    assert outcome.wireshark.read_bytes()[:4] in (b"\xd4\xc3\xb2\xa1", b"\xa1\xb2\xc3\xd4")
+    assert outcome.wireshark.read_bytes()[:4] in (
+        b"\xd4\xc3\xb2\xa1",
+        b"\xa1\xb2\xc3\xd4",
+    )
 
 
 def test_cli_create_open_add_export_import(tmp_path: Path) -> None:
@@ -107,7 +114,10 @@ def test_cli_create_open_add_export_import(tmp_path: Path) -> None:
     assert Project.open(project_path).name == "demo"
 
     assert main(["open", "--path", str(project_path), "--show"]) == 0
-    assert main(["add-capture", "--project", str(project_path), "--pcap", str(CAPTURE)]) == 0
+    assert (
+        main(["add-capture", "--project", str(project_path), "--pcap", str(CAPTURE)])
+        == 0
+    )
     assert Project.open(project_path).verify_captures() == []
 
     archive = tmp_path / "bundle.zip"
@@ -138,21 +148,38 @@ def test_investigation_from_contradictory_result() -> None:
         "rule_id": "r1",
         "rule_version": 2,
         "capture_id": "sha256:aa",
-        "summary": {"matched": 3, "mismatched": 1, "incomplete": 0, "ambiguous": 0, "unknown": 0, "uncovered": 0},
+        "summary": {
+            "matched": 3,
+            "mismatched": 1,
+            "incomplete": 0,
+            "ambiguous": 0,
+            "unknown": 0,
+            "uncovered": 0,
+        },
         "messages": [
             {"offset": 0, "length": 8, "status": "matched"},
             {"offset": 8, "length": 8, "status": "mismatched"},
         ],
     }
-    investigation = build_investigation(result, capture_id="sha256:aa", source_file="cap.pcapng")
+    investigation = build_investigation(
+        result, capture_id="sha256:aa", source_file="cap.pcapng"
+    )
     assert investigation["hypotheses"][0]["status"] == "contradiction"
     assert len(investigation["counterexamples"]) == 1
     assert investigation["counterexamples"][0]["offset"] == 8
 
 
-@pytest.mark.skipif(not HAS_ENGINE, reason="protocol engine not present in this checkout")
+@pytest.mark.skipif(
+    not HAS_ENGINE, reason="protocol engine not present in this checkout"
+)
 def test_pipeline_applies_rule_when_engine_present(tmp_path: Path) -> None:
-    rule = Path(__file__).resolve().parent.parent.parent / "src" / "protocol" / "examples" / "set_parameter_request.json"
+    rule = (
+        Path(__file__).resolve().parent.parent.parent
+        / "src"
+        / "protocol"
+        / "examples"
+        / "set_parameter_request.json"
+    )
     if not rule.is_file():
         pytest.skip("example rule not present")
     project_path = tmp_path / "project.madrigal"
