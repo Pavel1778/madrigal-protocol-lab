@@ -262,14 +262,15 @@ Checked at the submission revision.
 
 | Item | Value |
 | --- | --- |
-| `main` head | `c5b9cd2` (then the audit pass) |
+| `main` head | `774c2c6` (after the protocol/creative merge) |
 | `agent1/capture` head | equal to `main` |
-| Suite | 385 passed, 0 skipped |
+| Suite | 411 passed, 0 skipped |
 | Lint | `ruff check . --select "E4,E7,E9,F" --ignore E501`: All checks passed |
 | Coverage | 95% (see the coverage section above) |
 | CI | green: test matrix (3.12 and 3.13), `code-quality`, `dependency-audit` |
 | Largest tracked file | `presentation/slides.pdf`, 1.06 MiB, well under 5 MiB |
-| Fresh unpack | 385 passed, 0 skipped on a real 3.12 and on 3.13 |
+| Submission archive | `dist/submission_20261009_2048.zip`, 2.5 MiB, 207 entries |
+| Fresh unpack | 385 passed, 0 skipped at the earlier revision; to be re-checked on a clean 3.12 and 3.13 unpack after the merge |
 
 Trace checks at this revision:
 
@@ -291,6 +292,25 @@ deadline pressure is off:
 | `ruff format --check .` | 42 files unformatted, none in the capture/project/report zone | format zone by zone, then gate |
 | `mypy .` | 75 findings, none in the audited zone | annotate zone by zone, then gate |
 
+### R5 annotations
+
+The project contract names an `annotations.sqlite` file, and
+`Project.create` creates it. It holds no table: observations and hypotheses
+are stored in the JSON description of the rules and in the structured
+investigation report. A separate annotations table was a deliberate choice in
+favour of a self-contained JSON format that travels with the project without an
+extra dependency, not a shortage of time. A consumer that opens
+`annotations.sqlite` finds an empty file.
+
+### Test stand timing
+
+`tests/capture/test_synthetic_stand.py` drives
+`scripts.run_synthetic_stand.run_stand`, which opens a real loopback TCP socket
+and captures the live exchange, so packet boundaries depend on timing. One cold
+full-suite run failed and every run after it passed. It is left as is until the
+defense; afterwards the stand should capture from a committed fixture instead of
+a live socket.
+
 ## 13. Open questions
 
 - **Organizer captures.** The case mentions real data from the organizers; no
@@ -299,5 +319,5 @@ deadline pressure is off:
   parser and the applicability boundary further.
 - **Defense rehearsals.** Two rehearsals of the walkthrough are still to be run.
 - **Backup video.** A screen recording of the run is still to be made.
-- **Group name.** The submission records the participant and leaves the group
-  field for the participant to fill.
+- **Group name.** Resolved: the submission records the participant and the
+  group `ИС-24`.
