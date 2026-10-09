@@ -48,7 +48,7 @@ the protocol stage's use of its output, not the capture internals.
 | --- | --- |
 | six statuses per message | `src/hypothesis/status.py`; `tests/hypothesis/test_status.py` |
 | `mismatched` is a counterexample bound to bytes and packet | `Counterexample.to_dict()` carries `bytes_hex`, `session_id`, `message_offset`, `reason`; `tests/hypothesis/test_corpus.py` |
-| a match on examples is not proof | `docs/REPORT.md` section 3; `src/hypothesis/corpus.py` verifies over the whole corpus |
+| a match on examples is not proof | `REPORT.md` section 3; `src/hypothesis/corpus.py` verifies over the whole corpus |
 | counterexamples are kept, not discarded | `VerificationReport.contradictions`; `docs/REFERENCE_INVESTIGATION.md` |
 
 ## Slide 6 - Интерфейс (interface)
@@ -120,7 +120,7 @@ Every item is a real gap, stated rather than hidden:
 | claim | evidence |
 | --- | --- |
 | the layout is command, flags, length, payload | `examples/corpus_rule_v2.json` fields |
-| command takes `1, 2, 3`; offset 4 is a parameter id; offset 5-6 a written value | `docs/REPORT.md`, `docs/REFERENCE_INVESTIGATION.md` |
+| command takes `1, 2, 3`; offset 4 is a parameter id; offset 5-6 a written value | `REPORT.md`, `docs/REFERENCE_INVESTIGATION.md` |
 | the rule transfers to the second capture and not to a foreign one | v2 on `corpus_capture_02` matches 40, on `synthetic_live` matches 0 with one `incomplete` |
 | every claim is backed by bytes, a counterexample or the journal | `REPORT.md` sections 5, 9 and the counterexample table |
 
