@@ -94,3 +94,12 @@ def test_accepts_raw_bytes_and_directional_streams():
     report = verify_on_corpus(rule, [_message(4, 1), _message(4, 2)])
     assert report.total == 2
     assert report.totals["matched"] == 2
+
+
+def test_report_without_applicable_messages_is_not_confirmed():
+    rule = parse_rule(RULE)
+    report = verify_on_corpus(rule, [CorpusStream.from_bytes(_message(4, 1), "s1", "B_to_A")])
+    assert report.totals["not_applicable"] == 1
+    assert report.contradictions == []
+    assert not report.is_relevant()
+    assert not report.is_confirmed()
