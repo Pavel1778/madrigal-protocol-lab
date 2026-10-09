@@ -158,10 +158,10 @@ def build_html(markdown: str) -> str:
     * {{ box-sizing: border-box; }}
     {fonts}
     html, body {{ margin: 0; padding: 0; background: {BACKGROUND}; }}
-    body {{ color: {TEXT}; font-family: 'Montserrat', sans-serif; }}
+    body {{ color: {TEXT}; font-family: 'Montserrat', sans-serif; counter-reset: slide; }}
     section {{
         width: 1280px; height: 720px; padding: 64px 88px;
-        page-break-after: always; position: relative;
+        page-break-after: always; position: relative; counter-increment: slide;
         background: {BACKGROUND}; display: flex; flex-direction: column;
     }}
     section::before {{
@@ -184,12 +184,19 @@ def build_html(markdown: str) -> str:
     td, th {{ border: 1px solid #2A2C2E; padding: 8px 16px; font-size: 20px; }}
     td:first-child {{ color: {SECONDARY}; }}
     figure {{ margin: 10px 0 0; }}
-    img {{ max-width: 100%; max-height: 470px; border: 1px solid #2A2C2E; border-radius: 4px; }}
+    img {{ max-width: 100%; max-height: 340px; border: 1px solid #2A2C2E; border-radius: 4px; }}
     .figrow {{ display: flex; gap: 20px; margin-top: 12px; align-items: flex-start; }}
     .figrow figure {{ flex: 1 1 0; margin: 0; }}
     .figrow img {{ width: 100%; max-height: 440px; object-fit: contain; }}
     .title-slide {{ justify-content: center; }}
     .title-slide h1 {{ font-size: 56px; }}
+    section::after {{
+        content: counter(slide);
+        position: absolute; right: 88px; bottom: 26px;
+        font-family: 'Tektur', sans-serif; font-weight: 500; font-size: 16px;
+        color: {SECONDARY};
+    }}
+    .title-slide::after {{ content: none; }}
     """
     return (
         "<!DOCTYPE html><html><head><meta charset='utf-8'>"
