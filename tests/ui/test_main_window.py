@@ -15,23 +15,27 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest  # noqa: E402
 
-pytest.importorskip("PySide6")
+# A headless runner may lack the Qt system libraries (for example libEGL). When
+# PySide6 cannot be imported the whole module is skipped rather than left as a
+# collection error, so a missing runtime never masks the rest of the suite.
+try:
+    from PySide6 import QtCore, QtGui, QtWidgets  # noqa: E402
 
-from PySide6 import QtCore, QtWidgets  # noqa: E402
-
-from src.ui import theme  # noqa: E402
-from src.ui.compare_view import CompareView, diff_bytes  # noqa: E402
-from src.ui.hex_view import HexView, annotations_from_stream  # noqa: E402
-from src.ui.main_window import (  # noqa: E402
-    DEFAULT_CAPTURE,
-    DEFAULT_RULE,
-    MainWindow,
-    open_default_window,
-)
-from src.ui.model import CaptureModel, RuleModel  # noqa: E402
-from src.ui.session_tree import SessionTree  # noqa: E402
-from src.ui.validation_view import ValidationView  # noqa: E402
-from src.protocol.stream import capture_from_dict  # noqa: E402
+    from src.ui import theme  # noqa: E402
+    from src.ui.compare_view import CompareView, diff_bytes  # noqa: E402
+    from src.ui.hex_view import HexView, annotations_from_stream  # noqa: E402
+    from src.ui.main_window import (  # noqa: E402
+        DEFAULT_CAPTURE,
+        DEFAULT_RULE,
+        MainWindow,
+        open_default_window,
+    )
+    from src.ui.model import CaptureModel, RuleModel  # noqa: E402
+    from src.ui.session_tree import SessionTree  # noqa: E402
+    from src.ui.validation_view import ValidationView  # noqa: E402
+    from src.protocol.stream import capture_from_dict  # noqa: E402
+except ImportError as exc:  # pragma: no cover - depends on the runner
+    pytest.skip(f"Qt runtime unavailable: {exc}", allow_module_level=True)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFECT_CAPTURE = REPO_ROOT / "tests" / "corpus" / "reference_export" / "corpus_capture_defects.normalized.json"
