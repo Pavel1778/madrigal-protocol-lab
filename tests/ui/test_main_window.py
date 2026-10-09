@@ -232,6 +232,28 @@ def test_diff_bytes_aligns_a_shared_prefix():
     assert rows[-1].kind == "changed"
 
 
+def test_diff_bytes_marks_a_deletion_without_crashing():
+    # The left message is longer; the shared tail sits at a different offset on
+    # each side, which used to read past the end of the shorter message.
+    rows = diff_bytes(b"\x01\x02\x09\x03", b"\x01\x02\x03")
+    kinds = [r.kind for r in rows]
+    assert "deleted" in kinds
+    assert rows[-1].kind == "equal"
+    assert all(r.left != "" and r.right != "" for r in rows)
+
+
+def test_diff_bytes_marks_an_insertion():
+    rows = diff_bytes(b"\x01\x02\x03", b"\x01\x02\x09\x03")
+    kinds = [r.kind for r in rows]
+    assert "inserted" in kinds
+    assert rows[-1].kind == "equal"
+
+
+def test_diff_bytes_of_identical_messages_is_all_equal():
+    rows = diff_bytes(b"\x01\x02\x03", b"\x01\x02\x03")
+    assert {r.kind for r in rows} == {"equal"}
+
+
 def test_rule_edit_marks_the_previous_run_outdated(app):
     if not DEFAULT_RULE.is_file():
         pytest.skip("rule not present")
