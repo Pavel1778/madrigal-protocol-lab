@@ -7,6 +7,9 @@ __pycache__/
 *.pcapng
 !tests/fixtures/**/*.pcap
 !tests/fixtures/**/*.pcapng
+!tests/corpus/
+!tests/corpus/**/*.pcapng
+!tests/corpus/**/*.pcap
 project.madrigal/
 .DS_Store
 *.egg-info/
@@ -14,3 +17,5 @@ build/
 dist/
 .mypy_cache/
 .openhands/
+.benchmark/
+out/
