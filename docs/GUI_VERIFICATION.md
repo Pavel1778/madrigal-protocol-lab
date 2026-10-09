@@ -83,6 +83,27 @@ This is `src.hypothesis.diff.diff_reports` rendered in the window, so the
 refinement is visible as resolved and introduced counterexamples rather than as
 a bare change of numbers.
 
+## Hypotheses panel (step 4b)
+
+The Hypotheses tab is filled every time a rule is applied, and reads the rule
+against the messages it applies to. Applying to a single direction scores the
+candidates over that one stream; applying to the whole capture (Rule, Apply to
+whole capture) scores them over every scoped stream, which is the comparison the
+refinement is decided on. With `corpus_rule_v1.json` applied to the whole capture,
+the tab lists one row per candidate reading of each `hypothesis` field
+(`command`, `target`, `value`), with the field, the candidate name, support,
+contradiction count and score. The score is colour-coded: green at or above 0.9,
+amber between 0.5 and 0.9, grey below. For `command` the top rows are
+`entropy_enum` and `low_cardinality` at 1.00 (140 support, 0 contradiction), and
+the row for `constant` (the reading v1 declares) sits at 0.43 (60 support, 80
+contradict). Selecting a row emits the first evidence offset and jumps the hex
+view to that message, the same jump a counterexample click makes. The panel is
+driven from `src.hypothesis.alternatives.suggest_alternatives`, so it shows the
+engine's own output, not a second computation. `tests/ui/test_hypotheses_view.py`
+covers the colour bands, the row-per-candidate layout and the emitted offset, and
+`tests/ui/test_main_window.py::test_hypotheses_tab_fills_on_apply` checks the tab
+is populated after an apply.
+
 ## Defects found during verification
 
 Three defects were found and fixed on this branch; a fourth limit is recorded
