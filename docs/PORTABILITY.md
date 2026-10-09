@@ -50,9 +50,34 @@ reach the socket and falls back to `sudo -n` when it cannot.
   without errors.
 - No install warns or fails on either Python version.
 
+## Submission archive check
+
+The submission archive is verified on its own, from a clean unpack rather than
+from the repository, so a forgotten file cannot hide behind the working tree.
+
+| Field | Value |
+| --- | --- |
+| Date | 2026-10-09 20:11 UTC |
+| Host | Debian GNU/Linux 13 (trixie), kernel 6.8.0-1055-gke |
+| Architecture | x86_64, 4 CPUs, 16 GiB RAM |
+| Python | 3.13.15 (the archive targets 3.12 or newer) |
+| Archive | `dist/submission_20261009_2010.zip`, 188 entries, 2.5 MiB |
+| Install time | 16 s, `python -m venv .venv` + `pip install -e ".[dev]"` |
+| Suite | 385 passed, 0 skipped |
+| Static check | `ruff check . --select "E4,E7,E9,F" --ignore E501`: All checks passed |
+| Pipeline | `src.project.cli pipeline` with the corpus rule: 3 sessions, `REPORT.md` (17 KiB) and `REPORT.html` (28 KiB) written |
+| Window | opened headless against the reference export and the corpus rule |
+
+The first build omitted `examples/`, which holds the corpus rules. That made
+39 corpus and window tests skip and left the walkthrough rule out of the
+archive. `examples/` is now included and a reference rule is a required entry,
+so the build fails rather than shipping without it.
+
 ## Findings
 
-No portability defect was found. Two notes are worth keeping:
+No environment portability defect was found; the one archive-content defect
+is the missing `examples/` directory recorded above. Two notes are worth
+keeping:
 
 - `git` is not present in a minimal container. The submission builder reads the
   author from `git config` when rendering its manifest and treats a missing
