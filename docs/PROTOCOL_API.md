@@ -89,6 +89,9 @@ GUI works with `apply_rule` / `apply_rule_fields`, `build_result`,
   `format_report_diff(diff) -> str`.
 - `src.hypothesis.metrics.compute_metrics(report) -> RuleMetrics` — see the
   metrics section below.
+- `src.hypothesis.journal.load_journal(path) -> list[JournalEntry]`,
+  `parse_journal(text)`, `correlate(messages, entries, window_ms=500) ->
+  CorrelationReport` — see the journal section below.
 - `src.hypothesis.versioning.ResultStore` — `.add(rule, capture_id, payload) ->
   StoredResult`, `.results_for(rule_id, capture_id=None)`,
   `.mark_outdated(rule, capture_id=None) -> list[StoredResult]`,
@@ -472,7 +475,43 @@ contradiction of a claim.
 python -m src.protocol.cli metrics --report report.json --out metrics.json
 ```
 
-## 9. Limitations
+## 9. Journal correlation
+
+A journal is the researcher's own record of what happened during a capture,
+written as plain text separately from the bytes. Each non-comment line is
+`<timestamp> | <action> | key=value | ...`; the timestamp is epoch seconds or
+ISO-8601; `#` starts a comment and blank lines are ignored.
+
+```
+100.02 | set_temperature | value=21
+100.31 | toggle_power
+```
+
+`correlate(messages, entries, window_ms=500)` pairs each timestamped message
+with the nearest journal entry whose timestamp is within the window. A
+timestamp comes from the message's provenance (the earliest packet time), which
+is why the engine records `ts` on each `FieldResult.provenance_range` and on
+`MessageResult.timestamp`. The result is a `CorrelationReport`:
+
+- `correlated` — one `Correlation` per paired message: the message offset and
+  time, the entry, `delta_ms`, the journal keys that match a field name, and
+  `value_agreements`/`value_conflicts` (the decoded value against the journal
+  parameter). A conflict is evidence the field does *not* mean what the journal
+  says, and is kept, not dropped.
+- `messages_without_timestamp`, `messages_without_entry` — messages that could
+  not be paired, and why;
+- `entries_without_message` — journal lines not followed by a message.
+
+A correlation is a temporal suggestion, not proof: a nearby message with the
+intended value supports a field hypothesis; an empty window reports that no
+evidence was available. An entry is used at most once.
+
+```
+python -m src.protocol.cli correlate --rule rule.json --capture capture.json \
+    --journal journal.md --window-ms 500 --out correlations.json
+```
+
+## 10. Limitations
 
 The rule model is flat by design: arrays repeat a single fixed-width element and
 `computed`/`conditional` reference other declared fields, but there are no nested
