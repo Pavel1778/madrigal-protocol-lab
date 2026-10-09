@@ -119,7 +119,12 @@ Unpack the archive and follow the same setup to run it from scratch.
 | --- | --- | --- |
 | Source archive | shipped | `python scripts/build_submission.py` |
 | Docker image | shipped, `Dockerfile` and `.dockerignore` in the tree | `docker build -t madrigal-lab .` |
-| Linux binary and `.deb` | phase D, optional | see `docs/BINARY.md` when present |
+| Linux binary | shipped, built on demand | `scripts/build_linux_binary.sh` |
+| `.deb` | shipped, built on demand | `scripts/build_deb.sh` |
+
+The binary and the `.deb` are built artefacts and are not committed; the scripts
+that produce them are. See [docs/BINARY.md](docs/BINARY.md) for the size, the
+run commands, and what was verified.
 
 The archive is verified after the build: it is extracted into a temporary
 directory and the suite is run from there, so a broken archive is never

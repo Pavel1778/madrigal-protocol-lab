@@ -22,3 +22,6 @@ htmlcov/
 .agent-cache/
 .benchmark/
 out/
+
+# PyInstaller
+*.spec
