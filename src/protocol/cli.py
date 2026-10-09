@@ -176,7 +176,14 @@ def _load_report(path: str) -> VerificationReport:
 
 
 def report_from_dict(payload: dict) -> VerificationReport:
-    """Rebuild a report from the JSON produced by ``verify``."""
+    """Rebuild a report from the JSON produced by the ``verify`` command.
+
+    Args:
+        payload: A report mapping as written by ``verify``.
+
+    Returns:
+        The reconstructed report, with messages and counterexamples restored.
+    """
     from ..hypothesis.status import Status
     from .engine import FieldResult, MessageResult
 
@@ -368,6 +375,14 @@ def _counterexample(item: dict) -> Counterexample:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run the command line interface.
+
+    Args:
+        argv: Argument list; defaults to ``sys.argv[1:]`` via argparse.
+
+    Returns:
+        Process exit status: ``0`` on success, ``2`` on a handled error.
+    """
     parser = _build_parser()
     args = parser.parse_args(argv)
     try:
