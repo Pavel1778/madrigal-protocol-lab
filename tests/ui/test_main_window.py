@@ -281,6 +281,40 @@ def test_load_example_rule_populates_the_editor(app):
     window.close()
 
 
+def test_saved_result_matches_the_contract_schema(app, tmp_path, monkeypatch):
+    import json
+
+    from src.protocol.result import validate_result
+
+    window = open_window(app)
+    window.apply_rule()
+    destination = tmp_path / "result.json"
+    monkeypatch.setattr(
+        QtWidgets.QFileDialog,
+        "getSaveFileName",
+        staticmethod(lambda *a, **k: (str(destination), "JSON (*.json)")),
+    )
+    window.save_result_dialog()
+    payload = json.loads(destination.read_text())
+    # A shape the contract accepts, not a bespoke one.
+    validate_result(payload)
+    assert payload["contract_version"] == 1
+    assert payload["capture_id"] == window._capture.capture_id
+    assert "summary" in payload and "messages" in payload
+    window.close()
+
+
+def test_help_action_has_the_f1_shortcut(app):
+    window = open_window(app)
+    help_menu = next(
+        m for m in window.menuBar().findChildren(QtWidgets.QMenu) if "Help" in m.title()
+    )
+    quick = [a for a in help_menu.actions() if "help" in a.text().lower()]
+    assert quick
+    assert quick[0].shortcut().toString() == "F1"
+    window.close()
+
+
 def test_diff_bytes_marks_a_deletion_without_crashing():
     # The left message is longer; the shared tail sits at a different offset on
     # each side, which used to read past the end of the shorter message.

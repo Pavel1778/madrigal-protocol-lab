@@ -11,12 +11,12 @@ separate concern.
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from ..protocol.result import build_result, write_result
 from . import theme
 from .compare_view import CompareView
 from .hex_view import HexView, annotations_from_application, annotations_from_stream
@@ -53,25 +53,26 @@ class MainWindow(QtWidgets.QMainWindow):
     def _build_menu(self) -> None:
         bar = self.menuBar()
 
-        file_menu = bar.addMenu("File")
-        self._action(file_menu, "Open capture...", self.open_capture_dialog, "Ctrl+O")
-        self._action(file_menu, "Open rule...", self.open_rule_dialog, "Ctrl+R")
-        self._action(file_menu, "Save result...", self.save_result_dialog, "Ctrl+S")
+        file_menu = bar.addMenu("&File")
+        self._action(file_menu, "Open &normalized capture...", self.open_capture_dialog, "Ctrl+O")
+        self._action(file_menu, "Open &rule...", self.open_rule_dialog, "Ctrl+R")
+        self._action(file_menu, "&Save result...", self.save_result_dialog, "Ctrl+S")
         file_menu.addSeparator()
-        self._action(file_menu, "Quit", self.close, "Ctrl+Q")
+        self._action(file_menu, "&Quit", self.close, "Ctrl+Q")
 
-        rule_menu = bar.addMenu("Rule")
-        self._action(rule_menu, "Apply to current direction", self.apply_rule, "F5")
-        self._action(rule_menu, "Apply to whole capture", self.apply_to_capture, "F6")
-        self._action(rule_menu, "Compare versions", self.show_version_diff)
+        rule_menu = bar.addMenu("&Rule")
+        self._action(rule_menu, "&Apply to current direction", self.apply_rule, "F5")
+        self._action(rule_menu, "Apply to &whole capture", self.apply_to_capture, "F6")
+        self._action(rule_menu, "&Compare versions", self.show_version_diff)
 
-        report_menu = bar.addMenu("Report")
-        self._action(report_menu, "Show REPORT.md", self.show_report)
-        self._action(report_menu, "Export Markdown...", self.export_markdown)
-        self._action(report_menu, "Export HTML...", self.export_html)
+        report_menu = bar.addMenu("&Report")
+        self._action(report_menu, "Show &REPORT.md", self.show_report)
+        self._action(report_menu, "&Export Markdown...", self.export_markdown)
+        self._action(report_menu, "Export &HTML...", self.export_html)
 
-        help_menu = bar.addMenu("Help")
-        self._action(help_menu, "About", self.show_about)
+        help_menu = bar.addMenu("&Help")
+        self._action(help_menu, "&Quick help", self.show_help, "F1")
+        self._action(help_menu, "&About", self.show_about)
 
     def _action(self, menu, text, slot, shortcut: str | None = None) -> QtGui.QAction:
         action = QtGui.QAction(text, self)
@@ -414,7 +415,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self._notify(f"wrote {path}")
 
     def save_result_dialog(self) -> None:
-        """Prompt for a path and save the current rule application as JSON."""
+        """Prompt for a path and save the current rule application as JSON.
+
+        The file is the contract result, validated against
+        ``docs/schemas/result.schema.json`` before it is written, so a saved
+        result is interchangeable with one produced by the command line.
+        """
         if self._rule is None or self._rule.root is None:
             self._notify("apply a rule before saving a result")
             return
@@ -422,24 +428,35 @@ class MainWindow(QtWidgets.QMainWindow):
         if not path:
             return
         application = self._rule.root
-        payload = {
-            "rule_id": application.rule.rule_id,
-            "rule_version": application.rule.rule_version,
-            "session_id": application.session_id,
-            "direction": application.direction,
-            "counts": application.counts,
-            "messages": [
-                {
-                    "offset": m.offset,
-                    "length": m.length,
-                    "status": m.status.value,
-                    "bytes_hex": m.bytes_hex,
-                }
-                for m in application.messages
-            ],
-        }
-        Path(path).write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        capture_id = self._capture.capture_id if self._capture is not None else ""
+        result = build_result(application.rule, capture_id, application.messages)
+        try:
+            write_result(result, path)
+        except Exception as exc:  # noqa: BLE001 - report any write or schema failure
+            self.validation_view.set_rule_status(f"could not save result: {exc}", error=True)
+            self._notify("could not save the result")
+            return
         self._notify(f"wrote {path}")
+
+    def show_help(self) -> None:
+        """Show a short help card with the keys and the workflow order."""
+        QtWidgets.QMessageBox.information(
+            self,
+            "Quick help",
+            "Order of work\n"
+            "1. File - Open normalized capture (Ctrl+O).\n"
+            "2. Pick a session, then a direction.\n"
+            "3. Rule - Open rule (Ctrl+R), or Load example in the Rule tab.\n"
+            "4. F5 applies the rule to the current direction; F6 to the whole capture.\n"
+            "5. Read the Counterexamples tab; clicking a row jumps to the bytes.\n"
+            "\n"
+            "Keys\n"
+            "Ctrl+O open capture   Ctrl+R open rule   Ctrl+S save result\n"
+            "F5 apply direction    F6 apply capture   F1 this help\n"
+            "\n"
+            "The bytes are the source of truth. A rule is an interpretation; a\n"
+            "mismatch is a counterexample kept against it, not discarded.",
+        )
 
     def show_about(self) -> None:
         """Show the about dialog."""
