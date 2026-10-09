@@ -18,6 +18,46 @@ class FramingError(ValueError):
     """Raised when a framing strategy is malformed."""
 
 
+#: Values of ``length_covers`` for length-prefixed framing (Task semantics).
+#:
+#: * ``payload`` (default when the field is absent) — the length value counts
+#:   only the payload; the message is
+#:   ``length_offset + length_size + length_value`` bytes long. This is the
+#:   historical meaning of ``length_includes_payload=false``.
+#: * ``payload_and_length_field`` — the length value counts the payload plus
+#:   the bytes of the length field, but not the bytes of fields that precede
+#:   the length field; the message is
+#:   ``length_offset + length_value`` bytes long. This is the historical
+#:   meaning of ``length_includes_payload=true``.
+#: * ``entire_message`` — the length value counts the whole message; the
+#:   message is ``length_value`` bytes long.
+LENGTH_COVERS_PAYLOAD = "payload"
+LENGTH_COVERS_PAYLOAD_AND_FIELD = "payload_and_length_field"
+LENGTH_COVERS_ENTIRE = "entire_message"
+LENGTH_COVERS_VALUES = (
+    LENGTH_COVERS_PAYLOAD,
+    LENGTH_COVERS_PAYLOAD_AND_FIELD,
+    LENGTH_COVERS_ENTIRE,
+)
+LENGTH_COVERS_DEFAULT = LENGTH_COVERS_PAYLOAD
+
+
+def _normalise_length_covers(spec: dict) -> str:
+    covers = spec.get("length_covers")
+    if covers is not None:
+        covers = str(covers)
+        if covers not in LENGTH_COVERS_VALUES:
+            raise FramingError(f"unsupported length_covers {covers!r}")
+        return covers
+    # Backward compatibility with the old boolean. ``length_includes_payload``
+    # true meant the length value was the whole message (entire_message); false
+    # meant it counted only the payload (payload).
+    legacy = spec.get("length_includes_payload")
+    if legacy is None:
+        return LENGTH_COVERS_DEFAULT
+    return LENGTH_COVERS_ENTIRE if legacy else LENGTH_COVERS_PAYLOAD
+
+
 def _byte_order(name: str) -> str:
     if name in ("big", "be", "network", ">"):
         return "big"
@@ -53,13 +93,19 @@ class FramingStrategy:
 
     ``type`` is one of ``length_prefixed``, ``fixed_size``, ``marker_based`` or
     ``manual``. Only the parameters relevant to the chosen type are read.
+
+    For ``length_prefixed`` the meaning of the length value is fixed by
+    ``length_covers``; when the field is absent it defaults to ``payload``
+    (see the ``LENGTH_COVERS_*`` constants). The deprecated boolean
+    ``length_includes_payload`` is still accepted for backward compatibility:
+    ``true`` maps to ``entire_message`` and ``false`` maps to ``payload``.
     """
 
     type: str
     length_offset: int = 0
     length_size: int = 2
     byte_order: str = "big"
-    length_includes_payload: bool = True
+    length_covers: str = LENGTH_COVERS_DEFAULT
     size: int = 0
     start_bytes: bytes = b""
     end_bytes: bytes = b""
@@ -75,12 +121,13 @@ class FramingStrategy:
             raise FramingError(f"unsupported framing type {ftype!r}")
         start = spec.get("start_bytes", b"")
         end = spec.get("end_bytes", b"")
+        covers = _normalise_length_covers(spec)
         return cls(
             type=ftype,
             length_offset=int(spec.get("length_offset", 0)),
             length_size=int(spec.get("length_size", 2)),
             byte_order=str(spec.get("byte_order", "big")),
-            length_includes_payload=bool(spec.get("length_includes_payload", True)),
+            length_covers=covers,
             size=int(spec.get("size", 0)),
             start_bytes=_as_bytes(start),
             end_bytes=_as_bytes(end),
@@ -126,9 +173,13 @@ def _length_prefixed(data: bytes, strategy: FramingStrategy) -> list[Message]:
     order = _byte_order(strategy.byte_order)
     if strategy.length_size <= 0:
         raise FramingError("length_size must be positive")
+    if strategy.length_offset < 0:
+        raise FramingError("length_offset must be non-negative")
     header_end = strategy.length_offset + strategy.length_size
-    if header_end <= 0:
-        raise FramingError("length field must have a non-negative end offset")
+    covers = strategy.length_covers
+    if covers not in LENGTH_COVERS_VALUES:
+        raise FramingError(f"unsupported length_covers {covers!r}")
+    prefix = strategy.length_offset
     messages: list[Message] = []
     pos = 0
     total = len(data)
@@ -139,9 +190,16 @@ def _length_prefixed(data: bytes, strategy: FramingStrategy) -> list[Message]:
             )
             break
         declared = _read_int(data, pos + strategy.length_offset, strategy.length_size, order)
-        length = declared if strategy.length_includes_payload else declared + header_end
-        if length <= 0:
-            messages.append(Message(pos, 0, complete=False, reason="zero_length"))
+        if covers == LENGTH_COVERS_PAYLOAD:
+            length = prefix + strategy.length_size + declared
+        elif covers == LENGTH_COVERS_PAYLOAD_AND_FIELD:
+            length = prefix + declared
+        else:  # LENGTH_COVERS_ENTIRE
+            length = declared
+        if length < header_end:
+            # A length that cannot even hold its own header cannot be advanced
+            # over without risking a non-progressing loop.
+            messages.append(Message(pos, 0, complete=False, reason="length_too_small"))
             break
         end = pos + length
         if end > total:

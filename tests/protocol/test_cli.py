@@ -60,7 +60,7 @@ RULE = {
         "length_offset": 2,
         "length_size": 2,
         "byte_order": "big",
-        "length_includes_payload": True,
+        "length_covers": "entire_message",
     },
     "fields": [
         {"name": "command", "offset": 0, "type": "uint8", "expected": [4]},

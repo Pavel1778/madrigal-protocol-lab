@@ -36,7 +36,16 @@
         "length_offset": { "type": "integer", "minimum": 0 },
         "length_size": { "type": "integer", "minimum": 1 },
         "byte_order": { "type": "string", "enum": ["big", "little"] },
-        "length_includes_payload": { "type": "boolean" },
+        "length_covers": {
+          "type": "string",
+          "enum": ["payload", "payload_and_length_field", "entire_message"],
+          "description": "What the length value counts. payload: total = length_offset + length_size + value. payload_and_length_field: total = length_offset + value. entire_message: total = value. Default when absent: payload."
+        },
+        "length_includes_payload": {
+          "type": "boolean",
+          "deprecated": true,
+          "description": "Deprecated in favour of length_covers. true maps to entire_message, false maps to payload."
+        },
         "size": { "type": "integer", "minimum": 0 },
         "start_bytes": {},
         "end_bytes": {},
