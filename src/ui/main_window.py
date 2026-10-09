@@ -117,6 +117,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.report_view.setReadOnly(True)
         self.report_view.setFont(theme.mono_font(9))
         self.right_tabs.addTab(self.report_view, "Report")
+        self.diff_view = QtWidgets.QPlainTextEdit()
+        self.diff_view.setReadOnly(True)
+        self.diff_view.setFont(theme.mono_font(9))
+        self.right_tabs.addTab(self.diff_view, "Version diff")
         splitter.addWidget(self.right_tabs)
 
         splitter.setStretchFactor(0, 0)
@@ -174,7 +178,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.open_capture(path)
 
     def load_rule(self, path: str | Path) -> None:
+        previous_rule = self._rule.rule if self._rule is not None else None
+        previous_report = self._rule.corpus_report if self._rule is not None else None
         self._rule = RuleModel.from_file(path)
+        self._rule.previous_rule = previous_rule
+        self._rule.previous_report = previous_report
         self.validation_view.set_rule_text(self._rule.text)
         self.validation_view.set_rule_status(
             f"loaded {Path(path).name}  rule v{self._rule.rule.rule_version}"
@@ -249,8 +257,11 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         self._set_progress(20)
         report = verify_rule_on_corpus(self._rule.rule, self._capture)
-        self._corpus_report = report
         self._set_progress(100)
+        if self._rule.previous_report is not None and self._rule.previous_report.rule_id == report.rule_id:
+            self._show_report_diff(self._rule.previous_report, report)
+        self._rule.corpus_report = report
+        self._corpus_report = report
         counts = ", ".join(f"{k}={v}" for k, v in sorted(report.counts().items()))
         self.validation_view.set_rule_status(
             f"rule v{self._rule.rule.rule_version} over the capture: "
@@ -258,13 +269,23 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self._notify(f"verified rule over the whole capture: {counts}")
 
+    def _show_report_diff(self, report_a, report_b) -> None:
+        from ..hypothesis.diff import diff_reports, format_report_diff
+
+        diff = diff_reports(report_a, report_b)
+        self.diff_view.setPlainText(format_report_diff(diff))
+        self.right_tabs.setCurrentWidget(self.diff_view)
+
     def show_version_diff(self) -> None:
-        if self._rule is None or self._rule.previous is None:
+        report = self._rule.corpus_report if self._rule is not None else None
+        previous = self._rule.previous_report if self._rule is not None else None
+        if report is None or previous is None or previous.rule_id != report.rule_id:
             self._notify("no previous rule version to compare")
             return
+        self._show_report_diff(previous, report)
         self._notify(
-            f"rule v{self._rule.rule.rule_version} supersedes "
-            f"v{self._rule.previous.rule.rule_version}; the old run is marked outdated"
+            f"rule v{report.rule_version} supersedes v{previous.rule_version}; "
+            f"the old run is marked outdated"
         )
 
     # -- bytes -------------------------------------------------------------
