@@ -31,6 +31,14 @@ def test_identical_retransmission_adds_no_bytes(fixtures_dir: Path) -> None:
     assert stream.ambiguities() == []
     # The retransmitted payload is kept as an extra source, not as extra bytes.
     assert len(stream.provenance.ranges) >= 3
+    # The repeat is named as a retransmission, not left as an anonymous range.
+    repeats = stream.retransmissions()
+    assert repeats
+    assert all(r.is_retransmission for r in repeats)
+
+
+def test_clean_stream_has_no_retransmissions(fixtures_dir: Path) -> None:
+    assert _stream("normal.pcapng").retransmissions() == []
 
 
 def test_out_of_order_is_reordered_by_sequence(fixtures_dir: Path) -> None:
