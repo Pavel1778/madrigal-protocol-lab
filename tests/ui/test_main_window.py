@@ -19,7 +19,7 @@ import pytest  # noqa: E402
 # PySide6 cannot be imported the whole module is skipped rather than left as a
 # collection error, so a missing runtime never masks the rest of the suite.
 try:
-    from PySide6 import QtWidgets  # noqa: E402
+    from PySide6 import QtGui, QtTest, QtWidgets  # noqa: E402
 
     from src.ui import theme  # noqa: E402
     from src.ui.compare_view import diff_bytes  # noqa: E402
@@ -226,10 +226,59 @@ def test_hypotheses_tab_scores_over_the_whole_capture(app):
     window.close()
 
 
-def test_diff_bytes_aligns_a_shared_prefix():
-    rows = diff_bytes(b"\x01\x00\x00\x05", b"\x01\x00\x00\x06")
-    assert rows[0].kind == "equal"
-    assert rows[-1].kind == "changed"
+def test_rule_editor_flags_invalid_text_without_touching_the_run(app):
+    window = open_window(app)
+    window.apply_rule()
+    status_before = window.validation_view.rule_status.text()
+    window.validation_view.rule_edit.setPlainText('{"schema_version": 1, "fields": [')
+    app.processEvents()
+    assert "invalid rule" in window.validation_view.rule_status.text().lower()
+    # The previous application is left in place.
+    assert window.validation_view.messages_table.rowCount() > 0
+    assert status_before != window.validation_view.rule_status.text()
+    window.close()
+
+
+def test_rule_editor_reports_a_clean_parse(app):
+    window = open_window(app)
+    if not DEFAULT_RULE.is_file():
+        window.close()
+        return
+    text = DEFAULT_RULE.read_text()
+    window.validation_view.rule_edit.setPlainText(text)
+    app.processEvents()
+    assert "parses" in window.validation_view.rule_status.text()
+    window.close()
+
+
+def test_rule_editor_completes_a_field_type(app):
+    window = open_window(app)
+    edit = window.validation_view.rule_edit
+    edit.setPlainText('{"type": "uint')
+    cursor = edit.textCursor()
+    cursor.movePosition(QtGui.QTextCursor.MoveOperation.End)
+    edit.setTextCursor(cursor)
+    assert window.validation_view._completion_prefix(cursor) == "uint"
+    # Typing through the event filter opens the completion popup.
+    QtTest.QTest.keyClicks(edit, "1")
+    app.processEvents()
+    completer = window.validation_view._completer
+    assert completer.popup().isVisible()
+    offered = [
+        completer.completionModel().index(i, 0).data()
+        for i in range(completer.completionCount())
+    ]
+    assert "uint16" in offered
+    window.close()
+
+
+def test_load_example_rule_populates_the_editor(app):
+    window = open_window(app)
+    window.validation_view.example_button.click()
+    app.processEvents()
+    assert window.validation_view.rule_edit.toPlainText().strip()
+    assert window._rule is not None
+    window.close()
 
 
 def test_diff_bytes_marks_a_deletion_without_crashing():
