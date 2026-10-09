@@ -1,6 +1,7 @@
 """Capture engine: PCAP/PCAPNG reading, TCP sessions, reassembly, provenance."""
 
 from src.capture.export import capture_id_from_bytes, export_capture, sha256_file
+from src.capture.export_wireshark import export_reassembled_pcap
 from src.capture.parser import Diagnostic, Packet, read_capture
 from src.capture.pipeline import NormalizedCapture, normalize, normalize_bytes
 from src.capture.provenance import Provenance, Range
@@ -29,6 +30,7 @@ __all__ = [
     "build_sessions",
     "capture_id_from_bytes",
     "export_capture",
+    "export_reassembled_pcap",
     "normalize",
     "normalize_bytes",
     "process_streaming",
