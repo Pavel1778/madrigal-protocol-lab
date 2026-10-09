@@ -1,6 +1,6 @@
 # Defense: likely questions and grounded answers
 
-Twenty questions a reviewer is likely to ask, with the answer and the file,
+Twenty-eight questions a reviewer is likely to ask, with the answer and the file,
 command or figure that backs it. Nothing here is asserted without a source.
 
 ## 1. How do you keep an observation separate from a hypothesis?
@@ -84,9 +84,12 @@ diagnostic with both versions. A field over the ambiguity is `ambiguous`, not
 
 ## 11. Where does the rule stop?
 
-At `synthetic_live`. v2 matches nothing there and reports one `incomplete`
-message: the capture uses a command byte outside `{1, 2, 3}`. The rule says so
-rather than guessing. Evidence: `docs/CORPUS_ANALYSIS.md` section 7,
+At `synthetic_live`. v2 matches nothing there. The capture uses a little-endian
+length, so under the rule's big-endian length both streams are truncated: neither
+frames cleanly, and the scoped rule reports one `incomplete` message with the rest
+`not_applicable`. The rule fails on the length field before any command byte is
+judged, and it says so rather than guessing. Evidence:
+`docs/CORPUS_ANALYSIS.md` section 7,
 `tests/integration/test_reference_report.py::test_v2_fails_at_the_synthetic_boundary`.
 
 ## 12. Is "matched everywhere on the corpus" the same as proof?
@@ -105,7 +108,7 @@ The engine enumerates named candidates: `constant`, `counter`, `message_length`,
 `checksum_<algorithm>_<region>` and `journal_<key>`. A meaning outside the set
 will not be proposed. This is stated as a limitation on the deck and here.
 Evidence: `src/hypothesis/alternatives.py`,
-`presentation/slide_verification.md` slide 11.
+`presentation/slide_verification.md` slide 13.
 
 ## 14. How do you know the corpus rule is not overfit to one capture?
 
@@ -146,7 +149,7 @@ Evidence: `tests/integration/test_reference_report.py` (skip marker),
 It is constant (`0x00`) in every observed message, so no reading can be told
 apart from any other; the rule declares `expected: [0]` and nothing more. A
 meaning would be a guess with no evidence. Evidence: `docs/CORPUS_ANALYSIS.md`
-section 3, `presentation/slide_verification.md` slide 11.
+section 3, `presentation/slide_verification.md` slide 13.
 
 ## 20. What would you do next?
 
@@ -155,6 +158,83 @@ traffic to test the synthetic-corpus caveat; parse the `B_to_A` responses by
 field so the rule covers both directions; and drive a parameter across sessions
 to see whether the flags byte ever changes, which would let a second reading be
 distinguished. Evidence: `REPORT.md` section 12, deck limitations slide.
+
+## 21. Why not use Wireshark as the backend instead of dpkt?
+
+Wireshark is a program, not a library; using it would mean shelling out to
+`tshark`, so the tool would depend on an external binary and its version. dpkt
+reads both pcap and pcapng in pure Python with no external process, which keeps
+the project reproducible from `pip install` alone. The capture module is a thin
+layer over dpkt and is tested on both container formats. Evidence:
+`ARCHITECTURE.md` (dependency table), `src/capture/`.
+
+## 22. How do you know the rule is not overfit to the corpus?
+
+Overfitting is tested by transfer, not by the fit itself. Rule v2 was fitted on
+`corpus_capture_01` and then applied unchanged to `corpus_capture_02`, a separate
+record: 40 matched, 0 counterexamples. It was also applied to `synthetic_live`,
+where it matches nothing; a rule tuned to the corpus would have no reason to fail
+there, and the tool records that failure instead of hiding it. Evidence:
+`REPORT.md` sections 7-8,
+`tests/integration/test_reference_report.py::test_v2_transfers_to_the_second_capture_without_counterexamples`.
+
+## 23. The corpus is small; is that a problem?
+
+The corpus holds 185 journal transactions and 369 framed messages across three
+captures (280 in `corpus_capture_01`, 80 in `corpus_capture_02`, 9 in the defects
+capture). It is enough to show that the framing is exhaustive and that the command
+set is closed on the observed values, but not enough to prove a general grammar.
+The claim is kept to what the bytes support: the field is *confirmed in scope*,
+and the rule keeps `hypothesis: true` where the meaning is inferred. Evidence:
+`REPORT.md` section 3, section 12, `docs/CORPUS_ANALYSIS.md` section 8.
+
+## 24. How do you check the rule is not fitted to one file?
+
+Two ways. First, transfer: the same rule is run on a second capture it was never
+fitted to, and the counters are checked there. Second, the counterexamples: v1 is
+kept with its eighty contradictions, so the boundary of the rule is visible as
+data, not asserted. A rule that only worked on the file it was written against
+would show zero counterexamples on that file and a wall of them on the next, which
+is exactly what the boundary capture demonstrates. Evidence: `REPORT.md` sections
+5, 7, 8.
+
+## 25. Where are the researcher's observations stored?
+
+Observations and hypotheses live in the rule JSON and in the structured research
+report. Each field carries its offset, type and `hypothesis` flag, and every
+verdict carries the byte range and the packet it came from, so the reasoning is
+reconstructable from the documents alone. A separate `annotations.sqlite` table is
+not implemented; that is a deliberate choice in favour of a self-contained JSON
+format that moves with the project and adds no dependency. The task statement does
+not require a particular storage mechanism. Evidence: `docs/schemas/rule.schema.json`,
+`REPORT.md`, `src/hypothesis/corpus.py`.
+
+## 26. How would the check be reproduced a year later on another machine?
+
+Every number is produced from the shipped files by a command, and the environment
+is pinned: Python 3.12 or newer and the dependencies in `pyproject.toml`. The
+report states how each figure is generated, so it can be regenerated rather than
+trusted. If a corpus file is missing, the smoke tests skip and the CLI fails with a
+clear error instead of inventing a result. Evidence: `docs/PORTABILITY.md`,
+`docs/demo_cli.md`, `pyproject.toml`.
+
+## 27. How do you know `length_covers: payload` is the right semantics?
+
+It is not asserted; it is the only of three candidates that frames every clean
+stream with no leftover bytes and no truncated message. `payload_and_length_field`
+consumes the stream but leaves command bytes at impossible values, and
+`entire_message` stops after the first size. The decision is a measurement on the
+corpus, fixed in both rule versions as `"length_covers": "payload"`. Evidence:
+`docs/CORPUS_ANALYSIS.md` section 2, `REPORT.md` section 4.
+
+## 28. Why a GUI at all, if everything runs from the CLI?
+
+The CLI is the primary, scriptable path: apply, verify, diff, metrics, correlate
+and export all run without a window. The window exists for the part a terminal is
+bad at: seeing bytes, provenance and counterexamples together, and moving between a
+message, its packet and its verdict. Both paths call the same engine, so the window
+never computes a second answer. Evidence: `docs/demo.md` (window walkthrough),
+`docs/demo_cli.md` (the same investigation without the window), `src/ui/`.
 
 ## Where the numbers come from
 
