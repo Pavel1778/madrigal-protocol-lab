@@ -130,11 +130,26 @@ def run(
 ) -> Result:
     """Run the pipeline over ``pcap_path`` and return the measurements."""
 
+    import threading
+
     result = Result(environment=_environment())
     result.input_bytes = pcap_path.stat().st_size
 
     if use_tracemalloc:
         tracemalloc.start()
+
+    # Sample the live resident size: ``ru_maxrss`` survives ``exec``, so a
+    # process started from a heavier parent would inherit the parent's peak.
+    peak = 0.0
+    stop = threading.Event()
+
+    def sample() -> None:
+        nonlocal peak
+        while not stop.wait(0.02):
+            peak = max(peak, _sample_rss_mib())
+
+    sampler = threading.Thread(target=sample, daemon=True)
+    sampler.start()
 
     diagnostics: list = []
     started = time.perf_counter()
@@ -170,10 +185,12 @@ def run(
     result.export_seconds = time.perf_counter() - started
     result.output_bytes = out_path.stat().st_size
 
-    result.peak_rss_mib = _peak_rss_mib()
+    stop.set()
+    sampler.join(timeout=1.0)
+    result.peak_rss_mib = peak
     if use_tracemalloc:
-        _current, peak = tracemalloc.get_traced_memory()
-        result.tracemalloc_mib = peak / (1024 * 1024)
+        _current, peak_alloc = tracemalloc.get_traced_memory()
+        result.tracemalloc_mib = peak_alloc / (1024 * 1024)
         tracemalloc.stop()
 
     return result
@@ -375,6 +392,336 @@ def render_markdown(result: Result, profile: dict[str, int]) -> str:
     return "\n".join(lines)
 
 
+@dataclass
+class SizeRow:
+    """One row of the size sweep: regular and streaming at a given capture size."""
+
+    label: str
+    input_mib: float
+    packets: int
+    sessions: int
+    parse_seconds: float
+    sessions_seconds: float
+    reassembly_seconds: float
+    export_seconds: float
+    regular_seconds: float
+    regular_peak_mib: float
+    stream_seconds: float
+    stream_peak_mib: float
+    output_mib: float
+    diagnostics: int = 0
+
+    def to_dict(self) -> dict[str, float | int | str]:
+        return {
+            "label": self.label,
+            "input_mib": round(self.input_mib, 2),
+            "packets": self.packets,
+            "sessions": self.sessions,
+            "parse_s": round(self.parse_seconds, 2),
+            "sessions_s": round(self.sessions_seconds, 3),
+            "reassembly_s": round(self.reassembly_seconds, 2),
+            "export_s": round(self.export_seconds, 2),
+            "regular_s": round(self.regular_seconds, 2),
+            "regular_peak_mib": round(self.regular_peak_mib),
+            "stream_s": round(self.stream_seconds, 2),
+            "stream_peak_mib": round(self.stream_peak_mib),
+            "output_mib": round(self.output_mib, 2),
+            "diagnostics": self.diagnostics,
+        }
+
+
+def measure_regular_sampled(pcap_path: Path, work_dir: Path) -> dict[str, float]:
+    """Run the regular pipeline in this process, sampling RSS for the peak.
+
+    ``ru_maxrss`` is a high-water mark that never falls and is inherited across
+    a long-lived process, so a run in the same process as a larger one would
+    report the larger peak. Sampling the current resident size avoids that and
+    gives the real peak of this run.
+    """
+
+    import threading
+
+    peak = 0.0
+    stop = threading.Event()
+
+    def sample() -> None:
+        nonlocal peak
+        while not stop.wait(0.02):
+            peak = max(peak, _sample_rss_mib())
+
+    sampler = threading.Thread(target=sample, daemon=True)
+    sampler.start()
+
+    diagnostics: list = []
+    started = time.perf_counter()
+    packets = list(read_capture(pcap_path, diagnostics))
+    parse_seconds = time.perf_counter() - started
+
+    started = time.perf_counter()
+    sessions = build_sessions(packets)
+    sessions_seconds = time.perf_counter() - started
+
+    capture_id = sha256_file(pcap_path)
+    started = time.perf_counter()
+    capture = normalize_packets(
+        packets,
+        source_file=pcap_path,
+        capture_id=capture_id,
+        diagnostics=diagnostics,
+    )
+    reassembly_seconds = time.perf_counter() - started
+
+    out_path = work_dir / "size_regular.json"
+    started = time.perf_counter()
+    export_capture(
+        capture.sessions,
+        out_path,
+        source_file=pcap_path.name,
+        capture_id=capture_id,
+        streams=capture.streams,
+    )
+    export_seconds = time.perf_counter() - started
+
+    stop.set()
+    sampler.join(timeout=1.0)
+
+    return {
+        "input_bytes": float(pcap_path.stat().st_size),
+        "packets": float(len(packets)),
+        "sessions": float(len(sessions)),
+        "diagnostics": float(len(diagnostics)),
+        "parse_seconds": parse_seconds,
+        "sessions_seconds": sessions_seconds,
+        "reassembly_seconds": reassembly_seconds,
+        "export_seconds": export_seconds,
+        "regular_seconds": parse_seconds
+        + sessions_seconds
+        + reassembly_seconds
+        + export_seconds,
+        "regular_peak_mib": peak,
+        "output_bytes": float(out_path.stat().st_size),
+    }
+
+
+def measure_one_child(pcap_path: Path, work_dir: Path) -> dict[str, float]:
+    """Measure one capture in both modes, for a fresh process. Prints JSON."""
+
+    regular = measure_regular_sampled(pcap_path, work_dir)
+    stream = run_streaming_child(pcap_path, work_dir / "size_stream.json")
+    regular["stream_seconds"] = stream["seconds"]
+    regular["stream_peak_mib"] = stream["peak_mib"]
+    return regular
+
+
+def measure_tracemalloc_child(pcap_path: Path, work_dir: Path) -> dict[str, float]:
+    """Run the regular pipeline with tracemalloc on, in a fresh process."""
+
+    result = run(pcap_path, work_dir, use_tracemalloc=True)
+    return {
+        "input_bytes": float(result.input_bytes),
+        "packets": float(result.packets),
+        "peak_rss_mib": result.peak_rss_mib,
+        "tracemalloc_mib": float(result.tracemalloc_mib or 0.0),
+    }
+
+
+def run_size(pcap_path: Path, work_dir: Path, label: str) -> SizeRow:
+    """Measure one capture in both modes, in a child process.
+
+    A child process per size keeps the resident-memory measurement honest: no
+    earlier run's high-water mark can leak into this one.
+    """
+
+    import subprocess
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "scripts.run_benchmark",
+            "--mode",
+            "measure",
+            "--pcap",
+            str(pcap_path),
+            "--work-dir",
+            str(work_dir),
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    payload = json.loads(completed.stdout.strip().splitlines()[-1])
+    return SizeRow(
+        label=label,
+        input_mib=payload["input_bytes"] / (1024 * 1024),
+        packets=int(payload["packets"]),
+        sessions=int(payload["sessions"]),
+        parse_seconds=payload["parse_seconds"],
+        sessions_seconds=payload["sessions_seconds"],
+        reassembly_seconds=payload["reassembly_seconds"],
+        export_seconds=payload["export_seconds"],
+        regular_seconds=payload["regular_seconds"],
+        regular_peak_mib=payload["regular_peak_mib"],
+        stream_seconds=payload["stream_seconds"],
+        stream_peak_mib=payload["stream_peak_mib"],
+        output_mib=payload["output_bytes"] / (1024 * 1024),
+        diagnostics=int(payload["diagnostics"]),
+    )
+
+
+def run_matrix(
+    work_dir: Path,
+    sizes: list[int],
+    *,
+    max_response: int,
+    defects_pcap: Path | None,
+    tracemalloc_mib: int | None,
+) -> tuple[list[SizeRow], SizeRow | None, Result | None]:
+    """Run the size sweep, the defects capture, and the tracemalloc run.
+
+    Returns the sweep rows, the defects row (if measured), and the tracemalloc
+    result (if measured).
+    """
+
+    from scripts.generate_benchmark_pcap import build
+
+    work_dir.mkdir(parents=True, exist_ok=True)
+    rows: list[SizeRow] = []
+    for target in sizes:
+        pcap = work_dir / f"matrix-{target}.pcapng"
+        if not pcap.is_file():
+            data = build(target * 2500, max(1, target * 10), target, max_response)
+            pcap.write_bytes(data)
+        rows.append(run_size(pcap, work_dir, f"{target} MiB"))
+
+    defects_row: SizeRow | None = None
+    if defects_pcap is not None and defects_pcap.is_file():
+        defects_row = run_size(defects_pcap, work_dir, "defects")
+
+    tracemalloc_result: Result | None = None
+    if tracemalloc_mib is not None:
+        pcap = work_dir / f"matrix-{tracemalloc_mib}.pcapng"
+        if not pcap.is_file():
+            data = build(tracemalloc_mib * 2500, max(1, tracemalloc_mib * 10), tracemalloc_mib, max_response)
+            pcap.write_bytes(data)
+        import subprocess
+
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "scripts.run_benchmark",
+                "--mode",
+                "tracemalloc",
+                "--pcap",
+                str(pcap),
+                "--work-dir",
+                str(work_dir),
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        payload = json.loads(completed.stdout.strip().splitlines()[-1])
+        tracemalloc_result = Result(
+            packets=int(payload["packets"]),
+            input_bytes=int(payload["input_bytes"]),
+            peak_rss_mib=payload["peak_rss_mib"],
+            tracemalloc_mib=payload["tracemalloc_mib"],
+        )
+
+    return rows, defects_row, tracemalloc_result
+
+
+def render_matrix_markdown(rows: list[SizeRow]) -> str:
+    lines = [
+        "## Size sweep: regular vs streaming",
+        "",
+        "The same capture is normalized twice, regular then streaming, so the two",
+        "modes are compared on identical input. Each size is a distinct generated",
+        "capture with the same session and message shape; ``packets`` scales with",
+        "the size. Memory is the peak resident set of the process.",
+        "",
+        "| Input | Packets | Sessions | Regular s | Regular peak MiB | Streaming s | Streaming peak MiB | Output MiB |",
+        "| ----- | ------- | -------- | --------- | ---------------- | ----------- | ------------------ | ---------- |",
+    ]
+    for row in rows:
+        lines.append(
+            f"| {row.input_mib:.2f} MiB | {row.packets} | {row.sessions} | "
+            f"{row.regular_seconds:.2f} | {row.regular_peak_mib:.0f} | "
+            f"{row.stream_seconds:.2f} | {row.stream_peak_mib:.0f} | {row.output_mib:.2f} |"
+        )
+    lines.append("")
+    return "\n".join(lines)
+
+
+def render_phase_markdown(rows: list[SizeRow]) -> str:
+    lines = [
+        "## Phase breakdown by size",
+        "",
+        "Seconds per phase of the regular pipeline. Reassembly includes session",
+        "identification.",
+        "",
+        "| Input | Parse | Sessions | Reassembly | Export | Total |",
+        "| ----- | ----- | -------- | ---------- | ------ | ----- |",
+    ]
+    for row in rows:
+        lines.append(
+            f"| {row.input_mib:.2f} MiB | {row.parse_seconds:.2f} | "
+            f"{row.sessions_seconds:.3f} | {row.reassembly_seconds:.2f} | "
+            f"{row.export_seconds:.2f} | {row.regular_seconds:.2f} |"
+        )
+    lines.append("")
+    return "\n".join(lines)
+
+
+def render_defects_markdown(row: SizeRow | None) -> str:
+    if row is None:
+        return ""
+    return "\n".join(
+        [
+            "## Defects capture",
+            "",
+            "`tests/corpus/corpus_capture_defects.pcapng` is small but carries a",
+            "retransmission, an out-of-order segment, a gap, and a conflicting",
+            "overlap. It is measured to confirm the diagnostics do not degrade the",
+            "throughput at this size.",
+            "",
+            "| Metric | Regular | Streaming |",
+            "| ------ | ------- | --------- |",
+            f"| Input | {row.input_mib * 1024:.1f} KiB | same |",
+            f"| Packets | {row.packets} | {row.packets} |",
+            f"| Sessions | {row.sessions} | {row.sessions} |",
+            f"| Seconds | {row.regular_seconds:.3f} | {row.stream_seconds:.3f} |",
+            f"| Peak RSS (MiB) | {row.regular_peak_mib:.0f} | {row.stream_peak_mib:.0f} |",
+            "",
+        ]
+    )
+
+
+def render_tracemalloc_markdown(result: Result | None) -> str:
+    if result is None or result.tracemalloc_mib is None:
+        return ""
+    return "\n".join(
+        [
+            "## Python allocation (tracemalloc, 10 MiB)",
+            "",
+            "Peak memory tracked by ``tracemalloc`` during a regular run over the",
+            "10 MiB capture. This counts Python allocations only, not the memory",
+            "the interpreter or libraries hold outside the allocator, so it is",
+            "below the process RSS.",
+            "",
+            "| Metric | Value |",
+            "| ------ | ----- |",
+            f"| Input | {result.input_bytes / (1024 * 1024):.2f} MiB |",
+            f"| Packets | {result.packets} |",
+            f"| tracemalloc peak | {result.tracemalloc_mib:.0f} MiB |",
+            f"| Process RSS | {result.peak_rss_mib:.0f} MiB |",
+            "",
+        ]
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Benchmark the capture engine.")
     parser.add_argument(
@@ -395,9 +742,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-response", type=int, default=PROFILE_MAX_RESPONSE)
     parser.add_argument(
         "--mode",
-        choices=("full", "stream"),
+        choices=("full", "stream", "measure", "tracemalloc"),
         default="full",
-        help="full runs both modes; stream runs only streaming in this process",
+        help="full runs both modes; stream runs only streaming; measure runs "
+        "both modes for one capture and prints JSON",
     )
     parser.add_argument(
         "--out",
@@ -416,12 +764,44 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="write the result as Markdown to this path",
     )
+    parser.add_argument(
+        "--matrix",
+        action="store_true",
+        help="also run the size sweep, the defects capture, and tracemalloc",
+    )
+    parser.add_argument(
+        "--sizes",
+        default="10,50,95",
+        help="comma-separated capture sizes in MiB for the sweep",
+    )
+    parser.add_argument(
+        "--defects-pcap",
+        type=Path,
+        default=Path("tests") / "corpus" / "corpus_capture_defects.pcapng",
+        help="small defects capture to measure",
+    )
+    parser.add_argument(
+        "--tracemalloc-mib",
+        type=int,
+        default=10,
+        help="size in MiB for the tracemalloc run (0 to skip)",
+    )
     args = parser.parse_args(argv)
 
     if args.mode == "stream":
         if args.out is None:
             parser.error("--mode stream requires --out")
         payload = run_streaming_child(args.pcap, args.out)
+        print(json.dumps(payload))
+        return 0
+
+    if args.mode == "measure":
+        payload = measure_one_child(args.pcap, args.work_dir)
+        print(json.dumps(payload))
+        return 0
+
+    if args.mode == "tracemalloc":
+        payload = measure_tracemalloc_child(args.pcap, args.work_dir)
         print(json.dumps(payload))
         return 0
 
@@ -464,9 +844,34 @@ def main(argv: list[str] | None = None) -> int:
         "stream_output_mib": round((result.stream_output_bytes or 0) / (1024 * 1024), 2),
     }))
 
+    sweep_md = ""
+    if args.matrix:
+        sizes = [int(part) for part in args.sizes.split(",") if part.strip()]
+        rows, defects_row, trace_result = run_matrix(
+            args.work_dir,
+            sizes,
+            max_response=args.max_response,
+            defects_pcap=args.defects_pcap,
+            tracemalloc_mib=args.tracemalloc_mib or None,
+        )
+        sweep_md = "\n".join(
+            part
+            for part in (
+                render_matrix_markdown(rows),
+                render_phase_markdown(rows),
+                render_defects_markdown(defects_row),
+                render_tracemalloc_markdown(trace_result),
+            )
+            if part
+        )
+        print(json.dumps({"sweep": [row.to_dict() for row in rows]}))
+
     if args.write_md is not None:
         args.write_md.parent.mkdir(parents=True, exist_ok=True)
-        args.write_md.write_text(render_markdown(result, profile), encoding="utf-8")
+        document = render_markdown(result, profile)
+        if sweep_md:
+            document = document.rstrip("\n") + "\n\n" + sweep_md + "\n"
+        args.write_md.write_text(document, encoding="utf-8")
         print(f"wrote {args.write_md}")
     return 0
 
