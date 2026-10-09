@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from ..protocol.stream import DirectionalStream
 from . import theme
 from .model import (
     AMBIGUITY,
@@ -26,6 +27,7 @@ from .model import (
     NOT_APPLICABLE,
     UNCOVERED,
     ByteAnnotation,
+    RuleApplication,
 )
 
 _BYTES_PER_LINE = 16
@@ -85,16 +87,19 @@ class HexView(QtWidgets.QPlainTextEdit):
     # -- data --------------------------------------------------------------
 
     def set_stream(self, data: bytes, annotations: list[ByteAnnotation] | None = None) -> None:
+        """Render *data*, applying optional per-byte *annotations*."""
         self._data = bytes(data)
         self._annotations = list(annotations or [])
         self.setPlainText(self._render_text())
         self._apply_annotations()
 
     def set_annotations(self, annotations: list[ByteAnnotation] | None) -> None:
+        """Replace the annotations without re-rendering the bytes."""
         self._annotations = list(annotations or [])
         self._apply_annotations()
 
     def clear_stream(self) -> None:
+        """Drop the bytes and annotations."""
         self._data = b""
         self._annotations = []
         self.setPlainText("")
@@ -102,6 +107,7 @@ class HexView(QtWidgets.QPlainTextEdit):
 
     @property
     def data(self) -> bytes:
+        """The bytes currently shown."""
         return self._data
 
     def _render_text(self) -> str:
@@ -129,6 +135,7 @@ class HexView(QtWidgets.QPlainTextEdit):
         run_hex: tuple[str, str] | None = None
 
         def flush(end: int) -> None:
+            """Emit one extra selection per line span of the current run."""
             if run_kind is None or run_hex is None or end <= run_start:
                 return
             background, foreground = run_hex
@@ -162,6 +169,7 @@ class HexView(QtWidgets.QPlainTextEdit):
     # -- interaction -------------------------------------------------------
 
     def byte_at(self, position: QtCore.QPoint) -> int | None:
+        """Byte offset under *position*, or ``None`` when outside the bytes."""
         cursor = self.cursorForPosition(position)
         block = cursor.block()
         line_index = block.blockNumber()
@@ -180,18 +188,21 @@ class HexView(QtWidgets.QPlainTextEdit):
         return None
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+        """Emit :attr:`byteClicked` for the byte under the cursor."""
         offset = self.byte_at(event.position().toPoint())
         if offset is not None:
             self.byteClicked.emit(offset)
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+        """Emit :attr:`byteHovered` for the byte under the cursor."""
         offset = self.byte_at(event.position().toPoint())
         if offset is not None:
             self.byteHovered.emit(offset)
         super().mouseMoveEvent(event)
 
     def scroll_to_byte(self, offset: int) -> None:
+        """Centre the view on ``offset``; a no-op when out of range."""
         if not (0 <= offset < max(1, len(self._data))):
             return
         cursor = self.textCursor()
@@ -217,8 +228,16 @@ def _line_spans(start: int, end: int) -> list[tuple[int, int]]:
     return spans
 
 
-def annotations_from_stream(stream) -> list[ByteAnnotation]:
-    """One annotation per byte derived from a stream's diagnostics."""
+def annotations_from_stream(stream: DirectionalStream) -> list[ByteAnnotation]:
+    """One annotation per byte derived from a stream's diagnostics.
+
+    Args:
+        stream: The directional stream to annotate.
+
+    Returns:
+        One annotation per byte; diagnostics become ``gap``/``ambiguity`` and
+        every other byte ``not_applicable``.
+    """
     annotations = [ByteAnnotation(kind=NOT_APPLICABLE) for _ in range(len(stream.data))]
     for hole in stream.diagnostics:
         kind = GAP if hole.type == "gap" else AMBIGUITY if hole.type == "ambiguity" else UNCOVERED
@@ -227,12 +246,21 @@ def annotations_from_stream(stream) -> list[ByteAnnotation]:
     return annotations
 
 
-def annotations_from_application(application, stream) -> list[ByteAnnotation]:
+def annotations_from_application(
+    application: RuleApplication, stream: DirectionalStream
+) -> list[ByteAnnotation]:
     """Annotate every byte with the rule verdict that covers it.
 
     A byte covered by no field is left ``uncovered``. A byte inside a gap or an
     ambiguity keeps that diagnostic, because missing bytes are not a field
     verdict.
+
+    Args:
+        application: The rule application whose field verdicts are applied.
+        stream: The directional stream the application was run on.
+
+    Returns:
+        One annotation per byte, starting from the stream diagnostics.
     """
     annotations = annotations_from_stream(stream)
     for message in application.messages:

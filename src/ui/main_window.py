@@ -20,6 +20,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from . import theme
 from .compare_view import CompareView
 from .hex_view import HexView, annotations_from_application, annotations_from_stream
+from .hypotheses_view import HypothesesView
 from .model import CaptureModel, RuleModel, verify_rule_on_corpus
 from .session_tree import SessionTree
 from .validation_view import ValidationView
@@ -113,6 +114,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.right_tabs.addTab(self.validation_view, "Interpretation")
         self.compare_view = CompareView()
         self.right_tabs.addTab(self.compare_view, "Compare")
+        self.hypotheses_view = HypothesesView()
+        self.right_tabs.addTab(self.hypotheses_view, "Hypotheses")
         self.report_view = QtWidgets.QPlainTextEdit()
         self.report_view.setReadOnly(True)
         self.report_view.setFont(theme.mono_font(9))
@@ -153,10 +156,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.hex_view.byteClicked.connect(self._on_byte_clicked)
         self.validation_view.applyRequested.connect(self.apply_rule)
         self.validation_view.counterexampleSelected.connect(self.reveal_offset)
+        self.hypotheses_view.messageSelected.connect(self.reveal_offset)
 
     # -- loading -----------------------------------------------------------
 
     def open_capture(self, path: str | Path) -> None:
+        """Load a normalized capture and select its first direction."""
         model = CaptureModel.from_file(path)
         self._capture = model
         self.session_tree.load(model)
@@ -171,6 +176,7 @@ class MainWindow(QtWidgets.QMainWindow):
             )
 
     def open_capture_dialog(self) -> None:
+        """Prompt for a normalized capture file and open it."""
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open normalized capture", str(REPO_ROOT), "JSON (*.json)"
         )
@@ -178,6 +184,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.open_capture(path)
 
     def load_rule(self, path: str | Path) -> None:
+        """Load a rule file, keeping the previous rule and report for diffing."""
         previous_rule = self._rule.rule if self._rule is not None else None
         previous_report = self._rule.corpus_report if self._rule is not None else None
         self._rule = RuleModel.from_file(path)
@@ -189,6 +196,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
     def open_rule_dialog(self) -> None:
+        """Prompt for a rule file and load it."""
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open rule", str(REPO_ROOT / "examples"), "Rules (*.json *.yaml *.yml)"
         )
@@ -225,6 +233,7 @@ class MainWindow(QtWidgets.QMainWindow):
     # -- rule --------------------------------------------------------------
 
     def apply_rule(self) -> None:
+        """Adopt the edited rule and apply it to the current direction."""
         if self._capture is None or self._rule is None:
             self._notify("open a capture and a rule first")
             return
@@ -236,6 +245,7 @@ class MainWindow(QtWidgets.QMainWindow):
         application = self._rule.apply(self._capture, self._session_id, self._direction)
         self.validation_view.show_application(application)
         self.compare_view.show_application(application)
+        self._show_hypotheses(self._rule.rule, application.messages)
         stream = self._capture.stream(self._session_id, self._direction)
         self.hex_view.set_annotations(annotations_from_application(application, stream))
         counts = ", ".join(f"{k}={v}" for k, v in sorted(application.counts.items()))
@@ -246,7 +256,35 @@ class MainWindow(QtWidgets.QMainWindow):
             f"applied rule v{application.rule.rule_version} to {self._session_id} {self._direction}"
         )
 
+    def _show_hypotheses(self, rule, messages) -> None:
+        """Fill the hypotheses tab with the alternative readings for the run."""
+        from ..hypothesis.alternatives import suggest_alternatives
+
+        report = suggest_alternatives(rule, messages)
+        self.hypotheses_view.show_fields(report.fields)
+
+    def _corpus_messages(self, directions: tuple[str, ...]) -> list:
+        """Decode every scoped stream of the capture into one message list.
+
+        The hypotheses panel is read against the whole corpus, not one direction,
+        so the candidate scores are computed from every message the rule applies
+        to rather than from a single session.
+        """
+        from ..protocol.engine import apply_rule
+
+        messages: list = []
+        for session in self._capture.sessions:
+            for direction in self._capture.directions(session.session_id):
+                if directions and direction not in directions:
+                    continue
+                stream = self._capture.stream(session.session_id, direction)
+                messages.extend(
+                    apply_rule(stream, self._rule.rule, session.session_id, direction)
+                )
+        return messages
+
     def apply_to_capture(self) -> None:
+        """Verify the current rule over every direction of the capture."""
         if self._capture is None or self._rule is None:
             self._notify("open a capture and a rule first")
             return
@@ -262,6 +300,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self._show_report_diff(self._rule.previous_report, report)
         self._rule.corpus_report = report
         self._corpus_report = report
+        directions = (self._rule.rule.direction,) if self._rule.rule.direction else ()
+        self._show_hypotheses(self._rule.rule, self._corpus_messages(directions))
         counts = ", ".join(f"{k}={v}" for k, v in sorted(report.counts().items()))
         self.validation_view.set_rule_status(
             f"rule v{self._rule.rule.rule_version} over the capture: "
@@ -277,6 +317,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.right_tabs.setCurrentWidget(self.diff_view)
 
     def show_version_diff(self) -> None:
+        """Show how the current rule version changed the corpus report."""
         report = self._rule.corpus_report if self._rule is not None else None
         previous = self._rule.previous_report if self._rule is not None else None
         if report is None or previous is None or previous.rule_id != report.rule_id:
@@ -291,6 +332,7 @@ class MainWindow(QtWidgets.QMainWindow):
     # -- bytes -------------------------------------------------------------
 
     def reveal_offset(self, offset: int) -> None:
+        """Scroll the hex view to ``offset`` and show its provenance."""
         self.hex_view.scroll_to_byte(offset)
         self._show_provenance(offset)
 
@@ -319,14 +361,17 @@ class MainWindow(QtWidgets.QMainWindow):
     # -- report ------------------------------------------------------------
 
     def show_report(self) -> None:
+        """Show the default report file in the right-hand tab, if present."""
         if DEFAULT_REPORT.is_file():
             self.report_view.setPlainText(DEFAULT_REPORT.read_text(encoding="utf-8"))
             self.right_tabs.setCurrentWidget(self.report_view)
 
     def export_markdown(self) -> None:
+        """Export the report as Markdown."""
         self._export(DEFAULT_REPORT, "Markdown (*.md)")
 
     def export_html(self) -> None:
+        """Export the report as HTML."""
         self._export(DEFAULT_REPORT, "HTML (*.html)", html=True)
 
     def _export(self, source: Path, file_filter: str, html: bool = False) -> None:
@@ -343,6 +388,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._notify(f"wrote {path}")
 
     def save_result_dialog(self) -> None:
+        """Prompt for a path and save the current rule application as JSON."""
         if self._rule is None or self._rule.root is None:
             self._notify("apply a rule before saving a result")
             return
@@ -370,6 +416,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._notify(f"wrote {path}")
 
     def show_about(self) -> None:
+        """Show the about dialog."""
         QtWidgets.QMessageBox.information(
             self,
             "About",
@@ -455,6 +502,7 @@ def open_default_window(
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Launch the Qt application, opening an optional capture and rule."""
     import argparse
 
     parser = argparse.ArgumentParser(

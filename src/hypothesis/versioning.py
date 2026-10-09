@@ -17,7 +17,15 @@ from .corpus import VerificationReport
 
 @dataclass
 class StoredResult:
-    """A result kept on disk, tagged with the rule version that produced it."""
+    """A result kept on disk, tagged with the rule version that produced it.
+
+    Attributes:
+        rule_id: Identity of the rule that produced the result.
+        rule_version: Version of that rule.
+        capture_id: Identity of the capture the rule ran on.
+        payload: The stored result mapping.
+        status: ``"current"`` or ``"outdated"``.
+    """
 
     rule_id: str
     rule_version: int
@@ -26,6 +34,7 @@ class StoredResult:
     status: str = "current"
 
     def to_dict(self) -> dict:
+        """Return the stored result as a JSON-ready mapping."""
         return {
             "rule_id": self.rule_id,
             "rule_version": self.rule_version,
@@ -37,6 +46,18 @@ class StoredResult:
 
 @dataclass
 class VersionComparison:
+    """A side-by-side comparison of two rule versions on the same corpus.
+
+    Attributes:
+        rule_id: Identity shared by both versions.
+        base_version: Version compared from.
+        new_version: Version compared to.
+        base_counts: Status counts of the base report.
+        new_counts: Status counts of the new report.
+        introduced: Counterexamples new in ``new_version``.
+        resolved: Counterexamples fixed since ``base_version``.
+    """
+
     rule_id: str
     base_version: int
     new_version: int
@@ -46,6 +67,7 @@ class VersionComparison:
     resolved: list = field(default_factory=list)
 
     def to_dict(self) -> dict:
+        """Return the comparison as a JSON-ready mapping."""
         return {
             "rule_id": self.rule_id,
             "base_version": self.base_version,
@@ -64,6 +86,16 @@ class ResultStore:
         self._results: list[StoredResult] = []
 
     def add(self, rule: Rule, capture_id: str, payload: dict) -> StoredResult:
+        """Store a result, tagged with ``rule``'s identity and version.
+
+        Args:
+            rule: The rule that produced ``payload``.
+            capture_id: Identity of the capture the rule ran on.
+            payload: The result mapping.
+
+        Returns:
+            The stored record.
+        """
         stored = StoredResult(
             rule_id=rule.rule_id,
             rule_version=rule.rule_version,
@@ -74,6 +106,7 @@ class ResultStore:
         return stored
 
     def results_for(self, rule_id: str, capture_id: str | None = None) -> list[StoredResult]:
+        """Stored results for ``rule_id``, optionally filtered by capture."""
         return [
             r
             for r in self._results
@@ -91,9 +124,18 @@ class ResultStore:
         return touched
 
     def to_list(self) -> list[dict]:
+        """Every stored result as a JSON-ready mapping."""
         return [r.to_dict() for r in self._results]
 
     def save(self, path: str) -> None:
+        """Write the whole store to ``path`` as JSON.
+
+        Args:
+            path: Destination file path.
+
+        Raises:
+            OSError: If the file cannot be written.
+        """
         with open(path, "w", encoding="utf-8") as handle:
             json.dump(self.to_list(), handle, ensure_ascii=False, indent=2)
             handle.write("\n")
@@ -112,7 +154,15 @@ def _retag_payload(stored: StoredResult) -> None:
 
 
 def compare_reports(base: VerificationReport, new: VerificationReport) -> VersionComparison:
-    """Compare two verification reports for the same rule id."""
+    """Compare two verification reports for the same rule id.
+
+    Args:
+        base: The report of the earlier rule version.
+        new: The report of the later rule version.
+
+    Returns:
+        The comparison, listing introduced and resolved counterexamples.
+    """
     base_keys = {(c.session_id, c.direction, c.message_offset, c.status.value) for c in base.contradictions}
     new_keys = {(c.session_id, c.direction, c.message_offset, c.status.value) for c in new.contradictions}
     introduced = [c.to_dict() for c in new.contradictions if (c.session_id, c.direction, c.message_offset, c.status.value) not in base_keys]

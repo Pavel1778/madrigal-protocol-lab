@@ -82,8 +82,12 @@ GUI works with `apply_rule` / `apply_rule_fields`, `build_result`,
   `.is_confirmed()`, `.to_dict()`. `is_confirmed()` is true only when the rule
   reached at least one applicable message and nothing contradicted it; a report
   that is applicable nowhere is not a confirmation.
+  `src.protocol.cli.report_from_dict(payload) -> VerificationReport` rebuilds a
+  report from a stored `verify` JSON document, so `diff`, `metrics` and
+  `alternatives` can read a report without re-running the rule.
 - `src.hypothesis.diff.diff_rules(rule_a, rule_b) -> RuleDiff` — added, removed
-  and changed fields, framing and scope changes. `.to_dict()`;
+  and changed fields, framing and scope changes. Each field-level entry is a
+  `FieldChange` (`name`, `kind`, `before`, `after`). `.to_dict()`;
   `format_rule_diff(diff) -> str`.
 - `src.hypothesis.diff.diff_reports(report_a, report_b) -> ReportDiff` —
   `resolved_counterexamples, introduced_counterexamples, unchanged_mismatches,
@@ -96,7 +100,16 @@ GUI works with `apply_rule` / `apply_rule_fields`, `build_result`,
   CorrelationReport` — see the journal section below.
 - `src.hypothesis.alternatives.suggest_alternatives(rule, messages,
   correlations=None) -> AlternativesReport`, `analyze_field(rule, messages,
-  field_name, correlations=None)` — see the alternatives section below.
+  field_name, correlations=None) -> FieldAlternatives` — see the alternatives
+  section below.
+- `src.hypothesis.alternatives.entropy(field_values) -> float`,
+  `periodicity(field_values) -> int | None`,
+  `bit_pattern(field_values, bit_count=4) -> dict`,
+  `delta_correlation(field_values) -> dict` — value-shape readings; see the
+  alternatives section below.
+- `src.hypothesis.narrative.render_hypothesis_narrative(investigation) -> str` —
+  write the hypotheses of an investigation dictionary (the shape in
+  `src/report/model.py`) as Markdown, filled from the figures already present.
 - `src.hypothesis.versioning.ResultStore` — `.add(rule, capture_id, payload) ->
   StoredResult`, `.results_for(rule_id, capture_id=None)`,
   `.mark_outdated(rule, capture_id=None) -> list[StoredResult]`,
@@ -121,6 +134,19 @@ python -m src.protocol.cli alternatives --report r1.json --corpus capture.json -
 
 Each command prints a human-readable summary to stderr and the machine-readable
 document to stdout, or to `--out` when given.
+
+### Errors
+
+Parsing and loading raise a typed `ValueError` subclass, so a caller can
+distinguish a bad input from an internal fault:
+
+- `src.protocol.rule.RuleError` — `parse_rule` / `load_rule` on a malformed rule.
+- `src.protocol.framing.FramingError` — `FramingStrategy.from_dict` on a bad
+  framing block, or framing a stream that cannot satisfy it.
+- `src.protocol.stream.CaptureError` — `load_capture` / `capture_from_dict` on a
+  capture that is not in the contract format.
+- `src.hypothesis.journal.JournalError` — `load_journal` / `parse_journal` on a
+  journal that cannot be read.
 
 ## 2. Rule format
 
@@ -179,6 +205,9 @@ Checked rather than extracted (the message span is still reserved):
   covers given by `start` and `end` (offsets relative to the message start;
   `end` defaults to the message length). The stored value is compared with the
   computed one; a difference is `mismatched`.
+  `src.protocol.checksums.width_for(algorithm) -> int` returns that default
+  width, and the helper itself is public so a caller can size a field without
+  duplicating the table.
   ```json
   { "name": "crc", "offset": 6, "type": "checksum", "algorithm": "crc16",
     "length": 2, "start": 0, "end": 6 }
@@ -489,7 +518,7 @@ either `<timestamp> | <action> | key=value | ...` or the positional
 whether the third field contains `=` (the positional form stores `parameter`
 and `result` as keys). The timestamp is epoch seconds or ISO-8601; `#` starts a
 comment, a line that does not start with a digit is prose, and blank lines are
-ignored.
+ignored. `parse_timestamp(text) -> float` is the parser behind that rule.
 
 ```
 100.02 | set_temperature | value=21
@@ -541,6 +570,28 @@ Each `Alternative` carries `support`, `contradict`,
 `suggest_alternatives` runs it over every field marked `hypothesis: true`. The
 declared meaning is one candidate among them and may lose; the output is the
 evidence, not a verdict.
+
+Four further readings summarize how a numeric field *varies* rather than what it
+*means*; they use only the standard library and take only the field's values.
+Each is also offered as a candidate when its condition holds:
+
+- `entropy(field_values) -> float` — Shannon entropy in bits per value. More
+  than 6 bits suggests a nonce, hash or random field; 3 to 6 bits a value that
+  changes (counter or measurement); fewer than 2 bits an enum or flags. The
+  candidate names are `entropy_random`, `entropy_parameter`, `entropy_enum`.
+- `periodicity(field_values) -> int | None` — the smallest lag at which the
+  autocorrelation is a clear local peak, or `None`. A monotone ramp or a plain
+  counter returns `None`, because they correlate at every short lag. The
+  candidate name is `periodicity`.
+- `bit_pattern(field_values, bit_count=4) -> dict` — how stable the high-order
+  bits are (`bit_count` in `(2, 4, 6)`): `verdict` is `flags_high` above 90
+  percent stable, `contradict` at or below 50 percent, else `inconclusive`. The
+  candidate names are `bit_pattern_2`, `bit_pattern_4`, `bit_pattern_6`.
+- `delta_correlation(field_values) -> dict` — the coefficient of variation of
+  the first differences: `delta` below 0.1 (a fixed step or delta encoding),
+  `contradict` above 0.5. The candidate name is `delta_correlation`.
+
+Non-numeric values are out of scope for all four and are ignored.
 
 ```
 python -m src.protocol.cli alternatives --rule rule.json --report report.json \
