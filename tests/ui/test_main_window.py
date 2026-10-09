@@ -328,9 +328,26 @@ def test_corpus_counterexample_click_switches_direction(app):
     window.validation_view.counter_list.setCurrentRow(0)
     app.processEvents()
     item = window.validation_view.counter_list.item(0)
-    session_id, direction, offset = item.data(0x0100)  # UserRole
+    session_id, direction, offset, length = item.data(0x0100)  # UserRole
     # The reveal switched the window to the counterexample's own direction.
     assert window._session_id == session_id
     assert window._direction == direction
     assert f"offset {offset}" in window._provenance_label.text()
+    # The whole message is highlighted, not just the first byte.
+    selection = window.hex_view.textCursor()
+    assert selection.hasSelection()
+    assert length > 1
     window.close()
+
+
+def test_highlight_range_selects_the_whole_message(app):
+    view = HexView()
+    view.set_stream(bytes(range(64)))
+    view.highlight_range(20, 7)
+    cursor = view.textCursor()
+    assert cursor.hasSelection()
+    selected = cursor.selectedText().replace("\u2029", "")
+    # 7 bytes, three characters each ("xx ").
+    assert selected.count(" ") == 6
+    view.highlight_range(1000, 4)  # clamped, must not raise
+    assert view.textCursor().hasSelection()

@@ -276,6 +276,27 @@ class HexView(QtWidgets.QPlainTextEdit):
         self.setTextCursor(cursor)
         self.centerCursor()
 
+    def highlight_range(self, offset: int, length: int = 1) -> None:
+        """Select ``length`` bytes from ``offset`` and centre them.
+
+        The selection marks the whole message a counterexample belongs to, so
+        the bytes at fault are visible as a block, not as a single byte. The
+        cursor and the selection end are clamped to the document, so a range
+        that runs past the last byte still leaves a valid selection.
+        """
+        if not self._data or length <= 0:
+            return
+        start = max(0, min(offset, len(self._data) - 1))
+        stop = max(start + 1, min(offset + length, len(self._data)))
+        last = self.document().characterCount() - 1
+        cursor = self.textCursor()
+        cursor.setPosition(min(_byte_char_index(start), last))
+        cursor.setPosition(
+            min(_byte_char_index(stop - 1) + 2, last), QtGui.QTextCursor.MoveMode.KeepAnchor
+        )
+        self.setTextCursor(cursor)
+        self.centerCursor()
+
 
 def _byte_char_index(offset: int) -> int:
     line = offset // _BYTES_PER_LINE

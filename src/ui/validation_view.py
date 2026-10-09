@@ -46,7 +46,7 @@ class ValidationView(QtWidgets.QWidget):
     """Rule editor, message table and counterexample list."""
 
     applyRequested = QtCore.Signal()
-    counterexampleSelected = QtCore.Signal(str, str, int)  # session_id, direction, offset
+    counterexampleSelected = QtCore.Signal(str, str, int, int)  # session, direction, offset, length
     ruleLoaded = QtCore.Signal(str)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
@@ -156,7 +156,7 @@ class ValidationView(QtWidgets.QWidget):
             item.setForeground(QtGui.QColor(theme.MISMATCHED_TEXT))
             item.setData(
                 QtCore.Qt.ItemDataRole.UserRole,
-                (application.session_id, application.direction, message.offset),
+                (application.session_id, application.direction, message.offset, message.length),
             )
             item.setToolTip(_provenance_tooltip(message))
             self.counter_list.addItem(item)
@@ -192,18 +192,24 @@ class ValidationView(QtWidgets.QWidget):
         rows = self.messages_table.selectionModel().selectedRows()
         if not rows:
             return
-        item = self.messages_table.item(rows[0].row(), 0)
+        row = rows[0].row()
+        item = self.messages_table.item(row, 0)
         if item is not None:
+            length = int(self.messages_table.item(row, 1).text())
             self.counterexampleSelected.emit(
-                self._session_id, self._direction, int(item.data(QtCore.Qt.ItemDataRole.UserRole))
+                self._session_id,
+                self._direction,
+                int(item.data(QtCore.Qt.ItemDataRole.UserRole)),
+                length,
             )
 
     def _on_counter_selected(self) -> None:
         items = self.counter_list.selectedItems()
         if items:
-            item = items[0]
-            session_id, direction, offset = item.data(QtCore.Qt.ItemDataRole.UserRole)
-            self.counterexampleSelected.emit(session_id, direction, offset)
+            session_id, direction, offset, length = items[0].data(
+                QtCore.Qt.ItemDataRole.UserRole
+            )
+            self.counterexampleSelected.emit(session_id, direction, offset, length)
 
     def show_corpus_report(self, report) -> None:
         """Fill the counterexample list from a whole-capture report.
@@ -224,7 +230,7 @@ class ValidationView(QtWidgets.QWidget):
             item.setForeground(QtGui.QColor(theme.MISMATCHED_TEXT))
             item.setData(
                 QtCore.Qt.ItemDataRole.UserRole,
-                (counter.session_id, counter.direction, counter.message_offset),
+                (counter.session_id, counter.direction, counter.message_offset, counter.message_length),
             )
             item.setToolTip(_counter_provenance_tooltip(counter))
             self.counter_list.addItem(item)

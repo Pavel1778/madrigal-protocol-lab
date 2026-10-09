@@ -337,17 +337,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.hex_view.scroll_to_byte(offset)
         self._show_provenance(offset)
 
-    def _reveal_counterexample(self, session_id: str, direction: str, offset: int) -> None:
+    def _reveal_counterexample(self, session_id: str, direction: str, offset: int, length: int = 1) -> None:
         """Jump to a counterexample, switching session or direction if needed.
 
         A corpus counterexample can live in a direction other than the one on
-        screen, so the tree selection is moved first, then the byte revealed.
+        screen, so the tree selection is moved first, then the message bytes are
+        highlighted as a block.
         """
         if session_id and direction and (
             session_id != self._session_id or direction != self._direction
         ):
             self.session_tree.select_direction(session_id, direction)
-        self.reveal_offset(offset)
+        self.hex_view.highlight_range(offset, length)
+        self._show_provenance(offset)
 
     def _on_byte_clicked(self, offset: int) -> None:
         self._show_provenance(offset)
