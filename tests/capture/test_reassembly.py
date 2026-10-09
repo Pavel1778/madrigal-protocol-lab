@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from src.capture.parser import Packet
 from src.capture.pipeline import normalize
-from src.capture.session import Direction
+from src.capture.reassembly import reassemble
+from src.capture.session import Direction, Endpoint, Session
 
 from .conftest import fixture
 
@@ -69,6 +71,63 @@ def test_conflicting_overlap_is_ambiguous(fixtures_dir: Path) -> None:
 
 def test_sequence_wrap_is_ordered(fixtures_dir: Path) -> None:
     stream = _stream("seq_wrap.pcapng")
+    assert bytes(stream.bytes_) == b"ABCD"
+    assert stream.gaps() == []
+
+
+def test_segment_straddling_the_wrap_keeps_its_byte_order() -> None:
+    mask = 0xFFFFFFFF
+    session = Session(
+        session_id="s1",
+        endpoints=(Endpoint("10.0.0.1", 1), Endpoint("10.0.0.2", 2)),
+        isn_a=mask - 1,
+    )
+    # One segment whose payload crosses 2**32: it starts at 0xFFFFFFFE and its
+    # later bytes belong to sequence numbers past the wrap.
+    packet = Packet(
+        index=0,
+        timestamp=1.0,
+        src_ip="10.0.0.1",
+        src_port=1,
+        dst_ip="10.0.0.2",
+        dst_port=2,
+        seq=mask - 1,
+        ack=0,
+        flags=0,
+        payload=b"WXYZ",
+    )
+    stream = reassemble(session, Direction.A_TO_B, [packet])
+    assert bytes(stream.bytes_) == b"WXYZ"
+    assert stream.gaps() == []
+    rng = stream.provenance.lookup(3)
+    assert rng is not None and rng.seq == mask - 1
+
+
+def test_out_of_order_segments_across_the_wrap_are_ordered() -> None:
+    mask = 0xFFFFFFFF
+    session = Session(
+        session_id="s1",
+        endpoints=(Endpoint("10.0.0.1", 1), Endpoint("10.0.0.2", 2)),
+        isn_a=mask - 2,
+    )
+
+    def packet(index: int, seq: int, payload: bytes) -> Packet:
+        return Packet(
+            index=index,
+            timestamp=1.0 + index,
+            src_ip="10.0.0.1",
+            src_port=1,
+            dst_ip="10.0.0.2",
+            dst_port=2,
+            seq=seq,
+            ack=0,
+            flags=0,
+            payload=payload,
+        )
+
+    # The segment that wraps arrives first; the earlier one arrives second.
+    packets = [packet(0, 0, b"CD"), packet(1, mask - 1, b"AB")]
+    stream = reassemble(session, Direction.A_TO_B, packets)
     assert bytes(stream.bytes_) == b"ABCD"
     assert stream.gaps() == []
 
