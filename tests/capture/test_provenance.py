@@ -47,6 +47,17 @@ def test_lookup_ignores_a_shorter_retransmission_annotation() -> None:
     assert provenance.lookup(8) is None
 
 
+def test_lookup_sees_ranges_added_after_a_first_lookup() -> None:
+    provenance = Provenance()
+    provenance.add(Range(offset=0, length=2, packet_index=1, seq=10, ts=0.0))
+    assert provenance.lookup(0) is not None
+    # The index built by the first lookup must be discarded when a range is
+    # appended, or the new range would be invisible.
+    provenance.add(Range(offset=10, length=2, packet_index=2, seq=30, ts=1.0))
+    assert provenance.lookup(10) is not None
+    assert provenance.lookup(5) is None
+
+
 def test_split_returns_covering_subranges() -> None:
     provenance = Provenance()
     provenance.add(Range(offset=0, length=5, packet_index=1, seq=1000, ts=1.0))
