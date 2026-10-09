@@ -14,7 +14,7 @@ writes a portable project with a report.
 | --- | --- |
 | Participant | Sabadash Pavel |
 | Team size | one |
-| Group | not recorded |
+| Group | ИС-24 |
 
 ## Hackathon
 
