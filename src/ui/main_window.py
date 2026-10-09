@@ -157,6 +157,7 @@ class MainWindow(QtWidgets.QMainWindow):
     # -- loading -----------------------------------------------------------
 
     def open_capture(self, path: str | Path) -> None:
+        """Load a normalized capture and select its first direction."""
         model = CaptureModel.from_file(path)
         self._capture = model
         self.session_tree.load(model)
@@ -171,6 +172,7 @@ class MainWindow(QtWidgets.QMainWindow):
             )
 
     def open_capture_dialog(self) -> None:
+        """Prompt for a normalized capture file and open it."""
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open normalized capture", str(REPO_ROOT), "JSON (*.json)"
         )
@@ -178,6 +180,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.open_capture(path)
 
     def load_rule(self, path: str | Path) -> None:
+        """Load a rule file, keeping the previous rule and report for diffing."""
         previous_rule = self._rule.rule if self._rule is not None else None
         previous_report = self._rule.corpus_report if self._rule is not None else None
         self._rule = RuleModel.from_file(path)
@@ -189,6 +192,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
     def open_rule_dialog(self) -> None:
+        """Prompt for a rule file and load it."""
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open rule", str(REPO_ROOT / "examples"), "Rules (*.json *.yaml *.yml)"
         )
@@ -225,6 +229,7 @@ class MainWindow(QtWidgets.QMainWindow):
     # -- rule --------------------------------------------------------------
 
     def apply_rule(self) -> None:
+        """Adopt the edited rule and apply it to the current direction."""
         if self._capture is None or self._rule is None:
             self._notify("open a capture and a rule first")
             return
@@ -247,6 +252,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
     def apply_to_capture(self) -> None:
+        """Verify the current rule over every direction of the capture."""
         if self._capture is None or self._rule is None:
             self._notify("open a capture and a rule first")
             return
@@ -277,6 +283,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.right_tabs.setCurrentWidget(self.diff_view)
 
     def show_version_diff(self) -> None:
+        """Show how the current rule version changed the corpus report."""
         report = self._rule.corpus_report if self._rule is not None else None
         previous = self._rule.previous_report if self._rule is not None else None
         if report is None or previous is None or previous.rule_id != report.rule_id:
@@ -291,6 +298,7 @@ class MainWindow(QtWidgets.QMainWindow):
     # -- bytes -------------------------------------------------------------
 
     def reveal_offset(self, offset: int) -> None:
+        """Scroll the hex view to ``offset`` and show its provenance."""
         self.hex_view.scroll_to_byte(offset)
         self._show_provenance(offset)
 
@@ -319,14 +327,17 @@ class MainWindow(QtWidgets.QMainWindow):
     # -- report ------------------------------------------------------------
 
     def show_report(self) -> None:
+        """Show the default report file in the right-hand tab, if present."""
         if DEFAULT_REPORT.is_file():
             self.report_view.setPlainText(DEFAULT_REPORT.read_text(encoding="utf-8"))
             self.right_tabs.setCurrentWidget(self.report_view)
 
     def export_markdown(self) -> None:
+        """Export the report as Markdown."""
         self._export(DEFAULT_REPORT, "Markdown (*.md)")
 
     def export_html(self) -> None:
+        """Export the report as HTML."""
         self._export(DEFAULT_REPORT, "HTML (*.html)", html=True)
 
     def _export(self, source: Path, file_filter: str, html: bool = False) -> None:
@@ -343,6 +354,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._notify(f"wrote {path}")
 
     def save_result_dialog(self) -> None:
+        """Prompt for a path and save the current rule application as JSON."""
         if self._rule is None or self._rule.root is None:
             self._notify("apply a rule before saving a result")
             return
@@ -370,6 +382,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._notify(f"wrote {path}")
 
     def show_about(self) -> None:
+        """Show the about dialog."""
         QtWidgets.QMessageBox.information(
             self,
             "About",
@@ -455,6 +468,7 @@ def open_default_window(
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Launch the Qt application, opening an optional capture and rule."""
     import argparse
 
     parser = argparse.ArgumentParser(

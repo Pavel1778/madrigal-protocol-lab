@@ -12,6 +12,16 @@ from enum import Enum
 
 
 class Status(str, Enum):
+    """Classification of a message or field against a rule.
+
+    ``MATCHED`` means the bytes read consistently with the declared layout over
+    the tested messages; it is confirmation *within the tested domain*, not
+    proof. ``MISMATCHED``, ``INCOMPLETE`` and ``AMBIGUOUS`` are evidence
+    against the rule; ``UNCOVERED`` means no declared field produced a value.
+    ``NOT_APPLICABLE`` means the rule scope excluded the message. ``OUTDATED``
+    marks a result produced by an older rule version.
+    """
+
     MATCHED = "matched"
     MISMATCHED = "mismatched"
     INCOMPLETE = "incomplete"

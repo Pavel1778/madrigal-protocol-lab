@@ -112,22 +112,27 @@ class ValidationView(QtWidgets.QWidget):
     # -- rule --------------------------------------------------------------
 
     def set_rule_text(self, text: str) -> None:
+        """Replace the rule editor contents with ``text``."""
         self.rule_edit.setPlainText(text)
 
     def rule_text(self) -> str:
+        """The current rule editor contents."""
         return self.rule_edit.toPlainText()
 
     def set_rule_status(self, text: str, error: bool = False) -> None:
+        """Show ``text`` in the rule status line, red when ``error``."""
         colour = theme.MISMATCHED_TEXT if error else theme.TEXT_SECONDARY
         self.rule_status.setStyleSheet(f"color: {colour};")
         self.rule_status.setText(text)
 
     def set_context(self, session_id: str, direction: str) -> None:
+        """Show which session and direction the panel is working on."""
         self._context.setText(f"session {session_id}   {direction}")
 
     # -- results -----------------------------------------------------------
 
     def show_application(self, application: RuleApplication) -> None:
+        """Fill the message table and counterexample list from *application*."""
         self._application = application
         self.messages_table.setRowCount(0)
         ordered = sorted(
@@ -190,6 +195,7 @@ class ValidationView(QtWidgets.QWidget):
             self.counterexampleSelected.emit(int(items[0].data(QtCore.Qt.ItemDataRole.UserRole)))
 
     def show_message_count(self, count: int) -> None:
+        """Show that the rule was applied to ``count`` messages."""
         self.set_rule_status(f"rule applied to {count} messages")
 
 

@@ -25,7 +25,15 @@ class JournalError(ValueError):
 
 @dataclass
 class JournalEntry:
-    """One action recorded by the researcher."""
+    """One action recorded by the researcher.
+
+    Attributes:
+        timestamp: Action time as epoch seconds.
+        action: Action name (for example ``"write"``).
+        params: Key/value parameters for the action.
+        line_number: 1-based line in the journal source.
+        raw: The original line.
+    """
 
     timestamp: float
     action: str
@@ -34,6 +42,7 @@ class JournalEntry:
     raw: str = ""
 
     def to_dict(self) -> dict:
+        """Return the entry as a JSON-ready mapping."""
         return {
             "timestamp": self.timestamp,
             "action": self.action,
@@ -44,7 +53,20 @@ class JournalEntry:
 
 @dataclass
 class Correlation:
-    """A message paired with a journal entry inside the time window."""
+    """A message paired with a journal entry inside the time window.
+
+    Attributes:
+        session_id: Session the message belongs to.
+        direction: Direction the message was read from.
+        message_offset: Offset of the message in its stream.
+        message_timestamp: Message time as epoch seconds.
+        entry: The paired journal entry.
+        delta_ms: Absolute time gap between message and entry, in milliseconds.
+        message_values: Decoded field values of the message.
+        matched_fields: Values whose names also appear in the entry params.
+        value_agreements: ``name=value`` strings that agree with the journal.
+        value_conflicts: ``name=value`` strings that disagree with the journal.
+    """
 
     session_id: str
     direction: str
@@ -58,6 +80,7 @@ class Correlation:
     value_conflicts: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
+        """Return the correlation as a JSON-ready mapping."""
         return {
             "session_id": self.session_id,
             "direction": self.direction,
@@ -76,6 +99,16 @@ class Correlation:
 
 @dataclass
 class CorrelationReport:
+    """The result of correlating messages with a journal.
+
+    Attributes:
+        window_ms: Maximum pairing gap in milliseconds.
+        correlated: Message/entry pairs found inside the window.
+        messages_without_timestamp: Messages skipped for a missing timestamp.
+        messages_without_entry: Timestamped messages with no entry in range.
+        entries_without_message: Journal entries paired with no message.
+    """
+
     window_ms: int
     correlated: list[Correlation] = field(default_factory=list)
     messages_without_timestamp: int = 0
@@ -83,6 +116,7 @@ class CorrelationReport:
     entries_without_message: list[JournalEntry] = field(default_factory=list)
 
     def to_dict(self) -> dict:
+        """Return the report as a JSON-ready mapping with its summary."""
         return {
             "window_ms": self.window_ms,
             "correlated": [c.to_dict() for c in self.correlated],
@@ -93,6 +127,7 @@ class CorrelationReport:
         }
 
     def summary(self) -> str:
+        """One-line summary of how many messages and entries were paired."""
         matched = len(self.correlated)
         total = matched + self.messages_without_entry + self.messages_without_timestamp
         return (
@@ -167,6 +202,18 @@ def parse_journal(text: str) -> list[JournalEntry]:
 
 
 def load_journal(path: str) -> list[JournalEntry]:
+    """Load and parse a journal file.
+
+    Args:
+        path: Path to the journal text file.
+
+    Returns:
+        The parsed entries in file order.
+
+    Raises:
+        JournalError: If a data line cannot be parsed.
+        OSError: If the file cannot be read.
+    """
     with open(path, "r", encoding="utf-8") as handle:
         return parse_journal(handle.read())
 
@@ -187,7 +234,23 @@ def correlate(
     entries: list[JournalEntry],
     window_ms: int = 500,
 ) -> CorrelationReport:
-    """Pair every timestamped message with journal entries inside the window."""
+    """Pair every timestamped message with journal entries inside the window.
+
+    Each entry is used at most once. A message pairs with the nearest unused
+    entry within ``window_ms``; a message with no timestamp, or no entry in
+    range, is counted instead of guessed.
+
+    Args:
+        messages: Decoded messages, with timestamps where available.
+        entries: Journal entries to pair against.
+        window_ms: Maximum absolute time gap for a pair, in milliseconds.
+
+    Returns:
+        The correlation report, including unmatched counts on both sides.
+
+    Raises:
+        ValueError: If ``window_ms`` is negative.
+    """
     if window_ms < 0:
         raise ValueError("window_ms must not be negative")
     report = CorrelationReport(window_ms=window_ms)

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from ..protocol.rule import Rule
 from .corpus import VerificationReport
 
 
@@ -27,11 +28,25 @@ class FieldChange:
     new: object
 
     def to_dict(self) -> dict:
+        """Return the change as a JSON-ready mapping."""
         return {"field_name": self.field_name, "path": self.path, "old": self.old, "new": self.new}
 
 
 @dataclass
 class RuleDiff:
+    """What changed between two versions of one rule.
+
+    Attributes:
+        rule_id: Identity shared by both versions.
+        version_a: Version compared from.
+        version_b: Version compared to.
+        added_fields: Field names present only in ``version_b``.
+        removed_fields: Field names present only in ``version_a``.
+        changed_fields: Attribute-level changes on surviving fields.
+        changed_framing: Changes to the framing mapping.
+        scope_changes: Changes to the scope mapping.
+    """
+
     rule_id: str
     version_a: int
     version_b: int
@@ -43,6 +58,7 @@ class RuleDiff:
 
     @property
     def is_empty(self) -> bool:
+        """Whether the two rules are identical."""
         return not (
             self.added_fields
             or self.removed_fields
@@ -52,6 +68,7 @@ class RuleDiff:
         )
 
     def to_dict(self) -> dict:
+        """Return the rule diff as a JSON-ready mapping."""
         return {
             "rule_id": self.rule_id,
             "version_a": self.version_a,
@@ -66,6 +83,18 @@ class RuleDiff:
 
 @dataclass
 class ReportDiff:
+    """What a rule edit did to a verification.
+
+    Attributes:
+        version_a: Report compared from.
+        version_b: Report compared to.
+        resolved_counterexamples: Counterexamples in ``a`` absent from ``b``.
+        introduced_counterexamples: Counterexamples in ``b`` absent from ``a``.
+        unchanged_mismatches: Mismatches present in both.
+        matched_delta: Change in the matched message count.
+        coverage_delta: Change in coverage, in [0, 1].
+    """
+
     version_a: int
     version_b: int
     resolved_counterexamples: list[dict] = field(default_factory=list)
@@ -75,6 +104,7 @@ class ReportDiff:
     coverage_delta: float = 0.0
 
     def to_dict(self) -> dict:
+        """Return the report diff as a JSON-ready mapping."""
         return {
             "version_a": self.version_a,
             "version_b": self.version_b,
@@ -86,7 +116,7 @@ class ReportDiff:
         }
 
 
-def _field_map(rule) -> dict:
+def _field_map(rule: Rule) -> dict:
     return {spec.name: spec for spec in rule.fields}
 
 
@@ -102,8 +132,16 @@ def _spec_paths(spec_a, spec_b) -> list[tuple[str, object, object]]:
     return changes
 
 
-def diff_rules(rule_a, rule_b) -> RuleDiff:
-    """Compare two rules field by field, plus framing and scope."""
+def diff_rules(rule_a: Rule, rule_b: Rule) -> RuleDiff:
+    """Compare two rules field by field, plus framing and scope.
+
+    Args:
+        rule_a: The rule compared from.
+        rule_b: The rule compared to.
+
+    Returns:
+        The rule diff; ``is_empty`` is true when the two rules are identical.
+    """
     fields_a = _field_map(rule_a)
     fields_b = _field_map(rule_b)
 

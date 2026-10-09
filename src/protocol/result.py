@@ -19,6 +19,16 @@ CONTRACT_VERSION = 1
 
 @dataclass
 class ApplicationResult:
+    """The contract-shaped result of applying one rule to one capture.
+
+    Attributes:
+        rule_id: Identity of the applied rule.
+        rule_version: Version of the applied rule.
+        capture_id: Identity of the capture the rule ran on.
+        messages: Per-message mappings in the contract result format.
+        summary: Counts per status over ``messages``.
+    """
+
     rule_id: str
     rule_version: int
     capture_id: str
@@ -26,6 +36,7 @@ class ApplicationResult:
     summary: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
+        """Return the result in the contract result format."""
         return {
             "contract_version": CONTRACT_VERSION,
             "rule_id": self.rule_id,
@@ -37,6 +48,7 @@ class ApplicationResult:
 
 
 def summarise(messages: list[MessageResult]) -> dict:
+    """Count messages per status, always including the contract keys."""
     summary = {status.value: 0 for status in ALL_STATUSES}
     for message in messages:
         summary[message.status.value] += 1
@@ -75,6 +87,16 @@ def build_result(
     capture_id: str,
     messages: list[MessageResult],
 ) -> ApplicationResult:
+    """Assemble the contract result for one rule application.
+
+    Args:
+        rule: The rule that produced ``messages``.
+        capture_id: Identity of the capture the rule ran on.
+        messages: Message results produced by :func:`apply_rule`.
+
+    Returns:
+        The result, with a per-status summary.
+    """
     return ApplicationResult(
         rule_id=rule.rule_id,
         rule_version=rule.rule_version,
@@ -85,6 +107,18 @@ def build_result(
 
 
 def write_result(result: ApplicationResult, path: str, validate: bool = True) -> None:
+    """Write a result as JSON, optionally validating it against the schema.
+
+    Args:
+        result: The result to write.
+        path: Destination file path.
+        validate: Whether to validate against the result JSON Schema first.
+
+    Raises:
+        jsonschema.ValidationError: If ``validate`` is set and the payload does
+            not match the schema.
+        OSError: If the file cannot be written.
+    """
     payload = result.to_dict()
     if validate:
         validate_result(payload)
@@ -94,6 +128,18 @@ def write_result(result: ApplicationResult, path: str, validate: bool = True) ->
 
 
 def validate_result(payload: dict, schema_path: str | None = None) -> None:
+    """Validate a result payload against ``result.schema.json``.
+
+    Validation is skipped (not failed) when jsonschema or the schema file is
+    unavailable, so the engine still runs in a bare environment.
+
+    Args:
+        payload: The result mapping to validate.
+        schema_path: Schema location; defaults to the bundled schema.
+
+    Raises:
+        jsonschema.ValidationError: If the payload does not match the schema.
+    """
     try:
         import jsonschema
     except ImportError:  # pragma: no cover - jsonschema is a dev dependency
@@ -111,6 +157,7 @@ def validate_result(payload: dict, schema_path: str | None = None) -> None:
 
 
 def message_status(result_payload: dict, offset: int) -> Status | None:
+    """Status of the message at ``offset`` in a result payload, or ``None``."""
     for message in result_payload.get("messages", []):
         if message.get("offset") == offset:
             return Status(message.get("status"))

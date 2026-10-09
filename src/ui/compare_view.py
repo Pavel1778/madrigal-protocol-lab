@@ -30,6 +30,15 @@ _COLOUR = {
 
 @dataclass
 class DiffRow:
+    """One aligned row of the byte comparison.
+
+    Attributes:
+        offset: Offset of the row's first byte in the messages.
+        left: Hex of the left byte, or ``"--"`` when absent.
+        right: Hex of the right byte, or ``"--"`` when absent.
+        kind: ``EQUAL``, ``CHANGED``, ``INSERTED`` or ``DELETED``.
+    """
+
     offset: int
     left: str
     right: str
@@ -113,6 +122,7 @@ class CompareView(QtWidgets.QWidget):
         self.right_combo.currentIndexChanged.connect(self._refresh)
 
     def show_application(self, application: RuleApplication) -> None:
+        """Load *application*'s messages into the two selectors."""
         self._application = application
         self.left_combo.blockSignals(True)
         self.right_combo.blockSignals(True)
