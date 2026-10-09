@@ -62,6 +62,16 @@ def test_non_capture_file_is_refused(tmp_path: Path) -> None:
         list(read_capture(path))
 
 
+def test_file_too_short_for_a_magic_is_refused_as_valueerror(tmp_path: Path) -> None:
+    # A 1 to 3 byte file makes dpkt raise NeedData; the reader must surface it as
+    # the documented ValueError rather than a dpkt exception.
+    for length in (1, 2, 3):
+        path = tmp_path / f"tiny-{length}.pcapng"
+        path.write_bytes(b"\x0a" * length)
+        with pytest.raises(ValueError):
+            list(read_capture(path))
+
+
 def test_missing_directory_is_reported_as_missing_file(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError):
         list(read_capture(tmp_path / "absent" / "nothing.pcapng"))
