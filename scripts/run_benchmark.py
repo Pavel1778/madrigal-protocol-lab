@@ -49,6 +49,22 @@ def _peak_rss_mib() -> float:
     return usage / 1024
 
 
+def _sample_rss_mib() -> float:
+    """Current resident set size from /proc, in MiB.
+
+    ``ru_maxrss`` is a high-water mark that survives ``exec``, so a process
+    started from a memory-heavy parent inherits its parent's peak. Reading the
+    current value avoids that and gives the real size of this process.
+    """
+
+    try:
+        with open("/proc/self/statm", "r", encoding="ascii") as handle:
+            pages = int(handle.read().split()[1])
+    except (OSError, ValueError, IndexError):
+        return _peak_rss_mib()
+    return pages * os.sysconf("SC_PAGE_SIZE") / (1024 * 1024)
+
+
 def _total_ram_mib() -> float:
     try:
         pages = os.sysconf("SC_PHYS_PAGES")
@@ -71,6 +87,10 @@ class Result:
     peak_rss_mib: float = 0.0
     tracemalloc_mib: float | None = None
     diagnostics: int = 0
+    stream_seconds: float | None = None
+    stream_peak_rss_mib: float | None = None
+    stream_output_bytes: int | None = None
+    stream_flushes: int | None = None
     environment: dict[str, str] = field(default_factory=dict)
 
     @property
@@ -159,6 +179,77 @@ def run(
     return result
 
 
+def run_streaming_child(
+    pcap_path: Path, out_path: Path, interval: float = 0.02
+) -> dict[str, float]:
+    """Run streaming in this process and sample its resident memory.
+
+    Called as a child process so its numbers are not mixed with the regular
+    run. A sampler thread records the resident size while ``process_streaming``
+    works, which captures the real peak rather than a value inherited from the
+    parent.
+    """
+
+    import threading
+
+    from src.capture.streaming import process_streaming
+
+    peak = 0.0
+
+    def sample() -> None:
+        nonlocal peak
+        while not stop.wait(interval):
+            peak = max(peak, _sample_rss_mib())
+
+    stop = threading.Event()
+    sampler = threading.Thread(target=sample, daemon=True)
+    sampler.start()
+    started = time.perf_counter()
+    stats = process_streaming(pcap_path, out_path)
+    seconds = time.perf_counter() - started
+    stop.set()
+    sampler.join(timeout=1.0)
+    return {
+        "seconds": seconds,
+        "peak_mib": peak,
+        "output_bytes": float(out_path.stat().st_size),
+        "flushes": float(stats.flushes),
+    }
+
+
+def run_streaming(pcap_path: Path, work_dir: Path) -> tuple[float, float, int, int]:
+    """Run the streaming pipeline in a child process and report its numbers."""
+
+    import subprocess
+
+    out_path = work_dir / "benchmark_stream.json"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "scripts.run_benchmark",
+            "--mode",
+            "stream",
+            "--pcap",
+            str(pcap_path),
+            "--work-dir",
+            str(work_dir),
+            "--out",
+            str(out_path),
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    payload = json.loads(completed.stdout.strip().splitlines()[-1])
+    return (
+        float(payload["seconds"]),
+        float(payload["peak_mib"]),
+        int(payload["output_bytes"]),
+        int(payload["flushes"]),
+    )
+
+
 def render_markdown(result: Result, profile: dict[str, int]) -> str:
     env = result.environment
     total = result.total_seconds
@@ -200,6 +291,34 @@ def render_markdown(result: Result, profile: dict[str, int]) -> str:
         f"| Export (export_capture) | {result.export_seconds:.2f} |",
         f"| Total | {total:.2f} |",
         "",
+        "## Streaming mode",
+        "",
+        "`process_streaming` reads the capture in blocks and writes each session as",
+        "soon as it can no longer receive packets, so closed sessions leave memory.",
+        "The output is identical to the regular mode; only the resource profile",
+        "differs. The streaming peak is measured in its own process so the two do",
+        "not share a high-water mark.",
+        "",
+    ]
+    if result.stream_seconds is not None:
+        lines += [
+            "| Metric | Regular | Streaming |",
+            "| ------ | ------- | --------- |",
+            f"| Total seconds | {total:.2f} | {result.stream_seconds:.2f} |",
+            f"| Peak RSS (MiB) | {result.peak_rss_mib:.0f} | {result.stream_peak_rss_mib:.0f} |",
+            f"| Output JSON (MiB) | {result.output_bytes / (1024 * 1024):.2f} | "
+            f"{(result.stream_output_bytes or 0) / (1024 * 1024):.2f} |",
+            "",
+            f"The streaming run flushed {result.stream_flushes} sessions.",
+            "",
+            (
+                "Streaming used less memory."
+                if result.stream_peak_rss_mib < result.peak_rss_mib
+                else "Streaming did not reduce memory at this profile."
+            ),
+            "",
+        ]
+    lines += [
         "## Memory and output",
         "",
         f"- Peak process RSS: {result.peak_rss_mib:.0f} MiB",
@@ -275,6 +394,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--target-mib", type=int, default=PROFILE_TARGET_MIB)
     parser.add_argument("--max-response", type=int, default=PROFILE_MAX_RESPONSE)
     parser.add_argument(
+        "--mode",
+        choices=("full", "stream"),
+        default="full",
+        help="full runs both modes; stream runs only streaming in this process",
+    )
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="output path used by --mode stream",
+    )
+    parser.add_argument(
         "--tracemalloc",
         action="store_true",
         help="also report the Python allocation peak",
@@ -287,6 +418,13 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
+    if args.mode == "stream":
+        if args.out is None:
+            parser.error("--mode stream requires --out")
+        payload = run_streaming_child(args.pcap, args.out)
+        print(json.dumps(payload))
+        return 0
+
     args.work_dir.mkdir(parents=True, exist_ok=True)
     if not args.pcap.is_file():
         from scripts.generate_benchmark_pcap import build
@@ -298,6 +436,12 @@ def main(argv: list[str] | None = None) -> int:
         args.pcap.write_bytes(data)
 
     result = run(args.pcap, args.work_dir, use_tracemalloc=args.tracemalloc)
+    (
+        result.stream_seconds,
+        result.stream_peak_rss_mib,
+        result.stream_output_bytes,
+        result.stream_flushes,
+    ) = run_streaming(args.pcap, args.work_dir)
     profile = {
         "packets": args.packets,
         "sessions": args.sessions,
@@ -315,6 +459,9 @@ def main(argv: list[str] | None = None) -> int:
         "total_s": round(result.total_seconds, 2),
         "peak_rss_mib": round(result.peak_rss_mib),
         "output_mib": round(result.output_bytes / (1024 * 1024), 2),
+        "stream_s": round(result.stream_seconds, 2),
+        "stream_peak_rss_mib": round(result.stream_peak_rss_mib),
+        "stream_output_mib": round((result.stream_output_bytes or 0) / (1024 * 1024), 2),
     }))
 
     if args.write_md is not None:

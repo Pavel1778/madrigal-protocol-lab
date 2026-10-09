@@ -125,33 +125,70 @@ def _is_reuse_after_close(session: Session, packet: Packet) -> bool:
     return packet.payload_len > 0
 
 
-def build_sessions(packets: Sequence[Packet] | Iterable[Packet]) -> list[Session]:
-    """Group packets into TCP connection instances, in order of first appearance."""
+class SessionTracker:
+    """Assigns packets to connection instances as they arrive.
 
-    sessions: list[Session] = []
-    current: dict[frozenset[Endpoint], Session] = {}
-    counter = 0
+    This is the incremental form of :func:`build_sessions`: the same rules
+    decide where one instance ends and the next begins, but state is carried
+    across calls so a caller can feed packets in blocks. ``add`` returns the
+    session the packet joined and, when the packet superseded a previous
+    instance on the same address pair, that finished instance.
+    """
 
-    for packet in packets:
+    def __init__(self) -> None:
+        self._sessions: list[Session] = []
+        self._by_id: dict[str, Session] = {}
+        self._current: dict[frozenset[Endpoint], Session] = {}
+        self._counter = 0
+
+    def add(self, packet: Packet) -> tuple[Session, "Session | None"]:
         key = _pair_key(packet)
-        session = current.get(key)
+        session = self._current.get(key)
+        evicted: Session | None = None
 
         if session is not None and (
             _is_new_handshake(session, packet, session.endpoints[0])
             or _is_reuse_after_close(session, packet)
         ):
+            evicted = session
             session = None
 
         if session is None:
-            counter += 1
+            self._counter += 1
             a, b = _initiator(packet)
-            session = Session(session_id=f"s{counter}", endpoints=(a, b))
-            sessions.append(session)
-            current[key] = session
+            session = Session(session_id=f"s{self._counter}", endpoints=(a, b))
+            self._sessions.append(session)
+            self._by_id[session.session_id] = session
+            self._current[key] = session
 
         _absorb(session, packet)
+        return session, evicted
 
-    return sessions
+    @property
+    def sessions(self) -> list[Session]:
+        """Every session seen so far, in order of first appearance."""
+
+        return list(self._sessions)
+
+    def by_id(self, session_id: str) -> Session:
+        return self._by_id[session_id]
+
+    def open_sessions(self) -> list[Session]:
+        """The sessions still being filled, in order of first appearance."""
+
+        seen: dict[str, Session] = {}
+        for session in self._current.values():
+            seen[session.session_id] = session
+        return [s for s in self._sessions if s.session_id in seen]
+
+
+def build_sessions(packets: Sequence[Packet] | Iterable[Packet]) -> list[Session]:
+    """Group packets into TCP connection instances, in order of first appearance."""
+
+    tracker = SessionTracker()
+    for packet in packets:
+        tracker.add(packet)
+    return tracker.sessions
 
 
 def _absorb(session: Session, packet: Packet) -> None:
