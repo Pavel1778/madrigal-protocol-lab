@@ -71,6 +71,23 @@ pass with `src.protocol` present (the one skipped rule test turns green), and
 the protocol tests must pass alongside the capture modules. The full suite is
 run after the merge to confirm this.
 
+## Rehearsal
+
+The merge was rehearsed in a throwaway worktree (`git worktree add`), not on
+`main`, so the outcome is known before Phase B:
+
+- `git merge --no-ff origin/agent2/protocol` completed with no conflict.
+- `pip install -e ".[dev]"` then `pytest tests/ -q`: **371 passed**, no failure,
+  no skip. The rule test that is skipped on `agent1/capture` alone runs here,
+  because `src.protocol` is present.
+- The end-to-end pipeline on `corpus_capture_01.pcapng` succeeds and the report
+  renders. With `examples/corpus_rule_v1.json`, the run produces 60 matched
+  messages and 80 counterexamples, the same figure recorded in the reference
+  investigation, which confirms the capture and protocol stages are wired
+  together correctly.
+
+The worktree was removed afterwards; `main` and the working tree are unchanged.
+
 ## Merge order and rollback
 
 1. `git checkout agent1/capture`
