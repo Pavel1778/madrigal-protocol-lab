@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
+from src.capture.export import export_capture
 from src.capture.pipeline import normalize
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -38,8 +39,6 @@ def test_reference_export_is_valid_and_current(stem: str, tmp_path: Path) -> Non
 
     # Rebuild from the capture and require the same content.
     capture = normalize(CORPUS / f"{stem}.pcapng")
-    from src.capture.export import export_capture
-
     rebuilt = tmp_path / f"{stem}.json"
     export_capture(
         capture.sessions,
