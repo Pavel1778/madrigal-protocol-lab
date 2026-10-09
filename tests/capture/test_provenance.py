@@ -23,6 +23,30 @@ def test_lookup_inside_and_outside_ranges() -> None:
     assert provenance.lookup(99) is None
 
 
+def test_lookup_ignores_a_shorter_retransmission_annotation() -> None:
+    provenance = Provenance()
+    # A primary run and a shorter retransmission that starts at the same offset.
+    provenance.add(
+        Range(offset=0, length=8, packet_index=1, seq=100, ts=1.0)
+    )
+    provenance.add(
+        Range(
+            offset=0,
+            length=1,
+            packet_index=2,
+            seq=100,
+            ts=2.0,
+            is_retransmission=True,
+        )
+    )
+    # Every offset the primary range covers must resolve, including those past
+    # the short annotation.
+    for offset in range(8):
+        found = provenance.lookup(offset)
+        assert found is not None and found.packet_index == 1
+    assert provenance.lookup(8) is None
+
+
 def test_split_returns_covering_subranges() -> None:
     provenance = Provenance()
     provenance.add(Range(offset=0, length=5, packet_index=1, seq=1000, ts=1.0))
