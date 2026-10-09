@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+.pytest_cache/
+*.pcap
+*.pcapng
+!tests/fixtures/**/*.pcap
+!tests/fixtures/**/*.pcapng
+project.madrigal/
+.DS_Store
+*.egg-info/
+build/
+dist/
+.mypy_cache/
+.openhands/

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Pavel1778/madrigal-protocol-lab/docs/schemas/result.schema.json",
+  "title": "Rule application result",
+  "description": "Output of the Protocol engine (Agent 2). Consumed by the UI (Agent 3). Pairs every interpreted field with the byte range it was read from, so a field in the UI resolves back to the source packet.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "rule_id", "rule_version", "capture_id", "messages", "summary"],
+  "properties": {
+    "contract_version": { "type": "integer", "const": 1 },
+    "rule_id": { "type": "string" },
+    "rule_version": { "type": "integer", "minimum": 1 },
+    "capture_id": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "messages": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/message" }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["matched", "mismatched", "unknown", "uncovered"],
+      "properties": {
+        "matched": { "type": "integer", "minimum": 0 },
+        "mismatched": { "type": "integer", "minimum": 0 },
+        "unknown": { "type": "integer", "minimum": 0 },
+        "uncovered": { "type": "integer", "minimum": 0 },
+        "incomplete": { "type": "integer", "minimum": 0 },
+        "ambiguous": { "type": "integer", "minimum": 0 },
+        "not_applicable": { "type": "integer", "minimum": 0 },
+        "outdated": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "$defs": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "matched",
+        "mismatched",
+        "incomplete",
+        "ambiguous",
+        "uncovered",
+        "not_applicable",
+        "outdated",
+        "unknown"
+      ]
+    },
+    "message": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["offset", "length", "fields", "status"],
+      "properties": {
+        "offset": { "type": "integer", "minimum": 0 },
+        "length": { "type": "integer", "minimum": 0 },
+        "fields": {
+          "type": "object",
+          "description": "Decoded field values keyed by field name.",
+          "additionalProperties": true
+        },
+        "status": { "$ref": "#/$defs/status" },
+        "provenance_range": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Byte range backing this message; offsets resolve to the source packet."
+        }
+      }
+    }
+  }
+}

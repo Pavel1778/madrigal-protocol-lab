@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Pavel1778/madrigal-protocol-lab/docs/schemas/capture.schema.json",
+  "title": "Normalized capture",
+  "description": "Output of the Capture Engine (Agent 1). Consumed by the Protocol engine (Agent 2) and the UI (Agent 3). Every byte range in a directional stream is tied to the packet it came from.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "capture_id", "source_file", "sessions"],
+  "properties": {
+    "contract_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "capture_id": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Content hash of the source capture file."
+    },
+    "source_file": {
+      "type": "string",
+      "description": "Path to the source capture, relative to the project root."
+    },
+    "sessions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/session" }
+    }
+  },
+  "$defs": {
+    "endpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ip", "port"],
+      "properties": {
+        "ip": { "type": "string" },
+        "port": { "type": "integer", "minimum": 0, "maximum": 65535 }
+      }
+    },
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["offset", "length", "packet_index", "seq", "ts"],
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Byte offset in the reassembled directional stream."
+        },
+        "length": { "type": "integer", "minimum": 0 },
+        "packet_index": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Index of the source packet in the capture file."
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Absolute TCP sequence number of the first byte of this range."
+        },
+        "ts": { "type": "number", "description": "Packet timestamp (epoch seconds)." }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "gap",
+            "ambiguity",
+            "truncated",
+            "duplicate",
+            "unsupported_linktype",
+            "ipv6_ignored",
+            "no_syn",
+            "checksum_offload"
+          ]
+        },
+        "offset": { "type": "integer", "minimum": 0 },
+        "length": { "type": "integer", "minimum": 0 },
+        "packet_index": { "type": "integer", "minimum": 0 },
+        "detail": { "type": "string" }
+      }
+    },
+    "direction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bytes_b64", "provenance", "diagnostics"],
+      "properties": {
+        "bytes_b64": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "description": "Reassembled directional stream. Gaps are not filled with zeros."
+        },
+        "provenance": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/range" }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/diagnostic" }
+        }
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["session_id", "endpoints", "directions"],
+      "properties": {
+        "session_id": { "type": "string" },
+        "endpoints": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/endpoint" }
+        },
+        "directions": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "A_to_B": { "$ref": "#/$defs/direction" },
+            "B_to_A": { "$ref": "#/$defs/direction" }
+          }
+        },
+        "role_a": {
+          "type": "string",
+          "enum": ["client", "server", "unknown"]
+        },
+        "role_b": {
+          "type": "string",
+          "enum": ["client", "server", "unknown"]
+        },
+        "syn_seen": { "type": "boolean" },
+        "fin_seen": { "type": "boolean" },
+        "rst_seen": { "type": "boolean" },
+        "isn_a": { "type": ["integer", "null"] },
+        "isn_b": { "type": ["integer", "null"] },
+        "first_ts": { "type": ["number", "null"] },
+        "last_ts": { "type": ["number", "null"] },
+        "packet_indices": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}
