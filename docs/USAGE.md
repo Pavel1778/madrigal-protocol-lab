@@ -154,6 +154,10 @@ committed records.
 ## Notes
 
 - All commands run offline.
+- The capture, project, and report stages run on their own. The rule engine in
+  `src.protocol` ships with the protocol/GUI branch, so the `--rule` variant in
+  section 4 and the standalone command in section 6 require that module; without
+  it the pipeline still runs and writes a report that states no rule was applied.
 - The measured resource figures are in `docs/BENCHMARK.md`.
 - The contracts are in `docs/CONTRACT.md`; the JSON Schemas are in
   `docs/schemas/`.
