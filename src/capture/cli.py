@@ -15,6 +15,7 @@ import sys
 from pathlib import Path
 
 from src.capture.export import export_capture
+from src.capture.export_wireshark import export_reassembled_pcap
 from src.capture.pipeline import normalize
 from src.capture.streaming import process_streaming
 
@@ -46,6 +47,12 @@ def _build_parser() -> argparse.ArgumentParser:
         type=int,
         default=10000,
         help="packets per block in streaming mode",
+    )
+    parser.add_argument(
+        "--wireshark-pcap",
+        type=Path,
+        default=None,
+        help="also write reassembled streams as a pcap for inspection",
     )
     parser.add_argument(
         "--quiet",
@@ -89,6 +96,13 @@ def main(argv: list[str] | None = None) -> int:
         capture_id=capture.capture_id,
         streams=capture.streams,
     )
+
+    if args.wireshark_pcap is not None:
+        export_reassembled_pcap(
+            capture.sessions,
+            args.wireshark_pcap,
+            streams=capture.streams,
+        )
 
     if not args.quiet:
         summary = {
