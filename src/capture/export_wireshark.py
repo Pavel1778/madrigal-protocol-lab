@@ -92,51 +92,73 @@ def export_reassembled_pcap(
     with out_path.open("wb") as handle:
         writer = dpkt.pcap.Writer(handle, snaplen=_PCAP_SNAPLEN)
         for session in sessions:
-            session_streams = (streams or {}).get(session.session_id)
-            if session_streams is None:
-                source = packets if packets is not None else []
-                session_streams = {
-                    Direction.A_TO_B: reassemble(session, Direction.A_TO_B, source),
-                    Direction.B_TO_A: reassemble(session, Direction.B_TO_A, source),
-                }
+            session_streams = _session_streams(session, streams, packets)
+            written += _write_session(writer, session, session_streams)
+    return written
 
-            endpoint_a, endpoint_b = session.endpoints
-            isn_a = session.isn_a if session.isn_a is not None else _DEFAULT_ISN_CLIENT
-            isn_b = session.isn_b if session.isn_b is not None else _DEFAULT_ISN_SERVER
-            first_ts = session.first_ts if session.first_ts is not None else 0.0
-            last_ts = session.last_ts if session.last_ts is not None else first_ts
 
-            a_stream = session_streams.get(Direction.A_TO_B)
-            if a_stream is not None and len(a_stream.bytes_):
-                writer.writepkt(
-                    _frame(
-                        endpoint_a.ip,
-                        endpoint_a.port,
-                        endpoint_b.ip,
-                        endpoint_b.port,
-                        isn_a,
-                        isn_b,
-                        bytes(a_stream.bytes_),
-                        forward=True,
-                    ),
-                    ts=first_ts,
-                )
-                written += 1
+def _session_streams(
+    session: Session,
+    streams: dict[str, dict[Direction, DirectionalStream]] | None,
+    packets: list | None,
+) -> dict[Direction, DirectionalStream]:
+    """Return both directional streams of a session, reassembling if needed."""
 
-            b_stream = session_streams.get(Direction.B_TO_A)
-            if b_stream is not None and len(b_stream.bytes_):
-                writer.writepkt(
-                    _frame(
-                        endpoint_b.ip,
-                        endpoint_b.port,
-                        endpoint_a.ip,
-                        endpoint_a.port,
-                        isn_b,
-                        isn_a,
-                        bytes(b_stream.bytes_),
-                        forward=False,
-                    ),
-                    ts=last_ts,
-                )
-                written += 1
+    session_streams = (streams or {}).get(session.session_id)
+    if session_streams is not None:
+        return session_streams
+    source = packets if packets is not None else []
+    return {
+        Direction.A_TO_B: reassemble(session, Direction.A_TO_B, source),
+        Direction.B_TO_A: reassemble(session, Direction.B_TO_A, source),
+    }
+
+
+def _write_session(
+    writer: dpkt.pcap.Writer,
+    session: Session,
+    session_streams: dict[Direction, DirectionalStream],
+) -> int:
+    """Write one packet per non-empty direction; return the count written."""
+
+    endpoint_a, endpoint_b = session.endpoints
+    isn_a = session.isn_a if session.isn_a is not None else _DEFAULT_ISN_CLIENT
+    isn_b = session.isn_b if session.isn_b is not None else _DEFAULT_ISN_SERVER
+    first_ts = session.first_ts if session.first_ts is not None else 0.0
+    last_ts = session.last_ts if session.last_ts is not None else first_ts
+
+    written = 0
+    a_stream = session_streams.get(Direction.A_TO_B)
+    if a_stream is not None and len(a_stream.bytes_):
+        writer.writepkt(
+            _frame(
+                endpoint_a.ip,
+                endpoint_a.port,
+                endpoint_b.ip,
+                endpoint_b.port,
+                isn_a,
+                isn_b,
+                bytes(a_stream.bytes_),
+                forward=True,
+            ),
+            ts=first_ts,
+        )
+        written += 1
+
+    b_stream = session_streams.get(Direction.B_TO_A)
+    if b_stream is not None and len(b_stream.bytes_):
+        writer.writepkt(
+            _frame(
+                endpoint_b.ip,
+                endpoint_b.port,
+                endpoint_a.ip,
+                endpoint_a.port,
+                isn_b,
+                isn_a,
+                bytes(b_stream.bytes_),
+                forward=False,
+            ),
+            ts=last_ts,
+        )
+        written += 1
     return written
