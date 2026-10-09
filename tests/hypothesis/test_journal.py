@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from src.hypothesis.journal import (
-    JournalEntry,
     JournalError,
     correlate,
     parse_journal,
