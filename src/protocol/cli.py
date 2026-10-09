@@ -20,13 +20,15 @@ import dataclasses
 import json
 import sys
 
+from ..hypothesis.alternatives import AlternativesReport, analyze_field
 from ..hypothesis.corpus import CorpusStream, VerificationReport, verify_on_corpus
 from ..hypothesis.diff import diff_reports, diff_rules, format_report_diff, format_rule_diff
 from ..hypothesis.journal import correlate, load_journal
 from ..hypothesis.metrics import compute_metrics
-from .engine import Counterexample, apply_rule
+from .engine import Counterexample, MessageResult, apply_rule
+from .export import export_kaitai, export_python
 from .result import build_result, write_result
-from .rule import load_rule
+from .rule import Rule, load_rule
 from .stream import CaptureError, load_capture
 
 
@@ -74,7 +76,8 @@ def _build_parser() -> argparse.ArgumentParser:
     alternatives = sub.add_parser(
         "alternatives", help="suggest alternative explanations for a hypothesis field"
     )
-    alternatives.add_argument("--report", required=True, help="result JSON from apply")
+    alternatives.add_argument("--rule", required=True, help="the rule that produced the report")
+    alternatives.add_argument("--report", required=True, help="report JSON from the verify command")
     alternatives.add_argument("--corpus", default=None, help="normalized capture for the corpus")
     alternatives.add_argument("--journal", default=None, help="journal file for correlation")
     alternatives.add_argument("--field", required=True, help="hypothesis field name")
@@ -246,6 +249,95 @@ def _cmd_correlate(args) -> int:
     return 0
 
 
+def _cmd_export(args) -> int:
+    import os
+
+    rule = load_rule(args.rule)
+    if args.format == "kaitai":
+        text = export_kaitai(rule)
+        suffix = ".ksy"
+    else:
+        text = export_python(rule)
+        suffix = ".py"
+
+    target = args.out
+    if os.path.isdir(target) or target.endswith(os.sep):
+        os.makedirs(target, exist_ok=True)
+        stem = (rule.name or rule.rule_id).replace("/", "_")
+        target = os.path.join(target, stem + suffix)
+    directory = os.path.dirname(os.path.abspath(target))
+    if directory and not os.path.isdir(directory):
+        os.makedirs(directory, exist_ok=True)
+    with open(target, "w", encoding="utf-8") as handle:
+        handle.write(text)
+    print(f"{target}: rule {rule.rule_id} v{rule.rule_version} as {args.format}", file=sys.stderr)
+    return 0
+
+
+def _cmd_alternatives(args) -> int:
+    payload = json.load(open(args.report, "r", encoding="utf-8"))
+    rule = load_rule(args.rule)
+    messages = _messages_from_payload(payload)
+    correlations = None
+    if args.journal:
+        entries = load_journal(args.journal)
+        correlations = correlate(messages, entries).correlated
+
+    report = AlternativesReport(rule_id=rule.rule_id, rule_version=rule.rule_version)
+    report.fields.append(
+        analyze_field(rule, messages, args.field, correlations=correlations)
+    )
+    text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2)
+    if args.out:
+        with open(args.out, "w", encoding="utf-8") as handle:
+            handle.write(text + "\n")
+    else:
+        print(text)
+    field_report = report.fields[0]
+    best = field_report.best or "none"
+    print(
+        f"field {args.field}: {len(field_report.alternatives)} alternatives, best {best}",
+        file=sys.stderr,
+    )
+    return 0
+
+
+def _messages_from_payload(payload: dict) -> list:
+    from ..hypothesis.status import Status
+    from .engine import FieldResult, MessageResult
+
+    messages = []
+    for item in payload.get("messages", []):
+        if "message_offset" in item and "field_name" in item:
+            continue
+        status = Status(item.get("status", "unknown"))
+        fields = [
+            FieldResult(
+                message_offset=int(item.get("offset", 0)),
+                message_length=int(item.get("length", 0)),
+                field_name=str(name),
+                field_type="unknown",
+                field_offset=0,
+                field_length=0,
+                value=value,
+                status=Status.MATCHED,
+            )
+            for name, value in (item.get("fields") or {}).items()
+        ]
+        messages.append(
+            MessageResult(
+                offset=int(item.get("offset", 0)),
+                length=int(item.get("length", 0)),
+                status=status,
+                fields=fields,
+                session_id=str(item.get("session_id", "")),
+                direction=str(item.get("direction", "")),
+                bytes_hex=item.get("bytes_hex", ""),
+            )
+        )
+    return messages
+
+
 def _counterexample(item: dict) -> Counterexample:
     from ..hypothesis.status import Status
 
@@ -278,6 +370,10 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_metrics(args)
         if args.command == "correlate":
             return _cmd_correlate(args)
+        if args.command == "export":
+            return _cmd_export(args)
+        if args.command == "alternatives":
+            return _cmd_alternatives(args)
     except (CaptureError, ValueError, OSError) as exc:
         parser.exit(2, f"error: {exc}\n")
     parser.exit(2, "error: no command\n")

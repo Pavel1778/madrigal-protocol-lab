@@ -92,6 +92,9 @@ GUI works with `apply_rule` / `apply_rule_fields`, `build_result`,
 - `src.hypothesis.journal.load_journal(path) -> list[JournalEntry]`,
   `parse_journal(text)`, `correlate(messages, entries, window_ms=500) ->
   CorrelationReport` — see the journal section below.
+- `src.hypothesis.alternatives.suggest_alternatives(rule, messages,
+  correlations=None) -> AlternativesReport`, `analyze_field(rule, messages,
+  field_name, correlations=None)` — see the alternatives section below.
 - `src.hypothesis.versioning.ResultStore` — `.add(rule, capture_id, payload) ->
   StoredResult`, `.results_for(rule_id, capture_id=None)`,
   `.mark_outdated(rule, capture_id=None) -> list[StoredResult]`,
@@ -511,7 +514,37 @@ python -m src.protocol.cli correlate --rule rule.json --capture capture.json \
     --journal journal.md --window-ms 500 --out correlations.json
 ```
 
-## 10. Limitations
+## 10. Alternatives and export
+
+`analyze_field(rule, messages, field_name, correlations=None)` tests competing
+readings of one field and scores each by how many messages it agrees with. The
+candidates are `constant`, `counter`, `message_length`, `remaining_length`, a
+`checksum_<algo>_<range>` over the message body, `low_cardinality`,
+`alias_of_<other>` when the field mirrors another, and `journal_<key>` when
+correlations are supplied. Each `Alternative` carries `support`, `contradict`,
+`score = support / (support + contradict)` and up to a few `evidence` entries.
+`suggest_alternatives` runs it over every field marked `hypothesis: true`. The
+declared meaning is one candidate among them and may lose; the output is the
+evidence, not a verdict.
+
+```
+python -m src.protocol.cli alternatives --rule rule.json --report report.json \
+    --journal journal.md --field value --out alternatives.json
+```
+
+`export_kaitai(rule)` returns a Kaitai Struct `.ksy` document and
+`export_python(rule)` a standalone Python module with no dependency on this
+project. Both reproduce the framing and the field reads; the generated module's
+`parse_stream(data)` returns the same spans and values the engine does, and it
+checks checksums and computed fields itself. Verifying hypotheses, ambiguity and
+provenance stay in the engine.
+
+```
+python -m src.protocol.cli export --rule rule.json --format kaitai --out out/
+python -m src.protocol.cli export --rule rule.json --format python --out parser.py
+```
+
+## 11. Limitations
 
 The rule model is flat by design: arrays repeat a single fixed-width element and
 `computed`/`conditional` reference other declared fields, but there are no nested
