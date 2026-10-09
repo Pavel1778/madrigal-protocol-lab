@@ -7,8 +7,9 @@ __pycache__/
 *.pcapng
 !tests/fixtures/**/*.pcap
 !tests/fixtures/**/*.pcapng
-!tests/corpus/**/*.pcap
+!tests/corpus/
 !tests/corpus/**/*.pcapng
+!tests/corpus/**/*.pcap
 project.madrigal/
 .DS_Store
 *.egg-info/
