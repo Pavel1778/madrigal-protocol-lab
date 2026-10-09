@@ -67,15 +67,49 @@ Rule refined to v2. Changes:
 
 - field command: expected [1] -> [1, 2, 3]
 
-Counts after refinement: matched=140, mismatched=0, incomplete=0, ambiguous=0, uncovered=0, not_applicable=140, outdated=0, unknown=0
+Counts after refinement: matched=140, mismatched=0, incomplete=0, ambiguous=0, uncovered=0, not_applicable=140, outdated=0, unknown=0.
+
+## Version differentiation
+
+Rule v1 and rule v2 are different rules over the same bytes: nothing about the capture changed, only the description of it. The counts below come from re-running both versions.
+
+| metric | v1 | v2 | delta |
+| --- | --- | --- | --- |
+| matched | 60 | 140 | +80 |
+| mismatched | 80 | 0 | -80 |
+| counterexamples | 80 | 0 | -80 |
+| coverage | 0.5 | 0.5 | +0.0 |
+| precision | 0.428571 | 1.0 | +0.571429 |
+| counterexample_density | 57.142857 | 0.0 | -57.142857 |
+
 Resolved counterexamples: 80.
 Introduced counterexamples: 0.
+Coverage delta: +0.0.
+
+A rule change never rewrites the bytes it was checked against. The v1 result stays on disk with its own rule version; a reader sees which version produced which verdict.
+
+## Refined rule
+
+The refined rule is written to `corpus_rule_v2.json` so it can be applied again by the CLI without re-deriving it.
 
 ## Applicability
 
 Rule v2 applied to corpus_capture_02.pcapng (capture_id sha256:4aa281b97de9afa09d74ff0f5c41e9f6c4fc2b7b07ddf314f33b55d2fec95afc).
 Counts: matched=40, mismatched=0, incomplete=0, ambiguous=0, uncovered=0, not_applicable=40, outdated=0, unknown=0.
 Counterexamples: 0.
+
+## Applicability boundary
+
+Rule v2 applied to synthetic_live.pcapng, a capture produced by a real TCP stack with a deliberately different layout (little-endian length, a transaction id byte, commands 0x21/0x22/0x23). The rule was never fitted to this traffic.
+
+- s1 A_to_B: 61 B -> 1 messages, 61/61 B, truncated
+- s1 B_to_A: 116 B -> 1 messages, 116/116 B, truncated
+
+Streams framed cleanly: 0/2.
+Counts: matched=0, mismatched=0, incomplete=1, ambiguous=0, uncovered=0, not_applicable=1, outdated=0, unknown=0
+Counterexamples: 1.
+
+The big-endian length and the different command set mean the rule does not transfer: its matches here are coincidental, not evidence. This is the boundary of the rule's applicability, and it is stated rather than hidden by re-tuning until something matches.
 
 ## Journal correlation
 
@@ -97,6 +131,7 @@ Field `command` (140 values):
 | reading | support | contradict | score |
 | --- | --- | --- | --- |
 | low_cardinality | 140 | 0 | 1.00 |
+| offset_shift_+1 | 140 | 0 | 1.00 |
 | counter | 137 | 2 | 0.99 |
 | constant | 60 | 80 | 0.43 |
 | message_length | 0 | 140 | 0.00 |
@@ -127,3 +162,11 @@ Best fit: `constant`.
 
 - Field meanings marked `hypothesis: true` remain assumptions; a rule that matches is not proof.
 - Behaviour outside the tested captures is unknown; the rule is only confirmed within the tested domain.
+
+## Limitations
+
+- The rule describes the request direction only; responses are framed but not interpreted field by field.
+- Field meanings marked `hypothesis: true` (the enum `target`, the payload `value`) remain assumptions. Matching is not proof.
+- The framing question was settled against the corpus; a stream whose length field counts something else would need a new rule.
+- Ambiguity and gap diagnostics are surfaced, never zero-filled, so a message over a gap is reported `incomplete` rather than guessed.
+- The synthetic live capture shares no byte layout with the corpus, so nothing here is claimed to generalise to it.
