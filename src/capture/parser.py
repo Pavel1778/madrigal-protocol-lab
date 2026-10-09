@@ -13,6 +13,7 @@ every TCP session that can be read.
 
 from __future__ import annotations
 
+import io
 import struct
 from dataclasses import dataclass
 from pathlib import Path
@@ -36,6 +37,25 @@ _DLT_LINUX_SLL = 113
 _SUPPORTED_LINKTYPES = {_DLT_NULL, _DLT_EN10MB, _DLT_RAW, _DLT_LOOP, _DLT_LINUX_SLL}
 
 _PCAPNG_MAGIC = b"\x0a\x0d\x0d\x0a"
+
+# Classic pcap starts with one of four magic byte orders.
+_PCAP_MAGICS = (
+    b"\xd4\xc3\xb2\xa1",
+    b"\xa1\xb2\xc3\xd4",
+    b"\x4d\x3c\xb2\xa1",
+    b"\xa1\xb2\x3c\x4d",
+)
+
+
+def _looks_like_capture(path: Path) -> bool:
+    """Whether the first bytes mark the file as a pcap or pcapng capture."""
+
+    try:
+        with path.open("rb") as handle:
+            magic = handle.read(4)
+    except OSError:
+        return False
+    return magic == _PCAPNG_MAGIC or magic in _PCAP_MAGICS
 
 
 @dataclass(slots=True)
@@ -180,6 +200,13 @@ def _parse_tcp(ip_bytes: bytes) -> "_TcpRecord | Diagnostic":
         return Diagnostic("truncated_frame", detail=f"IPv4 parse failed: {exc}")
     if isinstance(ip.data, dpkt.ip6.IP6):
         return Diagnostic("ipv6_ignored", detail="IPv6 packet skipped")
+    if ip.offset or ip.mf:
+        # Fragments are reported, not reassembled. Only the first fragment
+        # carries a TCP header, and the specification excludes reassembly.
+        return Diagnostic(
+            "ip_fragment",
+            detail=f"IP fragment at offset {ip.offset} ignored",
+        )
     if not isinstance(ip.data, dpkt.tcp.TCP):
         return Diagnostic("non_tcp", detail=f"IP protocol {ip.p}")
     tcp = ip.data
@@ -195,6 +222,70 @@ def _parse_tcp(ip_bytes: bytes) -> "_TcpRecord | Diagnostic":
     )
 
 
+def _pcapng_linktypes(path: Path) -> list[int]:
+    """Collect every interface link type declared in a pcapng file.
+
+    ``dpkt`` keeps only the first Interface Description Block, so a file whose
+    interfaces declare different link types would otherwise look uniform. This
+    walks the block stream for the declared types and ignores the per-packet
+    type, which is a different field.
+    """
+
+    with path.open("rb") as handle:
+        if handle.read(4) != _PCAPNG_MAGIC:
+            return []
+        handle.seek(8)
+        bom = handle.read(4)
+        little = bom == b"\x4d\x3c\x2b\x1a"
+        endian = "<" if little else ">"
+        # Skip the section header block before walking the rest.
+        handle.seek(0)
+        header = handle.read(8)
+        if len(header) < 8:
+            return []
+        _, shb_len = struct.unpack(f"{endian}II", header)
+        handle.seek(shb_len)
+        linktypes: list[int] = []
+        while True:
+            header = handle.read(8)
+            if len(header) < 8:
+                break
+            block_type, block_len = struct.unpack(f"{endian}II", header)
+            if block_len < 12:
+                break
+            if block_type == 1 and block_len >= 20:
+                body = handle.read(block_len - 8)
+                if len(body) < 12:
+                    break
+                linktypes.append(struct.unpack(f"{endian}H", body[:2])[0])
+            else:
+                handle.seek(block_len - 8, io.SEEK_CUR)
+    return linktypes
+
+
+def _read_rows(path: Path, torn: list[str]) -> Iterator[tuple[float, bytes]]:
+    """Yield ``(timestamp, frame)`` without letting a torn tail escape.
+
+    A capture whose last block was cut short raises from the underlying reader
+    at the point of the tear. The rows before the tear are still valid, so they
+    are yielded and the reason is appended to ``torn``.
+    """
+
+    handle, reader = _open_reader(path)
+    try:
+        while True:
+            try:
+                row = next(reader)
+            except StopIteration:
+                return
+            except Exception as exc:
+                torn.append(str(exc))
+                return
+            yield row
+    finally:
+        handle.close()
+
+
 def read_capture(
     path: Path,
     diagnostics: list[Diagnostic] | None = None,
@@ -202,6 +293,11 @@ def read_capture(
     verify_checksums: bool = False,
 ) -> Iterator[Packet]:
     """Read ``path`` and yield every TCP/IPv4 packet in file order.
+
+    A capture with defects is read as far as it can be, and every part that
+    could not be read becomes a diagnostic of type ``truncated_frame``,
+    ``unsupported_linktype``, ``ipv6_ignored``, ``ip_fragment``, or ``non_tcp``.
+    A file that is not a capture at all raises ``ValueError``.
 
     If a list is passed as ``diagnostics``, notes about skipped link types,
     IPv6, and non-TCP frames are appended to it; the iterator is unaffected
@@ -216,7 +312,25 @@ def read_capture(
     if diagnostics is None:
         diagnostics = []
 
-    handle, reader = _open_reader(path)
+    declared = _pcapng_linktypes(path)
+    if len(set(declared)) > 1:
+        diagnostics.append(
+            Diagnostic(
+                "unsupported_linktype",
+                detail=f"capture mixes link types {sorted(set(declared))}",
+            )
+        )
+
+    try:
+        handle, reader = _open_reader(path)
+    except Exception as exc:
+        if _looks_like_capture(path):
+            # A recognizable but damaged file is reported, not raised.
+            diagnostics.append(
+                Diagnostic("truncated_frame", detail=f"capture header is invalid: {exc}")
+            )
+            return
+        raise
     try:
         linktype = reader.datalink() if callable(reader.datalink) else reader.datalink
         linktype = int(linktype)
@@ -227,7 +341,8 @@ def read_capture(
             return
         index = 0
         packet_index = 0
-        for timestamp, buf in reader:
+        torn: list[str] = []
+        for timestamp, buf in _read_rows(path, torn):
             packet_index += 1
             ip_bytes = _layer3_ip(linktype, buf)
             if isinstance(ip_bytes, Diagnostic):
@@ -240,6 +355,14 @@ def read_capture(
                 diagnostics.append(record)
                 continue
             tcp = record.tcp
+            if record.truncated:
+                diagnostics.append(
+                    Diagnostic(
+                        "truncated_packet",
+                        packet_index=packet_index,
+                        detail="captured payload is shorter than the header declares",
+                    )
+                )
             checksum_valid: bool | None = None
             if verify_checksums:
                 try:
@@ -263,6 +386,13 @@ def read_capture(
             index += 1
     finally:
         handle.close()
+    if torn:
+        diagnostics.append(
+            Diagnostic(
+                "truncated_frame",
+                detail=f"capture ended mid-block: {torn[0]}",
+            )
+        )
 
 
 def _tcp_checksum_ok(ip_bytes: bytes) -> bool:
