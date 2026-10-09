@@ -29,6 +29,7 @@ class Range:
     packet_index: int
     seq: int
     ts: float
+    is_retransmission: bool = False
 
     @property
     def end(self) -> int:
