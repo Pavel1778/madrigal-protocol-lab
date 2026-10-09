@@ -24,6 +24,7 @@ and out of a zip archive.
 from __future__ import annotations
 
 import hashlib
+import logging
 import shutil
 import zipfile
 from pathlib import Path
@@ -36,6 +37,8 @@ from src.project.manifest import (
     utc_now,
     write_manifest,
 )
+
+logger = logging.getLogger(__name__)
 
 DIRECTORIES = ("captures", "logs", "rules", "results", "reports")
 MANIFEST_FILE = "manifest.json"
@@ -83,6 +86,7 @@ class Project:
         (root / ANNOTATIONS_FILE).touch()
         manifest = Manifest.new(name)
         write_manifest(root / MANIFEST_FILE, manifest)
+        logger.info("created project %s at %s", name, root)
         return cls(root, manifest)
 
     @classmethod
@@ -157,6 +161,7 @@ class Project:
         self._manifest.captures.append(
             {"path": relative, "sha256": digest, "added_at": utc_now()}
         )
+        logger.info("added capture %s to project %s", relative, self._root)
         return relative
 
     def verify_captures(self) -> list[str]:
@@ -194,6 +199,7 @@ class Project:
                 if not path.is_file():
                     continue
                 archive.write(path, path.relative_to(self._root).as_posix())
+        logger.info("exported project %s to %s", self._root, out)
 
     @classmethod
     def import_(cls, in_zip: Path, target_dir: Path) -> Project:
@@ -227,6 +233,7 @@ class Project:
                 raise ProjectError(
                     "capture digests do not match after import: " + ", ".join(broken)
                 )
+            logger.info("imported project from %s to %s", archive_path, target)
             return project
         except BaseException:
             shutil.rmtree(target, ignore_errors=True)

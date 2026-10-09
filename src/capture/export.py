@@ -11,11 +11,14 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import logging
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
 from src.capture.reassembly import DirectionalStream
 from src.capture.session import Direction, Session
+
+logger = logging.getLogger(__name__)
 
 CONTRACT_VERSION = 1
 
@@ -75,6 +78,7 @@ def export_capture(
     """
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
+    written = 0
     with out_path.open("w", encoding="utf-8") as handle:
         handle.write("{")
         handle.write('"contract_version":')
@@ -92,5 +96,7 @@ def export_capture(
             session_streams = (streams or {}).get(session.session_id, {})
             payload = session_to_contract(session, session_streams)
             json.dump(payload, handle, ensure_ascii=True, separators=(",", ":"))
+            written += 1
         handle.write("]}")
         handle.write("\n")
+    logger.info("wrote %d session(s) to %s", written, out_path)

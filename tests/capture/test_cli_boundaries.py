@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
 import pytest
@@ -10,6 +11,35 @@ import pytest
 from src.capture.cli import main
 
 from .conftest import fixture
+
+
+def test_verbose_enables_info_logging(tmp_path: Path) -> None:
+    out = tmp_path / "out.json"
+    try:
+        code = main(
+            [
+                "--pcap",
+                str(fixture("normal.pcapng")),
+                "--out",
+                str(out),
+                "--verbose",
+            ]
+        )
+        assert code == 0
+        assert logging.getLogger().getEffectiveLevel() == logging.INFO
+    finally:
+        # main() reconfigures the root logger; restore it for the other tests.
+        logging.getLogger().setLevel(logging.WARNING)
+
+
+def test_without_verbose_stays_quiet(tmp_path: Path) -> None:
+    out = tmp_path / "out.json"
+    try:
+        code = main(["--pcap", str(fixture("normal.pcapng")), "--out", str(out)])
+        assert code == 0
+        assert logging.getLogger().getEffectiveLevel() == logging.WARNING
+    finally:
+        logging.getLogger().setLevel(logging.WARNING)
 
 
 def test_streaming_mode_writes_a_normalized_capture(
