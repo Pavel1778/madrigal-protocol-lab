@@ -1,0 +1,16 @@
+.git
+.venv
+venv
+__pycache__
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.benchmark
+.agent-cache
+out
+dist
+build
+*.egg-info
+.coverage
+htmlcov
+project.madrigal

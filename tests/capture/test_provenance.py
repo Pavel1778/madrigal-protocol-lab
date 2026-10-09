@@ -10,11 +10,15 @@ def test_lookup_inside_and_outside_ranges() -> None:
     provenance.add(Range(offset=0, length=4, packet_index=1, seq=100, ts=1.0))
     provenance.add(Range(offset=10, length=3, packet_index=2, seq=200, ts=2.0))
 
-    assert provenance.lookup(0).packet_index == 1
-    assert provenance.lookup(3).packet_index == 1
+    first = provenance.lookup(0)
+    assert first is not None and first.packet_index == 1
+    second = provenance.lookup(3)
+    assert second is not None and second.packet_index == 1
     assert provenance.lookup(4) is None  # a gap
-    assert provenance.lookup(10).packet_index == 2
-    assert provenance.lookup(12).packet_index == 2
+    third = provenance.lookup(10)
+    assert third is not None and third.packet_index == 2
+    fourth = provenance.lookup(12)
+    assert fourth is not None and fourth.packet_index == 2
     assert provenance.lookup(13) is None  # past the end
     assert provenance.lookup(99) is None
 

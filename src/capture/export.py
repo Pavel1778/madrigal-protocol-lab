@@ -11,8 +11,8 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Iterable, Sequence
 
 from src.capture.reassembly import DirectionalStream
 from src.capture.session import Direction, Session

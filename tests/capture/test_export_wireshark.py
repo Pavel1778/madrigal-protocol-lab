@@ -21,9 +21,7 @@ def _read(path: Path) -> list[tuple[float, bytes]]:
 def test_export_creates_a_readable_pcap(tmp_path: Path) -> None:
     capture = normalize(fixture("normal.pcapng"))
     out = tmp_path / "reassembled.pcap"
-    written = export_reassembled_pcap(
-        capture.sessions, out, streams=capture.streams
-    )
+    written = export_reassembled_pcap(capture.sessions, out, streams=capture.streams)
     assert out.is_file()
     assert written == 2
     rows = _read(out)
@@ -36,9 +34,7 @@ def test_export_creates_a_readable_pcap(tmp_path: Path) -> None:
 def test_export_writes_one_packet_per_session(tmp_path: Path) -> None:
     capture = normalize(fixture("port_reuse.pcapng"))
     out = tmp_path / "reassembled.pcap"
-    written = export_reassembled_pcap(
-        capture.sessions, out, streams=capture.streams
-    )
+    written = export_reassembled_pcap(capture.sessions, out, streams=capture.streams)
     # Two sessions, one direction each.
     assert len(capture.sessions) == 2
     assert written == 2

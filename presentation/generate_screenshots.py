@@ -20,14 +20,14 @@ from PySide6 import QtWidgets  # noqa: E402
 
 from src.ui import theme  # noqa: E402
 from src.ui.main_window import (  # noqa: E402
-    DEFAULT_CAPTURE,
-    DEFAULT_RULE,
     MainWindow,
     open_default_window,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OUT = REPO_ROOT / "presentation" / "screenshots"
+CAPTURE_01 = REPO_ROOT / "tests" / "corpus" / "reference_export" / "corpus_capture_01.normalized.json"
+RULE_V1 = REPO_ROOT / "examples" / "corpus_rule_v1.json"
 RULE_V2 = REPO_ROOT / "examples" / "corpus_rule_v2.json"
 CAPTURE_02 = REPO_ROOT / "tests" / "corpus" / "reference_export" / "corpus_capture_02.normalized.json"
 SYNTHETIC = REPO_ROOT / "tests" / "corpus" / "reference_export" / "synthetic_live.normalized.json"
@@ -59,7 +59,7 @@ def main() -> int:
     app = _app()
     written: list[Path] = []
 
-    window = open_default_window(app)
+    window = open_default_window(app, capture=CAPTURE_01, rule=RULE_V1)
     _show(app, window)
     written.append(_grab(window, "main_window.png"))
 
@@ -103,8 +103,8 @@ def main() -> int:
 
     # Compare two messages.
     if CAPTURE_02.is_file():
-        window.open_capture(DEFAULT_CAPTURE)
-        window.load_rule(DEFAULT_RULE)
+        window.open_capture(CAPTURE_01)
+        window.load_rule(RULE_V1)
         window.session_tree.select_direction("s1", "A_to_B")
         window.apply_rule()
         window.right_tabs.setCurrentWidget(window.compare_view)

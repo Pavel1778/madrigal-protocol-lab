@@ -43,4 +43,3 @@ __all__ = [
     "run_pipeline",
     "write_manifest",
 ]
-
