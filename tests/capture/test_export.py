@@ -77,6 +77,16 @@ def test_capture_id_is_content_hash(tmp_path: Path) -> None:
     assert capture.capture_id == digest
 
 
+def test_capture_id_does_not_depend_on_the_path(tmp_path: Path) -> None:
+    # A capture copied elsewhere is the same capture: the identifier follows the
+    # bytes, so a project can be moved and still match its manifest (R5).
+    original = fixture("normal.pcapng")
+    moved = tmp_path / "elsewhere" / "renamed.pcapng"
+    moved.parent.mkdir()
+    moved.write_bytes(original.read_bytes())
+    assert normalize(moved).capture_id == normalize(original).capture_id
+
+
 def test_export_is_deterministic(tmp_path: Path) -> None:
     capture = normalize(fixture("normal.pcapng"))
     first = tmp_path / "a.json"
