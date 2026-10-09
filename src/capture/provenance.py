@@ -50,13 +50,28 @@ class Provenance:
     """An ordered set of ranges covering a directional stream.
 
     Ranges are appended in stream order by :mod:`reassembly`. Lookup by offset
-    is a binary search, so a click in a hex view of a large stream stays cheap.
+    is a binary search over an index built once and reused, so a click in a hex
+    view of a large stream stays cheap.
     """
 
     ranges: list[Range] = field(default_factory=list)
+    _primary: list[Range] | None = field(default=None, repr=False, compare=False)
+    _starts: list[int] | None = field(default=None, repr=False, compare=False)
 
     def add(self, rng: Range) -> None:
         self.ranges.append(rng)
+        self._primary = None
+        self._starts = None
+
+    def _index(self) -> tuple[list[Range], list[int]]:
+        """Return the primary ranges and their start offsets, built once."""
+
+        if self._primary is None or self._starts is None:
+            primary = [r for r in self.ranges if not r.is_retransmission]
+            primary.sort(key=lambda r: r.offset)
+            self._primary = primary
+            self._starts = [r.offset for r in primary]
+        return self._primary, self._starts
 
     def lookup(self, offset: int) -> Range | None:
         """Return the range containing ``offset``, or ``None`` if uncovered.
@@ -71,8 +86,7 @@ class Provenance:
         the range that contains ``offset``.
         """
 
-        primary = [r for r in self.ranges if not r.is_retransmission]
-        starts = [r.offset for r in primary]
+        primary, starts = self._index()
         pos = bisect_right(starts, offset) - 1
         if pos < 0:
             return None
