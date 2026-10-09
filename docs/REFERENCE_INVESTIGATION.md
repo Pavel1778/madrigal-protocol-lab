@@ -130,6 +130,7 @@ Field `command` (140 values):
 
 | reading | support | contradict | score |
 | --- | --- | --- | --- |
+| entropy_enum | 140 | 0 | 1.00 |
 | low_cardinality | 140 | 0 | 1.00 |
 | offset_shift_+1 | 140 | 0 | 1.00 |
 | counter | 137 | 2 | 0.99 |
@@ -137,7 +138,7 @@ Field `command` (140 values):
 | message_length | 0 | 140 | 0.00 |
 | remaining_length | 0 | 140 | 0.00 |
 
-Best fit: `low_cardinality`.
+Best fit: `entropy_enum`.
 
 Field `target` (140 values):
 
@@ -152,11 +153,12 @@ Field `value` (60 values):
 
 | reading | support | contradict | score |
 | --- | --- | --- | --- |
+| entropy_parameter | 60 | 0 | 1.00 |
 | constant | 1 | 59 | 0.02 |
 | message_length | 1 | 59 | 0.02 |
 | remaining_length | 0 | 60 | 0.00 |
 
-Best fit: `constant`.
+Best fit: `entropy_parameter`.
 
 ## Open questions
 
