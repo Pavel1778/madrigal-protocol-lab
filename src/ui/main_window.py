@@ -155,6 +155,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.hex_view.byteHovered.connect(self._on_byte_hovered)
         self.hex_view.byteClicked.connect(self._on_byte_clicked)
         self.validation_view.applyRequested.connect(self.apply_rule)
+        self.validation_view.applyCaptureRequested.connect(self.apply_to_capture)
+        self.validation_view.loadExampleRequested.connect(self.load_example_rule)
+        self.validation_view.ruleValidityChanged.connect(self.validation_view.show_rule_validity)
         self.validation_view.counterexampleSelected.connect(self._reveal_counterexample)
         self.hypotheses_view.messageSelected.connect(self.reveal_offset)
 
@@ -202,6 +205,14 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         if path:
             self.load_rule(path)
+
+    def load_example_rule(self) -> None:
+        """Load the first example rule, or report that none is present."""
+        examples = sorted((REPO_ROOT / "examples").glob("*.json"))
+        if not examples:
+            self.validation_view.set_rule_status("no example rule found", error=True)
+            return
+        self.load_rule(examples[0])
 
     # -- selection ---------------------------------------------------------
 
