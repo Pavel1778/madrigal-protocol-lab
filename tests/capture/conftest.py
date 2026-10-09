@@ -17,3 +17,7 @@ def fixtures_dir() -> Path:
 
 def fixture(name: str) -> Path:
     return FIXTURES / name
+
+
+def defect(name: str) -> Path:
+    return FIXTURES / "defects" / name
