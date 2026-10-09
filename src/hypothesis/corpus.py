@@ -44,8 +44,21 @@ class VerificationReport:
         return dict(self.totals)
 
     def is_confirmed(self) -> bool:
-        """A rule is confirmed only when there are no contradictions."""
-        return self.total > 0 and not self.contradictions
+        """Whether the rule is confirmed within the tested scope.
+
+        Confirmation requires both that the rule actually applied to something
+        and that nothing contradicted it. A report that is applicable nowhere
+        (only ``not_applicable`` messages), or that is empty, is not a
+        confirmation of the rule: it is evidence of nothing. This keeps
+        "consistent in the tested scope" distinct from "proven".
+        """
+        if not self.is_relevant():
+            return False
+        return not self.contradictions
+
+    def is_relevant(self) -> bool:
+        """Whether the rule reached at least one message it applies to."""
+        return self.totals.get("matched", 0) + self.totals.get("mismatched", 0) > 0
 
     @property
     def covered_bytes(self) -> int:
