@@ -24,8 +24,13 @@ Files the walkthrough opens:
 Start the window:
 
 ```
-python -m src.ui.main_window
+python -m src.ui.main_window \
+  --capture tests/corpus/reference_export/corpus_capture_01.normalized.json \
+  --rule examples/corpus_rule_v1.json
 ```
+
+The window opens whatever capture and rule you pass on the command line or
+through File, Open capture and File, Open rule; it has no bundled example.
 
 Before the walkthrough, confirm the whole suite is green:
 
@@ -109,11 +114,19 @@ evidence of generality within this protocol.
 
 ## Step 8 - the applicability boundary (2 min)
 
-Do: File, Open capture, `tests/corpus/reference_export/synthetic_live.normalized.json`
-if it is present, otherwise open the pcap through the capture pipeline first.
-Apply to whole capture with rule v2.
+Do: the synthetic capture is not shipped as a normalized export, because it is
+outside the reference corpus. Normalize it first, then open it:
 
-See: no message matches; the capture is reported as incomplete or not applicable.
+```
+python -m src.capture.cli --pcap tests/corpus/synthetic_live.pcapng \
+  --out /tmp/synthetic_live.normalized.json
+```
+
+Then File, Open capture, `/tmp/synthetic_live.normalized.json`. Apply to whole
+capture with rule v2.
+
+See: no message matches; the framing reports the stream as incomplete or not
+applicable, so the counterexample set is not empty and the match count is zero.
 
 Say: a different capture uses a little-endian length, a transaction id and other
 command codes. The rule does not transfer. The tool reports the failure instead
