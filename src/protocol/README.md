@@ -29,8 +29,15 @@ messages. TCP packet boundaries are not message boundaries; a message split
 across two packets is one message.
 
 - `length_prefixed` — a length field at `length_offset` (`length_size` bytes,
-  `byte_order`) gives the message length. `length_includes_payload` says whether
-  the length covers the whole message or only the bytes after the header.
+  `byte_order`) gives the message length. `length_covers` says what the length
+  value counts:
+  - `payload` (default when the field is absent) — only the payload; total =
+    `length_offset + length_size + value`;
+  - `payload_and_length_field` — the payload plus the length field; total =
+    `length_offset + value`;
+  - `entire_message` — the whole message; total = `value`.
+  The deprecated boolean `length_includes_payload` is still accepted:
+  `true` maps to `entire_message`, `false` maps to `payload`.
 - `fixed_size` — every message is `size` bytes; a short final message is
   `incomplete`.
 - `marker_based` — messages are delimited by `start_bytes` and `end_bytes`.
@@ -52,7 +59,7 @@ A rule is JSON or YAML. The machine-readable definition is
     "length_offset": 2,
     "length_size": 2,
     "byte_order": "big",
-    "length_includes_payload": true
+    "length_covers": "entire_message"
   },
   "fields": [
     { "name": "command", "offset": 0, "type": "uint8", "expected": [4] },
