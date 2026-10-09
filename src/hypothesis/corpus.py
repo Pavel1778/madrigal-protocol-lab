@@ -69,6 +69,7 @@ class VerificationReport:
                     "direction": m.direction,
                     "status": m.status.value,
                     "fields": m.field_values(),
+                    "bytes_hex": m.bytes_hex,
                 }
                 for m in self.messages
             ],
