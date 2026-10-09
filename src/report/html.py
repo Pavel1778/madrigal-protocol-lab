@@ -110,8 +110,12 @@ def _scope_html(scope: dict[str, Any]) -> str:
 def _hypothesis_html(item: dict[str, Any]) -> str:
     status = str(item.get("status", "unknown"))
     cls = _STATUS_CLASS.get(status, "status-unknown")
-    parts = [f"<h3>{_esc(item.get('id', '?'))} &ndash; {_esc(item.get('statement', 'no statement recorded'))}</h3>"]
-    parts.append(f'<p><span class="status {cls}">{_esc(status_label(status))}</span></p>')
+    parts = [
+        f"<h3>{_esc(item.get('id', '?'))} &ndash; {_esc(item.get('statement', 'no statement recorded'))}</h3>"
+    ]
+    parts.append(
+        f'<p><span class="status {cls}">{_esc(status_label(status))}</span></p>'
+    )
     facts = []
     if item.get("rule_id") is not None:
         version = item.get("rule_version")
@@ -121,10 +125,12 @@ def _hypothesis_html(item: dict[str, Any]) -> str:
         facts.append(f"Evidence: {_esc(item['evidence'])}")
     counterexamples = item.get("counterexamples") or []
     if counterexamples:
-        facts.append("Counterexamples: " + _esc(", ".join(str(c) for c in counterexamples)))
+        facts.append(
+            "Counterexamples: " + _esc(", ".join(str(c) for c in counterexamples))
+        )
     if facts:
         parts.append("<ul>" + "".join(f"<li>{fact}</li>" for fact in facts) + "</ul>")
-    return f'<section>{"".join(parts)}</section>'
+    return f"<section>{''.join(parts)}</section>"
 
 
 def _counterexample_html(item: dict[str, Any]) -> str:
@@ -145,7 +151,7 @@ def _counterexample_html(item: dict[str, Any]) -> str:
     if item.get("detail"):
         parts.append(f"<dt>detail</dt><dd>{_esc(item['detail'])}</dd>")
     parts.append("</dl>")
-    return f'<section>{"".join(parts)}</section>'
+    return f"<section>{''.join(parts)}</section>"
 
 
 def render_html(investigation: dict[str, Any], out_path: Path) -> None:
@@ -200,16 +206,16 @@ def render_html(investigation: dict[str, Any], out_path: Path) -> None:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{_esc(model['title'])}</title>
+<title>{_esc(model["title"])}</title>
 <style>{_STYLESHEET}</style>
 </head>
 <body>
 <main>
-<h1>{_esc(model['title'])}</h1>
-<p class="muted">Contract version {_esc(investigation.get('contract_version', 1))}</p>
+<h1>{_esc(model["title"])}</h1>
+<p class="muted">Contract version {_esc(investigation.get("contract_version", 1))}</p>
 
 <h2>Scope</h2>
-{_scope_html(model['scope'])}
+{_scope_html(model["scope"])}
 
 <h2>Hypotheses</h2>
 {hypothesis_html}

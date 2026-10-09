@@ -107,9 +107,7 @@ def test_import_detects_capture_digest_mismatch(tmp_path: Path) -> None:
 
     # Corrupt the capture inside the archive.
     tampered = tmp_path / "tampered.zip"
-    with zipfile.ZipFile(archive) as source, zipfile.ZipFile(
-        tampered, "w"
-    ) as target:
+    with zipfile.ZipFile(archive) as source, zipfile.ZipFile(tampered, "w") as target:
         for item in source.infolist():
             data = source.read(item.filename)
             if item.filename.endswith(".pcapng"):
@@ -130,9 +128,7 @@ def test_import_rejects_missing_capture_file(tmp_path: Path) -> None:
     project.export(archive)
 
     stripped = tmp_path / "stripped.zip"
-    with zipfile.ZipFile(archive) as source, zipfile.ZipFile(
-        stripped, "w"
-    ) as target:
+    with zipfile.ZipFile(archive) as source, zipfile.ZipFile(stripped, "w") as target:
         for item in source.infolist():
             if item.filename.endswith(".pcapng"):
                 continue

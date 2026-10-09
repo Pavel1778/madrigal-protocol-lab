@@ -53,7 +53,13 @@ def test_markdown_has_every_section(tmp_path: Path) -> None:
     out = tmp_path / "report.md"
     render_markdown(INVESTIGATION, out)
     text = out.read_text(encoding="utf-8")
-    for heading in ("Scope", "Hypotheses", "Counterexamples", "Rule versions", "Open questions"):
+    for heading in (
+        "Scope",
+        "Hypotheses",
+        "Counterexamples",
+        "Rule versions",
+        "Open questions",
+    ):
         assert f"## {heading}" in text
     assert "h1" in text and "c1" in text
     assert "r1 version 2" in text

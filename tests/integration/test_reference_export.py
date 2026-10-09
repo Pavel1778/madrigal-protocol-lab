@@ -33,9 +33,9 @@ def test_reference_export_is_valid_and_current(stem: str, tmp_path: Path) -> Non
     committed = json.loads(
         (REFERENCES / f"{stem}.normalized.json").read_text(encoding="utf-8")
     )
-    Draft202012Validator(
-        json.loads(SCHEMA.read_text(encoding="utf-8"))
-    ).validate(committed)
+    Draft202012Validator(json.loads(SCHEMA.read_text(encoding="utf-8"))).validate(
+        committed
+    )
 
     # Rebuild from the capture and require the same content.
     capture = normalize(CORPUS / f"{stem}.pcapng")

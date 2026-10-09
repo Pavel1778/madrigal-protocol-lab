@@ -59,7 +59,9 @@ def _frame(
         data=bytes(tcp),
     )
     ip.len = len(bytes(ip))
-    src_mac, dst_mac = (_CLIENT_MAC, _SERVER_MAC) if forward else (_SERVER_MAC, _CLIENT_MAC)
+    src_mac, dst_mac = (
+        (_CLIENT_MAC, _SERVER_MAC) if forward else (_SERVER_MAC, _CLIENT_MAC)
+    )
     eth = dpkt.ethernet.Ethernet(
         src=src_mac,
         dst=dst_mac,
@@ -94,12 +96,8 @@ def export_reassembled_pcap(
             if session_streams is None:
                 source = packets if packets is not None else []
                 session_streams = {
-                    Direction.A_TO_B: reassemble(
-                        session, Direction.A_TO_B, source
-                    ),
-                    Direction.B_TO_A: reassemble(
-                        session, Direction.B_TO_A, source
-                    ),
+                    Direction.A_TO_B: reassemble(session, Direction.A_TO_B, source),
+                    Direction.B_TO_A: reassemble(session, Direction.B_TO_A, source),
                 }
 
             endpoint_a, endpoint_b = session.endpoints
