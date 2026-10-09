@@ -89,7 +89,14 @@ pytest tests/ -q
   for the integration day.
 - [docs/BENCHMARK.md](docs/BENCHMARK.md) — measured time and memory at the
   reference workload.
+- [docs/demo.md](docs/demo.md) — the window walkthrough on the reference corpus.
+- [docs/demo_cli.md](docs/demo_cli.md) — the same investigation from the command
+  line, as the fallback for the demonstration.
+- [docs/GUI_VERIFICATION.md](docs/GUI_VERIFICATION.md) — what the window was
+  driven to show, and the defects found while checking it.
 - [REPORT.md](REPORT.md) — the investigation report.
+- [presentation/slides.pdf](presentation/slides.pdf) — the deck, with the eight
+  window screenshots.
 
 ## License
 
