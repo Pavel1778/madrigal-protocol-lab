@@ -13,9 +13,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from . import theme
 from .model import (
     MISMATCHED,
-    NOT_APPLICABLE,
     RuleApplication,
-    RuleModel,
 )
 
 _STATUS_RANK = {

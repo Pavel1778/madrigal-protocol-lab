@@ -20,7 +20,6 @@ from .model import (
     AMBIGUOUS,
     FIELD,
     GAP,
-    HYPOTHESIS,
     INCOMPLETE,
     MATCHED,
     MISMATCHED,
