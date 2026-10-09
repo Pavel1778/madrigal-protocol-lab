@@ -66,13 +66,17 @@
     "field": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "offset", "type"],
+      "required": ["name", "type"],
       "properties": {
         "name": { "type": "string", "minLength": 1 },
-        "offset": { "type": "integer", "minimum": 0 },
+        "offset": { "type": "integer", "minimum": 0, "default": 0 },
         "type": {
           "type": "string",
-          "enum": ["uint8", "uint16", "uint32", "int8", "int16", "int32", "bytes", "enum"]
+          "enum": [
+            "uint8", "uint16", "uint32", "int8", "int16", "int32",
+            "bytes", "enum", "bitmask", "string", "array", "padding",
+            "checksum", "computed", "conditional"
+          ]
         },
         "byte_order": { "type": "string", "enum": ["big", "little"] },
         "length": { "type": "integer", "minimum": 0 },
@@ -85,7 +89,80 @@
           "description": "True when the field name or meaning is an assumption, not an observation."
         },
         "expected": { "type": "array" },
-        "missing_ok": { "type": "boolean" }
+        "missing_ok": { "type": "boolean" },
+        "bit_offset": { "type": "integer", "minimum": 0 },
+        "bit_length": { "type": "integer", "minimum": 1 },
+        "encoding": { "type": "string", "enum": ["ascii", "utf-8", "latin-1"] },
+        "terminated": { "type": "boolean" },
+        "element_type": {
+          "type": "string",
+          "enum": ["uint8", "uint16", "uint32", "int8", "int16", "int32", "bytes"]
+        },
+        "element_length": { "type": "integer", "minimum": 0 },
+        "count": { "type": "integer", "minimum": 0 },
+        "count_field": { "type": "string", "minLength": 1 },
+        "algorithm": { "type": "string", "enum": ["xor", "sum", "crc8", "crc16"] },
+        "start": { "type": "integer", "minimum": 0 },
+        "end": { "type": "integer", "minimum": 0 },
+        "expression": { "$ref": "#/$defs/expression" },
+        "condition": { "$ref": "#/$defs/condition" },
+        "field": { "$ref": "#/$defs/field" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "bitmask" } }, "required": ["type"] },
+          "then": { "required": ["bit_length"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "string" } }, "required": ["type"] },
+          "then": { "anyOf": [{ "required": ["length"] }, { "required": ["terminated"] }] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "array" } }, "required": ["type"] },
+          "then": {
+            "required": ["element_type"],
+            "anyOf": [{ "required": ["count"] }, { "required": ["count_field"] }]
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "padding" } }, "required": ["type"] },
+          "then": { "required": ["length"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "checksum" } }, "required": ["type"] },
+          "then": { "required": ["algorithm"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "computed" } }, "required": ["type"] },
+          "then": { "required": ["expression"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "conditional" } }, "required": ["type"] },
+          "then": { "required": ["condition", "field"] }
+        }
+      ]
+    },
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "op"],
+      "properties": {
+        "field": { "type": "string", "minLength": 1 },
+        "op": { "type": "string", "enum": ["eq", "ne", "bit_set", "bit_clear", "gt", "lt"] },
+        "value": {}
+      }
+    },
+    "expression": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["op"],
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": ["sum_of_lengths", "sum_of_values", "const", "add", "sub", "xor"]
+        },
+        "fields": { "type": "array", "items": { "type": "string" } },
+        "value": { "type": "integer" }
       }
     }
   }
