@@ -82,3 +82,27 @@ def test_checksum_flag_is_accepted(tmp_path: Path) -> None:
     )
     assert code == 0
     assert out.is_file()
+
+
+def test_unreadable_capture_reports_one_line(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    bad = tmp_path / "bad.pcapng"
+    bad.write_bytes(b"not a capture at all")
+    code = main(["--pcap", str(bad), "--out", str(tmp_path / "out.json")])
+    assert code == 2
+    err = capsys.readouterr().err
+    assert "cannot read capture" in err
+    assert "Traceback" not in err
+
+
+def test_empty_capture_reports_one_line(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    empty = tmp_path / "empty.pcapng"
+    empty.write_bytes(b"")
+    code = main(["--pcap", str(empty), "--out", str(tmp_path / "out.json")])
+    assert code == 2
+    err = capsys.readouterr().err
+    assert "cannot read capture" in err
+    assert "Traceback" not in err

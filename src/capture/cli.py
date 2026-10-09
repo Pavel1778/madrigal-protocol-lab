@@ -11,8 +11,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import struct
 import sys
 from pathlib import Path
+
+import dpkt
 
 from src.capture.export import export_capture
 from src.capture.export_wireshark import export_reassembled_pcap
@@ -66,43 +69,57 @@ def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
 
     if not args.pcap.is_file():
-        print(f"capture not found: {args.pcap}", file=sys.stderr)
+        print(
+            f"capture not found: {args.pcap} (check the path and try again)",
+            file=sys.stderr,
+        )
         return 2
 
     source_name = args.source_name if args.source_name is not None else str(args.pcap)
 
-    if args.stream:
-        stats = process_streaming(args.pcap, args.out, chunk_size=args.chunk_size)
-        if not args.quiet:
-            summary = {
-                "mode": "streaming",
-                "sessions": stats.sessions,
-                "packets": stats.packets,
-                "output": str(args.out),
-                "diagnostics": 0,
-            }
-            print(json.dumps(summary))
-        return 0
+    try:
+        if args.stream:
+            stats = process_streaming(args.pcap, args.out, chunk_size=args.chunk_size)
+            if not args.quiet:
+                summary = {
+                    "mode": "streaming",
+                    "sessions": stats.sessions,
+                    "packets": stats.packets,
+                    "output": str(args.out),
+                    "diagnostics": 0,
+                }
+                print(json.dumps(summary))
+            return 0
 
-    capture = normalize(
-        args.pcap,
-        ignore_checksums=not args.verify_checksums,
-    )
+        capture = normalize(
+            args.pcap,
+            ignore_checksums=not args.verify_checksums,
+        )
 
-    export_capture(
-        capture.sessions,
-        args.out,
-        source_file=source_name,
-        capture_id=capture.capture_id,
-        streams=capture.streams,
-    )
-
-    if args.wireshark_pcap is not None:
-        export_reassembled_pcap(
+        export_capture(
             capture.sessions,
-            args.wireshark_pcap,
+            args.out,
+            source_file=source_name,
+            capture_id=capture.capture_id,
             streams=capture.streams,
         )
+
+        if args.wireshark_pcap is not None:
+            export_reassembled_pcap(
+                capture.sessions,
+                args.wireshark_pcap,
+                streams=capture.streams,
+            )
+    except KeyboardInterrupt:
+        print("interrupted", file=sys.stderr)
+        return 130
+    except (OSError, dpkt.dpkt.Error, ValueError, struct.error) as exc:
+        print(
+            f"cannot read capture {args.pcap}: {exc} "
+            "(expected a valid PCAP or PCAPNG file)",
+            file=sys.stderr,
+        )
+        return 2
 
     if not args.quiet:
         summary = {
