@@ -12,11 +12,11 @@ separate concern.
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ..protocol.rule import load_rule
 from . import theme
 from .compare_view import CompareView
 from .hex_view import HexView, annotations_from_application, annotations_from_stream
@@ -25,9 +25,7 @@ from .session_tree import SessionTree
 from .validation_view import ValidationView
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_CAPTURE = REPO_ROOT / "tests" / "corpus" / "reference_export" / "corpus_capture_01.normalized.json"
-DEFAULT_RULE = REPO_ROOT / "examples" / "corpus_rule_v1.json"
-REPORT = REPO_ROOT / "REPORT.md"
+DEFAULT_REPORT = REPO_ROOT / "REPORT.md"
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -300,15 +298,15 @@ class MainWindow(QtWidgets.QMainWindow):
     # -- report ------------------------------------------------------------
 
     def show_report(self) -> None:
-        if REPORT.is_file():
-            self.report_view.setPlainText(REPORT.read_text(encoding="utf-8"))
+        if DEFAULT_REPORT.is_file():
+            self.report_view.setPlainText(DEFAULT_REPORT.read_text(encoding="utf-8"))
             self.right_tabs.setCurrentWidget(self.report_view)
 
     def export_markdown(self) -> None:
-        self._export(REPORT, "Markdown (*.md)")
+        self._export(DEFAULT_REPORT, "Markdown (*.md)")
 
     def export_html(self) -> None:
-        self._export(REPORT, "HTML (*.html)", html=True)
+        self._export(DEFAULT_REPORT, "HTML (*.html)", html=True)
 
     def _export(self, source: Path, file_filter: str, html: bool = False) -> None:
         if not source.is_file():
@@ -415,26 +413,42 @@ def _markdown_to_html(text: str) -> str:
     return "\n".join(out)
 
 
-def open_default_window(app: QtWidgets.QApplication | None = None) -> MainWindow:
-    """Build a window with the reference corpus and rule loaded.
+def open_default_window(
+    app: QtWidgets.QApplication | None = None,
+    capture: str | Path | None = None,
+    rule: str | Path | None = None,
+) -> MainWindow:
+    """Build a window, optionally opening *capture* and *rule*.
 
-    Used by the tests, the screenshot script and the manual smoke run so they
-    all start from the same state.
+    The window is input-driven: nothing is loaded unless the caller passes a
+    path. Tests, the screenshot script and the manual smoke run supply the
+    reference corpus and rule explicitly, so no capture or rule name is
+    embedded in the application itself.
     """
     window = MainWindow()
-    if DEFAULT_CAPTURE.is_file():
-        window.open_capture(DEFAULT_CAPTURE)
-    if DEFAULT_RULE.is_file():
-        window.load_rule(DEFAULT_RULE)
+    if capture is not None and Path(capture).is_file():
+        window.open_capture(capture)
+    if rule is not None and Path(rule).is_file():
+        window.load_rule(rule)
     return window
 
 
 def main(argv: list[str] | None = None) -> int:
-    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(argv or [])
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        prog="src.ui.main_window",
+        description="Open the protocol laboratory window.",
+    )
+    parser.add_argument("--capture", type=Path, help="normalized capture JSON to open")
+    parser.add_argument("--rule", type=Path, help="rule JSON or YAML to open")
+    args, qt_argv = parser.parse_known_args(argv)
+
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([sys.argv[0], *qt_argv])
     app.setApplicationName("Madrigal protocol laboratory")
     theme.load_fonts(app)
     app.setStyleSheet(theme.build_stylesheet())
-    window = open_default_window(app)
+    window = open_default_window(app, capture=args.capture, rule=args.rule)
     window.show()
     return app.exec()
 
