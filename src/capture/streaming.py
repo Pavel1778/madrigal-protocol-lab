@@ -127,37 +127,30 @@ def process_streaming(
             writer.write(session, streams)
             stats.flushes += 1
 
+        def drain(block: list[Packet]) -> None:
+            nonlocal global_index
+            _consume_block(
+                block,
+                tracker,
+                buffers,
+                closed_at,
+                flush,
+                stats,
+                global_index,
+                close_linger,
+                max_session_packets,
+            )
+            global_index += len(block)
+
         block: list[Packet] = []
         for packet in read_capture(path):
             block.append(packet)
             if len(block) < chunk_size:
                 continue
-            _consume_block(
-                block,
-                tracker,
-                buffers,
-                closed_at,
-                flush,
-                stats,
-                global_index,
-                close_linger,
-                max_session_packets,
-            )
-            global_index += len(block)
+            drain(block)
             block = []
         if block:
-            _consume_block(
-                block,
-                tracker,
-                buffers,
-                closed_at,
-                flush,
-                stats,
-                global_index,
-                close_linger,
-                max_session_packets,
-            )
-            global_index += len(block)
+            drain(block)
 
         # Anything still buffered is written at the end, in session order.
         for session in tracker.sessions:
