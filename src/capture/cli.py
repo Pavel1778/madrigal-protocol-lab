@@ -19,6 +19,7 @@ import dpkt
 
 from src.capture.export import export_capture
 from src.capture.export_wireshark import export_reassembled_pcap
+from src.capture.logging_setup import configure_logging
 from src.capture.pipeline import normalize
 from src.capture.streaming import process_streaming
 
@@ -62,11 +63,17 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="do not print the summary",
     )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="log progress to stderr",
+    )
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
+    configure_logging(args.verbose)
 
     if not args.pcap.is_file():
         print(

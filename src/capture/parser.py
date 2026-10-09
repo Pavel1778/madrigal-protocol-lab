@@ -14,6 +14,7 @@ every TCP session that can be read.
 from __future__ import annotations
 
 import io
+import logging
 import struct
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -21,6 +22,8 @@ from pathlib import Path
 from typing import Any, BinaryIO
 
 import dpkt
+
+logger = logging.getLogger(__name__)
 
 # TCP flag bits, re-exported for callers that classify packets.
 TH_FIN = 0x01
@@ -320,6 +323,7 @@ def read_capture(
     except Exception as exc:
         if _looks_like_capture(path):
             # A recognizable but damaged file is reported, not raised.
+            logger.warning("capture header is invalid: %s", exc)
             diagnostics.append(
                 Diagnostic(
                     "truncated_frame", detail=f"capture header is invalid: {exc}"
@@ -366,6 +370,7 @@ def _report_mixed_linktypes(path: Path, diagnostics: list[Diagnostic]) -> None:
 
     declared = _pcapng_linktypes(path)
     if len(set(declared)) > 1:
+        logger.warning("capture declares link types %s", sorted(set(declared)))
         diagnostics.append(
             Diagnostic(
                 "unsupported_linktype",
