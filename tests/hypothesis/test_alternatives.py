@@ -149,3 +149,97 @@ def test_suggest_covers_only_hypothesis_fields():
     report = suggest_alternatives(rule, _messages(rule, payloads))
     assert [f.field_name for f in report.fields] == ["guess"]
     assert report.fields[0].is_hypothesis is True
+
+
+def _alt_names(rule, payloads, field):
+    report = analyze_field(rule, _messages(rule, payloads), field)
+    return {a.name: a for a in report.alternatives}
+
+
+def test_endianness_suggested_for_a_little_endian_counter():
+    # A counter 0, 1, 2 stored little-endian appears on the wire as 00 00,
+    # 01 00, 02 00. Read little-endian they step by one; read big-endian they
+    # jump by 256, so the big-endian reading is flagged as the wrong one.
+    rule = _rule([{"name": "seq", "offset": 0, "type": "uint16", "byte_order": "big", "hypothesis": True}])
+    payloads = [b"\x00\x00" + b"\x00" * 6, b"\x01\x00" + b"\x00" * 6, b"\x02\x00" + b"\x00" * 6]
+    names = _alt_names(rule, payloads, "seq")
+    assert "endianness" in names
+    assert names["endianness"].score == 1.0
+
+
+def test_endianness_not_suggested_when_big_endian_is_regular():
+    rule = _rule([{"name": "seq", "offset": 0, "type": "uint16", "byte_order": "big", "hypothesis": True}])
+    payloads = [struct.pack(">H", v) + b"\x00" * 6 for v in (1, 2, 3, 4)]
+    names = _alt_names(rule, payloads, "seq")
+    assert "endianness" not in names
+
+
+def test_offset_shift_suggests_a_constant_neighbouring_byte():
+    # Byte 0 varies, byte 1 is the true constant field.
+    rule = _rule([{"name": "value", "offset": 0, "type": "uint8", "hypothesis": True}])
+    payloads = [bytes([v, 7]) + b"\x00" * 6 for v in (1, 2, 3)]
+    names = _alt_names(rule, payloads, "value")
+    assert "offset_shift_+1" in names
+    assert names["offset_shift_+1"].score == 1.0
+    assert names["offset_shift_+1"].support == 3
+
+
+def test_offset_shift_absent_when_no_neighbour_is_constant():
+    rule = _rule([{"name": "value", "offset": 0, "type": "uint8", "hypothesis": True}])
+    payloads = [bytes([v, v + 1, v + 2]) + b"\x00" * 5 for v in (1, 2, 3)]
+    names = _alt_names(rule, payloads, "value")
+    assert "offset_shift_+1" not in names
+    assert "offset_shift_-1" not in names
+
+
+def test_xor_mask_detected_on_masked_counter():
+    # Stored values are the counter xor 0x55.
+    rule = _rule([{"name": "value", "offset": 0, "type": "uint8", "hypothesis": True}])
+    payloads = [bytes([v ^ 0x55]) + b"\x00" * 7 for v in (1, 2, 3, 4)]
+    names = _alt_names(rule, payloads, "value")
+    assert "xor_mask_85" in names
+    assert names["xor_mask_85"].score == 1.0
+
+
+def test_xor_mask_not_reported_for_plain_values():
+    rule = _rule([{"name": "value", "offset": 0, "type": "uint8", "hypothesis": True}])
+    payloads = [bytes([v]) + b"\x00" * 7 for v in (10, 40, 90, 130)]
+    names = _alt_names(rule, payloads, "value")
+    assert not any(name.startswith("xor_mask_") for name in names)
+
+
+def test_delta_encoding_detected_when_values_are_steps():
+    # A constant value of 1 is either a constant field or a delta of 1; the
+    # running sum 1,2,3,4,5 advances by one, so the delta reading is offered.
+    rule = _rule([{"name": "delta", "offset": 0, "type": "uint8", "hypothesis": True}])
+    payloads = [b"\x01" + b"\x00" * 7 for _ in range(5)]
+    names = _alt_names(rule, payloads, "delta")
+    assert "delta_encoding" in names
+    assert names["delta_encoding"].support == 5
+
+
+def test_delta_encoding_absent_for_irregular_values():
+    rule = _rule([{"name": "value", "offset": 0, "type": "uint8", "hypothesis": True}])
+    payloads = [bytes([v]) + b"\x00" * 7 for v in (5, 40, 7, 90, 3)]
+    names = _alt_names(rule, payloads, "value")
+    assert "delta_encoding" not in names
+
+
+def test_encoding_alternatives_are_numeric_only():
+    rule = _rule(
+        [
+            {
+                "name": "target",
+                "offset": 0,
+                "type": "enum",
+                "hypothesis": True,
+                "enum": {"a": 1, "b": 2},
+            }
+        ]
+    )
+    payloads = [bytes([v]) + b"\x00" * 7 for v in (1, 2, 1, 2)]
+    names = _alt_names(rule, payloads, "target")
+    assert not any(name.startswith("xor_mask_") for name in names)
+    assert "delta_encoding" not in names
+    assert "endianness" not in names
+

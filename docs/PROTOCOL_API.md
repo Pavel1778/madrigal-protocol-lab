@@ -526,8 +526,15 @@ python -m src.protocol.cli correlate --rule rule.json --capture capture.json \
 readings of one field and scores each by how many messages it agrees with. The
 candidates are `constant`, `counter`, `message_length`, `remaining_length`, a
 `checksum_<algo>_<range>` over the message body, `low_cardinality`,
-`alias_of_<other>` when the field mirrors another, and `journal_<key>` when
-correlations are supplied. Each `Alternative` carries `support`, `contradict`,
+`alias_of_<other>` when the field mirrors another, `journal_<key>` when
+correlations are supplied, and four encoding readings for numeric fields:
+`endianness` (the counter reads little-endian while the rule says big-endian),
+`offset_shift_+1`/`offset_shift_-1` (a neighbouring byte is the real constant
+field), `xor_mask_<k>` (the values are masked with a constant), and
+`delta_encoding` (the field stores the step since the previous message). The
+encoding readings are offered only when the declared big-endian values are not
+already the simplest sequence, so a plain counter is not reported as masked.
+Each `Alternative` carries `support`, `contradict`,
 `score = support / (support + contradict)` and up to a few `evidence` entries.
 `suggest_alternatives` runs it over every field marked `hypothesis: true`. The
 declared meaning is one candidate among them and may lose; the output is the
@@ -536,7 +543,12 @@ evidence, not a verdict.
 ```
 python -m src.protocol.cli alternatives --rule rule.json --report report.json \
     --journal journal.md --field value --out alternatives.json
+python -m src.protocol.cli alternatives --rule rule.json --report report.json \
+    --all --out alternatives.json
 ```
+
+`--field NAME` analyses one field; `--all` analyses every hypothesis field in
+the rule.
 
 `export_kaitai(rule)` returns a Kaitai Struct `.ksy` document and
 `export_python(rule)` a standalone Python module with no dependency on this
