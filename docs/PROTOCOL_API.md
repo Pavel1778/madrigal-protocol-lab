@@ -78,8 +78,10 @@ GUI works with `apply_rule` / `apply_rule_fields`, `build_result`,
 - `src.hypothesis.corpus.verify_on_corpus(rule: Rule, corpus: list[CorpusStream
   | DirectionalStream]) -> VerificationReport` — apply the rule to every stream
   and summarise. The report has `rule_id, rule_version, totals, total,
-  contradictions, messages, summary`, plus `.counts()`, `.is_confirmed()`,
-  `.to_dict()`.
+  contradictions, messages, summary`, plus `.counts()`, `.is_relevant()`,
+  `.is_confirmed()`, `.to_dict()`. `is_confirmed()` is true only when the rule
+  reached at least one applicable message and nothing contradicted it; a report
+  that is applicable nowhere is not a confirmation.
 - `src.hypothesis.diff.diff_rules(rule_a, rule_b) -> RuleDiff` — added, removed
   and changed fields, framing and scope changes. `.to_dict()`;
   `format_rule_diff(diff) -> str`.
