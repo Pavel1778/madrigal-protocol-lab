@@ -90,6 +90,31 @@ def _brush_for(kind: str | None, background: str) -> QtGui.QBrush:
     return QtGui.QBrush(QtGui.QColor(background))
 
 
+# Byte kinds shown in the legend, in the order a reader meets them.
+LEGEND_KINDS = (
+    (GAP, "gap"),
+    (AMBIGUITY, "ambiguity"),
+    (MATCHED, "matched"),
+    (MISMATCHED, "mismatched"),
+    (INCOMPLETE, "incomplete"),
+    (UNCOVERED, "uncovered"),
+)
+
+
+def legend_swatch(kind: str) -> QtGui.QPixmap:
+    """A swatch painted with the exact brush used for ``kind``.
+
+    The swatch is filled with the same :func:`_brush_for` result the view uses,
+    so the legend cannot drift from the bytes it explains.
+    """
+    pixmap = QtGui.QPixmap(12, 12)
+    pixmap.fill(QtGui.QColor(_HATCH_BASE))
+    painter = QtGui.QPainter(pixmap)
+    painter.fillRect(0, 0, 12, 12, _brush_for(kind, _KIND_COLOURS[kind][0]))
+    painter.end()
+    return pixmap
+
+
 class HexView(QtWidgets.QPlainTextEdit):
     """Read-only hex view of a byte stream."""
 
@@ -141,6 +166,17 @@ class HexView(QtWidgets.QPlainTextEdit):
         self._data = b""
         self._annotations = []
         self.setPlainText("")
+        self.setExtraSelections([])
+
+    def show_hint(self, text: str) -> None:
+        """Show a single explanatory line when there are no bytes to draw.
+
+        Used for the first-run state, so an empty view says why it is empty
+        instead of looking broken.
+        """
+        self._data = b""
+        self._annotations = []
+        self.setPlainText(text)
         self.setExtraSelections([])
 
     @property
