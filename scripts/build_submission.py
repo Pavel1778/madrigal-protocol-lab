@@ -62,7 +62,7 @@ EXCLUDED_DIRS = frozenset(
         ".eggs",
         ".git",
         ".mypy_cache",
-        ".openhands",
+        ".agent-cache",
         ".pytest_cache",
         ".ruff_cache",
         ".venv",

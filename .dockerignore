@@ -6,7 +6,7 @@ __pycache__
 .mypy_cache
 .ruff_cache
 .benchmark
-.openhands
+.agent-cache
 out
 dist
 build
