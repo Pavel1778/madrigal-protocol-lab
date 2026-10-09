@@ -22,9 +22,12 @@ development interpreter.
 | Test coverage | `pytest --cov` | TOTAL 89%, every zone over target | None needed |
 | File size | `wc -l` | 3 scripts over 500 lines | Noted below |
 | Dependencies | `pip-audit`, `pip list --outdated` | 1 advisory in `pytest` | Upgraded |
-| Secrets in history | `git log -p | grep ghp_` | None | None |
+| Dependency advisories | `pip-audit` | None found | None |
+| Secrets in history | `git log --all -p | grep -iE 'ghp_|github_pat_'` | None | None |
 | Memory directory tracked | `git ls-files | grep -i openhands` | Not tracked, ignored | None |
 | Repository size | `du -sh .git` | 3.0 MiB | None |
+| Large files tracked | `git ls-files | xargs du -b` | Largest 30 KiB, no file over 1 MiB | None |
+| Fresh-clone commands | clone + `pip install -e ".[dev]"` + README/USAGE commands | All run; rule path needs `src.protocol` | Noted |
 
 ## 1. AI traces
 
@@ -155,10 +158,33 @@ at their pinned versions: the specification fixes the versions, and moving
 ## 7. Hygiene
 
 - `.openhands/` is not tracked and is ignored by `.gitignore`.
-- `git log --all -p | grep ghp_` returns nothing: no token is in history.
-- The largest tracked file is the 100 MiB benchmark output, which is not
-  tracked; the largest tracked file is a 30 KiB pcapng corpus capture. The
-  `.git` directory is 3.0 MiB.
+- `git log --all -p | grep -iE 'ghp_|github_pat_'` returns no token. The only
+  lines that match are the audit text itself, which quotes the search string.
+- `git ls-files | grep -i openhands` is empty.
+- The largest tracked files are `scripts/run_benchmark.py` (30 KiB) and the
+  corpus captures under `tests/corpus/` (29 KiB). Nothing tracked exceeds 1 MiB,
+  far under the 5 MiB threshold. `.git` is 3.0 MiB.
+
+## 8. Fresh-clone verification
+
+A clean clone of `agent1/capture` was installed into a new virtual environment
+and every command in `README.md` and `docs/USAGE.md` was run:
+
+- `pip install -e ".[dev]"` succeeds.
+- `python -m scripts.generate_corpus` writes all corpus and fixture captures.
+- `python -m src.capture.cli` normalizes `corpus_capture_01` (3 sessions, 0
+  diagnostics).
+- `python -m src.project.cli pipeline` builds the project and writes the
+  Markdown and HTML report.
+- `python -m src.project.cli create/add-capture/open/export/import` round trip
+  reports `"broken": []`.
+- `pytest tests/ -q` gives 177 passed, 1 skipped.
+
+The one command that cannot run from this branch is the rule path in sections 4
+and 6 of `docs/USAGE.md`, because `src.protocol` ships with the protocol/GUI
+branch. `docs/USAGE.md` now states this; the pipeline reports the missing engine
+instead of failing. The README link to `docs/PROTOCOL_API.md` will resolve once
+that branch is merged.
 
 ## Open issues
 
