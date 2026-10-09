@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtGui, QtWidgets
 
 from . import theme
 from .model import RuleApplication
@@ -62,15 +62,15 @@ def diff_bytes(left: bytes, right: bytes) -> list[DiffRow]:
     right_mid = right[prefix : len(right) - suffix]
     for index in range(max(len(left_mid), len(right_mid))):
         offset = prefix + index
-        l = f"{left_mid[index]:02x}" if index < len(left_mid) else "--"
-        r = f"{right_mid[index]:02x}" if index < len(right_mid) else "--"
+        left_byte = f"{left_mid[index]:02x}" if index < len(left_mid) else "--"
+        right_byte = f"{right_mid[index]:02x}" if index < len(right_mid) else "--"
         if index >= len(left_mid):
             kind = INSERTED
         elif index >= len(right_mid):
             kind = DELETED
         else:
             kind = CHANGED
-        rows.append(DiffRow(offset, l, r, kind))
+        rows.append(DiffRow(offset, left_byte, right_byte, kind))
 
     for index in range(suffix):
         offset = len(left) - suffix + index

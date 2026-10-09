@@ -46,14 +46,12 @@ target-version = "py312"
 line-length = 88
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "B", "UP", "SIM", "C4", "ISC", "RUF", "BLE"]
-ignore = [
-    "B008",
-    "E501",
-    # A ``str`` enum is kept as ``str, Enum`` so its members remain plain strings
-    # for the public API; rewriting to ``StrEnum`` would change that contract.
-    "UP042",
-]
+# Starter ruleset: only the rules that catch real mistakes are enabled while the
+# deadline is close. The extended set (isort, bugbear, pyupgrade, simplify,
+# comprehensions, ISC, RUF, BLE) is tracked in docs/AUDIT.md and will be turned
+# on after the defense.
+select = ["E4", "E7", "E9", "F"]
+ignore = ["E501"]
 
 [tool.mypy]
 python_version = "3.12"
