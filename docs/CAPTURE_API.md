@@ -261,8 +261,10 @@ rng = stream.provenance.lookup(4)
 if rng is None:
     print("offset 4 is a hole or past the end")
 else:
-    print(f"byte 4 came from packet {rng.packet_index} "
-          f"at seq {rng.seq}, captured at {rng.ts}")
+    print(
+        f"byte 4 came from packet {rng.packet_index} "
+        f"at seq {rng.seq}, captured at {rng.ts}"
+    )
 ```
 
 To cover a byte range that spans packets or holes, use `split`; it returns one
