@@ -22,6 +22,7 @@ import sys
 
 from ..hypothesis.corpus import CorpusStream, VerificationReport, verify_on_corpus
 from ..hypothesis.diff import diff_reports, diff_rules, format_report_diff, format_rule_diff
+from ..hypothesis.metrics import compute_metrics
 from .engine import Counterexample, apply_rule
 from .result import build_result, write_result
 from .rule import load_rule
@@ -162,14 +163,66 @@ def _cmd_diff(args) -> int:
 def _load_report(path: str) -> VerificationReport:
     with open(path, "r", encoding="utf-8") as handle:
         payload = json.load(handle)
+    return report_from_dict(payload)
+
+
+def report_from_dict(payload: dict) -> VerificationReport:
+    """Rebuild a report from the JSON produced by ``verify``."""
+    from ..hypothesis.status import Status
+    from .engine import FieldResult, MessageResult
+
+    messages = []
+    for item in payload.get("messages", []):
+        fields = [
+            FieldResult(
+                message_offset=int(item.get("offset", 0)),
+                message_length=int(item.get("length", 0)),
+                field_name=str(name),
+                field_type="unknown",
+                field_offset=0,
+                field_length=0,
+                value=value,
+                status=Status.MATCHED,
+            )
+            for name, value in (item.get("fields") or {}).items()
+        ]
+        messages.append(
+            MessageResult(
+                offset=int(item.get("offset", 0)),
+                length=int(item.get("length", 0)),
+                status=Status(item.get("status", "unknown")),
+                fields=fields,
+                session_id=str(item.get("session_id", "")),
+                direction=str(item.get("direction", "")),
+            )
+        )
     return VerificationReport(
         rule_id=str(payload.get("rule_id", "")),
         rule_version=int(payload.get("rule_version", 1)),
         totals=dict(payload.get("counts", {})),
         total=int(payload.get("total", 0)),
         contradictions=[_counterexample(item) for item in payload.get("contradictions", [])],
+        messages=messages,
         summary=str(payload.get("summary", "")),
+        stream_bytes=int(payload.get("stream_bytes", 0)),
     )
+
+
+def _cmd_metrics(args) -> int:
+    report = _load_report(args.report)
+    metrics = compute_metrics(report)
+    text = json.dumps(metrics.to_dict(), ensure_ascii=False, indent=2)
+    if args.out:
+        with open(args.out, "w", encoding="utf-8") as handle:
+            handle.write(text + "\n")
+    else:
+        print(text)
+    print(
+        f"rule {metrics.rule_id} v{metrics.rule_version}: coverage {metrics.coverage:.3f}, "
+        f"precision {metrics.precision:.3f}, counterexample density {metrics.counterexample_density:.1f}/100",
+        file=sys.stderr,
+    )
+    return 0
 
 
 def _counterexample(item: dict) -> Counterexample:
@@ -200,6 +253,8 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_verify(args)
         if args.command == "diff":
             return _cmd_diff(args)
+        if args.command == "metrics":
+            return _cmd_metrics(args)
     except (CaptureError, ValueError, OSError) as exc:
         parser.exit(2, f"error: {exc}\n")
     parser.exit(2, "error: no command\n")
