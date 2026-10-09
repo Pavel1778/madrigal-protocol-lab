@@ -20,7 +20,7 @@ import dataclasses
 import json
 import sys
 
-from ..hypothesis.alternatives import AlternativesReport, analyze_field
+from ..hypothesis.alternatives import AlternativesReport, analyze_field, suggest_alternatives
 from ..hypothesis.corpus import CorpusStream, VerificationReport, verify_on_corpus
 from ..hypothesis.diff import diff_reports, diff_rules, format_report_diff, format_rule_diff
 from ..hypothesis.journal import correlate, load_journal
@@ -80,7 +80,12 @@ def _build_parser() -> argparse.ArgumentParser:
     alternatives.add_argument("--report", required=True, help="report JSON from the verify command")
     alternatives.add_argument("--corpus", default=None, help="normalized capture for the corpus")
     alternatives.add_argument("--journal", default=None, help="journal file for correlation")
-    alternatives.add_argument("--field", required=True, help="hypothesis field name")
+    alternatives.add_argument("--field", default=None, help="hypothesis field name")
+    alternatives.add_argument(
+        "--all",
+        action="store_true",
+        help="report every hypothesis field instead of one field",
+    )
     alternatives.add_argument("--out", default=None, help="path to write JSON to (default: stdout)")
     return parser
 
@@ -283,22 +288,29 @@ def _cmd_alternatives(args) -> int:
         entries = load_journal(args.journal)
         correlations = correlate(messages, entries).correlated
 
-    report = AlternativesReport(rule_id=rule.rule_id, rule_version=rule.rule_version)
-    report.fields.append(
-        analyze_field(rule, messages, args.field, correlations=correlations)
-    )
+    if args.all:
+        report = suggest_alternatives(rule, messages, correlations=correlations)
+    else:
+        if not args.field:
+            print("provide --field NAME or --all", file=sys.stderr)
+            return 2
+        report = AlternativesReport(rule_id=rule.rule_id, rule_version=rule.rule_version)
+        report.fields.append(
+            analyze_field(rule, messages, args.field, correlations=correlations)
+        )
     text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2)
     if args.out:
         with open(args.out, "w", encoding="utf-8") as handle:
             handle.write(text + "\n")
     else:
         print(text)
-    field_report = report.fields[0]
-    best = field_report.best or "none"
-    print(
-        f"field {args.field}: {len(field_report.alternatives)} alternatives, best {best}",
-        file=sys.stderr,
-    )
+    for field_report in report.fields:
+        best = field_report.best or "none"
+        print(
+            f"field {field_report.field_name}: "
+            f"{len(field_report.alternatives)} alternatives, best {best}",
+            file=sys.stderr,
+        )
     return 0
 
 

@@ -245,10 +245,185 @@ def analyze_field(
     if correlations:
         _test_journal(alternatives, observations, correlations, limit)
 
+    # Encoding alternatives: is the field read the wrong way, from the wrong
+    # place, masked, or stored as a step rather than an absolute value?
+    if numeric:
+        _test_endianness(alternatives, observations, spec, limit)
+        _test_offset_shift(alternatives, observations, spec, limit)
+        _test_xor_mask(alternatives, observations, limit)
+        _test_delta_encoding(alternatives, observations, limit)
+
     alternatives.sort(key=lambda a: (-a.score, a.name))
     result.alternatives = alternatives
     result.best = alternatives[0].name if alternatives else None
     return result
+
+
+def _raw_slice(message: MessageResult, offset: int, width: int) -> bytes | None:
+    """The raw bytes a field claims, or None when they are not available."""
+    data = bytes.fromhex(message.bytes_hex or "")
+    if width <= 0 or offset < 0 or offset + width > len(data):
+        return None
+    return data[offset : offset + width]
+
+
+def _is_unit_step(values: list[int]) -> list[bool]:
+    """True at index i when the value is one greater than at index i-1."""
+    out = []
+    for index, value in enumerate(values):
+        if index == 0:
+            out.append(True)
+        else:
+            out.append(value - values[index - 1] == 1)
+    return out
+
+
+def _all_unit_step(values: list[int]) -> bool:
+    """True when every consecutive difference is exactly one."""
+    if len(values) < 3:
+        return False
+    return all(values[i + 1] - values[i] == 1 for i in range(len(values) - 1))
+
+
+def _test_endianness(alternatives, observations, spec, limit) -> None:
+    """The field may be little-endian even though the rule reads it big-endian.
+
+    The signature of a counter stored the other way round is that the same
+    bytes read little-endian advance by exactly one per message while the
+    declared big-endian reading does not.
+    """
+    width = spec.size
+    if width < 2:
+        return
+    little_values = []
+    for message, _ in observations:
+        raw = _raw_slice(message, spec.offset, width)
+        if raw is None:
+            return
+        little_values.append(int.from_bytes(raw, "little"))
+    big_values = [v for _, v in observations]
+    if not _all_unit_step(little_values) or _all_unit_step(big_values):
+        return
+    checks = [
+        (message, value, True, f"little-endian reading {little_values[index]}")
+        for index, (message, value) in enumerate(observations)
+    ]
+    _add(
+        alternatives,
+        "endianness",
+        "the field reads as little-endian rather than big-endian",
+        checks,
+        limit,
+    )
+
+
+def _test_offset_shift(alternatives, observations, spec, limit) -> None:
+    """The field may start one byte earlier or later than the rule says."""
+    width = spec.size
+    if width < 1:
+        return
+    for shift in (1, -1):
+        offset = spec.offset + shift
+        shifted = []
+        available = True
+        for message, _ in observations:
+            raw = _raw_slice(message, offset, width)
+            if raw is None:
+                available = False
+                break
+            shifted.append(int.from_bytes(raw, spec.byte_order))
+        if not available or len(set(shifted)) != 1:
+            continue
+        if len({v for _, v in observations}) == 1:
+            # The declared offset is already constant; a shift proves nothing.
+            continue
+        checks = [
+            (
+                message,
+                value,
+                shifted[index] == shifted[0],
+                f"value at offset {offset} is {shifted[index]}",
+            )
+            for index, (message, value) in enumerate(observations)
+        ]
+        sign = "+" if shift > 0 else "-"
+        _add(
+            alternatives,
+            f"offset_shift_{sign}1",
+            f"the field starts at offset {offset} instead of {spec.offset} "
+            "and is constant there",
+            checks,
+            limit,
+        )
+
+
+def _test_xor_mask(alternatives, observations, limit) -> None:
+    """The field may be masked with a constant byte.
+
+    A mask is proposed when the declared values are not already a unit step but
+    some constant makes them one. Several masks can fit; the one that maps the
+    sequence onto the lowest values (nearest zero) is reported, since it is the
+    smallest shift that explains the data.
+    """
+    values = [v for _, v in observations]
+    if _all_unit_step(values):
+        # The declared reading is already the simplest sequence; nothing to add.
+        return
+    best = None
+    for mask in range(1, 256):
+        masked = [v ^ mask for v in values]
+        if _all_unit_step(masked) or len(set(masked)) == 1:
+            key = min(masked)
+            if best is None or key < best[0]:
+                best = (key, mask, masked)
+    if best is None:
+        return
+    _, mask, masked = best
+    checks = [
+        (
+            message,
+            value,
+            index == 0 or masked[index] - masked[index - 1] == 1,
+            f"value xor {mask} is {masked[index]}",
+        )
+        for index, (message, value) in enumerate(observations)
+    ]
+    _add(
+        alternatives,
+        f"xor_mask_{mask}",
+        f"the field is the stored value xor {mask}",
+        checks,
+        limit,
+    )
+
+
+def _test_delta_encoding(alternatives, observations, limit) -> None:
+    """The field may store the step since the previous message, not the value.
+
+    The running sum is the quantity of interest; the reading is supported when
+    that running sum advances by exactly one per message.
+    """
+    values = [v for _, v in observations]
+    running = []
+    total = 0
+    for value in values:
+        total += value
+        running.append(total)
+    steps = _is_unit_step(running)
+    if sum(steps[1:]) <= len(running) // 2:
+        return
+    checks = [
+        (message, value, ok, f"running sum {running[index]}")
+        for index, ((message, value), ok) in enumerate(zip(observations, steps))
+    ]
+    _add(
+        alternatives,
+        "delta_encoding",
+        "the field is the step since the previous message; the running sum "
+        "advances by one",
+        checks,
+        limit,
+    )
 
 
 def _test_checksums(alternatives, observations, spec, limit) -> None:
