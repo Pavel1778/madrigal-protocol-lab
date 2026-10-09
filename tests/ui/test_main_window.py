@@ -193,6 +193,20 @@ def test_compare_view_shows_two_messages(app):
     window.close()
 
 
+@corpus_required
+def test_hypotheses_tab_fills_on_apply(app):
+    window = open_window(app)
+    window.session_tree.select_direction("s1", "A_to_B")
+    window.apply_rule()
+    view = window.hypotheses_view
+    # Rule v1 flags three fields as hypotheses; each contributes at least one
+    # candidate reading, so the panel is never empty after an apply.
+    assert view.table.rowCount() >= 3
+    fields = {view.table.item(r, 0).text() for r in range(view.table.rowCount())}
+    assert {"command", "target", "value"} <= fields
+    window.close()
+
+
 def test_diff_bytes_aligns_a_shared_prefix():
     rows = diff_bytes(b"\x01\x00\x00\x05", b"\x01\x00\x00\x06")
     assert rows[0].kind == "equal"
