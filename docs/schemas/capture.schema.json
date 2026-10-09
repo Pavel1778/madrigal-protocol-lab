@@ -69,12 +69,14 @@
           "enum": [
             "gap",
             "ambiguity",
-            "truncated",
-            "duplicate",
-            "unsupported_linktype",
+            "checksum_offload",
             "ipv6_ignored",
-            "no_syn",
-            "checksum_offload"
+            "non_ip",
+            "non_tcp",
+            "ip_fragment",
+            "truncated_packet",
+            "truncated_frame",
+            "unsupported_linktype"
           ]
         },
         "offset": { "type": "integer", "minimum": 0 },
