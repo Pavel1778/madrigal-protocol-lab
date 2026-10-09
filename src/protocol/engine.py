@@ -75,6 +75,7 @@ class MessageResult:
     direction: str = ""
     reason: str | None = None
     bytes_hex: str = ""
+    timestamp: float | None = None
 
     @property
     def end(self) -> int:
@@ -154,11 +155,27 @@ def _provenance_for(stream: DirectionalStream, start: int, end: int) -> dict | N
     if not overlapping:
         return None
     packets = sorted({p.packet_index for p in overlapping if p.packet_index is not None})
-    return {
+    out = {
         "offset": start,
         "length": end - start,
         "packets": packets,
     }
+    stamps = [p.ts for p in overlapping if p.ts is not None]
+    if stamps:
+        out["ts"] = min(stamps)
+    seqs = [p.seq for p in overlapping if p.seq is not None]
+    if seqs:
+        out["seq"] = min(seqs)
+    return out
+
+
+def _stream_timestamp(stream: DirectionalStream, start: int, end: int) -> float | None:
+    stamps = [
+        p.ts
+        for p in stream.provenance
+        if p.ts is not None and start < p.end and p.offset < end
+    ]
+    return min(stamps) if stamps else None
 
 
 def _decode_field(
@@ -461,6 +478,7 @@ def apply_rule(
             direction=direction,
             reason=reason,
             bytes_hex=data[message.offset : message.end].hex(),
+            timestamp=_stream_timestamp(stream, message.offset, message.end),
         )
         results.append(result)
     return results
