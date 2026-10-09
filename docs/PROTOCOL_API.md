@@ -80,6 +80,15 @@ GUI works with `apply_rule` / `apply_rule_fields`, `build_result`,
   and summarise. The report has `rule_id, rule_version, totals, total,
   contradictions, messages, summary`, plus `.counts()`, `.is_confirmed()`,
   `.to_dict()`.
+- `src.hypothesis.diff.diff_rules(rule_a, rule_b) -> RuleDiff` — added, removed
+  and changed fields, framing and scope changes. `.to_dict()`;
+  `format_rule_diff(diff) -> str`.
+- `src.hypothesis.diff.diff_reports(report_a, report_b) -> ReportDiff` —
+  `resolved_counterexamples, introduced_counterexamples, unchanged_mismatches,
+  matched_delta, coverage_delta, version_a, version_b`. `.to_dict()`;
+  `format_report_diff(diff) -> str`.
+- `src.hypothesis.metrics.compute_metrics(report) -> RuleMetrics` — see the
+  metrics section below.
 - `src.hypothesis.versioning.ResultStore` — `.add(rule, capture_id, payload) ->
   StoredResult`, `.results_for(rule_id, capture_id=None)`,
   `.mark_outdated(rule, capture_id=None) -> list[StoredResult]`,
@@ -438,22 +447,39 @@ The GUI should show `incomplete`, `ambiguous` and `uncovered` distinctly from
 `mismatched`: they describe a limitation of the data or the rule's reach, not a
 contradiction of a claim.
 
-## 8. Limitations
+## 8. Metrics
 
-The rule engine is deliberately a small declarative model. It does not support:
+`compute_metrics(report)` turns a verification report into numbers, and the CLI
+`metrics` command writes them as JSON. `RuleMetrics`:
 
-- Nested or repeating structures (arrays, length-prefixed sub-records). Each
-  rule describes a flat list of fields at fixed offsets inside one message.
-- Field values that depend on other fields (for example a computed length, a
-  checksum, or a discriminator that selects a variant layout). Rules are
-  static; verifying a variant means writing a separate rule scoped to it.
-- Conditional or branching logic and per-message scripting. Anything requiring
-  computation belongs in a caller that reads `apply_rule` output and decides.
-- Bit-level fields; fields are byte-aligned.
-- Encrypted or compressed payloads; the engine reads bytes, it does not decode
-  them.
+- `total_messages`, `applicable_messages` (messages the rule scope covers),
+  `sessions`, `matched`, `mismatched`, `counterexamples`;
+- `coverage = (total - not_applicable) / total` — how much of the corpus the rule
+  reaches;
+- `precision = matched / (matched + mismatched)` — of the messages it interprets,
+  how many agree with it;
+- `fragmentation = total_messages / sessions` — average messages per session, a
+  sign the framing actually split the stream;
+- `unknown_ratio = unknown / total`;
+- `uncovered_ratio` — bytes of the streams not consumed by any framed message,
+  `(stream_bytes - covered_bytes) / stream_bytes`;
+- `counterexample_density = counterexamples / applicable * 100`;
+- `length_histogram` — message length to count;
+- `type_histogram` — values of a `command` field to count, when such a field is
+  extracted.
 
-These fit the case, where the goal is a checkable interpretation of a stream
-rather than a complete protocol description. They can be added later as
-additional framing strategies or field types without changing the result
-contract.
+```
+python -m src.protocol.cli metrics --report report.json --out metrics.json
+```
+
+## 9. Limitations
+
+The rule model is flat by design: arrays repeat a single fixed-width element and
+`computed`/`conditional` reference other declared fields, but there are no nested
+sub-records, no variable-length elements, and no layout that changes wholesale
+per variant. A protocol variant is described by a separate rule scoped to it.
+Anything requiring per-message scripting belongs in a caller that reads
+`apply_rule` output. Fields are byte-aligned except `bitmask`. Encrypted or
+compressed payloads are not decoded. These fit the case, where the goal is a
+checkable interpretation of a stream rather than a complete protocol
+description; they can be extended without changing the result contract.

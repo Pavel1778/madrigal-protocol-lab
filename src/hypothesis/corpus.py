@@ -38,6 +38,7 @@ class VerificationReport:
     contradictions: list[Counterexample] = field(default_factory=list)
     messages: list[MessageResult] = field(default_factory=list)
     summary: str = ""
+    stream_bytes: int = 0
 
     def counts(self) -> dict:
         return dict(self.totals)
@@ -45,6 +46,11 @@ class VerificationReport:
     def is_confirmed(self) -> bool:
         """A rule is confirmed only when there are no contradictions."""
         return self.total > 0 and not self.contradictions
+
+    @property
+    def covered_bytes(self) -> int:
+        """Bytes consumed by framed messages."""
+        return sum(message.length for message in self.messages)
 
     def to_dict(self) -> dict:
         return {
@@ -54,6 +60,18 @@ class VerificationReport:
             "counts": self.counts(),
             "contradictions": [c.to_dict() for c in self.contradictions],
             "summary": self.summary,
+            "stream_bytes": self.stream_bytes,
+            "messages": [
+                {
+                    "offset": m.offset,
+                    "length": m.length,
+                    "session_id": m.session_id,
+                    "direction": m.direction,
+                    "status": m.status.value,
+                    "fields": m.field_values(),
+                }
+                for m in self.messages
+            ],
         }
 
 
@@ -66,8 +84,10 @@ def verify_on_corpus(
     totals = {status.value: 0 for status in ALL_STATUSES}
     messages: list[MessageResult] = []
     contradictions: list[Counterexample] = []
+    stream_bytes = 0
 
     for item in items:
+        stream_bytes += len(item.stream.data)
         results = apply_rule(item.stream, rule, item.session_id, item.direction)
         for result in results:
             messages.append(result)
@@ -85,6 +105,7 @@ def verify_on_corpus(
         contradictions=contradictions,
         messages=messages,
         summary=summary,
+        stream_bytes=stream_bytes,
     )
 
 
