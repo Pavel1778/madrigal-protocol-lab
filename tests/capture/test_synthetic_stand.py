@@ -97,4 +97,4 @@ def test_generate_writes_and_verifies(tmp_path: Path) -> None:
     sizes = generate(tmp_path)
     assert sizes["synthetic_live.pcapng"] < 2 * 1024 * 1024
     assert (tmp_path / "synthetic_live_journal.md").is_file()
-    assert (tmp_path / "README.md").is_file()
+    assert (tmp_path / "synthetic_live_README.md").is_file()

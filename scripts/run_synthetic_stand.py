@@ -574,7 +574,7 @@ def generate(out_dir: Path) -> dict[str, int]:
     files = {
         "synthetic_live.pcapng": capture,
         "synthetic_live_journal.md": render_journal(journal).encode("utf-8"),
-        "README.md": README.encode("utf-8"),
+        "synthetic_live_README.md": README.encode("utf-8"),
     }
     sizes: dict[str, int] = {}
     for name, data in files.items():
