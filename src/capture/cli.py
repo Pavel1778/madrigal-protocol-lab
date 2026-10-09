@@ -16,6 +16,7 @@ from pathlib import Path
 
 from src.capture.export import export_capture
 from src.capture.pipeline import normalize
+from src.capture.streaming import process_streaming
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -36,6 +37,17 @@ def _build_parser() -> argparse.ArgumentParser:
         help="report TCP checksum mismatches instead of ignoring them",
     )
     parser.add_argument(
+        "--stream",
+        action="store_true",
+        help="process in blocks instead of holding every session at once",
+    )
+    parser.add_argument(
+        "--chunk-size",
+        type=int,
+        default=10000,
+        help="packets per block in streaming mode",
+    )
+    parser.add_argument(
         "--quiet",
         action="store_true",
         help="do not print the summary",
@@ -50,11 +62,25 @@ def main(argv: list[str] | None = None) -> int:
         print(f"capture not found: {args.pcap}", file=sys.stderr)
         return 2
 
+    source_name = args.source_name if args.source_name is not None else str(args.pcap)
+
+    if args.stream:
+        stats = process_streaming(args.pcap, args.out, chunk_size=args.chunk_size)
+        if not args.quiet:
+            summary = {
+                "mode": "streaming",
+                "sessions": stats.sessions,
+                "packets": stats.packets,
+                "output": str(args.out),
+                "diagnostics": 0,
+            }
+            print(json.dumps(summary))
+        return 0
+
     capture = normalize(
         args.pcap,
         ignore_checksums=not args.verify_checksums,
     )
-    source_name = args.source_name if args.source_name is not None else str(args.pcap)
 
     export_capture(
         capture.sessions,

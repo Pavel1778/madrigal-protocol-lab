@@ -27,11 +27,29 @@ The reference environment in the specification is Linux x86-64, 4 vCPU,
 
 | Phase | Seconds |
 | ----- | ------- |
-| Parse (read_capture) | 6.63 |
-| Sessions (build_sessions) | 0.67 |
+| Parse (read_capture) | 6.90 |
+| Sessions (build_sessions) | 0.68 |
 | Reassembly (reassemble) | 1.83 |
-| Export (export_capture) | 2.28 |
-| Total | 11.40 |
+| Export (export_capture) | 2.15 |
+| Total | 11.56 |
+
+## Streaming mode
+
+`process_streaming` reads the capture in blocks and writes each session as
+soon as it can no longer receive packets, so closed sessions leave memory.
+The output is identical to the regular mode; only the resource profile
+differs. The streaming peak is measured in its own process so the two do
+not share a high-water mark.
+
+| Metric | Regular | Streaming |
+| ------ | ------- | --------- |
+| Total seconds | 11.56 | 11.22 |
+| Peak RSS (MiB) | 354 | 224 |
+| Output JSON (MiB) | 122.44 | 122.44 |
+
+The streaming run flushed 1000 sessions.
+
+Streaming used less memory.
 
 ## Memory and output
 
@@ -41,7 +59,7 @@ The reference environment in the specification is Linux x86-64, 4 vCPU,
 ## Conclusions and limitations
 
 - Peak memory is 354 MiB, well under the 4 GiB threshold.
-- Total time is 11.40 s, well under the 5 minute threshold.
+- Total time is 11.56 s, well under the 5 minute threshold.
 
 Observations:
 
