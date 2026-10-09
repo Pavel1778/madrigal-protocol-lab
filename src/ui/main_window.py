@@ -245,7 +245,7 @@ class MainWindow(QtWidgets.QMainWindow):
         application = self._rule.apply(self._capture, self._session_id, self._direction)
         self.validation_view.show_application(application)
         self.compare_view.show_application(application)
-        self._show_hypotheses(application)
+        self._show_hypotheses(self._rule.rule, application.messages)
         stream = self._capture.stream(self._session_id, self._direction)
         self.hex_view.set_annotations(annotations_from_application(application, stream))
         counts = ", ".join(f"{k}={v}" for k, v in sorted(application.counts.items()))
@@ -256,12 +256,32 @@ class MainWindow(QtWidgets.QMainWindow):
             f"applied rule v{application.rule.rule_version} to {self._session_id} {self._direction}"
         )
 
-    def _show_hypotheses(self, application) -> None:
+    def _show_hypotheses(self, rule, messages) -> None:
         """Fill the hypotheses tab with the alternative readings for the run."""
         from ..hypothesis.alternatives import suggest_alternatives
 
-        report = suggest_alternatives(application.rule, application.messages)
+        report = suggest_alternatives(rule, messages)
         self.hypotheses_view.show_fields(report.fields)
+
+    def _corpus_messages(self, directions: tuple[str, ...]) -> list:
+        """Decode every scoped stream of the capture into one message list.
+
+        The hypotheses panel is read against the whole corpus, not one direction,
+        so the candidate scores are computed from every message the rule applies
+        to rather than from a single session.
+        """
+        from ..protocol.engine import apply_rule
+
+        messages: list = []
+        for session in self._capture.sessions:
+            for direction in self._capture.directions(session.session_id):
+                if directions and direction not in directions:
+                    continue
+                stream = self._capture.stream(session.session_id, direction)
+                messages.extend(
+                    apply_rule(stream, self._rule.rule, session.session_id, direction)
+                )
+        return messages
 
     def apply_to_capture(self) -> None:
         """Verify the current rule over every direction of the capture."""
@@ -280,6 +300,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self._show_report_diff(self._rule.previous_report, report)
         self._rule.corpus_report = report
         self._corpus_report = report
+        directions = (self._rule.rule.direction,) if self._rule.rule.direction else ()
+        self._show_hypotheses(self._rule.rule, self._corpus_messages(directions))
         counts = ", ".join(f"{k}={v}" for k, v in sorted(report.counts().items()))
         self.validation_view.set_rule_status(
             f"rule v{self._rule.rule.rule_version} over the capture: "
