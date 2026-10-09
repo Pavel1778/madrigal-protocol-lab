@@ -252,8 +252,22 @@ Open:
   set would not be found by this analysis.
 - The corpus was generated, and its generator is not derived from a real device,
   so the corpus protocol may not match any deployed one.
+- The window opens a capture file, not a project directory: the portable project
+  is exercised from the command line, not from a project menu.
 
-## 13. Artifacts
+## 13. Verification
+
+The investigation and the window were driven over the reference export before
+the demonstration. The window opens the clean capture and lists its three
+sessions; a click on a byte reports its packet index, sequence number and
+timestamp; applying rule v1 gives 60 matched on `s1` and 60 mismatched on `s2`,
+and over the whole capture `matched=60, mismatched=80, not_applicable=140`; the
+version diff reports 80 resolved and 0 introduced counterexamples. The defects
+were found this way and fixed. The record is in `docs/GUI_VERIFICATION.md`, and
+the automated form of the same scenario is `tests/ui/test_e2e.py` (fourteen
+tests over the real bytes and the real engine).
+
+## 14. Artifacts
 
 | artifact | role |
 | --- | --- |
@@ -269,4 +283,9 @@ Open:
 | `docs/schemas/result.schema.json` | result contract |
 | `scripts/run_reference_investigation.py` | regenerates this analysis |
 | `docs/REFERENCE_INVESTIGATION.md` | the raw per-section output of that script |
-
+| `docs/demo.md` | the ten-step window walkthrough |
+| `docs/demo_cli.md` | the same investigation from the command line |
+| `docs/GUI_VERIFICATION.md` | what the window was driven to show, and the defects found |
+| `presentation/slides.pdf` | the deck, fifteen slides, with the eight screenshots |
+| `presentation/screenshots/01_main.png` ... `08_diff.png` | the eight window captures |
+| `tests/ui/test_e2e.py` | the scenario as fourteen offscreen tests |
