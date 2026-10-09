@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from src.hypothesis.corpus import CorpusStream
 from src.hypothesis.diff import diff_reports, diff_rules, format_report_diff, format_rule_diff
-from src.hypothesis.status import Status
 from src.hypothesis.corpus import verify_on_corpus
-from src.protocol.engine import Counterexample
 from src.protocol.rule import parse_rule
 from src.protocol.stream import DirectionalStream
 

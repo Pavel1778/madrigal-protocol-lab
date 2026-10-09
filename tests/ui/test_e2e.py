@@ -15,7 +15,6 @@ rule explicitly; the application embeds no path of its own.
 from __future__ import annotations
 
 import os
-import shutil
 from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -26,7 +25,7 @@ import pytest  # noqa: E402
 # PySide6 cannot be imported the whole module is skipped rather than left as a
 # collection error.
 try:
-    from PySide6 import QtCore, QtGui, QtTest, QtWidgets  # noqa: E402
+    from PySide6 import QtCore, QtTest, QtWidgets  # noqa: E402
 
     from src.project.project import Project  # noqa: E402
     from src.ui import theme  # noqa: E402
