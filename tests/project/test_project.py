@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from src.project import MANIFEST_FILE, Manifest, ManifestError, Project, ProjectError
+from src.project.manifest import write_manifest
 from src.project.project import _sha256
 
 CORPUS = Path(__file__).resolve().parent.parent / "corpus"
@@ -151,3 +152,41 @@ def test_manifest_round_trip_is_stable() -> None:
     manifest = Manifest.new("x")
     again = Manifest.from_dict(manifest.to_dict())
     assert again.to_dict() == manifest.to_dict()
+
+
+def test_import_rejects_a_truncated_archive(tmp_path: Path) -> None:
+    project = _project(tmp_path)
+    project.add_capture(CAPTURE)
+    archive = tmp_path / "bundle.zip"
+    project.export(archive)
+
+    raw = archive.read_bytes()
+    truncated = tmp_path / "truncated.zip"
+    truncated.write_bytes(raw[: len(raw) // 2])
+
+    target = tmp_path / "restored"
+    with pytest.raises(ProjectError):
+        Project.import_(truncated, target)
+    assert not target.exists()
+
+
+def test_write_manifest_replaces_atomically(tmp_path: Path) -> None:
+    project = _project(tmp_path)
+    manifest_path = project.root / MANIFEST_FILE
+    write_manifest(manifest_path, project.manifest)
+    write_manifest(manifest_path, project.manifest)
+
+    assert manifest_path.is_file()
+    assert not manifest_path.with_name(manifest_path.name + ".tmp").exists()
+
+
+def test_export_leaves_no_partial_file(tmp_path: Path) -> None:
+    project = _project(tmp_path)
+    project.add_capture(CAPTURE)
+    archive = tmp_path / "bundle.zip"
+    project.export(archive)
+
+    assert archive.is_file()
+    assert not archive.with_name(archive.name + ".part").exists()
+    with zipfile.ZipFile(archive) as opened:
+        assert opened.testzip() is None

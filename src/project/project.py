@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 import shutil
 import zipfile
 from pathlib import Path
@@ -184,21 +185,29 @@ class Project:
         """Write the whole project to ``out_zip``.
 
         Paths inside the archive are relative to the project root, so importing
-        it elsewhere recreates the same tree.
+        it elsewhere recreates the same tree. The archive is built next to the
+        target and moved into place, so an interrupted export leaves no partial
+        file that would look like a valid archive.
         """
 
         out = Path(out_zip)
         out.parent.mkdir(parents=True, exist_ok=True)
         self.save()
-        with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as archive:
-            # Record the directory tree explicitly so empty directories survive
-            # the zip round trip; a plain file walk drops them.
-            for directory in DIRECTORIES:
-                archive.writestr(f"{directory}/", b"")
-            for path in sorted(self._root.rglob("*")):
-                if not path.is_file():
-                    continue
-                archive.write(path, path.relative_to(self._root).as_posix())
+        temporary = out.with_name(out.name + ".part")
+        try:
+            with zipfile.ZipFile(temporary, "w", zipfile.ZIP_DEFLATED) as archive:
+                # Record the directory tree explicitly so empty directories
+                # survive the zip round trip; a plain file walk drops them.
+                for directory in DIRECTORIES:
+                    archive.writestr(f"{directory}/", b"")
+                for path in sorted(self._root.rglob("*")):
+                    if not path.is_file():
+                        continue
+                    archive.write(path, path.relative_to(self._root).as_posix())
+            os.replace(temporary, out)
+        except BaseException:
+            temporary.unlink(missing_ok=True)
+            raise
         logger.info("exported project %s to %s", self._root, out)
 
     @classmethod
