@@ -286,9 +286,13 @@ tests over the real bytes and the real engine).
 | `docs/schemas/result.schema.json` | result contract |
 | `scripts/run_reference_investigation.py` | regenerates this analysis |
 | `docs/REFERENCE_INVESTIGATION.md` | the raw per-section output of that script |
-| `docs/demo.md` | the ten-step window walkthrough |
+| `docs/demo.md` | the window walkthrough, eleven steps |
 | `docs/demo_cli.md` | the same investigation from the command line |
+| `docs/DEFENSE_FAQ.md` | twenty likely defense questions with their evidence |
+| `docs/CORPUS_ANALYSIS.md` | the corpus figures behind the rules, with the commands that reproduce them |
+| `docs/RULE_V1_V2.md` | the version record for the two corpus rules |
 | `docs/GUI_VERIFICATION.md` | what the window was driven to show, and the defects found |
+| `presentation/slide_verification.md` | each deck claim mapped to its evidence |
 | `presentation/slides.pdf` | the deck, fifteen slides, with the eight screenshots |
 | `presentation/screenshots/01_main.png` ... `08_diff.png` | the eight window captures |
 | `tests/ui/test_e2e.py` | the scenario as fourteen offscreen tests |
