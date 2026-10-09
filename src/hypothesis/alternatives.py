@@ -22,7 +22,16 @@ from ..protocol.rule import Rule
 
 @dataclass
 class Alternative:
-    """One candidate explanation for a field, with its measured fit."""
+    """One candidate explanation for a field, with its measured fit.
+
+    Attributes:
+        name: Machine-readable candidate name (for example ``"counter"``).
+        description: Human-readable one-line description.
+        support: Messages the candidate agrees with.
+        contradict: Messages the candidate disagrees with.
+        score: ``support / (support + contradict)`` in [0, 1].
+        evidence: A bounded sample of supporting and contradicting messages.
+    """
 
     name: str
     description: str
@@ -32,6 +41,7 @@ class Alternative:
     evidence: list[dict] = field(default_factory=list)
 
     def to_dict(self) -> dict:
+        """Return the alternative as a JSON-ready mapping."""
         return {
             "name": self.name,
             "description": self.description,
@@ -44,6 +54,17 @@ class Alternative:
 
 @dataclass
 class FieldAlternatives:
+    """All candidate explanations tested for one field.
+
+    Attributes:
+        field_name: The analysed field.
+        declared_meaning: The meaning the rule assigns (the field name).
+        is_hypothesis: Whether the rule flagged the meaning as an assumption.
+        total: Messages where the field had a value.
+        alternatives: Candidates, sorted by score descending.
+        best: Name of the highest-scoring candidate, or ``None``.
+    """
+
     field_name: str
     declared_meaning: str | None
     is_hypothesis: bool
@@ -52,6 +73,7 @@ class FieldAlternatives:
     best: str | None = None
 
     def to_dict(self) -> dict:
+        """Return the field's alternatives as a JSON-ready mapping."""
         return {
             "field_name": self.field_name,
             "declared_meaning": self.declared_meaning,
@@ -64,11 +86,20 @@ class FieldAlternatives:
 
 @dataclass
 class AlternativesReport:
+    """The alternatives test for every hypothesis field of one rule.
+
+    Args:
+        rule_id: Identity of the analysed rule.
+        rule_version: Version of the analysed rule.
+        fields: Per-field alternatives for each ``hypothesis`` field.
+    """
+
     rule_id: str
     rule_version: int
     fields: list[FieldAlternatives] = field(default_factory=list)
 
     def to_dict(self) -> dict:
+        """Return the report as a JSON-ready mapping."""
         return {
             "rule_id": self.rule_id,
             "rule_version": self.rule_version,
@@ -140,7 +171,21 @@ def analyze_field(
     correlations: list | None = None,
     limit: int = 5,
 ) -> FieldAlternatives:
-    """Test the candidate meanings of one field."""
+    """Test the candidate meanings of one field.
+
+    Args:
+        rule: The rule the field belongs to.
+        messages: Messages already decoded with ``rule``.
+        field_name: The field to analyse.
+        correlations: Optional journal correlations for the journal candidate.
+        limit: Maximum evidence entries kept per candidate.
+
+    Returns:
+        The field's alternatives, sorted by score descending.
+
+    Raises:
+        ValueError: If ``rule`` has no field named ``field_name``.
+    """
     spec = next((f for f in rule.fields if f.name == field_name), None)
     if spec is None:
         raise ValueError(f"rule {rule.rule_id!r} has no field {field_name!r}")
@@ -489,7 +534,17 @@ def suggest_alternatives(
     correlations: list | None = None,
     limit: int = 5,
 ) -> AlternativesReport:
-    """Analyse every field marked as a hypothesis in *rule*."""
+    """Analyse every field marked as a hypothesis in *rule*.
+
+    Args:
+        rule: The rule to analyse.
+        messages: Messages already decoded with ``rule``.
+        correlations: Optional journal correlations.
+        limit: Maximum evidence entries kept per candidate.
+
+    Returns:
+        One :class:`FieldAlternatives` per ``hypothesis`` field.
+    """
     report = AlternativesReport(rule_id=rule.rule_id, rule_version=rule.rule_version)
     for spec in rule.fields:
         if not spec.hypothesis:
