@@ -38,6 +38,8 @@ def _seed(root: Path) -> None:
     (root / "docs").mkdir(exist_ok=True)
     (root / "docs" / "CONTRACT.md").write_text("# Contract\n", encoding="utf-8")
     (root / "docs" / "SUBMISSION.md").write_text("# Submission\n", encoding="utf-8")
+    (root / "examples").mkdir(exist_ok=True)
+    (root / "examples" / "corpus_rule_v1.json").write_text("{}\n", encoding="utf-8")
     (root / "src").mkdir(exist_ok=True)
     (root / "src" / "app.py").write_text("VALUE = 1\n", encoding="utf-8")
     # An excluded cache directory that must not reach the archive.
@@ -73,6 +75,7 @@ def test_archive_holds_the_required_files_and_no_caches(tmp_path: Path) -> None:
         "pyproject.toml",
         "docs/CONTRACT.md",
         "docs/SUBMISSION.md",
+        "examples/corpus_rule_v1.json",
         "src/app.py",
         MANIFEST_NAME,
     ):
