@@ -149,3 +149,28 @@ def test_cli_pipeline_missing_capture_returns_two(
     )
     assert code == 2
     assert capsys.readouterr().err.strip()
+
+
+def test_cli_open_without_manifest_reports_one_line(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    directory = tmp_path / "empty.madrigal"
+    directory.mkdir()
+    code = main(["open", "--path", str(directory)])
+    assert code == 2
+    err = capsys.readouterr().err
+    assert "no manifest" in err
+    assert "Traceback" not in err
+
+
+def test_cli_open_with_corrupt_manifest_reports_one_line(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    directory = tmp_path / "broken.madrigal"
+    directory.mkdir()
+    (directory / "manifest.json").write_text("{ not json", encoding="utf-8")
+    code = main(["open", "--path", str(directory)])
+    assert code == 2
+    err = capsys.readouterr().err
+    assert "not valid JSON" in err
+    assert "Traceback" not in err
