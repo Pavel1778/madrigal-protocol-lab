@@ -103,8 +103,34 @@ def _render_slide(lines: list[str], first: bool) -> str:
         body.append(f"<p>{_inline(stripped)}</p>")
     if in_list:
         body.append("</ul>")
+    body = _group_figures(body)
     title_class = " class='title-slide'" if first else ""
     return f"<section{title_class}>\n" + "\n".join(body) + "\n</section>"
+
+
+def _group_figures(body: list[str]) -> list[str]:
+    """Wrap consecutive figures in a flex row so two images share one slide."""
+
+    out: list[str] = []
+    run: list[str] = []
+
+    def flush() -> None:
+        if not run:
+            return
+        if len(run) == 1:
+            out.append(run[0])
+        else:
+            out.append("<div class='figrow'>" + "".join(run) + "</div>")
+        run.clear()
+
+    for block in body:
+        if block.startswith("<figure>"):
+            run.append(block)
+        else:
+            flush()
+            out.append(block)
+    flush()
+    return out
 
 
 def _table_row(line: str) -> str:
@@ -159,6 +185,9 @@ def build_html(markdown: str) -> str:
     td:first-child {{ color: {SECONDARY}; }}
     figure {{ margin: 10px 0 0; }}
     img {{ max-width: 100%; max-height: 470px; border: 1px solid #2A2C2E; border-radius: 4px; }}
+    .figrow {{ display: flex; gap: 20px; margin-top: 12px; align-items: flex-start; }}
+    .figrow figure {{ flex: 1 1 0; margin: 0; }}
+    .figrow img {{ width: 100%; max-height: 440px; object-fit: contain; }}
     .title-slide {{ justify-content: center; }}
     .title-slide h1 {{ font-size: 56px; }}
     """
