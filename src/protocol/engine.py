@@ -22,7 +22,23 @@ _SIGNED = {"int8", "int16", "int32"}
 
 @dataclass
 class FieldResult:
-    """The outcome of reading one declared field from one message."""
+    """The outcome of reading one declared field from one message.
+
+    Attributes:
+        message_offset: Offset of the owning message in the stream.
+        message_length: Length of the owning message in bytes.
+        field_name: Declared field name.
+        field_type: Declared field type.
+        field_offset: Field offset relative to the message start.
+        field_length: Field width in bytes actually read.
+        value: Decoded value, or ``None`` when the field was not read.
+        status: Classification of this field (see :class:`Status`).
+        hypothesis: Whether the field meaning was declared as an assumption.
+        provenance_range: Source packet range backing the field bytes.
+        session_id: Session the message belongs to.
+        direction: Direction the message was read from.
+        reason: Machine-readable reason for a non-matched status.
+    """
 
     message_offset: int
     message_length: int
@@ -39,6 +55,7 @@ class FieldResult:
     reason: str | None = None
 
     def to_dict(self) -> dict:
+        """Return a JSON-ready mapping, omitting default-valued keys."""
         out = {
             "message_offset": self.message_offset,
             "message_length": self.message_length,
@@ -64,7 +81,20 @@ class FieldResult:
 
 @dataclass
 class MessageResult:
-    """A framed message together with the results for each declared field."""
+    """A framed message together with the results for each declared field.
+
+    Attributes:
+        offset: Offset of the message in the stream.
+        length: Message length in bytes.
+        status: Message-level classification (see :class:`Status`).
+        fields: Per-field results in declaration order.
+        complete: Whether the framing found the message end.
+        session_id: Session the message belongs to.
+        direction: Direction the message was read from.
+        reason: Machine-readable reason for a non-matched status.
+        bytes_hex: The message bytes as hex.
+        timestamp: Earliest source packet timestamp, or ``None``.
+    """
 
     offset: int
     length: int
@@ -79,9 +109,11 @@ class MessageResult:
 
     @property
     def end(self) -> int:
+        """Offset one past the last byte of the message."""
         return self.offset + self.length
 
     def field_values(self) -> dict:
+        """Decoded values keyed by field name."""
         return {f.field_name: _jsonable(f.value) for f in self.fields}
 
     def counterexample(self) -> "Counterexample | None":
@@ -126,6 +158,7 @@ class Counterexample:
     provenance_range: dict | None = None
 
     def to_dict(self) -> dict:
+        """Return a JSON-ready mapping of the counterexample and its bytes."""
         out = {
             "status": self.status.value,
             "session_id": self.session_id,
@@ -438,6 +471,18 @@ def apply_rule(
     use :func:`flatten_fields` for a flat per-field view. When the rule scope
     does not cover ``direction``, every framed message is marked
     ``not_applicable`` instead of being decoded.
+
+    Args:
+        stream: Directional stream, or raw bytes wrapped into one.
+        rule: The rule whose framing and fields are applied.
+        session_id: Session label copied onto every result.
+        direction: Direction label used for the scope check and the results.
+
+    Returns:
+        One ``MessageResult`` per framed message, in stream order.
+
+    Raises:
+        FramingError: If the rule framing is invalid.
     """
     if not isinstance(stream, DirectionalStream):
         stream = DirectionalStream.from_bytes(stream)
@@ -484,6 +529,7 @@ def apply_rule(
 
 
 def flatten_fields(results: list[MessageResult]) -> list[FieldResult]:
+    """Flatten per-message field results into one list, in message order."""
     return [f for message in results for f in message.fields]
 
 
@@ -493,5 +539,18 @@ def apply_rule_fields(
     session_id: str = "",
     direction: str = "A_to_B",
 ) -> list[FieldResult]:
-    """Apply *rule* and return a flat list of per-field results."""
+    """Apply *rule* and return a flat list of per-field results.
+
+    Args:
+        stream: Directional stream, or raw bytes wrapped into one.
+        rule: The rule whose framing and fields are applied.
+        session_id: Session label copied onto every result.
+        direction: Direction label used for the scope check and the results.
+
+    Returns:
+        Every ``FieldResult`` from every framed message, in order.
+
+    Raises:
+        FramingError: If the rule framing is invalid.
+    """
     return flatten_fields(apply_rule(stream, rule, session_id, direction))

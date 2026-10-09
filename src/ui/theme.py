@@ -51,10 +51,12 @@ _FONT_FILES = (
 
 
 def fonts_dir() -> Path:
+    """Directory holding the bundled font files."""
     return Path(__file__).resolve().parents[2] / "assets" / "fonts"
 
 
 def body_font(size: int = 10, semibold: bool = False) -> QtGui.QFont:
+    """The body font at ``size``, optionally semibold."""
     font = QtGui.QFont(BODY_FAMILY, size)
     font.setPixelSize(max(9, size + 3))
     font.setWeight(QtGui.QFont.Weight.DemiBold if semibold else QtGui.QFont.Weight.Normal)
@@ -62,6 +64,7 @@ def body_font(size: int = 10, semibold: bool = False) -> QtGui.QFont:
 
 
 def heading_font(size: int = 12, semibold: bool = True) -> QtGui.QFont:
+    """The heading font at ``size``, semibold by default."""
     font = QtGui.QFont(HEADING_FAMILY, size)
     font.setPixelSize(max(11, size + 3))
     font.setWeight(QtGui.QFont.Weight.DemiBold if semibold else QtGui.QFont.Weight.Medium)
@@ -69,6 +72,7 @@ def heading_font(size: int = 12, semibold: bool = True) -> QtGui.QFont:
 
 
 def mono_font(size: int = 10) -> QtGui.QFont:
+    """The fixed-pitch font used for hex and byte views."""
     font = QtGui.QFont("DejaVu Sans Mono", size)
     font.setStyleHint(QtGui.QFont.StyleHint.Monospace)
     font.setPixelSize(max(10, size + 3))
@@ -95,6 +99,7 @@ def load_fonts(app: QtGui.QGuiApplication | None = None) -> list[str]:
 
 
 def build_stylesheet() -> str:
+    """Return the Qt style sheet for the application window."""
     return f"""
     QWidget {{
         background-color: {BACKGROUND};
@@ -185,6 +190,7 @@ def build_stylesheet() -> str:
 
 
 def is_offscreen() -> bool:
+    """Whether the running Qt platform is the offscreen backend."""
     return bool(sys.platform) and "offscreen" in (
         QtGui.QGuiApplication.platformName() if QtGui.QGuiApplication.instance() else ""
     )

@@ -52,8 +52,8 @@ investigation from the command line, used as the fallback, is in
 | Area | Contents |
 | --- | --- |
 | `src/capture/` | PCAP and PCAPNG reading, session identification, directional reassembly with gap and ambiguity diagnostics, per-byte provenance, normalized export, CLI. |
-| `src/protocol/`, `src/hypothesis/` | Framing strategies, declarative rules, the rule engine, corpus verification and counterexamples, rule versioning, CLI. |
-| `src/ui/` | The PySide6 window: session tree, hex view with provenance, message comparison, rule and validation panels, version diff. |
+| `src/hypothesis/` and `src/protocol/` | Framing strategies, declarative rules, the rule engine, corpus verification and counterexamples, the alternatives engine, rule versioning, CLI. |
+| `src/ui/` | The PySide6 window: session tree, hex view with provenance, message comparison, rule and validation panels, the hypotheses panel, version diff. |
 | `src/project/` | The portable on-disk investigation, relative paths and sha256, zip export and import. |
 | `src/report/` | The investigation rendered to Markdown and to a self-contained HTML page. |
 

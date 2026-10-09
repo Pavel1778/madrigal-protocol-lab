@@ -15,6 +15,27 @@ from .corpus import VerificationReport
 
 @dataclass
 class RuleMetrics:
+    """Quality metrics derived from one verification report.
+
+    Attributes:
+        rule_id: Identity of the measured rule.
+        rule_version: Version of the measured rule.
+        total_messages: Messages framed over the corpus.
+        applicable_messages: Messages the rule scope covered.
+        sessions: Distinct sessions seen.
+        coverage: Applicable share of all messages, in [0, 1].
+        precision: Matched share of the applicable messages, in [0, 1].
+        fragmentation: Messages per session.
+        unknown_ratio: Unknown share of all messages.
+        uncovered_ratio: Share of stream bytes not covered by framing.
+        counterexample_density: Counterexamples per applicable message.
+        counterexamples: Number of distinct counterexamples.
+        matched: Matched message count.
+        mismatched: Mismatched message count.
+        length_histogram: Message count keyed by message length.
+        type_histogram: Message count keyed by the ``command`` field value.
+    """
+
     rule_id: str
     rule_version: int
     total_messages: int
@@ -33,6 +54,7 @@ class RuleMetrics:
     type_histogram: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
+        """Return the metrics as a JSON-ready mapping."""
         return {
             "rule_id": self.rule_id,
             "rule_version": self.rule_version,

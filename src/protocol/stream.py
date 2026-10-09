@@ -40,9 +40,11 @@ class Hole:
 
     @property
     def end(self) -> int:
+        """Offset one past the last byte of the hole."""
         return self.offset + self.length
 
     def overlaps(self, start: int, end: int) -> bool:
+        """Whether the half-open range ``[start, end)`` meets this hole."""
         return start < self.end and self.offset < end
 
 
@@ -61,12 +63,15 @@ class DirectionalStream:
     provenance: list[Hole] = field(default_factory=list)
 
     def holes(self, start: int, end: int) -> list[Hole]:
+        """Diagnostics that overlap the half-open range ``[start, end)``."""
         return [h for h in self.diagnostics if h.overlaps(start, end)]
 
     def has_gap(self, start: int, end: int) -> bool:
+        """Whether a ``gap`` diagnostic overlaps ``[start, end)``."""
         return any(h.type == "gap" for h in self.holes(start, end))
 
     def has_ambiguity(self, start: int, end: int) -> bool:
+        """Whether an ``ambiguity`` diagnostic overlaps ``[start, end)``."""
         return any(h.type == "ambiguity" for h in self.holes(start, end))
 
     @property
@@ -80,10 +85,30 @@ class DirectionalStream:
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "DirectionalStream":
+        """Wrap raw bytes as a stream with no diagnostics or provenance.
+
+        Args:
+            data: The reassembled bytes of one direction.
+
+        Returns:
+            A stream whose ``data`` is a copy of ``data``.
+        """
         return cls(data=bytes(data))
 
     @classmethod
     def from_direction(cls, direction: dict) -> "DirectionalStream":
+        """Build a stream from one ``directions`` entry of a capture.
+
+        Args:
+            direction: Mapping with base64 ``bytes_b64``, ``diagnostics`` and
+                ``provenance`` lists, as defined by the capture contract.
+
+        Returns:
+            The corresponding directional stream.
+
+        Raises:
+            CaptureError: If ``bytes_b64`` is not valid base64.
+        """
         raw = direction.get("bytes_b64", "")
         try:
             data = base64.b64decode(raw, validate=True)
@@ -135,6 +160,18 @@ class Capture:
     _directions: dict[tuple[str, str], DirectionalStream] = field(default_factory=dict)
 
     def stream(self, session_id: str, direction: str) -> DirectionalStream:
+        """Return one direction of one session as a stream (cached).
+
+        Args:
+            session_id: Session identifier from the capture.
+            direction: ``"A_to_B"`` or ``"B_to_A"``.
+
+        Returns:
+            The directional stream, decoded on first use.
+
+        Raises:
+            CaptureError: If the session or the direction is not in the capture.
+        """
         key = (session_id, direction)
         if key in self._directions:
             return self._directions[key]
@@ -152,6 +189,7 @@ class Capture:
         raise CaptureError(f"capture has no session {session_id!r}")
 
     def iter_streams(self) -> list[tuple[str, str, DirectionalStream]]:
+        """Every ``(session_id, direction, stream)`` present in the capture."""
         result = []
         for session in self.sessions:
             sid = str(session.get("session_id", ""))
@@ -178,12 +216,36 @@ class Capture:
 
 
 def load_capture(path: str) -> Capture:
+    """Load a normalized capture JSON file.
+
+    Args:
+        path: Path to a ``*.normalized.json`` capture.
+
+    Returns:
+        The parsed capture.
+
+    Raises:
+        CaptureError: If the file does not match the capture contract.
+        OSError: If the file cannot be read.
+    """
     with open(path, "r", encoding="utf-8") as handle:
         raw = json.load(handle)
     return capture_from_dict(raw)
 
 
 def capture_from_dict(raw: dict) -> Capture:
+    """Build a capture from an already-parsed normalized capture mapping.
+
+    Args:
+        raw: Mapping with ``contract_version`` and ``sessions``.
+
+    Returns:
+        The parsed capture.
+
+    Raises:
+        CaptureError: If the mapping is not an object, the contract version is
+            unsupported, or ``sessions`` is missing.
+    """
     if not isinstance(raw, dict):
         raise CaptureError("normalized capture must be a JSON object")
     version = raw.get("contract_version", CONTRACT_VERSION)
