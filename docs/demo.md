@@ -84,6 +84,23 @@ the status bar shows their packet and sequence number.
 Say: this request carries command `2`, but rule v1 only allowed `1`. The
 counterexample is tied to real bytes, not to a description of them.
 
+## Step 4b - alternative readings (1 min)
+
+Do: Rule, Apply to whole capture, or press F6, keeping rule v1. Then open the
+Hypotheses tab.
+
+See: one row per candidate reading of each `hypothesis` field, with its support,
+its contradiction count and its score. For `command`, `entropy_enum` and
+`low_cardinality` top the list at 1.00 (140 support, 0 contradiction), while
+`constant` - the reading rule v1 declares - sits at 0.43 (60 support, 80
+contradiction).
+
+Say: before widening the rule, the field is put to the alternatives engine over
+every message the rule applies to. The reading the rule already declares is only
+one candidate, and on this capture most messages contradict it. That is the
+evidence behind the refinement, not a guess. Selecting a row jumps the hex view
+to a message that supports or contradicts it.
+
 ## Step 5 - refine the rule (2 min)
 
 Do: File, Open rule, `corpus_rule_v2.json`. Apply again to `s2`, `A_to_B`.
@@ -205,10 +222,11 @@ the counterexamples. The investigation script regenerates the full write-up.
 | 2 provenance | 1 |
 | 3 apply v1 | 2 |
 | 4 counterexample | 2 |
+| 4b alternatives | 1 |
 | 5 refine | 2 |
 | 6 whole capture | 1 |
 | 7 transfer | 1 |
 | 8 boundary | 2 |
 | 9 journal | 1 |
 | 10 report | 1 |
-| total | 14 |
+| total | 15 |

@@ -54,6 +54,16 @@ class RuleError(ValueError):
 
 @dataclass
 class FieldSpec:
+    """Declarative description of one field inside a framed message.
+
+    A field is read from ``offset`` bytes into the message. The meaning of the
+    other attributes depends on ``type`` (for example ``length`` for ``bytes``
+    and ``string``, ``element_type`` for ``array``, ``algorithm`` for
+    ``checksum``). ``hypothesis`` marks the field's *meaning* as an assumption
+    rather than an observation; ``expected`` lists the values the field is
+    allowed to take.
+    """
+
     name: str
     offset: int
     type: str
@@ -85,6 +95,18 @@ class FieldSpec:
 
     @classmethod
     def from_dict(cls, raw: dict) -> "FieldSpec":
+        """Build a field spec from its declarative mapping.
+
+        Args:
+            raw: Field mapping with at least ``name``, ``offset`` and ``type``.
+
+        Returns:
+            The parsed field spec.
+
+        Raises:
+            RuleError: If a required key is missing or a value is invalid for
+                the declared type.
+        """
         if not isinstance(raw, dict):
             raise RuleError("field must be an object")
         name = raw.get("name")
@@ -233,6 +255,7 @@ class FieldSpec:
         return None
 
     def to_dict(self) -> dict:
+        """Return the declarative mapping for this field, round-trippable."""
         out: dict = {"name": self.name, "offset": self.offset, "type": self.type}
         if self.byte_order != "big" and self.type in set(FIELD_TYPES) | {"enum", "array", "bitmask"}:
             out["byte_order"] = self.byte_order
@@ -276,6 +299,12 @@ class FieldSpec:
 
     @property
     def size(self) -> int:
+        """Fixed byte width of the field.
+
+        Raises:
+            RuleError: If the field has no fixed size (an ``array`` without a
+                literal ``count``, or a ``conditional`` without an inner field).
+        """
         if self.type == "bitmask":
             bits = (self.bit_offset or 0) + (self.bit_length or 0)
             return max(1, (bits + 7) // 8)
@@ -294,11 +323,25 @@ class FieldSpec:
         return size
 
     def equals(self, other: "FieldSpec") -> bool:
+        """Whether two specs serialise identically."""
         return self.to_dict() == other.to_dict()
 
 
 @dataclass
 class Rule:
+    """A versioned set of framing and field specs for one direction.
+
+    Args:
+        schema_version: Version of the rule document schema.
+        rule_id: Stable identity shared across versions of the rule.
+        rule_version: Version number, incremented on any edit that changes how
+            messages are read or checked.
+        name: Human-readable rule name.
+        scope: Applicability, for example ``{"direction": "A_to_B"}``.
+        framing: Framing strategy mapping (see :class:`FramingStrategy`).
+        fields: Ordered field specs.
+    """
+
     schema_version: int
     rule_id: str
     rule_version: int
@@ -308,6 +351,7 @@ class Rule:
     fields: list[FieldSpec]
 
     def to_dict(self) -> dict:
+        """Return the full declarative rule mapping."""
         return {
             "schema_version": self.schema_version,
             "rule_id": self.rule_id,
@@ -318,20 +362,30 @@ class Rule:
             "fields": [f.to_dict() for f in self.fields],
         }
 
-    def bump_version(self, **changes) -> "Rule":
-        """Return a copy of this rule with a new ``rule_version``."""
+    def bump_version(self, **changes: object) -> "Rule":
+        """Return a copy of this rule with a new ``rule_version``.
+
+        Args:
+            **changes: Any other ``Rule`` attribute to replace on the copy.
+
+        Returns:
+            A new rule with ``rule_version`` one greater.
+        """
         updated = replace(self, **changes) if changes else self
         return replace(updated, rule_version=self.rule_version + 1)
 
     @property
     def direction(self) -> str | None:
+        """The single direction the rule is scoped to, or ``None`` for both."""
         return self.scope.get("direction")
 
     def applies_to(self, direction: str) -> bool:
+        """Whether the rule scope covers ``direction``."""
         scope_direction = self.direction
         return scope_direction is None or scope_direction == direction
 
     def is_out_of_date(self, result_rule_version: int) -> bool:
+        """Whether a result from ``result_rule_version`` predates this rule."""
         return result_rule_version < self.rule_version
 
     def referenced_field_names(self) -> set[str]:
@@ -353,6 +407,18 @@ class Rule:
 
 
 def parse_rule(raw: dict) -> Rule:
+    """Parse a rule from an already-decoded mapping.
+
+    Args:
+        raw: Rule mapping with at least ``rule_id`` and ``fields``.
+
+    Returns:
+        The parsed rule.
+
+    Raises:
+        RuleError: If the mapping is malformed, references an unknown field, or
+            has a duplicate field name.
+    """
     if not isinstance(raw, dict):
         raise RuleError("rule must be an object")
     for key in ("rule_id", "fields"):
@@ -390,13 +456,36 @@ def parse_rule(raw: dict) -> Rule:
 
 
 def load_rule(path: str) -> Rule:
+    """Load a rule from a JSON or YAML file.
+
+    Args:
+        path: Path to the rule document.
+
+    Returns:
+        The parsed rule.
+
+    Raises:
+        RuleError: If the file cannot be parsed as a rule.
+        OSError: If the file cannot be read.
+    """
     with open(path, "r", encoding="utf-8") as handle:
         text = handle.read()
     return parse_rule(load_rule_text(text))
 
 
 def load_rule_text(text: str) -> dict:
-    """Parse rule text as JSON; YAML is accepted when PyYAML is available."""
+    """Parse rule text as JSON; YAML is accepted when PyYAML is available.
+
+    Args:
+        text: The rule document as text.
+
+    Returns:
+        The decoded mapping.
+
+    Raises:
+        RuleError: If the text is neither a JSON object nor valid YAML, or if
+            YAML is needed but PyYAML is not installed.
+    """
     stripped = text.lstrip()
     if stripped.startswith("{"):
         return json.loads(text)

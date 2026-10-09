@@ -75,7 +75,14 @@ def _read_int(data: bytes, offset: int, size: int, order: str) -> int:
 
 @dataclass
 class Message:
-    """A candidate message located in a directional stream."""
+    """A candidate message located in a directional stream.
+
+    Args:
+        offset: Byte offset of the message start inside the stream.
+        length: Message length in bytes.
+        complete: Whether both message boundaries were found in the stream.
+        reason: Machine-readable reason when ``complete`` is ``False``.
+    """
 
     offset: int
     length: int
@@ -84,6 +91,7 @@ class Message:
 
     @property
     def end(self) -> int:
+        """Offset one past the last byte of the message."""
         return self.offset + self.length
 
 
@@ -114,6 +122,18 @@ class FramingStrategy:
 
     @classmethod
     def from_dict(cls, spec: dict) -> "FramingStrategy":
+        """Build a strategy from a rule ``framing`` object.
+
+        Args:
+            spec: Mapping with a ``type`` key and the parameters for that type.
+
+        Returns:
+            The parsed strategy.
+
+        Raises:
+            FramingError: If ``spec`` is not an object, the type is unknown, or
+                a parameter value is outside its accepted set.
+        """
         if not isinstance(spec, dict):
             raise FramingError("framing must be an object")
         ftype = spec.get("type")
@@ -153,7 +173,26 @@ def _as_bytes(value) -> bytes:
 
 
 def frame_stream(stream: bytes | DirectionalStream, strategy: FramingStrategy) -> list[Message]:
-    """Split *stream* into candidate messages using *strategy*."""
+    """Split *stream* into candidate messages using *strategy*.
+
+    Args:
+        stream: Flat bytes or a directional stream to split.
+        strategy: Framing strategy describing how messages are delimited.
+
+    Returns:
+        Candidate messages in order. A trailing range whose end was not found
+        is returned with ``complete=False`` rather than dropped.
+
+    Raises:
+        FramingError: If the strategy has an unsupported type or an invalid
+            parameter (for example a non-positive ``size``).
+
+    Example:
+        >>> frame_stream(b"\x02\x00\x05", FramingStrategy.from_dict(
+        ...     {"type": "length_prefixed", "length_offset": 0, "length_size": 1,
+        ...      "length_covers": "entire_message"}))[0].length
+        2
+    """
     if isinstance(stream, DirectionalStream):
         data = stream.data
     else:
