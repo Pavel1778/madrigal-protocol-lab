@@ -108,6 +108,26 @@ def test_journal_alternative():
     assert "journal_value" in names
 
 
+def test_enum_like_field_reports_low_cardinality_on_string_values():
+    rule = _rule(
+        [
+            {
+                "name": "target",
+                "offset": 0,
+                "type": "enum",
+                "hypothesis": True,
+                "enum": {"a": 1, "b": 2},
+            }
+        ]
+    )
+    payloads = [bytes([value]) + b"\x00" * 7 for value in (1, 2, 1, 2)]
+    report = analyze_field(rule, _messages(rule, payloads), "target")
+    low = next(a for a in report.alternatives if a.name == "low_cardinality")
+    assert low.support == 4
+    assert low.score == 1.0
+    assert report.best == "low_cardinality"
+
+
 def test_unknown_field_is_rejected():
     rule = _rule([{"name": "value", "offset": 0, "type": "uint8"}])
     try:
