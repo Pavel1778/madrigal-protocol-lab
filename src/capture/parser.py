@@ -18,7 +18,7 @@ import struct
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import BinaryIO
+from typing import Any, BinaryIO
 
 import dpkt
 
@@ -374,7 +374,7 @@ def _report_mixed_linktypes(path: Path, diagnostics: list[Diagnostic]) -> None:
         )
 
 
-def _reader_datalink(reader: object) -> int:
+def _reader_datalink(reader: Any) -> int:
     """Return the link type of an open reader as an int."""
 
     value = reader.datalink() if callable(reader.datalink) else reader.datalink
@@ -387,7 +387,7 @@ def _packet_from_row(
     *,
     index: int,
     packet_index: int,
-    timestamp: object,
+    timestamp: Any,
     verify_checksums: bool,
     diagnostics: list[Diagnostic],
 ) -> Packet | None:
@@ -435,7 +435,7 @@ def _packet_from_row(
     )
 
 
-def _checksum_state(tcp: object, ip_bytes: bytes) -> bool | None:
+def _checksum_state(tcp: Any, ip_bytes: bytes) -> bool | None:
     """Return the TCP checksum verdict, or ``None`` when it cannot be read."""
 
     try:
