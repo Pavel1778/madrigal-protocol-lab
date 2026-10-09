@@ -160,14 +160,16 @@ responses. Precision is 1.0 because no matched message is contradicted.
 
 ```
 python -m src.protocol.cli export \
-  --rule examples/corpus_rule_v2.json --format kaitai --out /tmp/parsers
+  --rule examples/corpus_rule_v2.json --format kaitai --out /tmp/parsers/
 python -m src.protocol.cli export \
-  --rule examples/corpus_rule_v2.json --format python --out /tmp/parsers
+  --rule examples/corpus_rule_v2.json --format python --out /tmp/parsers/
 ```
 
-Expected: two files under `/tmp/parsers`, a Kaitai Struct `.ksy` description and
-a standalone Python module that repeats the engine's framing. Both are generated
-from the rule, not written by hand.
+Expected: two files under `/tmp/parsers` (`corpus_request_v2.ksy` and
+`corpus_request_v2.py`), a Kaitai Struct description and a standalone Python
+module that repeats the engine's framing. The trailing separator makes `--out` a
+directory; without it the path is taken as the output file and the two exports
+overwrite each other. Both are generated from the rule, not written by hand.
 
 ## 9. Regenerate the investigation write-up
 
