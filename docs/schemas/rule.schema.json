@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Pavel1778/madrigal-protocol-lab/docs/schemas/rule.schema.json",
+  "title": "Interpretation rule",
+  "description": "Declarative description of how to frame a directional stream and read fields from each message. Owned by the Protocol engine. A rule is versioned: any change that affects framing or field reading bumps rule_version.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rule_id", "fields"],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "rule_id": { "type": "string", "minLength": 1 },
+    "rule_version": { "type": "integer", "minimum": 1 },
+    "name": { "type": "string" },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "direction": { "type": "string", "enum": ["A_to_B", "B_to_A"] }
+      }
+    },
+    "framing": { "$ref": "#/$defs/framing" },
+    "fields": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/field" }
+    }
+  },
+  "$defs": {
+    "framing": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["length_prefixed", "fixed_size", "marker_based", "manual"]
+        },
+        "length_offset": { "type": "integer", "minimum": 0 },
+        "length_size": { "type": "integer", "minimum": 1 },
+        "byte_order": { "type": "string", "enum": ["big", "little"] },
+        "length_includes_payload": { "type": "boolean" },
+        "size": { "type": "integer", "minimum": 0 },
+        "start_bytes": {},
+        "end_bytes": {},
+        "include_markers": { "type": "boolean" },
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["offset", "length"],
+            "properties": {
+              "offset": { "type": "integer", "minimum": 0 },
+              "length": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "offset", "type"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "offset": { "type": "integer", "minimum": 0 },
+        "type": {
+          "type": "string",
+          "enum": ["uint8", "uint16", "uint32", "int8", "int16", "int32", "bytes", "enum"]
+        },
+        "byte_order": { "type": "string", "enum": ["big", "little"] },
+        "length": { "type": "integer", "minimum": 0 },
+        "enum": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" }
+        },
+        "hypothesis": {
+          "type": "boolean",
+          "description": "True when the field name or meaning is an assumption, not an observation."
+        },
+        "expected": { "type": "array" },
+        "missing_ok": { "type": "boolean" }
+      }
+    }
+  }
+}
