@@ -253,7 +253,6 @@ def _decode_field(
     if spec.type == "checksum":
         return _decode_checksum(field, spec, data, message, start, end, context, **base)
 
-    chunk = data[start:end]
     value = _decode_value(spec, data, start, end, context)
     status = Status.MATCHED
     reason = None
