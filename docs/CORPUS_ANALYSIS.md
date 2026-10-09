@@ -52,6 +52,11 @@ gap, is the applicability boundary: no framing can frame across a hole, so the
 message that straddles it is `incomplete`, not `matched`. See
 `docs/REFERENCE_INVESTIGATION.md` for the full table.
 
+The count here is eleven of twelve because this census covers all three captures.
+The framing generator (`scripts/run_reference_investigation.py`) runs over its
+default corpus of the two clean captures, where the same verdict reads as ten of
+ten; the two numbers differ only in what they count, not in the outcome.
+
 ## 3. The field layout that survived
 
 | offset | size | type | name | meaning |
@@ -132,11 +137,13 @@ current verdict.
 ## 7. Where the rule stops
 
 Widening `command` to the corpus values does not make the rule general. On
-`synthetic_live` the same rule matches nothing and reports one `incomplete`
-message: the capture uses a command byte outside `{1, 2, 3}`, and the rule says
-so rather than guessing. This is the applicability boundary the whole exercise
-is built to expose: a rule is confirmed inside the bytes it was checked against,
-not proven beyond them.
+`synthetic_live` the same rule matches nothing. The capture uses a little-endian
+length, so under the rule's big-endian length both streams are truncated: neither
+frames cleanly, and the scoped rule reports one `incomplete` message on `A_to_B`
+with the rest `not_applicable`. The rule fails on the length field before any
+command byte is judged, and it says so rather than guessing. This is the
+applicability boundary the whole exercise is built to expose: a rule is confirmed
+inside the bytes it was checked against, not proven beyond them.
 
 ## 8. The six statuses, each with a witness
 
