@@ -68,7 +68,9 @@ still yields the TCP sessions that can be read.
   reassembled bytes, for inspection in Wireshark.
 - `streaming.py` — `process_streaming(...)` releases a closed session from
   memory while walking a large capture.
-- `cli.py` — `python -m src.capture.cli --pcap ... --out ...`.
+- `cli.py` — `python -m src.capture.cli --pcap ... --out ...`. `--verbose`
+  logs read, session and export progress to stderr; without it the command
+  prints only the JSON summary.
 
 ## Project and report
 
