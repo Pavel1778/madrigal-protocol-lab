@@ -51,6 +51,13 @@ Notes:
 - `bytes_b64` is the reassembled directional stream, base64 encoded. Gaps are
   not filled with zero bytes; the missing ranges appear in `diagnostics` with
   `type` = `gap`.
+- `diagnostics[].type` is an open set. Stream defects use `gap` and
+  `ambiguity`; parser notes use `ipv6_ignored`, `non_ip`, `non_tcp`,
+  `ip_fragment`, `truncated_packet`, `truncated_frame`, and
+  `unsupported_linktype`. Consumers must tolerate types they do not know.
+  Every diagnostic that points at stream bytes carries `offset` and `length`;
+  parser notes may carry `packet_index` instead. `docs/CAPTURE_API.md` lists
+  each type with its meaning.
 - Every entry of `provenance` maps a byte range of the stream (`offset`,
   `length`) to the packet it came from (`packet_index`, `seq`, `ts`).
   `packet_index` is the index of the packet in the capture file as read.
