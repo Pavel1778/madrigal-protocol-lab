@@ -82,8 +82,12 @@ GUI works with `apply_rule` / `apply_rule_fields`, `build_result`,
   `.is_confirmed()`, `.to_dict()`. `is_confirmed()` is true only when the rule
   reached at least one applicable message and nothing contradicted it; a report
   that is applicable nowhere is not a confirmation.
+  `src.protocol.cli.report_from_dict(payload) -> VerificationReport` rebuilds a
+  report from a stored `verify` JSON document, so `diff`, `metrics` and
+  `alternatives` can read a report without re-running the rule.
 - `src.hypothesis.diff.diff_rules(rule_a, rule_b) -> RuleDiff` — added, removed
-  and changed fields, framing and scope changes. `.to_dict()`;
+  and changed fields, framing and scope changes. Each field-level entry is a
+  `FieldChange` (`name`, `kind`, `before`, `after`). `.to_dict()`;
   `format_rule_diff(diff) -> str`.
 - `src.hypothesis.diff.diff_reports(report_a, report_b) -> ReportDiff` —
   `resolved_counterexamples, introduced_counterexamples, unchanged_mismatches,
@@ -96,7 +100,8 @@ GUI works with `apply_rule` / `apply_rule_fields`, `build_result`,
   CorrelationReport` — see the journal section below.
 - `src.hypothesis.alternatives.suggest_alternatives(rule, messages,
   correlations=None) -> AlternativesReport`, `analyze_field(rule, messages,
-  field_name, correlations=None)` — see the alternatives section below.
+  field_name, correlations=None) -> FieldAlternatives` — see the alternatives
+  section below.
 - `src.hypothesis.versioning.ResultStore` — `.add(rule, capture_id, payload) ->
   StoredResult`, `.results_for(rule_id, capture_id=None)`,
   `.mark_outdated(rule, capture_id=None) -> list[StoredResult]`,
@@ -121,6 +126,19 @@ python -m src.protocol.cli alternatives --report r1.json --corpus capture.json -
 
 Each command prints a human-readable summary to stderr and the machine-readable
 document to stdout, or to `--out` when given.
+
+### Errors
+
+Parsing and loading raise a typed `ValueError` subclass, so a caller can
+distinguish a bad input from an internal fault:
+
+- `src.protocol.rule.RuleError` — `parse_rule` / `load_rule` on a malformed rule.
+- `src.protocol.framing.FramingError` — `FramingStrategy.from_dict` on a bad
+  framing block, or framing a stream that cannot satisfy it.
+- `src.protocol.stream.CaptureError` — `load_capture` / `capture_from_dict` on a
+  capture that is not in the contract format.
+- `src.hypothesis.journal.JournalError` — `load_journal` / `parse_journal` on a
+  journal that cannot be read.
 
 ## 2. Rule format
 
@@ -179,6 +197,9 @@ Checked rather than extracted (the message span is still reserved):
   covers given by `start` and `end` (offsets relative to the message start;
   `end` defaults to the message length). The stored value is compared with the
   computed one; a difference is `mismatched`.
+  `src.protocol.checksums.width_for(algorithm) -> int` returns that default
+  width, and the helper itself is public so a caller can size a field without
+  duplicating the table.
   ```json
   { "name": "crc", "offset": 6, "type": "checksum", "algorithm": "crc16",
     "length": 2, "start": 0, "end": 6 }
@@ -489,7 +510,7 @@ either `<timestamp> | <action> | key=value | ...` or the positional
 whether the third field contains `=` (the positional form stores `parameter`
 and `result` as keys). The timestamp is epoch seconds or ISO-8601; `#` starts a
 comment, a line that does not start with a digit is prose, and blank lines are
-ignored.
+ignored. `parse_timestamp(text) -> float` is the parser behind that rule.
 
 ```
 100.02 | set_temperature | value=21
