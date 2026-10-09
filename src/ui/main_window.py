@@ -20,6 +20,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from . import theme
 from .compare_view import CompareView
 from .hex_view import HexView, annotations_from_application, annotations_from_stream
+from .hypotheses_view import HypothesesView
 from .model import CaptureModel, RuleModel, verify_rule_on_corpus
 from .session_tree import SessionTree
 from .validation_view import ValidationView
@@ -113,6 +114,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.right_tabs.addTab(self.validation_view, "Interpretation")
         self.compare_view = CompareView()
         self.right_tabs.addTab(self.compare_view, "Compare")
+        self.hypotheses_view = HypothesesView()
+        self.right_tabs.addTab(self.hypotheses_view, "Hypotheses")
         self.report_view = QtWidgets.QPlainTextEdit()
         self.report_view.setReadOnly(True)
         self.report_view.setFont(theme.mono_font(9))
@@ -153,6 +156,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.hex_view.byteClicked.connect(self._on_byte_clicked)
         self.validation_view.applyRequested.connect(self.apply_rule)
         self.validation_view.counterexampleSelected.connect(self.reveal_offset)
+        self.hypotheses_view.messageSelected.connect(self.reveal_offset)
 
     # -- loading -----------------------------------------------------------
 
@@ -241,6 +245,7 @@ class MainWindow(QtWidgets.QMainWindow):
         application = self._rule.apply(self._capture, self._session_id, self._direction)
         self.validation_view.show_application(application)
         self.compare_view.show_application(application)
+        self._show_hypotheses(application)
         stream = self._capture.stream(self._session_id, self._direction)
         self.hex_view.set_annotations(annotations_from_application(application, stream))
         counts = ", ".join(f"{k}={v}" for k, v in sorted(application.counts.items()))
@@ -250,6 +255,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self._notify(
             f"applied rule v{application.rule.rule_version} to {self._session_id} {self._direction}"
         )
+
+    def _show_hypotheses(self, application) -> None:
+        """Fill the hypotheses tab with the alternative readings for the run."""
+        from ..hypothesis.alternatives import suggest_alternatives
+
+        report = suggest_alternatives(application.rule, application.messages)
+        self.hypotheses_view.show_fields(report.fields)
 
     def apply_to_capture(self) -> None:
         """Verify the current rule over every direction of the capture."""
