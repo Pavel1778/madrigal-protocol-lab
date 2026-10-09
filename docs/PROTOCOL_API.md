@@ -95,7 +95,15 @@ GUI works with `apply_rule` / `apply_rule_fields`, `build_result`,
 ```
 python -m src.protocol.cli apply  --rule rule.json --capture capture.json --out result.json
 python -m src.protocol.cli verify --rule rule.json --capture capture.json --out report.json
+python -m src.protocol.cli diff   --rule-a v1.json --rule-b v2.json --report-a r1.json --report-b r2.json
+python -m src.protocol.cli metrics --report r1.json --out metrics.json
+python -m src.protocol.cli correlate --capture capture.json --journal journal.md --out correlations.json
+python -m src.protocol.cli export --rule rule.json --format kaitai --out out/
+python -m src.protocol.cli alternatives --report r1.json --corpus capture.json --journal journal.md --field value --out alternatives.json
 ```
+
+Each command prints a human-readable summary to stderr and the machine-readable
+document to stdout, or to `--out` when given.
 
 ## 2. Rule format
 
