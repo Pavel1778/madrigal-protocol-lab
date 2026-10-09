@@ -88,13 +88,16 @@ def process_streaming(
     *,
     close_linger: int = 16,
     max_session_packets: int = 200_000,
+    source_file: str | None = None,
 ) -> StreamingStats:
     """Normalize ``path`` into ``out_path`` without holding every session at once.
 
     ``chunk_size`` bounds how many packets are read from the file per block.
     ``close_linger`` is how many packets may follow a close before the session
     is written; ``max_session_packets`` is a safety valve for a session that
-    stays open and grows without bound.
+    stays open and grows without bound. ``source_file`` is the value recorded
+    in the output; it defaults to the input path and can be set to a relative
+    path so a project export stays portable.
     """
 
     stats = StreamingStats()
@@ -105,7 +108,8 @@ def process_streaming(
     global_index = 0
 
     capture_id = sha256_file(path)
-    with _Writer(out_path, capture_id, str(path)) as writer:
+    recorded_source = source_file if source_file is not None else str(path)
+    with _Writer(out_path, capture_id, recorded_source) as writer:
 
         def flush(session: Session) -> None:
             if session.session_id in flushed:
