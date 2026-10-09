@@ -562,7 +562,74 @@ python -m src.protocol.cli export --rule rule.json --format kaitai --out out/
 python -m src.protocol.cli export --rule rule.json --format python --out parser.py
 ```
 
-## 11. Limitations
+## 11. GUI integration
+
+The window in `src.ui` is a thin consumer of this module. It never parses a
+capture and never re-implements framing: it loads a normalized capture, hands a
+direction and a rule to `apply_rule`, and renders the result.
+
+### What the GUI expects
+
+- A normalized capture, either a file (`load_capture`) or parsed JSON
+  (`capture_from_dict`). The reference exports under
+  `tests/corpus/reference_export/` are exactly this shape.
+- A rule, either a file (`load_rule`) or edited text (`load_rule_text` +
+  `parse_rule`).
+
+### What the GUI calls
+
+- `CaptureModel.from_file(path)` wraps `capture_from_dict` and satisfies the
+  session list and diagnostics from `sessions` and
+  `directions[*].diagnostics`.
+- `RuleModel.apply` calls `apply_rule(stream, rule, session_id, direction)` and
+  keeps the `MessageResult` list. `counts` and `counterexamples` are read off it.
+- `verify_on_corpus(rule, streams)` backs the "apply to whole capture" command;
+  `CorpusStream.from_bytes(data, session_id, direction)` builds its input.
+- Byte provenance for the status bar comes from `DirectionalStream.provenance`
+  (each `Hole` carries `packet_index`, `seq`, `ts`), or from
+  `FieldResult.provenance_range` for the field under the pointer.
+
+### Field-level details the GUI relies on
+
+- `FieldResult.field_offset` and `field_length` locate a byte range inside its
+  message; the hex view highlights `message.offset + field_offset` onward.
+- `FieldResult.hypothesis` marks an assumption; the messages table labels it.
+- `MessageResult.status` and `bytes_hex` drive the per-message row and the
+  counterexample list.
+- `MessageResult.provenance_range` is not a field of the message; provenance is
+  read from the message's fields (`fields[0].provenance_range` when the message
+  has fields). This is what `src.ui.validation_view` and the integration tests
+  use.
+
+### Example
+
+Open the reference capture, apply rule v1, and read the result:
+
+```python
+from src.protocol.engine import apply_rule
+from src.protocol.rule import load_rule
+from src.protocol.stream import load_capture
+
+capture = load_capture("tests/corpus/reference_export/corpus_capture_01.normalized.json")
+rule = load_rule("examples/corpus_rule_v1.json")
+stream = capture.stream("s1", "A_to_B")
+messages = apply_rule(stream, rule, "s1", "A_to_B")
+matched = sum(m.status.value == "matched" for m in messages)
+```
+
+To produce the contract result the report and the export use:
+
+```python
+from src.protocol.result import build_result
+
+payload = build_result(rule, capture.capture_hash, messages).to_dict()
+```
+
+The result validates against `docs/schemas/result.schema.json`. A byte the user
+clicks is reported as `session + direction + offset + packet_index + seq + ts`,
+which is enough to find it in the original capture.
+
+## 12. Limitations
 
 The rule model is flat by design: arrays repeat a single fixed-width element and
 `computed`/`conditional` reference other declared fields, but there are no nested
