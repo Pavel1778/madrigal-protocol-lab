@@ -10,6 +10,7 @@ See the project format section of ``docs/INTEGRATION.md`` for the layout.
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -130,9 +131,14 @@ def read_manifest(path: Path) -> Manifest:
 
 
 def write_manifest(path: Path, manifest: Manifest) -> None:
-    """Write ``manifest`` to ``path`` with a stable, readable layout."""
+    """Write ``manifest`` to ``path`` atomically.
 
-    path.write_text(
-        json.dumps(manifest.to_dict(), indent=2, ensure_ascii=True) + "\n",
-        encoding="utf-8",
-    )
+    The document is written to a temporary file in the same directory and then
+    moved over ``path`` with ``os.replace``, so an interrupted write leaves the
+    previous manifest intact instead of a truncated one.
+    """
+
+    text = json.dumps(manifest.to_dict(), indent=2, ensure_ascii=True) + "\n"
+    temporary = path.with_name(path.name + ".tmp")
+    temporary.write_text(text, encoding="utf-8")
+    os.replace(temporary, path)
