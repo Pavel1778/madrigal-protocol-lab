@@ -32,6 +32,8 @@ class Hole:
     length: int
     detail: str | None = None
     packet_index: int | None = None
+    ts: float | None = None
+    seq: int | None = None
 
     @property
     def end(self) -> int:
@@ -96,7 +98,27 @@ def _hole(entry: dict) -> Hole:
         length=int(entry.get("length", 0)),
         detail=entry.get("detail"),
         packet_index=entry.get("packet_index"),
+        ts=_optional_float(entry.get("ts")),
+        seq=_optional_int(entry.get("seq")),
     )
+
+
+def _optional_float(value):
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _optional_int(value):
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
 
 
 @dataclass
