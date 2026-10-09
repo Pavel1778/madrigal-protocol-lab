@@ -140,7 +140,7 @@ def test_applying_rule_v2_clears_counterexamples(app):
     window.session_tree.select_direction("s2", "A_to_B")
     window.apply_rule()
     assert window._rule.root.counts.get("mismatched", 0) == 0
-    assert window.validation_view.counter_list.count() == 0
+    assert window.validation_view.counterexample_count == 0
     window.close()
 
 
@@ -315,6 +315,50 @@ def test_help_action_has_the_f1_shortcut(app):
     window.close()
 
 
+def test_legend_uses_painted_swatches(app):
+    from src.ui.hex_view import LEGEND_KINDS
+
+    window = open_window(app)
+    labels = window.annotation_legend.findChildren(QtWidgets.QLabel)
+    pixmaps = [
+        label.pixmap()
+        for label in labels
+        if not label.pixmap().isNull()
+    ]
+    # One swatch per legend kind, and every name is spelled out.
+    assert len(pixmaps) == len(LEGEND_KINDS)
+    assert all(p.width() == 12 and p.height() == 12 for p in pixmaps)
+    names = {label.text() for label in labels}
+    assert {"gap", "ambiguity", "matched", "mismatched"} <= names
+    window.close()
+
+
+def test_window_starts_with_an_empty_state_hint(app):
+    window = MainWindow()
+    assert "no capture loaded" in window.hex_view.toPlainText()
+    assert window._progress.isVisible() is False
+    window.close()
+
+
+def test_progress_returns_to_idle_after_a_run(app):
+    window = open_window(app)
+    window.apply_to_capture()
+    assert window._progress.value() == 0
+    assert window._progress.isVisible() is False
+    window.close()
+
+
+def test_no_counterexamples_shows_a_note(app):
+    window = open_window(app)
+    window.session_tree.select_direction("s1", "A_to_B")
+    window.apply_rule()
+    assert window.validation_view.counterexample_count == 0
+    # The tab is not simply empty; it states that there is nothing here.
+    assert window.validation_view.counter_list.count() == 1
+    assert "no counterexamples" in window.validation_view.counter_list.item(0).text()
+    window.close()
+
+
 def test_diff_bytes_marks_a_deletion_without_crashing():
     # The left message is longer; the shared tail sits at a different offset on
     # each side, which used to read past the end of the shorter message.
@@ -415,12 +459,12 @@ def test_capture_run_fills_the_counterexample_tab(app):
     window = open_window(app)
     window.session_tree.select_direction("s1", "A_to_B")
     window.apply_rule()
-    assert window.validation_view.counter_list.count() == 0
+    assert window.validation_view.counterexample_count == 0
     window.apply_to_capture()
     report = window._corpus_report
     # The tab must agree with the report, not with the earlier single-direction run.
-    assert window.validation_view.counter_list.count() == len(report.contradictions)
-    assert window.validation_view.counter_list.count() > 0
+    assert window.validation_view.counterexample_count == len(report.contradictions)
+    assert window.validation_view.counterexample_count > 0
     window.close()
 
 

@@ -19,7 +19,13 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from ..protocol.result import build_result, write_result
 from . import theme
 from .compare_view import CompareView
-from .hex_view import HexView, annotations_from_application, annotations_from_stream
+from .hex_view import (
+    LEGEND_KINDS,
+    HexView,
+    annotations_from_application,
+    annotations_from_stream,
+    legend_swatch,
+)
 from .hypotheses_view import HypothesesView
 from .model import CaptureModel, RuleModel, verify_rule_on_corpus
 from .session_tree import SessionTree
@@ -47,6 +53,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self._build_central()
         self._build_status()
         self._wire()
+        self._show_empty_state()
+
+    def _show_empty_state(self) -> None:
+        """Explain the first-run window before a capture is opened."""
+        self.hex_view.show_hint(
+            "no capture loaded\n\n"
+            "Open a normalized capture (Ctrl+O), pick a session and a direction,\n"
+            "then load a rule (Ctrl+R) or press Load example in the Rule tab."
+        )
+        self.validation_view.set_rule_status("no rule applied yet")
 
     # -- construction ------------------------------------------------------
 
@@ -99,11 +115,20 @@ class MainWindow(QtWidgets.QMainWindow):
         controls.addWidget(QtWidgets.QLabel("direction"))
         controls.addWidget(self.direction_combo)
         controls.addStretch(1)
-        self.annotation_legend = QtWidgets.QLabel(
-            "gap / ambiguity / matched / mismatched / uncovered"
-        )
-        self.annotation_legend.setProperty("role", "secondary")
-        self.annotation_legend.setFont(theme.body_font(8))
+        self.annotation_legend = QtWidgets.QWidget()
+        legend_layout = QtWidgets.QHBoxLayout(self.annotation_legend)
+        legend_layout.setContentsMargins(0, 0, 0, 0)
+        legend_layout.setSpacing(8)
+        for kind, name in LEGEND_KINDS:
+            chip = QtWidgets.QLabel(name)
+            chip.setFont(theme.body_font(8))
+            chip.setProperty("role", "secondary")
+            chip.setToolTip(name)
+            swatch = QtWidgets.QLabel()
+            swatch.setPixmap(legend_swatch(kind))
+            swatch.setFixedSize(12, 12)
+            legend_layout.addWidget(swatch)
+            legend_layout.addWidget(chip)
         controls.addWidget(self.annotation_legend)
         centre_layout.addLayout(controls)
         self.hex_view = HexView()
@@ -149,6 +174,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._progress.setFixedWidth(140)
         self._progress.setRange(0, 100)
         self._progress.setValue(0)
+        self._progress.setVisible(False)
         bar.addPermanentWidget(self._progress)
 
     def _wire(self) -> None:
@@ -305,9 +331,11 @@ class MainWindow(QtWidgets.QMainWindow):
         except Exception as exc:  # noqa: BLE001
             self.validation_view.set_rule_status(f"rule error: {exc}", error=True)
             return
+        self._begin_run()
         self._set_progress(20)
         report = verify_rule_on_corpus(self._rule.rule, self._capture)
         self._set_progress(100)
+        self._end_run()
         if self._rule.previous_report is not None and self._rule.previous_report.rule_id == report.rule_id:
             self._show_report_diff(self._rule.previous_report, report)
         self._rule.corpus_report = report
@@ -473,6 +501,24 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _set_progress(self, value: int) -> None:
         self._progress.setValue(value)
+
+    def _begin_run(self) -> None:
+        """Show the progress bar at zero for the start of a run.
+
+        Resetting to zero first means a previous run's finished bar is never
+        read as the state of the run now starting.
+        """
+        self._progress.setValue(0)
+        self._progress.setVisible(True)
+
+    def _end_run(self) -> None:
+        """Return the progress bar to idle and hide it.
+
+        A run is synchronous, so leaving the bar at a finished value would
+        report progress that no longer exists.
+        """
+        self._progress.setValue(0)
+        self._progress.setVisible(False)
 
     def _notify(self, text: str) -> None:
         self.statusBar().showMessage(text, 6000)

@@ -267,6 +267,12 @@ class ValidationView(QtWidgets.QWidget):
             )
             item.setToolTip(_provenance_tooltip(message))
             self.counter_list.addItem(item)
+        if not counterexamples:
+            # A run with no mismatch in this direction is not a proof; say so,
+            # and point at the corpus run, which is where mismatches appear.
+            self.counter_list.addItem(
+                QtWidgets.QListWidgetItem("no counterexamples in this direction")
+            )
 
         counts = application.counts
         summary = "  ".join(f"{k}:{v}" for k, v in sorted(counts.items()))
@@ -312,11 +318,13 @@ class ValidationView(QtWidgets.QWidget):
 
     def _on_counter_selected(self) -> None:
         items = self.counter_list.selectedItems()
-        if items:
-            session_id, direction, offset, length = items[0].data(
-                QtCore.Qt.ItemDataRole.UserRole
-            )
-            self.counterexampleSelected.emit(session_id, direction, offset, length)
+        if not items:
+            return
+        data = items[0].data(QtCore.Qt.ItemDataRole.UserRole)
+        if data is None:  # the "no counterexamples" placeholder
+            return
+        session_id, direction, offset, length = data
+        self.counterexampleSelected.emit(session_id, direction, offset, length)
 
     def show_corpus_report(self, report) -> None:
         """Fill the counterexample list from a whole-capture report.
@@ -341,7 +349,20 @@ class ValidationView(QtWidgets.QWidget):
             )
             item.setToolTip(_counter_provenance_tooltip(counter))
             self.counter_list.addItem(item)
+        if not report.contradictions:
+            self.counter_list.addItem(
+                QtWidgets.QListWidgetItem("no counterexamples in this capture")
+            )
         self._tabs.setTabText(2, f"Counterexamples ({len(report.contradictions)})")
+
+    @property
+    def counterexample_count(self) -> int:
+        """Number of real counterexample rows, excluding the empty-state note."""
+        return sum(
+            1
+            for row in range(self.counter_list.count())
+            if self.counter_list.item(row).data(QtCore.Qt.ItemDataRole.UserRole) is not None
+        )
 
     def show_message_count(self, count: int) -> None:
         """Show that the rule was applied to ``count`` messages."""
