@@ -6,12 +6,10 @@ import base64
 import json
 from pathlib import Path
 
-import pytest
 from jsonschema import Draft202012Validator
 
 from src.capture.export import export_capture, sha256_file
 from src.capture.pipeline import normalize
-from src.capture.session import Direction
 
 from .conftest import SCHEMAS, fixture
 

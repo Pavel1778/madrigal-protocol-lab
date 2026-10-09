@@ -112,6 +112,21 @@ def test_missing_sessions_raises():
         capture_from_dict({"contract_version": 1})
 
 
+def test_unknown_contract_version_raises():
+    with pytest.raises(CaptureError):
+        capture_from_dict({"contract_version": 2, "sessions": []})
+
+
+def test_non_integer_contract_version_raises():
+    with pytest.raises(CaptureError):
+        capture_from_dict({"contract_version": "one", "sessions": []})
+
+
+def test_absent_contract_version_defaults_to_one():
+    capture = capture_from_dict({"sessions": []})
+    assert capture.contract_version == 1
+
+
 def test_example_rule_matches_rule_schema():
     here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     schema_path = os.path.join(here, "docs", "schemas", "rule.schema.json")

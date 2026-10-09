@@ -38,7 +38,9 @@ def test_port_reuse_makes_two_sessions(fixtures_dir: Path) -> None:
     assert [s.session_id for s in sessions] == ["s1", "s2"]
     assert sessions[0].isn_a == 1000
     assert sessions[1].isn_a == 90000
-    assert len(sessions[0].packet_indices) + len(sessions[1].packet_indices) == len(packets)
+    assert len(sessions[0].packet_indices) + len(sessions[1].packet_indices) == len(
+        packets
+    )
     assert not set(sessions[0].packet_indices) & set(sessions[1].packet_indices)
 
 

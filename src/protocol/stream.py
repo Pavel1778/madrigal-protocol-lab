@@ -18,6 +18,9 @@ class CaptureError(ValueError):
     """Raised when a normalized capture does not match the contract."""
 
 
+CONTRACT_VERSION = 1
+
+
 @dataclass(frozen=True)
 class Hole:
     """A range inside a stream that is not backed by observed bytes.
@@ -183,10 +186,19 @@ def load_capture(path: str) -> Capture:
 def capture_from_dict(raw: dict) -> Capture:
     if not isinstance(raw, dict):
         raise CaptureError("normalized capture must be a JSON object")
+    version = raw.get("contract_version", CONTRACT_VERSION)
+    try:
+        version = int(version)
+    except (TypeError, ValueError):
+        raise CaptureError(f"contract_version must be an integer, got {version!r}") from None
+    if version != CONTRACT_VERSION:
+        raise CaptureError(
+            f"unsupported contract_version {version}; this build reads version {CONTRACT_VERSION}"
+        )
     if "sessions" not in raw:
         raise CaptureError("normalized capture is missing 'sessions'")
     return Capture(
-        contract_version=int(raw.get("contract_version", 1)),
+        contract_version=version,
         capture_id=str(raw.get("capture_id", "")),
         source_file=str(raw.get("source_file", "")),
         sessions=list(raw.get("sessions", [])),

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -42,7 +42,7 @@ class ManifestError(ValueError):
 def utc_now() -> str:
     """Return the current UTC time as an ISO 8601 string with a ``Z`` suffix."""
 
-    stamp = datetime.now(timezone.utc).replace(microsecond=0)
+    stamp = datetime.now(UTC).replace(microsecond=0)
     return stamp.isoformat().replace("+00:00", "Z")
 
 
@@ -77,12 +77,12 @@ class Manifest:
         return None
 
     @classmethod
-    def new(cls, name: str) -> "Manifest":
+    def new(cls, name: str) -> Manifest:
         stamp = utc_now()
         return cls(name=name, created_at=stamp, updated_at=stamp)
 
     @classmethod
-    def from_dict(cls, data: Any) -> "Manifest":
+    def from_dict(cls, data: Any) -> Manifest:
         if not isinstance(data, dict):
             raise ManifestError("manifest must be a JSON object")
         missing = [key for key in _MANIFEST_KEYS if key not in data]

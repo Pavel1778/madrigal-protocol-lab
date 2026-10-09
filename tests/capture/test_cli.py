@@ -46,6 +46,8 @@ def test_cli_source_name_override(tmp_path: Path) -> None:
 
 
 def test_cli_missing_file_returns_two(tmp_path: Path, capsys) -> None:
-    code = main(["--pcap", str(tmp_path / "nope.pcapng"), "--out", str(tmp_path / "x.json")])
+    code = main(
+        ["--pcap", str(tmp_path / "nope.pcapng"), "--out", str(tmp_path / "x.json")]
+    )
     assert code == 2
     assert "not found" in capsys.readouterr().err

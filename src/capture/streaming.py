@@ -31,6 +31,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Self
 
 from src.capture.export import CONTRACT_VERSION, session_to_contract, sha256_file
 from src.capture.parser import Packet, read_capture
@@ -63,7 +64,9 @@ class _Writer:
         self._handle.write(',"sessions":[\n')
         self._first = True
 
-    def write(self, session: Session, streams: dict[Direction, DirectionalStream]) -> None:
+    def write(
+        self, session: Session, streams: dict[Direction, DirectionalStream]
+    ) -> None:
         if not self._first:
             self._handle.write(",\n")
         self._first = False
@@ -74,7 +77,7 @@ class _Writer:
         self._handle.write("\n]}\n")
         self._handle.close()
 
-    def __enter__(self) -> "_Writer":
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, *exc: object) -> None:
@@ -190,7 +193,7 @@ def _consume_block(
 
         session_id = session.session_id
         closed = closed_at.get(session_id)
-        if closed is not None and position - closed >= close_linger:
-            flush(session)
-        elif len(buffers[session_id]) >= max_session_packets:
+        if (closed is not None and position - closed >= close_linger) or len(
+            buffers[session_id]
+        ) >= max_session_packets:
             flush(session)

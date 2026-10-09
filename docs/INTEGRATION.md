@@ -162,7 +162,7 @@ project.export(Path("work/cap1.zip"))
 
 # On another machine:
 restored = Project.import_(Path("work/cap1.zip"), Path("work/restored"))
-assert restored.verify_captures() == []   # digests still match
+assert restored.verify_captures() == []  # digests still match
 ```
 
 `Project.import_` checks every capture against its recorded digest and refuses

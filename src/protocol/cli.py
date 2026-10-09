@@ -16,7 +16,6 @@ counts together with the counterexamples.
 from __future__ import annotations
 
 import argparse
-import dataclasses
 import json
 import sys
 
@@ -25,10 +24,10 @@ from ..hypothesis.corpus import CorpusStream, VerificationReport, verify_on_corp
 from ..hypothesis.diff import diff_reports, diff_rules, format_report_diff, format_rule_diff
 from ..hypothesis.journal import correlate, load_journal
 from ..hypothesis.metrics import compute_metrics
-from .engine import Counterexample, MessageResult, apply_rule
+from .engine import Counterexample, apply_rule
 from .export import export_kaitai, export_python
 from .result import build_result, write_result
-from .rule import Rule, load_rule
+from .rule import load_rule
 from .stream import CaptureError, load_capture
 
 
