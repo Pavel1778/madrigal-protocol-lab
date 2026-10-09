@@ -214,6 +214,13 @@ class Project:
         try:
             with zipfile.ZipFile(archive_path) as archive:
                 cls._safe_extract(archive, target)
+        except (zipfile.BadZipFile, OSError) as exc:
+            shutil.rmtree(target, ignore_errors=True)
+            raise ProjectError(f"{archive_path} is not a readable archive") from exc
+        except BaseException:
+            shutil.rmtree(target, ignore_errors=True)
+            raise
+        try:
             project = cls.open(target)
             broken = project.verify_captures()
             if broken:
@@ -221,7 +228,7 @@ class Project:
                     "capture digests do not match after import: " + ", ".join(broken)
                 )
             return project
-        except Exception:
+        except BaseException:
             shutil.rmtree(target, ignore_errors=True)
             raise
 

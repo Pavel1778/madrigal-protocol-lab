@@ -18,6 +18,7 @@ import json
 import sys
 from pathlib import Path
 
+from src.project.manifest import ManifestError
 from src.project.pipeline import PipelineError, PipelineOutcome, run_pipeline
 from src.project.project import MANIFEST_FILE, Project, ProjectError
 
@@ -110,9 +111,12 @@ def _run_pipeline(args: argparse.Namespace) -> int:
             chunk_size=args.chunk_size,
             force=args.force,
         )
-    except (ProjectError, PipelineError) as exc:
+    except (ManifestError, ProjectError, PipelineError) as exc:
         print(str(exc), file=sys.stderr)
         return 2
+    except KeyboardInterrupt:
+        print("interrupted", file=sys.stderr)
+        return 130
     except Exception as exc:  # noqa: BLE001 - the CLI reports any failure
         print(f"pipeline failed: {exc}", file=sys.stderr)
         return 1
@@ -189,9 +193,12 @@ def main(argv: list[str] | None = None) -> int:
             broken = project.verify_captures()
             print(json.dumps({"project": str(project.root), "broken": broken}))
             return 0
-    except ProjectError as exc:
+    except (ManifestError, ProjectError) as exc:
         print(str(exc), file=sys.stderr)
         return 2
+    except KeyboardInterrupt:
+        print("interrupted", file=sys.stderr)
+        return 130
 
     return 2
 
