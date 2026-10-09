@@ -7,6 +7,7 @@ steps.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -14,6 +15,8 @@ from src.capture.export import capture_id_from_bytes, sha256_file
 from src.capture.parser import Diagnostic, Packet, read_capture
 from src.capture.reassembly import DirectionalStream, reassemble
 from src.capture.session import Direction, Session, build_sessions
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -41,13 +44,21 @@ def normalize(
 
     diagnostics: list[Diagnostic] = []
     packets = list(read_capture(path, diagnostics))
-    return normalize_packets(
+    logger.info("read %d packet(s) from %s", len(packets), path)
+    result = normalize_packets(
         packets,
         source_file=path,
         capture_id=capture_id if capture_id is not None else sha256_file(path),
         diagnostics=diagnostics,
         ignore_checksums=ignore_checksums,
     )
+    logger.info(
+        "normalised %s: %d session(s), %d diagnostic(s)",
+        path,
+        len(result.sessions),
+        len(result.diagnostics),
+    )
+    return result
 
 
 def normalize_bytes(
