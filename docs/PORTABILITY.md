@@ -20,8 +20,32 @@ covers requirement R5 (reproducible transfer) at the level of the environment.
 | Debian 13 development host | 3.13 | `pytest tests/ -q` | 183 passed, 1 skipped |
 | Fresh clone, new venv | 3.13 | `pip install -e ".[dev]"` + README/USAGE commands | all run |
 
-The one skipped test is the rule path, which needs the `src.protocol` engine
-from the protocol/GUI branch; it runs once that branch is merged.
+Those rows are from the capture, project and report revision. The suite has
+since grown with the protocol and window modules; the authoritative counts for
+the submitted revision are in "Submission archive check" below.
+
+## Submission revision (385 tests)
+
+The submission revision is checked on both ends of the supported Python range
+from a clean unpack, so the archived tree and not the working copy is what
+runs.
+
+| Python | Install | Suite | Lint |
+| --- | --- | --- | --- |
+| 3.12.14 | 15 s | 385 passed | All checks passed |
+| 3.13.15 | 16 s | 385 passed | All checks passed |
+
+No test skipped on either version: the corpus, the reference export and the
+`examples/` rules are inside the archive.
+
+## Docker
+
+The `Dockerfile` and `scripts/test_in_docker.sh` are provided, but the Docker
+daemon is not reachable in the environment this revision was checked in, so the
+container path is prepared and not re-run here. The clean-unpack rows above use
+a real 3.12 interpreter on the host as the equivalent check. On a host with
+Docker, `scripts/test_in_docker.sh` runs the same suite and the starter lint in
+a throwaway Ubuntu image.
 
 ## What each check does
 
