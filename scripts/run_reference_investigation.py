@@ -17,6 +17,7 @@ never fabricates a report.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from pathlib import Path
 
@@ -72,6 +73,11 @@ def _build_parser() -> argparse.ArgumentParser:
         "--refine-fields",
         default="command",
         help="comma-separated candidate field names to widen when refining",
+    )
+    parser.add_argument(
+        "--boundary",
+        default="synthetic_live.pcapng",
+        help="capture inside --corpus-dir to test the rule outside its domain",
     )
     return parser
 
@@ -336,6 +342,112 @@ def _format_report(header, sections) -> str:
     return "\n".join(lines)
 
 
+def _version_section(report_v1, report_v2, revised: int, comparison) -> str:
+    """Compare the metrics of the two rule versions and the version delta."""
+    from src.hypothesis.metrics import compute_metrics
+
+    m1 = compute_metrics(report_v1)
+    m2 = compute_metrics(report_v2)
+    rows = (
+        ("matched", m1.matched, m2.matched),
+        ("mismatched", m1.mismatched, m2.mismatched),
+        ("counterexamples", m1.counterexamples, m2.counterexamples),
+        ("coverage", m1.coverage, m2.coverage),
+        ("precision", m1.precision, m2.precision),
+        ("counterexample_density", m1.counterexample_density, m2.counterexample_density),
+    )
+    lines = [
+        f"Rule v{report_v1.rule_version} and rule v{revised} are different rules over the "
+        "same bytes: nothing about the capture changed, only the description of "
+        "it. The counts below come from re-running both versions.",
+        "",
+        f"| metric | v{report_v1.rule_version} | v{revised} | delta |",
+        "| --- | --- | --- | --- |",
+    ]
+    for name, before, after in rows:
+        delta = round(after - before, 6)
+        lines.append(f"| {name} | {before} | {after} | {delta:+} |")
+    lines += [
+        "",
+        f"Resolved counterexamples: {len(comparison.resolved)}.",
+        f"Introduced counterexamples: {len(comparison.introduced)}.",
+        f"Coverage delta: {round(m2.coverage - m1.coverage, 6):+}.",
+        "",
+        "A rule change never rewrites the bytes it was checked against. The v"
+        f"{report_v1.rule_version} result stays on disk with its own rule version; a reader "
+        "sees which version produced which verdict.",
+    ]
+    return "\n".join(lines)
+
+
+def _boundary_section(rule, payload: dict, name: str) -> str:
+    """Apply the rule outside its confirmed domain and record where it breaks."""
+    from src.hypothesis.corpus import CorpusStream, verify_on_corpus
+    from src.protocol.framing import FramingStrategy, frame_stream
+    from src.protocol.stream import capture_from_dict
+
+    capture = capture_from_dict(payload)
+    strategy = FramingStrategy.from_dict(rule.framing)
+    lines = [
+        f"Rule v{rule.rule_version} applied to {name}, a capture produced by a real "
+        "TCP stack with a deliberately different layout (little-endian length, a "
+        "transaction id byte, commands 0x21/0x22/0x23). The rule was never fitted "
+        "to this traffic.",
+        "",
+    ]
+    framed_ok = 0
+    framed_total = 0
+    for session_id, direction, stream in capture.iter_streams():
+        if not stream.data:
+            continue
+        framed_total += 1
+        messages = frame_stream(stream.data, strategy)
+        consumed = sum(m.length for m in messages)
+        complete = all(m.complete for m in messages)
+        if consumed == len(stream.data) and complete and messages:
+            framed_ok += 1
+        lines.append(
+            f"- {session_id} {direction}: {len(stream.data)} B -> "
+            f"{len(messages)} messages, {consumed}/{len(stream.data)} B, "
+            + ("complete" if complete else "truncated")
+        )
+    streams = [
+        CorpusStream.from_bytes(stream.data, session_id, direction)
+        for session_id, direction, stream in capture.iter_streams()
+    ]
+    report = verify_on_corpus(rule, streams)
+    lines += [
+        "",
+        f"Streams framed cleanly: {framed_ok}/{framed_total}.",
+        "Counts: " + ", ".join(f"{k}={v}" for k, v in report.counts().items()),
+        f"Counterexamples: {len(report.contradictions)}.",
+        "",
+        "The big-endian length and the different command set mean the rule does "
+        "not transfer: its matches here are coincidental, not evidence. This is "
+        "the boundary of the rule's applicability, and it is stated rather than "
+        "hidden by re-tuning until something matches.",
+    ]
+    return "\n".join(lines)
+
+
+def _limitations_section() -> str:
+    return "\n".join(
+        [
+            "- The rule describes the request direction only; responses are "
+            "framed but not interpreted field by field.",
+            "- Field meanings marked `hypothesis: true` (the enum `target`, the "
+            "payload `value`) remain assumptions. Matching is not proof.",
+            "- The framing question was settled against the corpus; a stream "
+            "whose length field counts something else would need a new rule.",
+            "- Ambiguity and gap diagnostics are surfaced, never zero-filled, so "
+            "a message over a gap is reported `incomplete` rather than guessed.",
+            "- The synthetic live capture shares no byte layout with the corpus, "
+            "so nothing here is claimed to generalise to it.",
+        ]
+    )
+
+
+
 def main(argv=None) -> int:
     args = _build_parser().parse_args(argv)
 
@@ -409,6 +521,9 @@ def main(argv=None) -> int:
         rule_v1, [c.to_dict() for c in report_v1.contradictions], candidate_fields
     )
     if revised is not None:
+        from dataclasses import replace
+
+        revised = replace(revised, name=f"{revised.rule_id}_v{revised.rule_version}")
         _, report_v2 = _apply(revised, payloads[primary_name])
         comparison = compare_reports(report_v1, report_v2)
         lines = [f"Rule refined to v{revised.rule_version}. Changes:", ""]
@@ -417,11 +532,28 @@ def main(argv=None) -> int:
         lines += [
             "",
             "Counts after refinement: "
-            + ", ".join(f"{k}={v}" for k, v in report_v2.counts().items()),
-            f"Resolved counterexamples: {len(comparison.resolved)}.",
-            f"Introduced counterexamples: {len(comparison.introduced)}.",
+            + ", ".join(f"{k}={v}" for k, v in report_v2.counts().items()) + ".",
         ]
         sections.append(("Refinement", "\n".join(lines)))
+        sections.append(
+            (
+                "Version differentiation",
+                _version_section(report_v1, report_v2, revised.rule_version, comparison),
+            )
+        )
+
+        rule_v2_path = args.rule.with_name("corpus_rule_v2.json")
+        rule_v2_path.write_text(
+            json.dumps(revised.to_dict(), ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        sections.append(
+            (
+                "Refined rule",
+                f"The refined rule is written to `{rule_v2_path.name}` so it can be "
+                "applied again by the CLI without re-deriving it.",
+            )
+        )
 
         if len(capture_paths) > 1:
             secondary_name = capture_paths[1].name
@@ -439,6 +571,21 @@ def main(argv=None) -> int:
     else:
         sections.append(("Refinement", "No refinement was needed."))
 
+    boundary_name = args.boundary
+    if boundary_name:
+        boundary_path = args.corpus_dir / boundary_name
+        if boundary_path.is_file():
+            sections.append(
+                (
+                    "Applicability boundary",
+                    _boundary_section(
+                        revised or rule_v1,
+                        _load_capture_payload(boundary_path),
+                        boundary_name,
+                    ),
+                )
+            )
+
     sections.append(
         ("Journal correlation", _journal_section(payloads, revised or rule_v1, args.journal))
     )
@@ -453,6 +600,7 @@ def main(argv=None) -> int:
         "confirmed within the tested domain.",
     ]
     sections.append(("Open questions", "\n".join(open_questions)))
+    sections.append(("Limitations", _limitations_section()))
 
     header = "# Reference investigation"
     text = _format_report(header, sections)
