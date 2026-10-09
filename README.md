@@ -100,6 +100,22 @@ pytest tests/ -q
 - [presentation/slides.pdf](presentation/slides.pdf) — the deck, with the eight
   window screenshots.
 
+## Delivery formats
+
+The primary delivery is the source tree with the setup instructions above,
+packed by `python scripts/build_submission.py` into `dist/submission_*.zip`.
+Unpack the archive and follow the same setup to run it from scratch.
+
+| Format | State | Command |
+| --- | --- | --- |
+| Source archive | shipped | `python scripts/build_submission.py` |
+| Docker image | not shipped, no `Dockerfile` in the tree | — |
+| Linux binary and `.deb` | planned, phase D | — |
+
+The archive is verified after the build: it is extracted into a temporary
+directory and the suite is run from there, so a broken archive is never
+reported as ready.
+
 ## License
 
 MIT, see [LICENSE](LICENSE).

@@ -53,6 +53,7 @@ REQUIRED_FILES = (
     "README.md",
     "pyproject.toml",
     "docs/CONTRACT.md",
+    "docs/SUBMISSION.md",
 )
 
 # Directory names pruned wherever they appear in the tree.
@@ -215,9 +216,8 @@ def render_manifest(root: Path, stamp: datetime) -> str:
     """Render the SUBMISSION.md text for the archive."""
     name, email = committed_identity(root)
     author = f"{name} <{email}>" if email else name or "not recorded"
-    return "\n".join(
-        [
-            "# Submission",
+    lines = [
+        "# Submission",
             "",
             "## Solution",
             "",
@@ -295,7 +295,11 @@ def render_manifest(root: Path, stamp: datetime) -> str:
             "  all paths inside the archive are relative.",
             "",
         ]
-    )
+
+    detail = root / "docs" / "SUBMISSION.md"
+    if detail.is_file():
+        lines.extend(["", "---", "", detail.read_text(encoding="utf-8").rstrip()])
+    return "\n".join(lines) + "\n"
 
 
 def build_archive(
