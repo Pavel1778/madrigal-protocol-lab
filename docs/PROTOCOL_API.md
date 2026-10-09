@@ -108,17 +108,84 @@ YAML with these keys:
 - `fields[]` — ordered list of fields.
 
 Field keys: `name`, `offset`, `type`, `byte_order` (`"big"` default or
-`"little"`), and depending on the type:
+`"little"`), `hypothesis: true` (the field's meaning is an assumption, not an
+observation), `expected: [v1, v2]` (allowed values; a value outside the list is
+`mismatched`), and `missing_ok: true` (the field may be absent — part of the
+stream may be a gap — without failing the message; it is then `uncovered`).
+The remaining keys depend on `type`.
 
-- numeric types `uint8, uint16, uint32, int8, int16, int32` — fixed size;
-- `bytes` — requires `length`;
-- `enum` — requires an `enum` mapping of names to integer values;
-- `hypothesis: true` — the field's meaning is an assumption, not an
-  observation;
-- `expected: [v1, v2]` — allowed values; a value outside the list is
-  `mismatched`;
-- `missing_ok: true` — the field may be absent (part of the stream may be a gap)
-  without failing the message; it is then `uncovered`.
+### Field types
+
+Directly read from the message layout:
+
+- Numeric `uint8, uint16, uint32, int8, int16, int32` — fixed width.
+- `bytes` — requires `length`; value is the lowercase hex string.
+- `enum` — requires an `enum` mapping of names to integer values.
+- `bitmask` — a bit range inside one or more bytes: `bit_offset` (LSB-based)
+  and `bit_length`. The storage width is `bit_offset + bit_length` rounded up to
+  whole bytes, so a range may cross a byte boundary.
+  ```json
+  { "name": "version", "offset": 0, "type": "bitmask", "bit_offset": 0, "bit_length": 2 }
+  { "name": "mode", "offset": 0, "type": "bitmask", "bit_offset": 2, "bit_length": 2 }
+  ```
+- `string` — `length` for a fixed-width string, or `terminated: true` for a
+  NUL-terminated one (the terminator is included in the field span). `encoding`
+  is `ascii` (default), `utf-8` or `latin-1`. Trailing NUL padding is stripped.
+  ```json
+  { "name": "tag", "offset": 4, "type": "string", "length": 8, "encoding": "ascii" }
+  { "name": "name", "offset": 12, "type": "string", "terminated": true }
+  ```
+- `array` — repeated elements: `element_type` (a numeric type or `bytes`),
+  `element_length` (for `bytes` elements) and a count given by `count` or by
+  `count_field` (another decoded field). The value is a list.
+  ```json
+  { "name": "values", "offset": 2, "type": "array", "element_type": "uint16", "count": 5 }
+  { "name": "items", "offset": 4, "type": "array", "element_type": "bytes",
+    "element_length": 2, "count_field": "item_count" }
+  ```
+- `padding` — `length` bytes skipped when reading but kept in the message span
+  (for alignment). Its value is `null` and it is `uncovered`; a message of only
+  padding is `uncovered`.
+
+Checked rather than extracted (the message span is still reserved):
+
+- `checksum` — `algorithm` (`xor`, `sum`, `crc8`, `crc16`), `length` (defaults
+  to the algorithm width: 1 byte, 2 for `crc16`), and the byte range the sum
+  covers given by `start` and `end` (offsets relative to the message start;
+  `end` defaults to the message length). The stored value is compared with the
+  computed one; a difference is `mismatched`.
+  ```json
+  { "name": "crc", "offset": 6, "type": "checksum", "algorithm": "crc16",
+    "length": 2, "start": 0, "end": 6 }
+  ```
+- `computed` — `expression` describes a value derived from other fields. The
+  field's own bytes (`length`, default 1) are compared with the computed value.
+  Expressions: `sum_of_values` (`fields`), `sum_of_lengths`, `xor` (`fields`,
+  optional `value`), `const` (`value`), `add`/`sub`. Operands are referenced by
+  field name; if any operand is missing the field is `incomplete`.
+  ```json
+  { "name": "payload_length", "offset": 2, "type": "computed", "length": 2,
+    "expression": { "op": "sum_of_lengths", "fields": ["body"] } }
+  { "name": "total", "offset": 4, "type": "computed",
+    "expression": { "op": "sum_of_values", "fields": ["a", "b"] } }
+  ```
+
+Conditional (present only when a condition holds):
+
+- `conditional` — `condition` is `{ "field": <name>, "op": ..., "value": ... }`
+  with `op` in `eq`, `ne`, `bit_set`, `bit_clear`, `gt`, `lt`; the nested
+  `field` object describes the value when the condition holds. When the
+  condition is not met the value is `null` and the field is `uncovered` (it does
+  not fail the message).
+  ```json
+  { "name": "value_2", "type": "conditional",
+    "condition": { "field": "flags", "op": "bit_set", "value": 1 },
+    "field": { "name": "value_2", "offset": 6, "type": "uint16" } }
+  ```
+
+References between fields (`conditions`, `computed`, `count_field`) resolve by
+name against fields declared earlier in the list. A reference to an undeclared
+field is rejected when the rule is parsed.
 
 ### Framing
 
