@@ -52,6 +52,11 @@ gap, is the applicability boundary: no framing can frame across a hole, so the
 message that straddles it is `incomplete`, not `matched`. See
 `docs/REFERENCE_INVESTIGATION.md` for the full table.
 
+The count here is eleven of twelve because this census covers all three captures.
+The framing generator (`scripts/run_reference_investigation.py`) runs over its
+default corpus of the two clean captures, where the same verdict reads as ten of
+ten; the two numbers differ only in what they count, not in the outcome.
+
 ## 3. The field layout that survived
 
 | offset | size | type | name | meaning |

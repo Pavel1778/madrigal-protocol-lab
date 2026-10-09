@@ -11,7 +11,7 @@ time. A hypothesis is a field the rule marks `hypothesis: true`, meaning the
 (value plus provenance); the alternatives engine reports a meaning as a
 candidate with a score. The two never share a code path. Evidence:
 `src/protocol/engine.py`, `src/hypothesis/alternatives.py`,
-`docs/REPORT.md` section 3.
+`REPORT.md` section 3.
 
 ## 2. Why is the framing length-prefixed with `length_covers: payload`?
 
@@ -33,7 +33,7 @@ contradicted by 80 of 140. Evidence: `docs/CORPUS_ANALYSIS.md` sections 4-5,
 
 A corpus check confirms agreement, not meaning. `0x01/0x02/0x03` fit a command
 code, but the corpus is synthetic and small, so the rule keeps the flag. The
-field is *confirmed in scope*, not proven. Evidence: `docs/REPORT.md` section 3,
+field is *confirmed in scope*, not proven. Evidence: `REPORT.md` section 3,
 `src/hypothesis/status.py`.
 
 ## 5. What exactly is a counterexample?
@@ -93,7 +93,7 @@ rather than guessing. Evidence: `docs/CORPUS_ANALYSIS.md` section 7,
 
 No. It means the rule is confirmed inside the checked bytes. The whole point of
 the alternatives engine and the boundary capture is to keep that distinction
-visible. Evidence: `docs/REPORT.md` section 3, section 8.
+visible. Evidence: `REPORT.md` section 3, section 8.
 
 ## 13. Why do alternative readings come from a fixed set?
 
@@ -154,7 +154,7 @@ Three concrete steps, each aimed at a limitation above: capture real device
 traffic to test the synthetic-corpus caveat; parse the `B_to_A` responses by
 field so the rule covers both directions; and drive a parameter across sessions
 to see whether the flags byte ever changes, which would let a second reading be
-distinguished. Evidence: `docs/REPORT.md` section 12, deck limitations slide.
+distinguished. Evidence: `REPORT.md` section 12, deck limitations slide.
 
 ## Where the numbers come from
 
