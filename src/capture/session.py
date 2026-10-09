@@ -14,11 +14,14 @@ no SYN both roles stay ``unknown`` and no meaning is assigned to either side.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 
 from src.capture.parser import Packet
+
+logger = logging.getLogger(__name__)
 
 
 class Direction(str, Enum):
@@ -191,6 +194,7 @@ def build_sessions(packets: Sequence[Packet] | Iterable[Packet]) -> list[Session
     tracker = SessionTracker()
     for packet in packets:
         tracker.add(packet)
+    logger.debug("built %d session(s)", len(tracker.sessions))
     return tracker.sessions
 
 

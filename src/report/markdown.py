@@ -8,11 +8,14 @@ for the investigation dictionary shape.
 
 from __future__ import annotations
 
+import logging
 import tempfile
 from pathlib import Path
 from typing import Any
 
 from src.report.model import normalize, status_label
+
+logger = logging.getLogger(__name__)
 
 
 def _scope_lines(scope: dict[str, Any]) -> list[str]:
@@ -124,6 +127,7 @@ def render_markdown(investigation: dict[str, Any], out_path: Path) -> None:
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text("\n".join(lines), encoding="utf-8")
+    logger.info("wrote Markdown report to %s", out_path)
 
 
 def render(investigation: dict[str, Any]) -> str:

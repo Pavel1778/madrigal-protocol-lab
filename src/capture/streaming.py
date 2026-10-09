@@ -29,6 +29,7 @@ any final acks are still part of the session.
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Self
@@ -37,6 +38,8 @@ from src.capture.export import CONTRACT_VERSION, session_to_contract, sha256_fil
 from src.capture.parser import Packet, read_capture
 from src.capture.reassembly import DirectionalStream, reassemble
 from src.capture.session import Direction, Session, SessionTracker
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -158,6 +161,13 @@ def process_streaming(
                 flush(session)
 
     stats.sessions = len(tracker.sessions)
+    logger.info(
+        "streaming %s: %d packet(s), %d session(s), %d flush(es)",
+        path,
+        stats.packets,
+        stats.sessions,
+        stats.flushes,
+    )
     return stats
 
 
