@@ -14,7 +14,7 @@ version become ``outdated`` (see :mod:`src.hypothesis.versioning`).
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 
 RULE_SCHEMA_VERSION = 1
 
