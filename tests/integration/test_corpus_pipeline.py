@@ -29,6 +29,11 @@ CORPUS_PCAP_2 = CORPUS_DIR / "corpus_capture_02.pcapng"
 CORPUS_PCAP_DEFECTS = CORPUS_DIR / "corpus_capture_defects.pcapng"
 CORPUS_JOURNAL = CORPUS_DIR / "corpus_journal.md"
 CORPUS_RULE = REPO_ROOT / "examples" / "corpus_rule_v1.json"
+CORPUS_RULE_2 = REPO_ROOT / "examples" / "corpus_rule_v2.json"
+REFERENCE_DIR = CORPUS_DIR / "reference_export"
+REFERENCE_01 = REFERENCE_DIR / "corpus_capture_01.normalized.json"
+REFERENCE_02 = REFERENCE_DIR / "corpus_capture_02.normalized.json"
+REFERENCE_SYNTHETIC = REFERENCE_DIR / "synthetic_live.normalized.json"
 CAPTURE_SCHEMA = REPO_ROOT / "docs" / "schemas" / "capture.schema.json"
 RESULT_SCHEMA = REPO_ROOT / "docs" / "schemas" / "result.schema.json"
 
@@ -220,3 +225,110 @@ def test_defect_capture_reports_incomplete_instead_of_failing(tmp_path):
         if message.status.value == "incomplete":
             assert message.reason
             assert message.length > 0
+
+
+# -- reference export pipeline -------------------------------------------
+
+
+@corpus_required
+def test_reference_export_result_matches_the_schema():
+    """The GUI reads the reference export; its result must satisfy the contract.
+
+    This exercises the exact path the window uses: load the normalized JSON,
+    apply the rule through the engine, build the result and validate it.
+    """
+    if not REFERENCE_01.is_file():
+        pytest.skip("reference export not present")
+    loaded = load_capture(str(REFERENCE_01))
+    rule = load_rule(str(CORPUS_RULE))
+    messages = []
+    for session_id, direction, stream in loaded.iter_streams():
+        if not rule.applies_to(direction):
+            continue
+        messages.extend(apply_rule(stream, rule, session_id, direction))
+    assert messages
+    payload = build_result(rule, loaded.capture_hash, messages).to_dict()
+    _validate(RESULT_SCHEMA, payload)
+    assert payload["capture_id"] == loaded.capture_hash
+    assert payload["summary"]["matched"] > 0
+    assert payload["summary"]["mismatched"] > 0
+
+
+@corpus_required
+def test_counterexample_provenance_carries_packet_index():
+    if not REFERENCE_01.is_file():
+        pytest.skip("reference export not present")
+    loaded = load_capture(str(REFERENCE_01))
+    rule = load_rule(str(CORPUS_RULE))
+    mismatched = []
+    for session_id, direction, stream in loaded.iter_streams():
+        if not rule.applies_to(direction):
+            continue
+        mismatched.extend(
+            m for m in apply_rule(stream, rule, session_id, direction)
+            if m.status.value == "mismatched"
+        )
+    assert mismatched, "the narrow rule should have counterexamples"
+    for message in mismatched:
+        provenance = message.fields[0].provenance_range
+        assert provenance is not None, "counterexample without provenance"
+        assert provenance.get("packets"), "counterexample has no packet index"
+        assert isinstance(provenance["packets"][0], int)
+
+
+@corpus_required
+def test_refined_rule_transfers_to_the_second_capture():
+    from src.hypothesis.corpus import CorpusStream, verify_on_corpus
+
+    if not (CORPUS_RULE_2.is_file() and REFERENCE_02.is_file()):
+        pytest.skip("refined rule or second reference export not present")
+    loaded = load_capture(str(REFERENCE_02))
+    streams = [
+        CorpusStream.from_bytes(stream.data, session_id, direction)
+        for session_id, direction, stream in loaded.iter_streams()
+    ]
+    report = verify_on_corpus(load_rule(str(CORPUS_RULE_2)), streams)
+    assert report.contradictions == []
+    assert report.counts()["matched"] > 0
+
+
+@corpus_required
+def test_refined_rule_fails_at_the_synthetic_boundary(tmp_path):
+    from src.hypothesis.corpus import CorpusStream, verify_on_corpus
+
+    if not CORPUS_RULE_2.is_file():
+        pytest.skip("refined rule not present")
+    synthetic_pcap = CORPUS_DIR / "synthetic_live.pcapng"
+    if REFERENCE_SYNTHETIC.is_file():
+        capture = load_capture(str(REFERENCE_SYNTHETIC))
+    elif synthetic_pcap.is_file():
+        capture = capture_from_dict(_export_normalized(synthetic_pcap, tmp_path / "syn.json"))
+    else:
+        pytest.skip("synthetic capture not present")
+    streams = [
+        CorpusStream.from_bytes(stream.data, session_id, direction)
+        for session_id, direction, stream in capture.iter_streams()
+    ]
+    report = verify_on_corpus(load_rule(str(CORPUS_RULE_2)), streams)
+    counts = report.counts()
+    # A different protocol: the rule frames nothing cleanly and contradicts.
+    assert counts["matched"] == 0
+    assert report.contradictions, "the rule must contradict the foreign capture"
+
+
+@corpus_required
+def test_journal_correlation_is_complete_on_the_first_capture():
+    from src.hypothesis.journal import correlate, load_journal
+
+    if not REFERENCE_01.is_file():
+        pytest.skip("reference export not present")
+    loaded = load_capture(str(REFERENCE_01))
+    rule = load_rule(str(CORPUS_RULE))
+    messages = []
+    for session_id, direction, stream in loaded.iter_streams():
+        if not rule.applies_to(direction):
+            continue
+        messages.extend(apply_rule(stream, rule, session_id, direction))
+    report = correlate(messages, load_journal(str(CORPUS_JOURNAL)), window_ms=500)
+    assert len(report.correlated) == len(messages) == 140
+    assert report.messages_without_entry == 0
