@@ -85,10 +85,14 @@ def test_stand_records_a_verifiable_session(tmp_path: Path) -> None:
     assert [entry.action for entry in journal].count("set") == 3
     assert [entry.action for entry in journal].count("measure") == 5
 
-    # Journal timestamps must be real packet times in the capture.
-    stamps = {round(packet.timestamp, 3) for packet in packets}
+    # Journal timestamps must be real packet times in the capture. The pcapng
+    # writer stores whole microseconds, so a recorded time can round across a
+    # millisecond boundary; compare within one microsecond rather than by an
+    # exact three-decimal rounding, which is not stable at that boundary.
     for entry in journal:
-        assert round(entry.timestamp, 3) in stamps
+        assert any(
+            abs(entry.timestamp - packet.timestamp) <= 1e-6 for packet in packets
+        )
 
 
 def test_generate_writes_and_verifies(tmp_path: Path) -> None:
