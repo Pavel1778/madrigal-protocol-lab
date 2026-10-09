@@ -162,6 +162,8 @@ distinguished. Evidence: `REPORT.md` section 12, deck limitations slide.
 python -m pytest tests/integration/test_reference_report.py -q
 python -m src.protocol.cli verify --rule examples/corpus_rule_v1.json \
     --capture tests/corpus/reference_export/corpus_capture_01.normalized.json --out /tmp/v1.json
+python -m src.protocol.cli verify --rule examples/corpus_rule_v2.json \
+    --capture tests/corpus/reference_export/corpus_capture_01.normalized.json --out /tmp/v2.json
 python -m src.protocol.cli diff --rule-a examples/corpus_rule_v1.json \
     --rule-b examples/corpus_rule_v2.json --report-a /tmp/v1.json --report-b /tmp/v2.json
 ```
