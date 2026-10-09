@@ -155,7 +155,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.hex_view.byteHovered.connect(self._on_byte_hovered)
         self.hex_view.byteClicked.connect(self._on_byte_clicked)
         self.validation_view.applyRequested.connect(self.apply_rule)
-        self.validation_view.counterexampleSelected.connect(self.reveal_offset)
+        self.validation_view.counterexampleSelected.connect(self._reveal_counterexample)
         self.hypotheses_view.messageSelected.connect(self.reveal_offset)
 
     # -- loading -----------------------------------------------------------
@@ -300,6 +300,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._show_report_diff(self._rule.previous_report, report)
         self._rule.corpus_report = report
         self._corpus_report = report
+        self.validation_view.show_corpus_report(report)
         directions = (self._rule.rule.direction,) if self._rule.rule.direction else ()
         self._show_hypotheses(self._rule.rule, self._corpus_messages(directions))
         counts = ", ".join(f"{k}={v}" for k, v in sorted(report.counts().items()))
@@ -335,6 +336,18 @@ class MainWindow(QtWidgets.QMainWindow):
         """Scroll the hex view to ``offset`` and show its provenance."""
         self.hex_view.scroll_to_byte(offset)
         self._show_provenance(offset)
+
+    def _reveal_counterexample(self, session_id: str, direction: str, offset: int) -> None:
+        """Jump to a counterexample, switching session or direction if needed.
+
+        A corpus counterexample can live in a direction other than the one on
+        screen, so the tree selection is moved first, then the byte revealed.
+        """
+        if session_id and direction and (
+            session_id != self._session_id or direction != self._direction
+        ):
+            self.session_tree.select_direction(session_id, direction)
+        self.reveal_offset(offset)
 
     def _on_byte_clicked(self, offset: int) -> None:
         self._show_provenance(offset)
