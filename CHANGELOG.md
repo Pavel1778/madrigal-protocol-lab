@@ -51,3 +51,16 @@ benchmark, and this documentation.
 - `069eda8` feat(project): add end-to-end pipeline CLI
 - `40a7253` perf(capture): expand benchmarks by phase and size
 - docs: add usage walkthrough and changelog
+
+## Iteration 6 - audit, CI, submission
+
+A repository audit with boundary tests, a wider CI, a submission builder, and
+the portability report.
+
+- `87c71a2` docs: add repository audit
+- `a296b0d` test: cover capture, project, and report boundaries
+- `245bece` ci: add python matrix and code-quality jobs
+- `029ae96` chore: hygiene pass on repository
+- `3cf0b33` feat(scripts): add submission builder
+- `92d2762` docs: add portability report
+- `43694ad` docs: extend the integration checklist
