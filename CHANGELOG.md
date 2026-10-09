@@ -64,3 +64,24 @@ the portability report.
 - `3cf0b33` feat(scripts): add submission builder
 - `92d2762` docs: add portability report
 - `43694ad` docs: extend the integration checklist
+
+## Iteration 7 - protocol integration and CI rescope
+
+The protocol and window branch merged into `main`, and the lint gate scoped to
+the starter ruleset so the shared branch is green.
+
+- `a5535e0` merge(protocol): verify branch, screenshots, lint fixes
+- `779238c` merge: verify branch, lint fixes, CI rescope
+- `1c86f10` chore(ci): rescope code-quality to starter ruleset
+- `308b62c` docs(audit): record CI rescope and integration merge
+
+## Iteration 8 - submission, container, defense material
+
+The submission archive, the container image, and the numbers and decisions for
+the defense.
+
+- `e70bfd8` docs: add submission metadata and delivery formats
+- `cbb4b48` fix(submission): include examples directory in the archive
+- `87e722f` docs: add submission metadata and portability check
+- `29451c7` feat(docker): add container image and update portability notes
+- `c5b9cd2` docs: add metrics, roadmap and architecture decisions

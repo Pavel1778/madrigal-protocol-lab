@@ -48,10 +48,11 @@ capture that follows `docs/CONTRACT.md`. The third confirms the whole suite.
 | Area | State |
 | ---- | ----- |
 | `src/capture/` | Done. PCAP and PCAPNG reading, TCP session identification, directional reassembly with gap and ambiguity diagnostics, per-byte provenance, normalized JSON export, streaming mode for large captures, Wireshark export of rebuild streams, CLI. |
+| `src/protocol/` | Done. Framing strategies, declarative versioned rules, the rule engine, CLI re-application. |
+| `src/hypothesis/` | Done. Result classification, corpus verification, counterexamples, rule and result versioning. |
+| `src/ui/` | Done. PySide6 interface: session tree, hex view with provenance, message comparison, rule and validation panels, version diff. |
 | `src/project/` | Done. Portable on-disk investigation, manifest with relative paths and sha256, zip export and import with a digest check. |
 | `src/report/` | Done. Investigation rendered to Markdown and to a self-contained HTML page. |
-| `src/protocol/`, `src/hypothesis/` | In progress by the protocol/GUI branch. Framing and the rule engine. |
-| `src/ui/` | In progress by the protocol/GUI branch. PySide6 interface. |
 
 ## Layout
 
@@ -89,8 +90,16 @@ pytest tests/ -q
   for the integration day.
 - [docs/BENCHMARK.md](docs/BENCHMARK.md) — measured time and memory at the
   reference workload.
+- [docs/METRICS.md](docs/METRICS.md) — the numbers to quote on defense, each
+  with its source.
 - [docs/PORTABILITY.md](docs/PORTABILITY.md) — the environments the suite is
   checked in, and the result.
+- [docs/ROADMAP.md](docs/ROADMAP.md) — what is implemented, what was left out of
+  the MVP, the technical debt, and the plan beyond the hackathon.
+- [docs/ARCHITECTURE_DECISIONS.md](docs/ARCHITECTURE_DECISIONS.md) — the
+  architecture decision records.
+- [docs/AUDIT.md](docs/AUDIT.md) — the trace audit and the lint and typing
+  findings.
 - [docs/demo.md](docs/demo.md) — the window walkthrough on the reference corpus.
 - [docs/demo_cli.md](docs/demo_cli.md) — the same investigation from the command
   line, as the fallback for the demonstration.
@@ -109,8 +118,8 @@ Unpack the archive and follow the same setup to run it from scratch.
 | Format | State | Command |
 | --- | --- | --- |
 | Source archive | shipped | `python scripts/build_submission.py` |
-| Docker image | not shipped, no `Dockerfile` in the tree | — |
-| Linux binary and `.deb` | planned, phase D | — |
+| Docker image | shipped, `Dockerfile` and `.dockerignore` in the tree | `docker build -t madrigal-lab .` |
+| Linux binary and `.deb` | phase D, optional | see `docs/BINARY.md` when present |
 
 The archive is verified after the build: it is extracted into a temporary
 directory and the suite is run from there, so a broken archive is never
