@@ -86,17 +86,20 @@ counterexample is tied to real bytes, not to a description of them.
 
 ## Step 4b - alternative readings (1 min)
 
-Do: open the Hypotheses tab while rule v1 is applied.
+Do: Rule, Apply to whole capture, or press F6, keeping rule v1. Then open the
+Hypotheses tab.
 
 See: one row per candidate reading of each `hypothesis` field, with its support,
-its contradiction count and its score. For `command`, `entropy_enum` is at the
-top with score 1.00 and `constant` (the v1 reading) below it at 0.43.
+its contradiction count and its score. For `command`, `entropy_enum` and
+`low_cardinality` top the list at 1.00 (140 support, 0 contradiction), while
+`constant` - the reading rule v1 declares - sits at 0.43 (60 support, 80
+contradiction).
 
-Say: before widening the rule, the field is put to the alternatives engine. The
-reading the rule already declares is only one candidate, and on this corpus it is
-contradicted by most messages. That is the evidence behind the refinement, not a
-guess. Selecting a row jumps the hex view to a message that supports or
-contradicts it.
+Say: before widening the rule, the field is put to the alternatives engine over
+every message the rule applies to. The reading the rule already declares is only
+one candidate, and on this capture most messages contradict it. That is the
+evidence behind the refinement, not a guess. Selecting a row jumps the hex view
+to a message that supports or contradicts it.
 
 ## Step 5 - refine the rule (2 min)
 

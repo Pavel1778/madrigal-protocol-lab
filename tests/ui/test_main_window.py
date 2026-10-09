@@ -207,6 +207,25 @@ def test_hypotheses_tab_fills_on_apply(app):
     window.close()
 
 
+@corpus_required
+def test_hypotheses_tab_scores_over_the_whole_capture(app):
+    window = open_window(app)
+    window.load_rule(DEFAULT_RULE)  # rule v1
+    window.apply_to_capture()
+    view = window.hypotheses_view
+    rows = {
+        (view.table.item(r, 0).text(), view.table.item(r, 1).text()): (
+            view.table.item(r, 2).text(),
+            view.table.item(r, 3).text(),
+        )
+        for r in range(view.table.rowCount())
+    }
+    # Over the whole capture the constant reading of command is contradicted by
+    # 80 of 140 messages; that is the evidence the refinement rests on.
+    assert rows[("command", "constant")] == ("60", "80")
+    window.close()
+
+
 def test_diff_bytes_aligns_a_shared_prefix():
     rows = diff_bytes(b"\x01\x00\x00\x05", b"\x01\x00\x00\x06")
     assert rows[0].kind == "equal"
