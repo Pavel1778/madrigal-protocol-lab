@@ -38,4 +38,3 @@ __all__ = [
     "reassemble",
     "sha256_file",
 ]
-

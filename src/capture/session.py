@@ -14,9 +14,9 @@ no SYN both roles stay ``unknown`` and no meaning is assigned to either side.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Iterable, Sequence
 
 from src.capture.parser import Packet
 
@@ -28,7 +28,7 @@ class Direction(str, Enum):
     B_TO_A = "B_to_A"
 
     @property
-    def opposite(self) -> "Direction":
+    def opposite(self) -> Direction:
         return Direction.B_TO_A if self is Direction.A_TO_B else Direction.A_TO_B
 
 
@@ -89,7 +89,10 @@ class Session:
 
 def _pair_key(packet: Packet) -> frozenset[Endpoint]:
     return frozenset(
-        (Endpoint(packet.src_ip, packet.src_port), Endpoint(packet.dst_ip, packet.dst_port))
+        (
+            Endpoint(packet.src_ip, packet.src_port),
+            Endpoint(packet.dst_ip, packet.dst_port),
+        )
     )
 
 
@@ -141,7 +144,7 @@ class SessionTracker:
         self._current: dict[frozenset[Endpoint], Session] = {}
         self._counter = 0
 
-    def add(self, packet: Packet) -> tuple[Session, "Session | None"]:
+    def add(self, packet: Packet) -> tuple[Session, Session | None]:
         key = _pair_key(packet)
         session = self._current.get(key)
         evicted: Session | None = None

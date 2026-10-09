@@ -210,7 +210,9 @@ def _finalize(runs: list[_Run]) -> tuple[bytearray, list[int]]:
     return buf, offsets
 
 
-def _physical_offset(runs: list[_Run], offsets: list[int], abs_offset: int) -> int | None:
+def _physical_offset(
+    runs: list[_Run], offsets: list[int], abs_offset: int
+) -> int | None:
     """Map an absolute sequence position to a physical stream offset."""
 
     starts = [run.start for run in runs]
@@ -277,7 +279,7 @@ def reassemble(
     buf, offsets = _finalize(runs)
 
     provenance = Provenance()
-    for run, physical in zip(runs, offsets):
+    for run, physical in zip(runs, offsets, strict=True):
         provenance.add(
             Range(
                 offset=physical,
@@ -288,12 +290,12 @@ def reassemble(
             )
         )
     for abs_offset, length, packet_index, ts in extra_sources:
-        physical = _physical_offset(runs, offsets, abs_offset)
-        if physical is None:
+        source_offset = _physical_offset(runs, offsets, abs_offset)
+        if source_offset is None:
             continue
         provenance.add(
             Range(
-                offset=physical,
+                offset=source_offset,
                 length=length,
                 packet_index=packet_index,
                 seq=abs_offset & SEQ_MASK,

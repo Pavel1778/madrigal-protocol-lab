@@ -193,9 +193,7 @@ class Dialogue:
         self.frames.append(
             (
                 self._tick(),
-                self._client_frame(
-                    self.client_isn, 0, dpkt.tcp.TH_SYN, b""
-                ),
+                self._client_frame(self.client_isn, 0, dpkt.tcp.TH_SYN, b""),
             )
         )
         self.frames.append(
@@ -282,7 +280,9 @@ class Dialogue:
         )
         self._seq_b += len(payload)
 
-    def client_segment(self, seq: int, payload: bytes, when: float | None = None) -> float:
+    def client_segment(
+        self, seq: int, payload: bytes, when: float | None = None
+    ) -> float:
         """Inject a client segment at an explicit sequence number."""
 
         when = self._tick() if when is None else when
@@ -296,7 +296,9 @@ class Dialogue:
         )
         return when
 
-    def server_segment(self, seq: int, payload: bytes, when: float | None = None) -> float:
+    def server_segment(
+        self, seq: int, payload: bytes, when: float | None = None
+    ) -> float:
         """Inject a server segment at an explicit sequence number."""
 
         when = self._tick() if when is None else when
@@ -539,9 +541,7 @@ def build_capture_defects() -> tuple[bytes, list[JournalEntry]]:
     request_ts = dialogue.ts + 0.001
     dialogue.client_segment(dialogue._seq_a, req, when=request_ts)
     dialogue._seq_a += len(req)
-    dialogue.server_segment(
-        dialogue._seq_b, read_response(PARAM_IDS["humidity"], 1234)
-    )
+    dialogue.server_segment(dialogue._seq_b, read_response(PARAM_IDS["humidity"], 1234))
     dialogue._seq_b += 4 + 3
     dialogue.last_request_ts = request_ts
     dialogue.record("read", "humidity", "1234")
@@ -583,9 +583,7 @@ def build_capture_defects() -> tuple[bytes, list[JournalEntry]]:
     dialogue._seq_a += 4 + 1
     dialogue.server_segment(dialogue._seq_b, good, when=request_ts + 0.001)
     rejected = b"\xff\xff"
-    dialogue.server_segment(
-        dialogue._seq_b + 4, rejected, when=request_ts + 0.002
-    )
+    dialogue.server_segment(dialogue._seq_b + 4, rejected, when=request_ts + 0.002)
     dialogue._seq_b += len(good)
     dialogue.last_request_ts = request_ts
     dialogue.record("measure", "channel_a", "8 samples")

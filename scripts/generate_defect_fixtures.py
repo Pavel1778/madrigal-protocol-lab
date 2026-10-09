@@ -44,11 +44,7 @@ def _block(block_type: int, body: bytes) -> bytes:
     padding = (4 - len(body) % 4) % 4
     body = body + b"\x00" * padding
     total = 12 + len(body)
-    return (
-        struct.pack("<II", block_type, total)
-        + body
-        + struct.pack("<I", total)
-    )
+    return struct.pack("<II", block_type, total) + body + struct.pack("<I", total)
 
 
 def _section() -> bytes:
@@ -206,13 +202,14 @@ def generate(out_dir: Path) -> list[Path]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="Generate deformed capture fixtures."
-    )
+    parser = argparse.ArgumentParser(description="Generate deformed capture fixtures.")
     parser.add_argument(
         "--out",
         type=Path,
-        default=Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "defects",
+        default=Path(__file__).resolve().parent.parent
+        / "tests"
+        / "fixtures"
+        / "defects",
         help="output directory",
     )
     args = parser.parse_args(argv)
