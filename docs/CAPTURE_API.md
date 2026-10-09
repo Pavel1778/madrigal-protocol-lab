@@ -123,6 +123,13 @@ Methods: `length`, `gaps()`, `ambiguities()`.
 Writes the normalized capture as JSON, streaming session by session. `streams`
 maps a session id to its two directional streams.
 
+### `export_reassembled_pcap(sessions, out_path, *, streams=None, packets=None) -> int`
+
+Writes one packet per session direction carrying the reassembled bytes, so a
+stream can be inspected in Wireshark next to the original capture. Returns the
+number of packets written. Header fields that a stream does not carry are fixed
+and documented in the module. The CLI exposes it as `--wireshark-pcap`.
+
 ### Helpers
 
 - `sha256_file(path) -> str` — `sha256:<hex>` of a file, used as `capture_id`.
@@ -201,19 +208,27 @@ for piece in stream.provenance.split(start, end):
 | `ipv6_ignored` | parser | an IPv6 frame was skipped |
 | `non_ip` | parser | an Ethernet frame that is not IPv4 |
 | `non_tcp` | parser | an IPv4 packet that is not TCP |
-| `truncated_frame` | parser | the frame was shorter than its headers claimed |
-| `unsupported_linktype` | parser | the capture uses a link type other than Ethernet, loopback, or cooked |
+| `ip_fragment` | parser | an IP fragment was skipped, not reassembled |
+| `truncated_packet` | parser | the captured payload is shorter than the header declares |
+| `truncated_frame` | parser | the frame was shorter than its headers claimed, or the capture header is damaged |
+| `unsupported_linktype` | parser | the capture uses a link type other than Ethernet, loopback, or cooked, or mixes link types |
 
 Parser diagnostics land in `NormalizedCapture.diagnostics`. Stream diagnostics
 land in `DirectionalStream.diagnostics` and are written into the JSON with the
 stream. Truncation is also exposed per packet as `Packet.is_truncated`.
 
+Reading never stops at a defect. A capture that ends mid-block, a cut section
+header, mixed link types, IP fragments, and mixed IP versions are all read as
+far as possible and reported; only a file that is not a capture at all raises
+`ValueError`. `tests/fixtures/defects/` holds one fixture per defect and
+`tests/capture/test_deformed_captures.py` covers each.
+
 ## Limitations
 
 - IPv6 is not reassembled. Frames are counted and reported as `ipv6_ignored`,
   but their TCP payload never reaches a stream.
-- IP fragmentation is not reassembled. A fragmented packet is treated as
-  non-TCP once the first fragment's payload is too short to parse.
+- IP fragmentation is not reassembled. A fragment is reported as `ip_fragment`
+  and skipped; only the first fragment of a datagram carries a TCP header.
 - Encrypted traffic is not decrypted. TLS, and anything else above TCP, appears
   as opaque bytes.
 - Only Ethernet, Linux loopback, and BSD cooked captures are understood; other
