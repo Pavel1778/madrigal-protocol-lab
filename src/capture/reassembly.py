@@ -8,8 +8,8 @@ file.
 Rules applied here, all of them deliberately conservative:
 
 - Identical retransmissions do not add bytes. The bytes are kept once and the
-  retransmitting packet is recorded as an additional provenance range, so no
-  observation is lost and none is duplicated.
+  retransmitting packet is recorded as an additional provenance range marked
+  ``is_retransmission``, so no observation is lost and none is duplicated.
 - Out-of-order segments are placed by their sequence number; the byte order in
   the stream is the byte order of the conversation, not of the file.
 - A hole between two observed segments becomes a ``gap`` diagnostic. It is not
@@ -69,6 +69,11 @@ class DirectionalStream:
 
     def ambiguities(self) -> list[Diagnostic]:
         return [d for d in self.diagnostics if d.type == "ambiguity"]
+
+    def retransmissions(self) -> list[Range]:
+        """Provenance ranges that came from a byte-identical retransmission."""
+
+        return [r for r in self.provenance.ranges if r.is_retransmission]
 
 
 @dataclass(slots=True)
@@ -300,6 +305,7 @@ def reassemble(
                 packet_index=packet_index,
                 seq=abs_offset & SEQ_MASK,
                 ts=ts,
+                is_retransmission=True,
             )
         )
     provenance.ranges.sort(key=lambda r: (r.offset, r.packet_index))
