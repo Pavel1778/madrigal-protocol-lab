@@ -16,7 +16,7 @@ from ..hypothesis.corpus import CorpusStream
 from ..hypothesis.status import Status
 from ..protocol.engine import MessageResult, apply_rule
 from ..protocol.rule import Rule, load_rule_text
-from ..protocol.stream import Capture, capture_from_dict
+from ..protocol.stream import Capture, DirectionalStream, capture_from_dict
 
 PROVENANCE = "provenance"
 GAP = "gap"
@@ -33,6 +33,17 @@ HYPOTHESIS = "hypothesis"
 
 @dataclass
 class Diagnostic:
+    """A reassembly diagnostic surfaced to the UI.
+
+    Attributes:
+        session_id: Session the diagnostic belongs to.
+        direction: Direction the diagnostic belongs to.
+        type: ``gap``, ``ambiguity`` or another capture diagnostic type.
+        offset: Byte offset in the direction.
+        length: Length in bytes.
+        detail: Optional extra detail from the capture.
+    """
+
     session_id: str
     direction: str
     type: str
@@ -43,6 +54,20 @@ class Diagnostic:
 
 @dataclass
 class SessionInfo:
+    """Presentation summary of one session in a capture.
+
+    Attributes:
+        session_id: Session identifier.
+        endpoints: Preformatted ``ip:port -> ip:port`` label.
+        role_a: Role of the first endpoint (``client``/``server``/``unknown``).
+        role_b: Role of the second endpoint.
+        first_ts: Timestamp of the first packet, or ``None``.
+        last_ts: Timestamp of the last packet, or ``None``.
+        direction_bytes: Byte count per direction.
+        diagnostics: Diagnostics belonging to this session.
+        packet_count: Number of source packets in the session.
+    """
+
     session_id: str
     endpoints: str
     role_a: str
@@ -76,6 +101,7 @@ class CaptureModel:
 
     @classmethod
     def from_file(cls, path: str | Path) -> "CaptureModel":
+        """Load a capture model from a normalized capture JSON file."""
         path = Path(path)
         with open(path, "r", encoding="utf-8") as handle:
             raw = json.load(handle)
@@ -83,30 +109,37 @@ class CaptureModel:
 
     @property
     def capture_id(self) -> str:
+        """Identity of the underlying capture (``sha256:...``)."""
         return self.capture.capture_id
 
     @property
     def source_file(self) -> str:
+        """Source file recorded in the capture."""
         return self.capture.source_file
 
     @property
     def sessions(self) -> list[SessionInfo]:
+        """Presentation summaries of every session."""
         return self._sessions
 
     @property
     def diagnostics(self) -> list[Diagnostic]:
+        """Every diagnostic across all sessions."""
         return self._diagnostics
 
     def session(self, session_id: str) -> SessionInfo | None:
+        """The session summary for ``session_id``, or ``None``."""
         return next((s for s in self._sessions if s.session_id == session_id), None)
 
     def directions(self, session_id: str) -> list[str]:
+        """Directions present for ``session_id``, in ``A_to_B``/``B_to_A`` order."""
         for session in self.capture.sessions:
             if str(session.get("session_id")) == session_id:
                 return [n for n in ("A_to_B", "B_to_A") if n in session.get("directions", {})]
         return []
 
-    def stream(self, session_id: str, direction: str):
+    def stream(self, session_id: str, direction: str) -> DirectionalStream:
+        """The directional stream for one session and direction."""
         return self.capture.stream(session_id, direction)
 
     def _read_sessions(self) -> list[SessionInfo]:
@@ -173,6 +206,7 @@ class RuleApplication:
 
     @property
     def counts(self) -> dict[str, int]:
+        """Message count per status for this application."""
         counts: dict[str, int] = {}
         for message in self.messages:
             counts[message.status.value] = counts.get(message.status.value, 0) + 1
@@ -180,9 +214,11 @@ class RuleApplication:
 
     @property
     def counterexamples(self) -> list[MessageResult]:
+        """Messages classified as mismatched."""
         return [m for m in self.messages if m.status == Status.MISMATCHED]
 
     def message_at(self, offset: int) -> MessageResult | None:
+        """The message starting at ``offset``, or ``None``."""
         return next((m for m in self.messages if m.offset == offset), None)
 
 
@@ -207,6 +243,7 @@ class RuleModel:
 
     @classmethod
     def from_file(cls, path: str | Path) -> "RuleModel":
+        """Load a rule model from a JSON or YAML rule file."""
         path = Path(path)
         text = path.read_text(encoding="utf-8")
         rule = _rule_from_text(text)
@@ -234,6 +271,16 @@ class RuleModel:
         self.errors = None
 
     def apply(self, model: CaptureModel, session_id: str | None = None, direction: str | None = None) -> RuleApplication:
+        """Apply this rule to one direction and mark the previous run outdated.
+
+        Args:
+            model: The capture model to read from.
+            session_id: Session to use; defaults to the first session.
+            direction: Direction to use; defaults to the rule scope or ``A_to_B``.
+
+        Returns:
+            The new application.
+        """
         self.errors = None
         target_direction = direction or self.rule.direction or "A_to_B"
         target_session = session_id or (model.sessions[0].session_id if model.sessions else "")

@@ -12,7 +12,22 @@ ALGORITHMS = ("xor", "sum", "crc8", "crc16")
 
 
 def compute(algorithm: str, data: bytes) -> int:
-    """Return the checksum of *data* under *algorithm*."""
+    """Return the checksum of *data* under *algorithm*.
+
+    Args:
+        algorithm: One of ``"xor"``, ``"sum"``, ``"crc8"``, ``"crc16"``.
+        data: Bytes to fold.
+
+    Returns:
+        The checksum as an unsigned integer.
+
+    Raises:
+        ValueError: If ``algorithm`` is unknown.
+
+    Example:
+        >>> compute("xor", b"\x01\x02")
+        3
+    """
     if algorithm == "xor":
         return _xor(data)
     if algorithm == "sum":
