@@ -14,7 +14,7 @@ import dpkt
 import pytest
 
 from scripts.generate_fixture import _write_pcapng, data_a, syn
-from src.capture.parser import TH_SYN, read_capture
+from src.capture.parser import TH_SYN, Diagnostic, read_capture
 from src.capture.pipeline import normalize
 from src.capture.provenance import Provenance, Range
 from src.capture.reassembly import reassemble
@@ -82,6 +82,34 @@ def test_sll_linktype_is_parsed(tmp_path: Path) -> None:
     packets = list(read_capture(path))
     assert len(packets) == 1
     assert packets[0].seq == 7
+
+
+def test_loopback_linktype_is_parsed(tmp_path: Path) -> None:
+    # A BSD/loopback header is a 4-byte address family in front of the IP packet.
+    loopback = struct.pack("<I", 2) + _ipv4_tcp(seq=11, flags=TH_SYN)
+    path = tmp_path / "loop.pcapng"
+    path.write_bytes(_pcapng_with_linktype(0, loopback))
+    packets = list(read_capture(path))
+    assert len(packets) == 1
+    assert packets[0].seq == 11
+
+
+def test_short_loopback_header_is_a_diagnostic(tmp_path: Path) -> None:
+    diagnostics: list[Diagnostic] = []
+    path = tmp_path / "short-loop.pcapng"
+    path.write_bytes(_pcapng_with_linktype(0, b"\x02\x00"))
+    packets = list(read_capture(path, diagnostics))
+    assert packets == []
+    assert "truncated_frame" in [d.type for d in diagnostics]
+
+
+def test_short_cooked_header_is_a_diagnostic(tmp_path: Path) -> None:
+    diagnostics: list[Diagnostic] = []
+    path = tmp_path / "short-sll.pcapng"
+    path.write_bytes(_pcapng_with_linktype(113, b"\x00" * 8))
+    packets = list(read_capture(path, diagnostics))
+    assert packets == []
+    assert "truncated_frame" in [d.type for d in diagnostics]
 
 
 def test_checksum_verification_accepts_a_valid_segment(tmp_path: Path) -> None:
