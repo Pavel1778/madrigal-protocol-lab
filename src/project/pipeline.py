@@ -132,55 +132,13 @@ def build_investigation(
     uncovered = int(summary.get("uncovered", 0))
     unknown = int(summary.get("unknown", 0))
 
-    if matched and not mismatched:
-        status = "confirmed_in_scope"
-    elif mismatched:
-        status = "contradiction"
-    elif incomplete or ambiguous:
-        status = "ambiguous"
-    else:
-        status = "hypothesis"
+    status = _hypothesis_status(matched, mismatched, incomplete, ambiguous)
 
     rule_id = result.get("rule_id", "rule")
     rule_version = result.get("rule_version", 1)
 
-    counterexamples: list[dict[str, Any]] = []
-    contradictory_statuses = {"mismatched", "ambiguous", "incomplete"}
-    for message in messages:
-        message_status = message.get("status")
-        if message_status not in contradictory_statuses:
-            continue
-        entry: dict[str, Any] = {
-            "id": f"c{len(counterexamples) + 1}",
-            "rule_id": rule_id,
-            "rule_version": rule_version,
-            "capture_id": capture_id,
-            "offset": message.get("offset"),
-            "length": message.get("length"),
-            "detail": f"message classified {message_status}",
-        }
-        if message.get("session_id"):
-            entry["session_id"] = message["session_id"]
-        if message.get("direction"):
-            entry["direction"] = message["direction"]
-        provenance = message.get("provenance_range") or {}
-        if provenance.get("packets"):
-            entry["packets"] = provenance["packets"]
-        counterexamples.append(entry)
-
-    open_questions: list[str] = []
-    if incomplete:
-        open_questions.append(
-            f"{incomplete} message(s) fall on a gap and cannot be read whole"
-        )
-    if ambiguous:
-        open_questions.append(
-            f"{ambiguous} message(s) fall on an ambiguous overlap; the bytes are kept in both versions"
-        )
-    if uncovered:
-        open_questions.append(f"{uncovered} message(s) are not covered by the rule")
-    if unknown:
-        open_questions.append(f"{unknown} message(s) have too little data to classify")
+    counterexamples = _counterexamples(messages, rule_id, rule_version, capture_id)
+    open_questions = _open_questions(incomplete, ambiguous, uncovered, unknown)
 
     return {
         "title": f"Investigation of {source_file}",
@@ -214,6 +172,75 @@ def build_investigation(
         ],
         "open_questions": open_questions,
     }
+
+
+def _hypothesis_status(
+    matched: int, mismatched: int, incomplete: int, ambiguous: int
+) -> str:
+    """Classify the rule's standing over the messages it framed."""
+
+    if matched and not mismatched:
+        return "confirmed_in_scope"
+    if mismatched:
+        return "contradiction"
+    if incomplete or ambiguous:
+        return "ambiguous"
+    return "hypothesis"
+
+
+def _counterexamples(
+    messages: list[dict[str, Any]],
+    rule_id: Any,
+    rule_version: Any,
+    capture_id: str,
+) -> list[dict[str, Any]]:
+    """Collect the messages that contradict the rule, tied to their bytes."""
+
+    contradictory_statuses = {"mismatched", "ambiguous", "incomplete"}
+    counterexamples: list[dict[str, Any]] = []
+    for message in messages:
+        message_status = message.get("status")
+        if message_status not in contradictory_statuses:
+            continue
+        entry: dict[str, Any] = {
+            "id": f"c{len(counterexamples) + 1}",
+            "rule_id": rule_id,
+            "rule_version": rule_version,
+            "capture_id": capture_id,
+            "offset": message.get("offset"),
+            "length": message.get("length"),
+            "detail": f"message classified {message_status}",
+        }
+        if message.get("session_id"):
+            entry["session_id"] = message["session_id"]
+        if message.get("direction"):
+            entry["direction"] = message["direction"]
+        provenance = message.get("provenance_range") or {}
+        if provenance.get("packets"):
+            entry["packets"] = provenance["packets"]
+        counterexamples.append(entry)
+    return counterexamples
+
+
+def _open_questions(
+    incomplete: int, ambiguous: int, uncovered: int, unknown: int
+) -> list[str]:
+    """State, in plain language, what the rule could not settle."""
+
+    questions: list[str] = []
+    if incomplete:
+        questions.append(
+            f"{incomplete} message(s) fall on a gap and cannot be read whole"
+        )
+    if ambiguous:
+        questions.append(
+            f"{ambiguous} message(s) fall on an ambiguous overlap; the bytes are kept in both versions"
+        )
+    if uncovered:
+        questions.append(f"{uncovered} message(s) are not covered by the rule")
+    if unknown:
+        questions.append(f"{unknown} message(s) have too little data to classify")
+    return questions
 
 
 def _capture_only_investigation(
@@ -260,15 +287,7 @@ def run_pipeline(
     pcap = Path(pcap)
     if not pcap.is_file():
         raise PipelineError(f"no capture at {pcap}")
-    project_path = Path(project_path)
-    if project_path.exists():
-        if not force:
-            raise PipelineError(
-                f"{project_path} already exists; pass force to replace it"
-            )
-        import shutil
-
-        shutil.rmtree(project_path)
+    project_path = _prepare_project_path(Path(project_path), force)
 
     project = Project.create(project_path, name or f"{project_path.name} investigation")
     relative_capture = project.add_capture(pcap)
@@ -290,18 +309,74 @@ def run_pipeline(
     )
 
     capture_id = sha256_file(project.path(relative_capture))
+    investigation = _apply_or_skip_rule(
+        project, normalized, rule_path, capture_id, relative_capture, sessions, outcome
+    )
 
-    if rule_path is not None:
-        result_path = project.path("results", RESULT_NAME)
-        result = _apply_rule(normalized, Path(rule_path), result_path)
-        outcome.result = result_path
-        investigation = build_investigation(
-            result, capture_id=capture_id, source_file=relative_capture
-        )
-    else:
-        investigation = _capture_only_investigation(
-            capture_id, relative_capture, sessions
-        )
+    _render_reports(project, investigation, report_path, html, outcome)
+    if wireshark:
+        _export_wireshark(project, relative_capture, outcome)
+    _record_results(project, outcome)
+    project.save()
+    return outcome
+
+
+def _export_wireshark(
+    project: Project, relative_capture: str, outcome: PipelineOutcome
+) -> None:
+    """Write the reassembled streams as a classic pcap next to the results."""
+
+    from src.capture.export_wireshark import export_reassembled_pcap
+
+    capture = normalize(project.path(relative_capture))
+    out = project.path("results", "reassembled.pcap")
+    export_reassembled_pcap(capture.sessions, out, streams=capture.streams)
+    outcome.wireshark = out
+
+
+def _prepare_project_path(project_path: Path, force: bool) -> Path:
+    """Return a usable project path, removing an existing one only if forced."""
+
+    if project_path.exists():
+        if not force:
+            raise PipelineError(
+                f"{project_path} already exists; pass force to replace it"
+            )
+        import shutil
+
+        shutil.rmtree(project_path)
+    return project_path
+
+
+def _apply_or_skip_rule(
+    project: Project,
+    normalized: Path,
+    rule_path: Path | None,
+    capture_id: str,
+    relative_capture: str,
+    sessions: int,
+    outcome: PipelineOutcome,
+) -> dict[str, Any]:
+    """Apply the rule when one was given, else describe the capture alone."""
+
+    if rule_path is None:
+        return _capture_only_investigation(capture_id, relative_capture, sessions)
+    result_path = project.path("results", RESULT_NAME)
+    result = _apply_rule(normalized, Path(rule_path), result_path)
+    outcome.result = result_path
+    return build_investigation(
+        result, capture_id=capture_id, source_file=relative_capture
+    )
+
+
+def _render_reports(
+    project: Project,
+    investigation: dict[str, Any],
+    report_path: Path | None,
+    html: bool,
+    outcome: PipelineOutcome,
+) -> None:
+    """Write the Markdown report (always) and the HTML report (when asked)."""
 
     from src.report import render_html, render_markdown
 
@@ -316,13 +391,9 @@ def run_pipeline(
         render_html(investigation, project_html)
         outcome.report_html = project_html
 
-    if wireshark:
-        from src.capture.export_wireshark import export_reassembled_pcap
 
-        capture = normalize(project.path(relative_capture))
-        out = project.path("results", "reassembled.pcap")
-        export_reassembled_pcap(capture.sessions, out, streams=capture.streams)
-        outcome.wireshark = out
+def _record_results(project: Project, outcome: PipelineOutcome) -> None:
+    """List the produced artifacts in the manifest."""
 
     project.manifest.results.append(
         {"path": f"results/{NORMALIZED_NAME}", "kind": "normalized_capture"}
@@ -334,5 +405,3 @@ def run_pipeline(
     project.manifest.results.append(
         {"path": f"reports/{REPORT_MD_NAME}", "kind": "report"}
     )
-    project.save()
-    return outcome
