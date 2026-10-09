@@ -262,14 +262,14 @@ Checked at the submission revision.
 
 | Item | Value |
 | --- | --- |
-| `main` head | `7a700aa` (then the audit pass) |
+| `main` head | `5c269da` (then the audit pass) |
 | `agent1/capture` head | equal to `main` |
 | Suite | 411 passed, 0 skipped |
 | Lint | `ruff check . --select "E4,E7,E9,F" --ignore E501`: All checks passed |
 | Coverage | 95% (see the coverage section above) |
-| CI | green: test matrix (3.12 and 3.13), `code-quality`, `dependency-audit` |
+| CI | green: test matrix (3.12 and 3.13), `code-quality`, `dependency-audit`, run `37995221037` |
 | Largest tracked file | `presentation/slides.pdf`, 1.06 MiB, well under 5 MiB |
-| Submission archive | the latest `dist/submission_*.zip`, rebuilt at this head: 2.5 MiB, 206 entries |
+| Submission archive | the latest `dist/submission_*.zip`, rebuilt at this head: 2.5 MiB, 207 entries |
 | Fresh unpack | 411 passed, 0 skipped from a clean unpack at this head |
 
 Trace checks at this revision:
