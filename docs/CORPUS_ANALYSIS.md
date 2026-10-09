@@ -138,7 +138,26 @@ so rather than guessing. This is the applicability boundary the whole exercise
 is built to expose: a rule is confirmed inside the bytes it was checked against,
 not proven beyond them.
 
-## 8. How to reproduce
+## 8. The six statuses, each with a witness
+
+The classification is not a list of words in a document; every status is produced
+by the engine from the shipped captures. `tests/integration/test_status_coverage.py`
+fails if any of them stops being reachable.
+
+| status | witness on the corpus | rule and stream |
+| --- | --- | --- |
+| `matched` | 60 requests whose command is in the declared set | rule v1, `corpus_capture_01` `s1` `A_to_B` |
+| `mismatched` | 80 requests carrying a command outside `{1}` | rule v1, `corpus_capture_01` `s2` + `s3` `A_to_B` |
+| `incomplete` | a message whose framing reaches into a gap | unscoped rule on `corpus_capture_defects`, or a field past the message end |
+| `ambiguous` | the message whose field range covers the conflicting overlap | unscoped rule on `corpus_capture_defects` `B_to_A` (offset 32) |
+| `uncovered` | a message whose only declared field is an optional field that is absent | optional trailing field on `corpus_capture_01` |
+| `not_applicable` | every response the scoped rule does not interpret | rule v1, `corpus_capture_01` `B_to_A` |
+
+`outdated` and `unknown` sit outside the core six: `outdated` is a versioning
+mark on a superseded result (section 6), not a reading of bytes, and `unknown` is
+the engine's default before any rule is applied.
+
+## 9. How to reproduce
 
 ```
 python -m pytest tests/integration/test_reference_report.py -q
