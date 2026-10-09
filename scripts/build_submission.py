@@ -47,6 +47,7 @@ INCLUDE_DIRS = (
 INCLUDE_ROOT_FILES = (
     "ARCHITECTURE.md",
     "CHANGELOG.md",
+    "Dockerfile",
     "LICENSE",
     "PROGRESS.md",
     "README.md",

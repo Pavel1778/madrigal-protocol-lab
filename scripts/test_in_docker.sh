@@ -46,7 +46,8 @@ python${PYTHON} -m venv /venv; \
 . /venv/bin/activate; \
 pip install --upgrade pip; \
 pip install -e '.[dev]'; \
-pytest tests/ -q"
+pytest tests/ -q; \
+ruff check . --select 'E4,E7,E9,F' --ignore E501"
 
 echo "image=${IMAGE} python=${PYTHON}"
 
