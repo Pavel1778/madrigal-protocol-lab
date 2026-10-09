@@ -42,15 +42,37 @@ def test_parse_timestamp_roundtrip():
     assert parse_timestamp("  7 ") == 7.0
 
 
+def test_parse_journal_skips_prose_and_comments():
+    text = """\
+# Action journal
+
+One line per transaction: `timestamp | action | parameter | result`.
+
+```
+10.0 | read | temperature | 1595
+```
+"""
+    entries = parse_journal(text)
+    assert len(entries) == 1
+    assert entries[0].params == {"parameter": "temperature", "result": 1595}
+
+
+def test_parse_journal_reads_positional_format():
+    entries = parse_journal("10.0 | write | humidity | applied 2743\n11.0 | measure | channel_a | 8 samples\n")
+    assert entries[0].action == "write"
+    assert entries[0].params == {"parameter": "humidity", "result": "applied 2743"}
+    assert entries[1].params == {"parameter": "channel_a", "result": "8 samples"}
+
+
 def test_parse_journal_rejects_bad_lines():
     try:
-        parse_journal("nonsense line without separator")
+        parse_journal("10 | act | value=1 | broken")
     except JournalError:
         pass
     else:  # pragma: no cover
         raise AssertionError("expected JournalError")
     try:
-        parse_journal("10 | act | notkeyvalue")
+        parse_journal("10")
     except JournalError:
         pass
     else:  # pragma: no cover
