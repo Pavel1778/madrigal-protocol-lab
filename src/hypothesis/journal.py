@@ -52,6 +52,7 @@ class Correlation:
     message_timestamp: float
     entry: JournalEntry
     delta_ms: float
+    message_values: dict = field(default_factory=dict)
     matched_fields: dict = field(default_factory=dict)
     value_agreements: list[str] = field(default_factory=list)
     value_conflicts: list[str] = field(default_factory=list)
@@ -66,6 +67,7 @@ class Correlation:
             "action": self.entry.action,
             "entry_timestamp": self.entry.timestamp,
             "entry_line": self.entry.line_number,
+            "message_values": self.message_values,
             "matched_fields": self.matched_fields,
             "value_agreements": self.value_agreements,
             "value_conflicts": self.value_conflicts,
@@ -119,27 +121,39 @@ def parse_timestamp(text: str) -> float:
 def parse_journal(text: str) -> list[JournalEntry]:
     """Parse a pipe-delimited journal.
 
-    Each non-comment line is ``<timestamp> | <action> | key=value | ...``.
-    A ``#`` at the start of a line starts a comment; blank lines are ignored.
+    Each non-comment line is either ``<timestamp> | <action> | key=value | ...``
+    or ``<timestamp> | <action> | <parameter> | <result>``. The two forms are
+    told apart by whether the third field contains ``=``. A ``#`` starts a
+    comment and blank lines are ignored.
     """
     entries: list[JournalEntry] = []
     for number, raw in enumerate(text.splitlines(), start=1):
         line = raw.strip()
+        if line.startswith("```"):
+            continue
         if not line or line.startswith("#"):
+            continue
+        if not line[0].isdigit():
+            # Prose around the data block is not an entry.
             continue
         parts = [part.strip() for part in line.split("|")]
         if len(parts) < 2:
-            raise JournalError(f"line {number}: expected 'timestamp | action [| key=value ...]'")
+            raise JournalError(f"line {number}: expected 'timestamp | action [| ...]'")
         timestamp = parse_timestamp(parts[0])
         action = parts[1]
+        tail = [part for part in parts[2:] if part]
         params: dict = {}
-        for chunk in parts[2:]:
-            if not chunk:
-                continue
-            if "=" not in chunk:
-                raise JournalError(f"line {number}: parameter {chunk!r} is not key=value")
-            key, _, value = chunk.partition("=")
-            params[key.strip()] = _coerce(value.strip())
+        if len(tail) == 1 and "=" not in tail[0]:
+            params["parameter"] = _coerce(tail[0])
+        elif len(tail) == 2 and "=" not in tail[0]:
+            params["parameter"] = _coerce(tail[0])
+            params["result"] = _coerce(tail[1])
+        else:
+            for chunk in tail:
+                if "=" not in chunk:
+                    raise JournalError(f"line {number}: parameter {chunk!r} is not key=value")
+                key, _, value = chunk.partition("=")
+                params[key.strip()] = _coerce(value.strip())
         entries.append(
             JournalEntry(
                 timestamp=timestamp,
@@ -225,6 +239,7 @@ def _pair(message: MessageResult, entry: JournalEntry) -> Correlation:
         message_timestamp=message.timestamp,
         entry=entry,
         delta_ms=round(abs(entry.timestamp - message.timestamp) * 1000, 6),
+        message_values=values,
         matched_fields=matched_fields,
         value_agreements=agreements,
         value_conflicts=conflicts,

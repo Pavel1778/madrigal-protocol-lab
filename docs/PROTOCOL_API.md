@@ -482,12 +482,17 @@ python -m src.protocol.cli metrics --report report.json --out metrics.json
 
 A journal is the researcher's own record of what happened during a capture,
 written as plain text separately from the bytes. Each non-comment line is
-`<timestamp> | <action> | key=value | ...`; the timestamp is epoch seconds or
-ISO-8601; `#` starts a comment and blank lines are ignored.
+either `<timestamp> | <action> | key=value | ...` or the positional
+`<timestamp> | <action> | <parameter> | <result>`; the two are told apart by
+whether the third field contains `=` (the positional form stores `parameter`
+and `result` as keys). The timestamp is epoch seconds or ISO-8601; `#` starts a
+comment, a line that does not start with a digit is prose, and blank lines are
+ignored.
 
 ```
 100.02 | set_temperature | value=21
 100.31 | toggle_power
+100.40 | read | temperature | 1595
 ```
 
 `correlate(messages, entries, window_ms=500)` pairs each timestamped message
@@ -497,7 +502,8 @@ is why the engine records `ts` on each `FieldResult.provenance_range` and on
 `MessageResult.timestamp`. The result is a `CorrelationReport`:
 
 - `correlated` — one `Correlation` per paired message: the message offset and
-  time, the entry, `delta_ms`, the journal keys that match a field name, and
+  time, the entry, `delta_ms`, every decoded field value (`message_values`),
+  the journal keys that match a field name, and
   `value_agreements`/`value_conflicts` (the decoded value against the journal
   parameter). A conflict is evidence the field does *not* mean what the journal
   says, and is kept, not dropped.
