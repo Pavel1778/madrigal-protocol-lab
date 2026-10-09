@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "madrigal-protocol-lab"
+version = "0.1.0"
+description = "Local desktop laboratory for investigating undocumented binary protocols over TCP"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Sabadash Pavel" }]
+dependencies = [
+    "PySide6==6.8.1",
+    "dpkt==1.9.8",
+    "PyYAML==6.0.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.4",
+    "jsonschema==4.23.0",
+]
+
+[tool.setuptools]
+packages = [
+    "src",
+    "src.capture",
+    "src.protocol",
+    "src.hypothesis",
+    "src.ui",
+    "src.project",
+    "src.report",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
