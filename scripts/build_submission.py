@@ -32,7 +32,16 @@ ROOT = Path(__file__).resolve().parent.parent
 EXPECTED_BRANCH = "agent1/capture"
 
 # Directories copied into the archive when present.
-INCLUDE_DIRS = (".github", "assets", "docs", "presentation", "scripts", "src", "tests")
+INCLUDE_DIRS = (
+    ".github",
+    "assets",
+    "docs",
+    "examples",
+    "presentation",
+    "scripts",
+    "src",
+    "tests",
+)
 
 # Top-level files copied into the archive when present.
 INCLUDE_ROOT_FILES = (
@@ -54,6 +63,7 @@ REQUIRED_FILES = (
     "pyproject.toml",
     "docs/CONTRACT.md",
     "docs/SUBMISSION.md",
+    "examples/corpus_rule_v1.json",
 )
 
 # Directory names pruned wherever they appear in the tree.
