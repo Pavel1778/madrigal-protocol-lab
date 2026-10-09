@@ -89,6 +89,8 @@ pytest tests/ -q
   for the integration day.
 - [docs/BENCHMARK.md](docs/BENCHMARK.md) — measured time and memory at the
   reference workload.
+- [docs/PORTABILITY.md](docs/PORTABILITY.md) — the environments the suite is
+  checked in, and the result.
 - [REPORT.md](REPORT.md) — the investigation report.
 
 ## License

@@ -136,13 +136,20 @@ def missing_required(files: list[Path]) -> list[str]:
 
 
 def _git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        ["git", *args],
-        cwd=root,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    try:
+        return subprocess.run(
+            ["git", *args],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError as error:
+        # ``git`` may be absent in a minimal environment; report it as a failed
+        # command rather than letting the caller crash.
+        return subprocess.CompletedProcess(
+            ["git", *args], 127, "", f"git is not available: {error}"
+        )
 
 
 def working_tree_clean(root: Path) -> bool:
