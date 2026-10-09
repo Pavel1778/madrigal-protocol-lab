@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
-from src.capture.parser import read_capture
-from src.capture.session import Direction, Endpoint, build_sessions
+from src.capture.parser import TH_ACK, TH_RST, read_capture
+from src.capture.session import (
+    Direction,
+    Endpoint,
+    SessionTracker,
+    build_sessions,
+)
 
 from .conftest import fixture
 
@@ -50,3 +56,28 @@ def test_direction_is_derived_from_endpoints(fixtures_dir: Path) -> None:
     from_a = [p for p in packets if session.direction_of(p) is Direction.A_TO_B]
     assert all(p.src_ip == "10.0.0.1" for p in from_a)
     assert Direction.A_TO_B.opposite is Direction.B_TO_A
+
+
+def test_rst_closes_the_session(fixtures_dir: Path) -> None:
+    packets = list(read_capture(fixture("normal.pcapng")))
+    # Drop both FINs and close the connection with a reset instead.
+    reset = replace(packets[-1], flags=TH_RST | TH_ACK)
+    sessions = build_sessions(packets[:-2] + [reset])
+    assert sessions[0].rst_seen
+    assert not sessions[0].fin_seen
+
+
+def test_tracker_returns_each_session_by_id(fixtures_dir: Path) -> None:
+    tracker = SessionTracker()
+    assigned = [tracker.add(p)[0].session_id for p in read_capture(fixture("normal.pcapng"))]
+    assert assigned == ["s1"] * 7
+    assert tracker.by_id("s1") is tracker.sessions[0]
+
+
+def test_tracker_reports_only_open_sessions(fixtures_dir: Path) -> None:
+    tracker = SessionTracker()
+    for packet in read_capture(fixture("port_reuse.pcapng")):
+        tracker.add(packet)
+    assert [s.session_id for s in tracker.sessions] == ["s1", "s2"]
+    # s1 was closed and superseded, so only the live instance remains open.
+    assert [s.session_id for s in tracker.open_sessions()] == ["s2"]
