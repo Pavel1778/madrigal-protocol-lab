@@ -179,7 +179,33 @@ Expected: `docs/REFERENCE_INVESTIGATION.md` is rewritten from the captures with
 its framing, counterexample, refinement, transfer, journal and alternatives
 sections. The command fails if the corpus is missing rather than inventing data.
 
-## 10. Move the project and reopen it
+## 10. Alternative readings of a hypothesis field
+
+```
+python -m src.protocol.cli alternatives \
+  --rule examples/corpus_rule_v2.json \
+  --report /tmp/report_v2.json \
+  --corpus tests/corpus/reference_export/corpus_capture_01.normalized.json \
+  --all
+```
+
+Expected summary inside the JSON (one block per `hypothesis` field):
+
+```
+"field_name": "command", "declared_meaning": "command", "best": "entropy_enum"
+  entropy_enum   support 140  contradict 0  score 1.00
+  low_cardinality support 140 contradict 0  score 1.00
+  constant       support 60   contradict 80 score 0.43
+```
+
+`constant` is the reading rule v1 declared; on this capture most messages
+contradict it, while `entropy_enum` fits all of them. That is the evidence behind
+the refinement, and it is produced by the tool, not asserted. The command prints
+seven alternatives for `command` and ranks `entropy_enum` first; `--all` reports
+every hypothesis field at once, while `--field command` limits the output to one
+field.
+
+## 11. Move the project and reopen it
 
 ```
 python -m src.project.cli export --project /tmp/demo.madrigal --out /tmp/demo.zip
