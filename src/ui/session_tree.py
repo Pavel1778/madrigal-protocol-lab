@@ -32,6 +32,7 @@ class SessionTree(QtWidgets.QTreeWidget):
         self.itemSelectionChanged.connect(self._on_selection)
 
     def load(self, model: CaptureModel) -> None:
+        """Rebuild the tree from *model* and select the first direction."""
         self._model = model
         self.clear()
         for session in model.sessions:
@@ -92,6 +93,7 @@ class SessionTree(QtWidgets.QTreeWidget):
                     self.directionSelected.emit(session_id, directions[0])
 
     def select_direction(self, session_id: str, direction: str) -> None:
+        """Select the direction node for (``session_id``, ``direction``)."""
         for index in range(self.topLevelItemCount()):
             parent = self.topLevelItem(index)
             for child_index in range(parent.childCount()):

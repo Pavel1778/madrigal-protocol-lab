@@ -13,6 +13,8 @@ that support it and those that contradict it, so a human chooses.
 
 from __future__ import annotations
 
+import math
+from collections import Counter
 from dataclasses import dataclass, field
 
 from ..protocol.checksums import ALGORITHMS, compute as checksum_compute
@@ -22,7 +24,16 @@ from ..protocol.rule import Rule
 
 @dataclass
 class Alternative:
-    """One candidate explanation for a field, with its measured fit."""
+    """One candidate explanation for a field, with its measured fit.
+
+    Attributes:
+        name: Machine-readable candidate name (for example ``"counter"``).
+        description: Human-readable one-line description.
+        support: Messages the candidate agrees with.
+        contradict: Messages the candidate disagrees with.
+        score: ``support / (support + contradict)`` in [0, 1].
+        evidence: A bounded sample of supporting and contradicting messages.
+    """
 
     name: str
     description: str
@@ -32,6 +43,7 @@ class Alternative:
     evidence: list[dict] = field(default_factory=list)
 
     def to_dict(self) -> dict:
+        """Return the alternative as a JSON-ready mapping."""
         return {
             "name": self.name,
             "description": self.description,
@@ -44,6 +56,17 @@ class Alternative:
 
 @dataclass
 class FieldAlternatives:
+    """All candidate explanations tested for one field.
+
+    Attributes:
+        field_name: The analysed field.
+        declared_meaning: The meaning the rule assigns (the field name).
+        is_hypothesis: Whether the rule flagged the meaning as an assumption.
+        total: Messages where the field had a value.
+        alternatives: Candidates, sorted by score descending.
+        best: Name of the highest-scoring candidate, or ``None``.
+    """
+
     field_name: str
     declared_meaning: str | None
     is_hypothesis: bool
@@ -52,6 +75,7 @@ class FieldAlternatives:
     best: str | None = None
 
     def to_dict(self) -> dict:
+        """Return the field's alternatives as a JSON-ready mapping."""
         return {
             "field_name": self.field_name,
             "declared_meaning": self.declared_meaning,
@@ -64,11 +88,20 @@ class FieldAlternatives:
 
 @dataclass
 class AlternativesReport:
+    """The alternatives test for every hypothesis field of one rule.
+
+    Args:
+        rule_id: Identity of the analysed rule.
+        rule_version: Version of the analysed rule.
+        fields: Per-field alternatives for each ``hypothesis`` field.
+    """
+
     rule_id: str
     rule_version: int
     fields: list[FieldAlternatives] = field(default_factory=list)
 
     def to_dict(self) -> dict:
+        """Return the report as a JSON-ready mapping."""
         return {
             "rule_id": self.rule_id,
             "rule_version": self.rule_version,
@@ -140,7 +173,21 @@ def analyze_field(
     correlations: list | None = None,
     limit: int = 5,
 ) -> FieldAlternatives:
-    """Test the candidate meanings of one field."""
+    """Test the candidate meanings of one field.
+
+    Args:
+        rule: The rule the field belongs to.
+        messages: Messages already decoded with ``rule``.
+        field_name: The field to analyse.
+        correlations: Optional journal correlations for the journal candidate.
+        limit: Maximum evidence entries kept per candidate.
+
+    Returns:
+        The field's alternatives, sorted by score descending.
+
+    Raises:
+        ValueError: If ``rule`` has no field named ``field_name``.
+    """
     spec = next((f for f in rule.fields if f.name == field_name), None)
     if spec is None:
         raise ValueError(f"rule {rule.rule_id!r} has no field {field_name!r}")
@@ -172,8 +219,6 @@ def analyze_field(
     if numeric:
         steps = [values[i + 1] - values[i] for i in range(len(values) - 1)]
         if steps:
-            from collections import Counter
-
             step, step_count = Counter(steps).most_common(1)[0]
             if step_count >= max(1, len(steps) * 0.6) and step_count > 0:
                 checks = []
@@ -253,10 +298,319 @@ def analyze_field(
         _test_xor_mask(alternatives, observations, limit)
         _test_delta_encoding(alternatives, observations, limit)
 
+    # Statistical readings: distribution, repetition, leading-bit stability and
+    # step regularity. These need only the values, not the message bytes.
+    _test_entropy(alternatives, observations, limit)
+    _test_periodicity(alternatives, observations, limit)
+    _test_bit_pattern(alternatives, observations, limit)
+    _test_delta_correlation(alternatives, observations, limit)
+
     alternatives.sort(key=lambda a: (-a.score, a.name))
     result.alternatives = alternatives
     result.best = alternatives[0].name if alternatives else None
     return result
+
+
+def entropy(field_values: list) -> float:
+    """Shannon entropy of a field, in bits per value.
+
+    This is an interpretability measure, not a statistical test: it says how
+    many bits on average are needed to describe one value, which is a direct
+    read on how much the field varies. Only integers are read; bytes and enums
+    are out of scope because their bit width is not a property of the value.
+
+    Banding, used when the function is turned into a candidate reading:
+
+    - more than 6 bits per value: a nonce, hash or random field;
+    - 3 to 6 bits: a parameter that changes, such as a counter or a measurement;
+    - fewer than 2 bits: a closed set of values, an enum or flags.
+
+    Args:
+        field_values: The observed values. Non-integers are ignored.
+
+    Returns:
+        Entropy in bits per value, rounded to six decimals. ``0.0`` when fewer
+        than two values remain or all of them are equal.
+    """
+    values = _integer_values(field_values)
+    if len(values) < 2:
+        return 0.0
+    return round(_shannon_entropy(values), 6)
+
+
+def periodicity(field_values: list) -> int | None:
+    """Autocorrelation lag at which a numeric field repeats, if any.
+
+    Values are centre-reduced and correlated against themselves at each lag; a
+    lag is reported only when its correlation is a local peak that stands clear
+    of the neighbouring lags, so noise does not register as a cycle and the
+    broad, slowly falling autocorrelation of a plain ramp or counter does not
+    either. A real period points at a counter that wraps, a packet or sequence
+    number, or a timestamp with a fixed step.
+
+    Args:
+        field_values: The observed values. Non-integers are ignored.
+
+    Returns:
+        The smallest repeating lag in messages (at least 2), or ``None`` when no
+        clear period is found or fewer than four values are available.
+    """
+    values = _integer_values(field_values)
+    if len(values) < 4:
+        return None
+    mean = sum(values) / len(values)
+    centred = [value - mean for value in values]
+    if not any(centred):
+        return None
+    max_lag = len(values) // 2
+    correlations = {1: 1.0}
+    for lag in range(2, max_lag + 1):
+        correlations[lag] = _autocorrelation(centred, lag)
+    for lag in range(2, max_lag + 1):
+        r = correlations[lag]
+        if r < 0.7:
+            continue
+        left = correlations.get(lag - 1, float("-inf"))
+        right = correlations.get(lag + 1, float("-inf"))
+        if r - max(left, right) < 0.1:
+            continue
+        return lag
+    return None
+
+
+def _autocorrelation(centred: list, lag: int) -> float:
+    """Normalised autocorrelation of *centred* at *lag* (0 for a flat tail)."""
+    if lag <= 0 or lag >= len(centred):
+        return 0.0
+    pairs = [(centred[i], centred[i - lag]) for i in range(lag, len(centred))]
+    numerator = sum(a * b for a, b in pairs)
+    pair_energy = sum(b * b for _, b in pairs)
+    denominator = sum(x * x for x in centred)
+    if pair_energy == 0 or denominator == 0:
+        return 0.0
+    return numerator / math.sqrt(denominator * pair_energy)
+
+
+def bit_pattern(field_values: list, bit_count: int = 4) -> dict:
+    """Stability of the high-order bits of a numeric field.
+
+    Some fields pack a flag or a small enum into their high-order bits and a
+    value into the rest. For a given bit width ``n`` this reports how often the
+    top ``n`` bits are identical across messages, which is the signature of such
+    a split. Meant to be called for ``n`` in ``(2, 4, 6)``.
+
+    The bit width of the field is taken from the largest observed value. When
+    the field does not use more than ``n`` bits, the top ``n`` bits are the whole
+    value and the reading would only restate ``constant``, so the verdict is
+    ``"inconclusive"``.
+
+    Args:
+        field_values: The observed values. Non-integers are ignored.
+        bit_count: Number of high-order bits to inspect, at least 1.
+
+    Returns:
+        A mapping with ``bit_count``, ``field_bit_width``, ``shift``, ``total``,
+        ``stable`` (messages whose top bits equal the first value's),
+        ``stable_ratio``, ``distinct_high_values`` and ``verdict`` --
+        ``"flags_high"`` when more than 90 percent are stable (a flag or enum in
+        the high bits), ``"contradict"`` when 50 percent or fewer are (the
+        reading does not hold), otherwise ``"inconclusive"``.
+    """
+    values = _integer_values(field_values)
+    width = max(1, int(bit_count))
+    empty = {
+        "bit_count": width,
+        "field_bit_width": 0,
+        "shift": 0,
+        "total": 0,
+        "stable": 0,
+        "stable_ratio": 0.0,
+        "distinct_high_values": 0,
+        "verdict": "inconclusive",
+    }
+    if not values:
+        return empty
+    field_width = max(value.bit_length() for value in values)
+    shift = field_width - width
+    if shift <= 0:
+        return {**empty, "field_bit_width": field_width}
+    high = [value >> shift for value in values]
+    stable = sum(1 for value in high if value == high[0])
+    ratio = round(stable / len(high), 6)
+    if ratio > 0.9:
+        verdict = "flags_high"
+    elif ratio <= 0.5:
+        verdict = "contradict"
+    else:
+        verdict = "inconclusive"
+    return {
+        "bit_count": width,
+        "field_bit_width": field_width,
+        "shift": shift,
+        "total": len(high),
+        "stable": stable,
+        "stable_ratio": ratio,
+        "distinct_high_values": len(set(high)),
+        "verdict": verdict,
+    }
+
+
+def delta_correlation(field_values: list) -> dict:
+    """Regularity of the step between consecutive values.
+
+    The coefficient of variation of the first differences (their standard
+    deviation over their mean) measures how constant the step is. A small value
+    means every message advances by nearly the same amount, which is a delta
+    encoding or a fixed step. A large value means the step varies and the
+    reading does not hold.
+
+    Args:
+        field_values: The observed values. Non-integers are ignored.
+
+    Returns:
+        A mapping with ``total`` (number of differences), ``mean_step``,
+        ``std_step``, ``cv`` and ``verdict`` -- ``"delta"`` when ``cv < 0.1``,
+        ``"contradict"`` when ``cv > 0.5``, otherwise ``"inconclusive"``.
+    """
+    values = _integer_values(field_values)
+    steps = [values[i + 1] - values[i] for i in range(len(values) - 1)]
+    if not steps:
+        return {"total": 0, "mean_step": 0.0, "std_step": 0.0, "cv": 0.0, "verdict": "inconclusive"}
+    mean = sum(steps) / len(steps)
+    std = math.sqrt(sum((step - mean) ** 2 for step in steps) / len(steps))
+    if mean == 0:
+        cv = 0.0 if std == 0 else float("inf")
+    else:
+        cv = abs(std / mean)
+    if cv < 0.1:
+        verdict = "delta"
+    elif cv > 0.5:
+        verdict = "contradict"
+    else:
+        verdict = "inconclusive"
+    return {
+        "total": len(steps),
+        "mean_step": round(mean, 6),
+        "std_step": round(std, 6),
+        "cv": round(cv, 6) if math.isfinite(cv) else None,
+        "verdict": verdict,
+    }
+
+
+def _integer_values(field_values: list) -> list[int]:
+    """Keep the integers in *field_values*, dropping booleans and the rest."""
+    return [v for v in field_values if isinstance(v, int) and not isinstance(v, bool)]
+
+
+def _shannon_entropy(values: list[int]) -> float:
+    """Shannon entropy of a list of integers, in bits per value."""
+    counts = Counter(values)
+    total = len(values)
+    entropy_bits = 0.0
+    for count in counts.values():
+        probability = count / total
+        entropy_bits -= probability * math.log2(probability)
+    return entropy_bits
+
+
+def _entropy_readings(values: list[int]) -> list[tuple[str, str, bool, str]]:
+    """Banded readings of the entropy of *values* (random / parameter / enum)."""
+    bits = _shannon_entropy(values)
+    readings = [
+        ("entropy_random", "nonce, hash or random", bits > 6.0, f"{bits:.2f} bits/value"),
+        ("entropy_parameter", "value that changes between messages", 3.0 <= bits <= 6.0, f"{bits:.2f} bits/value"),
+        ("entropy_enum", "closed set of values (enum or flags)", bits < 2.0, f"{bits:.2f} bits/value"),
+    ]
+    return readings
+
+
+def _test_entropy(alternatives, observations, limit) -> None:
+    """Offer the entropy-band reading as a candidate, if a band fits."""
+    values = [v for _, v in observations if isinstance(v, int) and not isinstance(v, bool)]
+    if len(values) < 2:
+        return
+    for name, description, holds, detail in _entropy_readings(values):
+        if not holds:
+            continue
+        checks = [(message, value, holds, detail) for message, value in observations]
+        _add(alternatives, name, f"the field's spread suggests a {description}", checks, limit)
+
+
+def _period_agreement(values: list[int], lag: int) -> list[tuple[int, bool]]:
+    """Per-index (value, agrees-with-value-at-lag) for a candidate period."""
+    return [(value, index < lag or value == values[index - lag]) for index, value in enumerate(values)]
+
+
+def _test_periodicity(alternatives, observations, limit) -> None:
+    """Offer a detected period as a candidate, if one stands out."""
+    values = [v for _, v in observations if isinstance(v, int) and not isinstance(v, bool)]
+    lag = periodicity(values)
+    if lag is None:
+        return
+    agreement = _period_agreement(values, lag)
+    checks = [
+        (message, value, ok, f"matches the value {lag} messages earlier")
+        for (message, value), (_, ok) in zip(observations, agreement)
+    ]
+    _add(
+        alternatives,
+        "periodicity",
+        f"the field repeats every {lag} messages",
+        checks,
+        limit,
+    )
+
+
+def _test_bit_pattern(alternatives, observations, limit) -> None:
+    """Offer a high-order-bit reading when the top bits are stable."""
+    values = [v for _, v in observations if isinstance(v, int) and not isinstance(v, bool)]
+    if len(values) < 2:
+        return
+    for width in (2, 4, 6):
+        pattern = bit_pattern(values, width)
+        if pattern["verdict"] != "flags_high":
+            continue
+        shift = pattern["shift"]
+        top = max(values) >> shift
+        checks = [
+            (message, value, (value >> shift) == top, f"top {width} bits are {top}")
+            for message, value in observations
+        ]
+        _add(
+            alternatives,
+            f"bit_pattern_{width}",
+            f"the top {width} bits stay constant; a flag or enum there, "
+            "the value in the low bits",
+            checks,
+            limit,
+        )
+
+
+def _test_delta_correlation(alternatives, observations, limit) -> None:
+    """Offer a constant-step reading when the first differences are regular."""
+    values = [v for _, v in observations if isinstance(v, int) and not isinstance(v, bool)]
+    if len(values) < 3:
+        return
+    reading = delta_correlation(values)
+    if reading["verdict"] != "delta":
+        return
+    mean = reading["mean_step"]
+    checks = [
+        (
+            message,
+            value,
+            index == 0 or (values[index] - values[index - 1]) == mean,
+            f"step {mean}",
+        )
+        for index, (message, value) in enumerate(observations)
+    ]
+    _add(
+        alternatives,
+        "delta_correlation",
+        f"consecutive values differ by a near-constant {mean}",
+        checks,
+        limit,
+    )
 
 
 def _raw_slice(message: MessageResult, offset: int, width: int) -> bytes | None:
@@ -489,7 +843,17 @@ def suggest_alternatives(
     correlations: list | None = None,
     limit: int = 5,
 ) -> AlternativesReport:
-    """Analyse every field marked as a hypothesis in *rule*."""
+    """Analyse every field marked as a hypothesis in *rule*.
+
+    Args:
+        rule: The rule to analyse.
+        messages: Messages already decoded with ``rule``.
+        correlations: Optional journal correlations.
+        limit: Maximum evidence entries kept per candidate.
+
+    Returns:
+        One :class:`FieldAlternatives` per ``hypothesis`` field.
+    """
     report = AlternativesReport(rule_id=rule.rule_id, rule_version=rule.rule_version)
     for spec in rule.fields:
         if not spec.hypothesis:
