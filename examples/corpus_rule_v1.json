@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "rule_id": "corpus_request",
+  "rule_version": 1,
+  "name": "corpus_request_v1",
+  "scope": {"direction": "A_to_B"},
+  "framing": {
+    "type": "length_prefixed",
+    "length_offset": 2,
+    "length_size": 2,
+    "byte_order": "big",
+    "length_covers": "payload"
+  },
+  "fields": [
+    {"name": "command", "offset": 0, "type": "uint8", "hypothesis": true, "expected": [1]},
+    {"name": "flags", "offset": 1, "type": "uint8", "expected": [0]},
+    {"name": "payload_length", "offset": 2, "type": "uint16", "byte_order": "big"},
+    {"name": "target", "offset": 4, "type": "enum", "hypothesis": true,
+     "enum": {"temperature": 16, "humidity": 17, "voltage": 18, "gain": 19,
+              "threshold": 20, "mode": 21, "sample_rate": 22,
+              "channel_a": 32, "channel_b": 33, "probe": 34}},
+    {"name": "value", "offset": 5, "type": "uint16", "byte_order": "big", "hypothesis": true, "missing_ok": true}
+  ]
+}
