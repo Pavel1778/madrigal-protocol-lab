@@ -63,13 +63,20 @@ class Provenance:
 
         A gap in the stream has no range, so a missing result means the offset
         falls inside a gap or past the end.
+
+        Retransmission ranges annotate bytes that a primary range already
+        covers, and they may start at the same offset as that range while being
+        shorter. Searching only the primary ranges keeps the answer the packet
+        that actually produced the byte and avoids a short annotation shadowing
+        the range that contains ``offset``.
         """
 
-        starts = [r.offset for r in self.ranges]
+        primary = [r for r in self.ranges if not r.is_retransmission]
+        starts = [r.offset for r in primary]
         pos = bisect_right(starts, offset) - 1
         if pos < 0:
             return None
-        candidate = self.ranges[pos]
+        candidate = primary[pos]
         if candidate.offset <= offset < candidate.end:
             return candidate
         return None
