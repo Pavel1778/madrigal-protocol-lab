@@ -320,6 +320,10 @@ def read_capture(
 
     try:
         handle, reader = _open_reader(path)
+    except OSError:
+        # A missing file, a directory, or a permission problem: the path itself
+        # is wrong, which is the caller's error, not a capture defect.
+        raise
     except Exception as exc:
         if _looks_like_capture(path):
             # A recognizable but damaged file is reported, not raised.
@@ -330,7 +334,10 @@ def read_capture(
                 )
             )
             return
-        raise
+        # Not a capture at all. A file too short to hold a magic number makes
+        # dpkt raise NeedData; normalise every such failure to ValueError so a
+        # caller has one exception to handle.
+        raise ValueError(f"{path} is not a readable capture: {exc}") from exc
     try:
         linktype = _reader_datalink(reader)
         if linktype not in _SUPPORTED_LINKTYPES:
