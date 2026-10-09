@@ -19,6 +19,6 @@ dist/
 .ruff_cache/
 .coverage
 htmlcov/
-.openhands/
+.agent-cache/
 .benchmark/
 out/

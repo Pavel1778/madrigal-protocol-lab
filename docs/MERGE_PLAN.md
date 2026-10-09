@@ -119,7 +119,7 @@ in steps 4 or 7 is fully recoverable by aborting and reporting.
 ### One item to raise with the participant
 
 The only occurrences of the string `OpenHands` in the repository are the path
-rules `.openhands/` in `.gitignore`, `.dockerignore`, and the exclusion list in
+rules `.agent-cache/` in `.gitignore`, `.dockerignore`, and the exclusion list in
 `scripts/build_submission.py`. These are ignore rules, not attribution, but a
 reviewer searching the tree for the word will find them. If the submission rule
 is read strictly, the three lines can be renamed to a neutral cache path, or
