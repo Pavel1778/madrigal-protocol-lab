@@ -16,6 +16,8 @@ project.madrigal/
 build/
 dist/
 .mypy_cache/
+.coverage
+htmlcov/
 .openhands/
 .benchmark/
 out/

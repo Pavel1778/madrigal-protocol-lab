@@ -334,7 +334,8 @@ def render_markdown(result: Result, profile: dict[str, int]) -> str:
             "",
             (
                 "Streaming used less memory."
-                if result.stream_peak_rss_mib < result.peak_rss_mib
+                if result.stream_peak_rss_mib is not None
+                and result.stream_peak_rss_mib < result.peak_rss_mib
                 else "Streaming did not reduce memory at this profile."
             ),
             "",
