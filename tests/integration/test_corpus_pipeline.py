@@ -26,6 +26,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CORPUS_DIR = REPO_ROOT / "tests" / "corpus"
 CORPUS_PCAP = CORPUS_DIR / "corpus_capture_01.pcapng"
 CORPUS_PCAP_2 = CORPUS_DIR / "corpus_capture_02.pcapng"
+CORPUS_PCAP_DEFECTS = CORPUS_DIR / "corpus_capture_defects.pcapng"
 CORPUS_JOURNAL = CORPUS_DIR / "corpus_journal.md"
 CORPUS_RULE = REPO_ROOT / "examples" / "corpus_rule_v1.json"
 CAPTURE_SCHEMA = REPO_ROOT / "docs" / "schemas" / "capture.schema.json"
@@ -196,3 +197,26 @@ def test_second_capture_is_framed_with_the_same_rule(tmp_path):
         messages.extend(apply_rule(stream, rule, session_id, direction))
     assert messages
     assert all(m.length > 0 for m in messages)
+
+
+@corpus_required
+def test_defect_capture_reports_incomplete_instead_of_failing(tmp_path):
+    from src.hypothesis.corpus import CorpusStream, verify_on_corpus
+
+    if not CORPUS_PCAP_DEFECTS.is_file():
+        pytest.skip("defect capture not present")
+    normalized = _export_normalized(CORPUS_PCAP_DEFECTS, tmp_path / "nd.json")
+    capture = capture_from_dict(normalized)
+    streams = [
+        CorpusStream.from_bytes(stream.data, session_id, direction)
+        for session_id, direction, stream in capture.iter_streams()
+    ]
+    rule = load_rule(str(CORPUS_RULE))
+    report = verify_on_corpus(rule, streams)
+    # A damaged capture yields incomplete messages tied to bytes and a reason,
+    # never a crash and never a silent zero-length message.
+    assert any(m.status.value == "incomplete" for m in report.messages)
+    for message in report.messages:
+        if message.status.value == "incomplete":
+            assert message.reason
+            assert message.length > 0
