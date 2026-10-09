@@ -78,13 +78,17 @@ def test_journal_timestamps_exist_in_the_captures(tmp_path: Path) -> None:
     sizes = generate(tmp_path, scale=2)
     assert "corpus_journal.md" in sizes
     timestamps = set()
-    for name in ("corpus_capture_01.pcapng", "corpus_capture_02.pcapng",
-                 "corpus_capture_defects.pcapng"):
+    for name in (
+        "corpus_capture_01.pcapng",
+        "corpus_capture_02.pcapng",
+        "corpus_capture_defects.pcapng",
+    ):
         for packet in read_capture(tmp_path / name):
             timestamps.add(round(packet.timestamp, 3))
     journal = (tmp_path / "corpus_journal.md").read_text(encoding="utf-8")
     rows = [
-        line for line in journal.splitlines()
+        line
+        for line in journal.splitlines()
         if line and line[0].isdigit() and " | " in line
     ]
     assert rows

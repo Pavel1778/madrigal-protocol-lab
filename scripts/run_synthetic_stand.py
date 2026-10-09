@@ -214,9 +214,7 @@ class Recorder:
         self.events.append(_Event(now + 0.0002, True, b"", dpkt.tcp.TH_ACK))
 
     def stop(self, now: float) -> None:
-        self.events.append(
-            _Event(now, True, b"", dpkt.tcp.TH_FIN | dpkt.tcp.TH_ACK)
-        )
+        self.events.append(_Event(now, True, b"", dpkt.tcp.TH_FIN | dpkt.tcp.TH_ACK))
         self.events.append(
             _Event(now + 0.0001, False, b"", dpkt.tcp.TH_FIN | dpkt.tcp.TH_ACK)
         )
@@ -334,7 +332,7 @@ def _server_loop(server_socket: socket.socket, ready: threading.Event) -> None:
         while True:
             try:
                 chunk = connection.recv(4096)
-            except socket.timeout:
+            except TimeoutError:
                 break
             if not chunk:
                 break
@@ -371,7 +369,7 @@ def _relay_loop(
         while not stop.is_set():
             try:
                 chunk = source.recv(4096)
-            except (socket.timeout, OSError):
+            except (TimeoutError, OSError):
                 break
             if not chunk:
                 break
@@ -383,10 +381,10 @@ def _relay_loop(
                 break
         stop.set()
 
-    forward_thread = threading.Thread(target=pump, args=(client_conn, True), daemon=True)
-    backward_thread = threading.Thread(
-        target=pump, args=(upstream, False), daemon=True
+    forward_thread = threading.Thread(
+        target=pump, args=(client_conn, True), daemon=True
     )
+    backward_thread = threading.Thread(target=pump, args=(upstream, False), daemon=True)
     forward_thread.start()
     backward_thread.start()
     forward_thread.join(timeout=10.0)
@@ -403,7 +401,6 @@ def _client_scenario(relay_port: int) -> None:
         txid = 1
 
         def exchange(command: int, payload: bytes) -> bytes:
-            nonlocal txid
             connection.sendall(encode_request(command, txid, payload))
             header = _recv_exact(connection, HEADER_SIZE)
             length = int.from_bytes(header[2:4], "little")

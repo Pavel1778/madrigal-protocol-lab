@@ -53,9 +53,7 @@ def generate(out_dir: Path = OUT_DIR) -> list[Path]:
     """Build every reference export and return the written paths."""
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    validator = Draft202012Validator(
-        json.loads(SCHEMA.read_text(encoding="utf-8"))
-    )
+    validator = Draft202012Validator(json.loads(SCHEMA.read_text(encoding="utf-8")))
     written: list[Path] = []
     for name in RECORDS:
         capture = normalize(CORPUS / name)

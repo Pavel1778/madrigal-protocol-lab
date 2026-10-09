@@ -15,9 +15,10 @@ from __future__ import annotations
 
 import io
 import struct
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import BinaryIO, Iterator
+from typing import BinaryIO
 
 import dpkt
 
@@ -130,7 +131,7 @@ class Packet:
         return len(self.payload)
 
 
-def _open_reader(path: Path) -> tuple[BinaryIO, "dpkt.pcap.Reader | dpkt.pcapng.Reader"]:
+def _open_reader(path: Path) -> tuple[BinaryIO, dpkt.pcap.Reader | dpkt.pcapng.Reader]:
     """Open ``path`` as pcap or pcapng and return the handle and reader."""
 
     with path.open("rb") as probe:
@@ -152,7 +153,7 @@ def _ip_to_str(raw: bytes) -> str:
     return ".".join(str(b) for b in raw)
 
 
-def _layer3_ip(linktype: int, buf: bytes) -> "bytes | Diagnostic":
+def _layer3_ip(linktype: int, buf: bytes) -> bytes | Diagnostic:
     """Return the IPv4 datagram bytes of a frame, or a diagnostic.
 
     IPv6 and non-IP frames are returned as diagnostics, never as data.
@@ -191,7 +192,7 @@ class _TcpRecord:
     truncated: bool
 
 
-def _parse_tcp(ip_bytes: bytes) -> "_TcpRecord | Diagnostic":
+def _parse_tcp(ip_bytes: bytes) -> _TcpRecord | Diagnostic:
     """Parse an IPv4 datagram into a TCP record or a diagnostic."""
 
     try:
@@ -278,7 +279,7 @@ def _read_rows(path: Path, torn: list[str]) -> Iterator[tuple[float, bytes]]:
                 row = next(reader)
             except StopIteration:
                 return
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 - a torn record is a diagnostic, not a crash
                 torn.append(str(exc))
                 return
             yield row
@@ -327,7 +328,9 @@ def read_capture(
         if _looks_like_capture(path):
             # A recognizable but damaged file is reported, not raised.
             diagnostics.append(
-                Diagnostic("truncated_frame", detail=f"capture header is invalid: {exc}")
+                Diagnostic(
+                    "truncated_frame", detail=f"capture header is invalid: {exc}"
+                )
             )
             return
         raise
@@ -367,7 +370,7 @@ def read_capture(
             if verify_checksums:
                 try:
                     checksum_valid = bool(tcp.sum == 0 or _tcp_checksum_ok(ip_bytes))
-                except Exception:
+                except Exception:  # noqa: BLE001 - an unreadable checksum leaves the field unknown
                     checksum_valid = None
             yield Packet(
                 index=index,

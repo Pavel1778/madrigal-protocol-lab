@@ -206,13 +206,19 @@ def build_investigation(
         ],
         "counterexamples": counterexamples,
         "rule_versions": [
-            {"rule_id": rule_id, "version": rule_version, "note": "applied by the pipeline"}
+            {
+                "rule_id": rule_id,
+                "version": rule_version,
+                "note": "applied by the pipeline",
+            }
         ],
         "open_questions": open_questions,
     }
 
 
-def _capture_only_investigation(capture_id: str, source_file: str, sessions: int) -> dict[str, Any]:
+def _capture_only_investigation(
+    capture_id: str, source_file: str, sessions: int
+) -> dict[str, Any]:
     """An honest investigation when no rule was applied."""
 
     return {
@@ -257,7 +263,9 @@ def run_pipeline(
     project_path = Path(project_path)
     if project_path.exists():
         if not force:
-            raise PipelineError(f"{project_path} already exists; pass force to replace it")
+            raise PipelineError(
+                f"{project_path} already exists; pass force to replace it"
+            )
         import shutil
 
         shutil.rmtree(project_path)

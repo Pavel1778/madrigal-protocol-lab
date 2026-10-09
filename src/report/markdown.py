@@ -68,7 +68,7 @@ def _counterexample_lines(item: dict[str, Any]) -> list[str]:
     return out
 
 
-def _version_lines(item: dict[str, Any]) -> list[str]:
+def _version_lines(item: dict[str, Any]) -> str:
     rule_id = item.get("rule_id", "?")
     version = item.get("version", "?")
     line = f"- {rule_id} version {version}"
