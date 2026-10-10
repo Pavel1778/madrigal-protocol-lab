@@ -32,7 +32,14 @@ from .hypotheses_view import HypothesesView
 from .i18n import LanguageManager
 from .model import CaptureModel, RuleModel, verify_rule_on_corpus
 from .session_tree import SessionTree
-from .settings import SettingsDialog, read_settings, write_settings
+from .settings import (
+    APPLICATION,
+    DEFAULTS,
+    ORGANISATION,
+    SettingsDialog,
+    read_settings,
+    write_settings,
+)
 from .validation_view import ValidationView
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -49,6 +56,15 @@ APP_DESKTOP_FILE = "madrigal-protocol-lab"
 # needs; the same text is then one hover away.
 _PROVENANCE_CHAR_CAP = 120
 _PROVENANCE_LABEL_PADDING = 8
+
+# Zoom bounds for the byte and tree fonts. The tree tracks the bytes a little
+# smaller; both are kept in these ranges so the layout cannot be zoomed into a
+# state where a column collapses or a row is taller than the viewport.
+ZOOM_MIN_FONT = 8
+ZOOM_MAX_FONT = 28
+TREE_MIN_FONT = 7
+TREE_MAX_FONT = 26
+HEX_TREE_OFFSET = 2
 
 logger = logging.getLogger(__name__)
 
@@ -156,6 +172,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self._actions["theme_light"] = self._action(view_menu, "&Light theme", lambda: self.set_theme_mode("light"), "Ctrl+2")
         self._actions["theme_system"] = self._action(view_menu, "&System theme", lambda: self.set_theme_mode("system"), "Ctrl+3")
         view_menu.addSeparator()
+        self._actions["zoom_in"] = self._action(
+            view_menu, "Zoom &in", self.zoom_in, "Ctrl+=", tip="Enlarge the bytes and the session tree (Ctrl+Plus)"
+        )
+        self._actions["zoom_in_alt"] = QtGui.QAction("Zoom in", self)
+        self._actions["zoom_in_alt"].setShortcut(QtGui.QKeySequence("Ctrl++"))
+        self._actions["zoom_in_alt"].triggered.connect(self.zoom_in)
+        self.addAction(self._actions["zoom_in_alt"])
+        self._actions["zoom_out"] = self._action(
+            view_menu, "Zoom &out", self.zoom_out, "Ctrl+-", tip="Shrink the bytes and the session tree (Ctrl+Minus)"
+        )
+        self._actions["zoom_reset"] = self._action(
+            view_menu, "&Reset zoom", self.zoom_reset, "Ctrl+0", tip="Restore the default byte and tree size"
+        )
+        view_menu.addSeparator()
 
         self._actions["settings"] = self._action(
             view_menu, "&Settings...", self.open_settings_dialog, "Ctrl+,"
@@ -223,6 +253,10 @@ class MainWindow(QtWidgets.QMainWindow):
             "theme_dark": self.tr("&Dark theme"),
             "theme_light": self.tr("&Light theme"),
             "theme_system": self.tr("&System theme"),
+            "zoom_in": self.tr("Zoom &in"),
+            "zoom_in_alt": self.tr("Zoom in"),
+            "zoom_out": self.tr("Zoom &out"),
+            "zoom_reset": self.tr("&Reset zoom"),
             "settings": self.tr("&Settings..."),
             "quick_help": self.tr("&Quick help"),
             "about": self.tr("&About"),
@@ -387,7 +421,57 @@ class MainWindow(QtWidgets.QMainWindow):
         self.report_view.setFont(theme.mono_font(9))
         self.diff_view.setFont(theme.mono_font(9))
 
-    # -- settings ----------------------------------------------------------
+    # -- zoom --------------------------------------------------------------
+
+    def zoom_in(self) -> None:
+        """Enlarge the bytes and the tree by one step."""
+        self._zoom_step(1)
+
+    def zoom_out(self) -> None:
+        """Shrink the bytes and the tree by one step."""
+        self._zoom_step(-1)
+
+    def zoom_reset(self) -> None:
+        """Restore the default byte and tree size."""
+        self._set_zoom(
+            int(DEFAULTS["editor"]["hex_font_size"]),
+            int(DEFAULTS["editor"]["tree_font_size"]),
+        )
+
+    def _zoom_step(self, delta: int) -> None:
+        """Move the byte font, carrying the tree with it at a fixed offset.
+
+        The tree is derived from the byte size rather than stepped on its own,
+        so repeated zooming cannot drift the two apart.
+        """
+        target = max(ZOOM_MIN_FONT, min(ZOOM_MAX_FONT, self.hex_view.font_size + delta))
+        self._set_zoom(target, target - HEX_TREE_OFFSET)
+
+    def _set_zoom(self, hex_size: int, tree_size: int) -> None:
+        """Apply a byte and tree font size, clamped and reflected in the menu."""
+        hex_size = max(ZOOM_MIN_FONT, min(ZOOM_MAX_FONT, int(hex_size)))
+        tree_size = max(TREE_MIN_FONT, min(TREE_MAX_FONT, int(tree_size)))
+        if (hex_size, tree_size) == (self.hex_view.font_size, self.session_tree.font_size):
+            return
+        self.hex_view.set_font_size(hex_size)
+        self.session_tree.set_font_size(tree_size)
+        # Keep the settings mapping and the store in step so a later settings
+        # round-trip does not snap the zoom back to a stale size.
+        editor = self._settings.setdefault("editor", {})
+        editor["hex_font_size"] = hex_size
+        editor["tree_font_size"] = tree_size
+        store = QtCore.QSettings(ORGANISATION, APPLICATION)
+        store.setValue("editor/hex_font_size", hex_size)
+        store.setValue("editor/tree_font_size", tree_size)
+        self._update_zoom_actions()
+        self._notify(self.tr("zoom {0}%").format(round(hex_size / int(DEFAULTS["editor"]["hex_font_size"]) * 100)))
+
+    def _update_zoom_actions(self) -> None:
+        """Disable the zoom actions that would have no effect at a limit."""
+        size = self.hex_view.font_size
+        if "zoom_in" in self._actions:
+            self._actions["zoom_in"].setEnabled(size < ZOOM_MAX_FONT)
+            self._actions["zoom_out"].setEnabled(size > ZOOM_MIN_FONT)
 
     def open_settings_dialog(self) -> SettingsDialog:
         """Open the preferences dialog and apply what the user accepts."""
@@ -442,6 +526,8 @@ class MainWindow(QtWidgets.QMainWindow):
         level = str(advanced.get("log_level", "INFO"))
         if level in logging.getLevelNamesMapping():
             logging.getLogger().setLevel(level)
+
+        self._update_zoom_actions()
 
     # -- interface language ------------------------------------------------
 
