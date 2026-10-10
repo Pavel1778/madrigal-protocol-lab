@@ -20,12 +20,16 @@ CHANGED = "changed"
 INSERTED = "inserted"
 DELETED = "deleted"
 
-_COLOUR = {
-    EQUAL: theme.TEXT_SECONDARY,
-    CHANGED: theme.MISMATCHED_TEXT,
-    INSERTED: theme.MATCHED_TEXT,
-    DELETED: theme.INCOMPLETE_TEXT,
-}
+
+def _colours() -> dict[object, str]:
+    """Diff colours for the active theme."""
+    token = theme.current()
+    return {
+        EQUAL: token.text_secondary,
+        CHANGED: token.status_mismatched_text,
+        INSERTED: token.status_matched_text,
+        DELETED: token.status_incomplete_text,
+    }
 
 
 @dataclass
@@ -147,12 +151,17 @@ class CompareView(QtWidgets.QWidget):
         if left is None or right is None:
             return
         rows = diff_bytes(bytes.fromhex(left.bytes_hex), bytes.fromhex(right.bytes_hex))
+        colours = _colours()
         self.table.setRowCount(len(rows))
         for index, row in enumerate(rows):
-            colour = QtGui.QColor(_COLOUR[row.kind])
+            colour = QtGui.QColor(colours[row.kind])
             for column, text in enumerate(
                 (f"{row.offset:04x}", row.left, row.right)
             ):
                 item = QtWidgets.QTableWidgetItem(text)
                 item.setForeground(colour)
                 self.table.setItem(index, column, item)
+
+    def apply_theme(self) -> None:
+        """Recolour the diff table in the active theme."""
+        self._refresh()

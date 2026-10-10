@@ -42,11 +42,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self._session_id: str = ""
         self._direction: str = ""
         self._corpus_report = None
+        self._theme_manager = None
 
         self._build_menu()
         self._build_central()
         self._build_status()
         self._wire()
+        self._install_theme()
 
     # -- construction ------------------------------------------------------
 
@@ -69,6 +71,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self._action(report_menu, "Show REPORT.md", self.show_report)
         self._action(report_menu, "Export Markdown...", self.export_markdown)
         self._action(report_menu, "Export HTML...", self.export_html)
+
+        view_menu = bar.addMenu("View")
+        self._action(view_menu, "Dark theme", lambda: self.set_theme_mode("dark"), "Ctrl+1")
+        self._action(view_menu, "Light theme", lambda: self.set_theme_mode("light"), "Ctrl+2")
+        self._action(view_menu, "System theme", lambda: self.set_theme_mode("system"), "Ctrl+3")
 
         help_menu = bar.addMenu("Help")
         self._action(help_menu, "About", self.show_about)
@@ -157,6 +164,44 @@ class MainWindow(QtWidgets.QMainWindow):
         self.validation_view.applyRequested.connect(self.apply_rule)
         self.validation_view.counterexampleSelected.connect(self.reveal_offset)
         self.hypotheses_view.messageSelected.connect(self.reveal_offset)
+
+    # -- theme -------------------------------------------------------------
+
+    def _install_theme(self) -> None:
+        """Create the manager for the running application and apply its mode."""
+        app = QtWidgets.QApplication.instance()
+        if app is None:
+            return
+        if self._theme_manager is None:
+            self._theme_manager = theme.ThemeManager(app)
+            self._theme_manager.themeChanged.connect(self._on_theme_changed)
+        else:
+            self._theme_manager.apply()
+        self.apply_theme()
+
+    def set_theme_mode(self, mode: str) -> None:
+        """Select and persist a theme mode (``dark``, ``light`` or ``system``)."""
+        if self._theme_manager is None:
+            self._install_theme()
+        if self._theme_manager is not None:
+            self._theme_manager.set_mode(mode)
+        self.apply_theme()
+
+    def _on_theme_changed(self, name: str) -> None:
+        self._notify(f"{name} theme")
+
+    def apply_theme(self) -> None:
+        """Make every view re-read the active theme."""
+        for view in (
+            self.session_tree,
+            self.hex_view,
+            self.validation_view,
+            self.compare_view,
+            self.hypotheses_view,
+        ):
+            view.apply_theme()
+        self.report_view.setFont(theme.mono_font(9))
+        self.diff_view.setFont(theme.mono_font(9))
 
     # -- loading -----------------------------------------------------------
 
@@ -444,13 +489,16 @@ def _markdown_to_html(text: str) -> str:
     import html as html_module
 
     lines = text.splitlines()
+    token = theme.current()
     out: list[str] = [
         "<!DOCTYPE html><html><head><meta charset='utf-8'>",
-        "<style>body{background:#131516;color:#E0E0E0;font-family:Montserrat,sans-serif;"
+        f"<style>body{{background:{token.background};color:{token.text_primary};"
+        f"font-family:{token.font_body},sans-serif;"
         "max-width:960px;margin:2rem auto;padding:0 1rem} "
-        "h1,h2,h3{font-family:Tektur,sans-serif;color:#E0E0E0} "
+        f"h1,h2,h3{{font-family:{token.font_heading},sans-serif;color:{token.text_primary}}} "
         "table{border-collapse:collapse;margin:1rem 0} "
-        "td,th{border:1px solid #2A2C2E;padding:4px 8px} code{color:#A2391D}</style>",
+        f"td,th{{border:1px solid {token.border};padding:4px 8px}} "
+        f"code{{color:{token.accent}}}</style>",
         "</head><body>",
     ]
     in_table = False
@@ -516,7 +564,6 @@ def main(argv: list[str] | None = None) -> int:
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([sys.argv[0], *qt_argv])
     app.setApplicationName("Madrigal protocol laboratory")
     theme.load_fonts(app)
-    app.setStyleSheet(theme.build_stylesheet())
     window = open_default_window(app, capture=args.capture, rule=args.rule)
     window.show()
     return app.exec()
