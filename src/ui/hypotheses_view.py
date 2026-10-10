@@ -22,6 +22,9 @@ MID_SCORE = 0.5
 
 _COLUMNS = ("field", "reading", "support", "contradict", "score")
 
+# Translation context for strings built outside an instance method.
+_TRANSLATE_CONTEXT = "HypothesesView"
+
 # The readings added for value shape; shown with the same colour code as the
 # rest but named here so the panel can label them.
 _SHAPE_READINGS = (
@@ -63,14 +66,16 @@ class HypothesesView(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
 
-        self.header = QtWidgets.QLabel("no rule applied")
+        self.header = QtWidgets.QLabel(self.tr("no rule applied"))
         self.header.setProperty("role", "secondary")
         self.header.setFont(theme.body_font(9))
         self.header.setWordWrap(True)
         layout.addWidget(self.header)
 
         self.table = QtWidgets.QTableWidget(0, len(_COLUMNS))
-        self.table.setHorizontalHeaderLabels(list(_COLUMNS))
+        self.table.setHorizontalHeaderLabels(
+            [QtCore.QCoreApplication.translate(_TRANSLATE_CONTEXT, name) for name in _COLUMNS]
+        )
         self.table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setFont(theme.body_font(9))
@@ -98,7 +103,7 @@ class HypothesesView(QtWidgets.QWidget):
         for field in fields:
             candidates = field.alternatives or []
             if not candidates:
-                rows.append((field.field_name, "(no candidate fits)", None, None))
+                rows.append((field.field_name, self.tr("(no candidate fits)"), None, None))
                 continue
             for candidate in candidates:
                 rows.append((field.field_name, candidate.name, candidate, candidate.score))
@@ -109,7 +114,9 @@ class HypothesesView(QtWidgets.QWidget):
 
         total_candidates = sum(1 for _, _, candidate, _ in rows if candidate is not None)
         self.header.setText(
-            f"{len(fields)} hypothesis field(s), {total_candidates} candidate reading(s)"
+            self.tr("{0} hypothesis field(s), {1} candidate reading(s)").format(
+                len(fields), total_candidates
+            )
         )
 
     def clear(self) -> None:
@@ -117,7 +124,17 @@ class HypothesesView(QtWidgets.QWidget):
         self.table.setRowCount(0)
         self._offsets = []
         self._fields = []
-        self.header.setText("no rule applied")
+        self.header.setText(self.tr("no rule applied"))
+
+    def retranslate_ui(self) -> None:
+        """Re-apply the column headers and rebuild the body in the active language."""
+        self.table.setHorizontalHeaderLabels(
+            [QtCore.QCoreApplication.translate(_TRANSLATE_CONTEXT, name) for name in _COLUMNS]
+        )
+        if self._fields:
+            self.show_fields(self._fields)
+        elif not self.table.rowCount():
+            self.header.setText(self.tr("no rule applied"))
 
     def apply_theme(self) -> None:
         """Rebuild the panel so the score colours follow the active theme."""
@@ -133,7 +150,7 @@ class HypothesesView(QtWidgets.QWidget):
         for column, text in enumerate(cells):
             item = QtWidgets.QTableWidgetItem(text)
             if column == 1 and reading in _SHAPE_READINGS:
-                item.setToolTip("value-shape reading")
+                item.setToolTip(self.tr("value-shape reading"))
             if colour is not None and column >= 2:
                 item.setForeground(QtGui.QColor(colour))
             self.table.setItem(row, column, item)
@@ -141,7 +158,7 @@ class HypothesesView(QtWidgets.QWidget):
         self._offsets.append(offset)
         if offset is not None:
             self.table.item(row, 0).setData(QtCore.Qt.ItemDataRole.UserRole, offset)
-            self.table.item(row, 0).setToolTip(f"reveal message at offset {offset}")
+            self.table.item(row, 0).setToolTip(self.tr("reveal message at offset {0}").format(offset))
 
     def _on_selected(self) -> None:
         rows = self.table.selectionModel().selectedRows()

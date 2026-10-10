@@ -175,3 +175,23 @@ entry, not editing this one.
   bytes is a stated rule, and the diagnostic carries the alternative.
 - **Consequences.** A message over an ambiguous range is classified `ambiguous`,
   not `matched`. The window shows both versions.
+
+## ADR-13: Interface language via Qt translators, not a home-grown map
+
+- **Decision.** Keep every UI string in English in the source, wrap it in `tr()`,
+  and switch language with a `QTranslator` over a compiled Qt catalogue.
+- **Context.** The window needs a Russian and an English interface, chosen at run
+  time and remembered across restarts.
+- **Alternatives.** A dictionary of `{source: translation}` looked up by hand at
+  every assignment; a third-party i18n library.
+- **Why.** `tr()` is idiomatic Qt, `pyside6-lupdate` harvests the strings so none
+  is missed by hand, and `QTranslator` is the mechanism Qt rebuilds widgets with.
+  A hand-rolled map would need a lookup call at every `setText` and would drift
+  from the code as strings change. The dictionary approach also cannot relabel a
+  widget once it is built.
+- **Consequences.** Widgets that build their own labels expose a
+  `retranslate_ui()`; the window calls it on every registered view when the
+  language changes, so a switch is live and needs no restart. English is the
+  source language and needs no catalogue. The compiled `.qm` is committed so the
+  installed binary works without a Qt toolchain. The language choice is a
+  `QSettings` value under the `madrigal/protocol-lab` scope.

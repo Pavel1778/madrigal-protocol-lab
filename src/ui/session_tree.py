@@ -26,7 +26,7 @@ class SessionTree(QtWidgets.QTreeWidget):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.setColumnCount(2)
-        self.setHeaderLabels(["session", "traffic"])
+        self.setHeaderLabels([self.tr("session"), self.tr("traffic")])
         self.setRootIsDecorated(True)
         self.setUniformRowHeights(True)
         self.setFont(theme.body_font(10))
@@ -61,8 +61,10 @@ class SessionTree(QtWidgets.QTreeWidget):
         parent.setData(0, QtCore.Qt.ItemDataRole.UserRole, ("session", session.session_id))
         parent.setToolTip(
             0,
-            f"{session.endpoints}\nroles: {session.role_a} / {session.role_b}\n"
-            f"packets: {session.packet_count}",
+            f"{session.endpoints}\n"
+            + self.tr("roles: {0} / {1}").format(session.role_a, session.role_b)
+            + "\n"
+            + self.tr("packets: {0}").format(session.packet_count),
         )
         if types:
             parent.setData(0, _DIAG_ROLE, True)
@@ -77,13 +79,19 @@ class SessionTree(QtWidgets.QTreeWidget):
             child.setData(0, QtCore.Qt.ItemDataRole.UserRole, ("direction", session.session_id, direction))
             child.setToolTip(
                 0,
-                f"{session.session_id} {direction}: {size} bytes",
+                self.tr("{0} {1}: {2} bytes").format(session.session_id, direction, size),
             )
             has_diag = any(d.direction == direction for d in diagnostics)
             child.setData(0, _DIAG_ROLE, has_diag)
             if has_diag:
                 child.setForeground(0, QtGui.QColor(theme.current().status_incomplete_text))
             parent.addChild(child)
+
+    def retranslate_ui(self) -> None:
+        """Re-apply the header labels and rebuild the rows in the active language."""
+        self.setHeaderLabels([self.tr("session"), self.tr("traffic")])
+        if self._model is not None:
+            self.load(self._model)
 
     def apply_theme(self) -> None:
         """Recolour diagnostic items in the active theme."""

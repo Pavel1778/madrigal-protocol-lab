@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6 import QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from . import theme
 from .model import RuleApplication
@@ -42,6 +42,14 @@ _LEGEND_NAMES = (
     ("inserted", INSERTED),
     ("deleted", DELETED),
 )
+
+
+def legend_labels() -> dict[object, str]:
+    """Translated captions for the compare legend, keyed by diff ``kind``."""
+    return {
+        kind: QtCore.QCoreApplication.translate("CompareView", name)
+        for name, kind in _LEGEND_NAMES
+    }
 
 
 @dataclass
@@ -136,8 +144,9 @@ class CompareView(QtWidgets.QWidget):
 
         legend = QtWidgets.QHBoxLayout()
         self._legend_chips: dict[object, QtWidgets.QLabel] = {}
-        for name, kind in _LEGEND_NAMES:
-            chip = QtWidgets.QLabel(name)
+        labels = legend_labels()
+        for kind in (EQUAL, CHANGED, INSERTED, DELETED):
+            chip = QtWidgets.QLabel(labels[kind])
             chip.setFont(theme.mono_font(8))
             legend.addWidget(chip)
             self._legend_chips[kind] = chip
@@ -145,7 +154,7 @@ class CompareView(QtWidgets.QWidget):
         layout.addLayout(legend)
 
         self.table = QtWidgets.QTableWidget(0, 3)
-        self.table.setHorizontalHeaderLabels(["offset", "A", "B"])
+        self.table.setHorizontalHeaderLabels([self.tr("offset"), "A", "B"])
         self.table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setFont(theme.mono_font(9))
         self.table.verticalHeader().setVisible(False)
@@ -196,6 +205,13 @@ class CompareView(QtWidgets.QWidget):
                 item = QtWidgets.QTableWidgetItem(text)
                 item.setForeground(colour)
                 self.table.setItem(index, column, item)
+
+    def retranslate_ui(self) -> None:
+        """Re-apply the legend captions and column headers to the active language."""
+        labels = legend_labels()
+        for kind, chip in self._legend_chips.items():
+            chip.setText(labels[kind])
+        self.table.setHorizontalHeaderLabels([self.tr("offset"), "A", "B"])
 
     def apply_theme(self) -> None:
         """Recolour the diff table and its legend in the active theme."""
