@@ -30,6 +30,7 @@ SOURCES=(
     src/ui/compare_view.py
     src/ui/hypotheses_view.py
     src/ui/validation_view.py
+    src/ui/settings.py
 )
 TS="src/ui/locale/madrigal_ru.ts"
 QM="src/ui/locale/madrigal_ru.qm"

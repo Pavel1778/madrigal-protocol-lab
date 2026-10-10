@@ -29,11 +29,26 @@ class SessionTree(QtWidgets.QTreeWidget):
         self.setHeaderLabels([self.tr("session"), self.tr("traffic")])
         self.setRootIsDecorated(True)
         self.setUniformRowHeights(True)
-        self.setFont(theme.body_font(10))
+        self._font_size = 10
+        self.setFont(theme.body_font(self._font_size))
         self.header().setStretchLastSection(True)
         self.header().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
         self._model: CaptureModel | None = None
         self.itemSelectionChanged.connect(self._on_selection)
+
+    def set_font_size(self, size: int) -> None:
+        """Set the tree font size and re-apply it to every row.
+
+        Session rows use the heading font and direction rows the body font, so
+        both are refreshed, not just the widget default.
+        """
+        self._font_size = max(6, int(size))
+        self.setFont(theme.body_font(self._font_size))
+        for index in range(self.topLevelItemCount()):
+            parent = self.topLevelItem(index)
+            parent.setFont(0, theme.heading_font(self._font_size))
+            for child_index in range(parent.childCount()):
+                parent.child(child_index).setFont(0, theme.body_font(self._font_size))
 
     def load(self, model: CaptureModel) -> None:
         """Rebuild the tree from *model* and select the first direction."""
@@ -57,7 +72,7 @@ class SessionTree(QtWidgets.QTreeWidget):
         if types:
             label = f"{label}   [{', '.join(types)}]"
         parent = QtWidgets.QTreeWidgetItem([label, summary])
-        parent.setFont(0, theme.heading_font(10))
+        parent.setFont(0, theme.heading_font(self._font_size))
         parent.setData(0, QtCore.Qt.ItemDataRole.UserRole, ("session", session.session_id))
         parent.setToolTip(
             0,
@@ -75,7 +90,7 @@ class SessionTree(QtWidgets.QTreeWidget):
 
         for direction, size in session.direction_bytes.items():
             child = QtWidgets.QTreeWidgetItem([direction, f"{size} B"])
-            child.setFont(0, theme.body_font(10))
+            child.setFont(0, theme.body_font(self._font_size))
             child.setData(0, QtCore.Qt.ItemDataRole.UserRole, ("direction", session.session_id, direction))
             child.setToolTip(
                 0,

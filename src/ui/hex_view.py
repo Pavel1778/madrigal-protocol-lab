@@ -69,6 +69,10 @@ def _kind_colours() -> dict[str, tuple[str, str]]:
 # ambiguous range reads as different from a byte a rule simply matched. The
 # pattern is a small pixmap used as a QBrush texture.
 _HATCHED = {GAP, AMBIGUITY, AMBIGUOUS, INCOMPLETE, MISMATCHED}
+
+# Diagnostics the reader can hide: the ranges come from reassembly, not from a
+# rule, and suppressing them lets the raw bytes be read without the shading.
+_DIAGNOSTIC_KINDS = frozenset({GAP, AMBIGUITY, AMBIGUOUS})
 _HATCH_COLOUR = {
     GAP: "gap",
     AMBIGUITY: "status_ambiguous",
@@ -161,7 +165,12 @@ class HexView(QtWidgets.QPlainTextEdit):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.setReadOnly(True)
-        self.setFont(theme.mono_font())
+        self._font_size = 10
+        self._show_offset = True
+        self._show_diagnostics = True
+        self._prefix = _PREFIX
+        self._ascii_start = _ASCII_START
+        self.setFont(theme.mono_font(self._font_size))
         self.setLineWrapMode(QtWidgets.QPlainTextEdit.LineWrapMode.NoWrap)
         self.setWordWrapMode(QtGui.QTextOption.WrapMode.NoWrap)
         self.setTextInteractionFlags(
@@ -172,10 +181,22 @@ class HexView(QtWidgets.QPlainTextEdit):
         self._data = b""
         self._annotations: list[ByteAnnotation] = []
         self._header = QtWidgets.QLabel(self)
-        self._header.setFont(theme.body_font(9))
+        self._header.setFont(self._header_font())
         self._header.setFixedHeight(20)
         self._header.setText(self._column_header())
         self._style_header()
+
+    def _recompute_geometry(self) -> None:
+        """Recompute the column geometry from the offset-visibility flag.
+
+        The offset column is optional; when it is hidden the hex column starts
+        at the first character, so index and hit-test arithmetic shift with it.
+        """
+        self._prefix = _PREFIX if self._show_offset else 0
+        self._ascii_start = self._prefix + _HEX_WIDTH
+
+    def _header_font(self) -> QtGui.QFont:
+        return theme.body_font(max(7, self._font_size - 3))
 
     def _style_header(self) -> None:
         token = theme.current()
@@ -184,11 +205,39 @@ class HexView(QtWidgets.QPlainTextEdit):
         )
 
     def _column_header(self) -> str:
+        prefix = "offset    " if self._show_offset else ""
         return (
-            "offset    "
+            prefix
             + "".join(f"{i:02x} " for i in range(_BYTES_PER_LINE))
             + self.tr("ascii")
         )
+
+    def set_font_size(self, size: int) -> None:
+        """Set the byte font size, re-reading the header font to match."""
+        self._font_size = max(6, int(size))
+        self.setFont(theme.mono_font(self._font_size))
+        self._header.setFont(self._header_font())
+        if self._data:
+            self._apply_annotations()
+
+    def set_show_offset(self, show: bool) -> None:
+        """Show or hide the offset column and re-render the bytes."""
+        self._show_offset = bool(show)
+        self._recompute_geometry()
+        self._header.setText(self._column_header())
+        if self._data:
+            self.setPlainText(self._render_text())
+            self._apply_annotations()
+
+    def set_show_diagnostics(self, show: bool) -> None:
+        """Include or suppress gap and ambiguity highlighting.
+
+        When off, a diagnostic range is drawn as a plain byte, so the stream can
+        be read without the missing- or ambiguous-range shading.
+        """
+        self._show_diagnostics = bool(show)
+        if self._data:
+            self._apply_annotations()
 
     # -- data --------------------------------------------------------------
 
@@ -244,7 +293,8 @@ class HexView(QtWidgets.QPlainTextEdit):
             hexpart = hexpart.ljust(_HEX_WIDTH)
             ascii_part = "".join(_printable(b) for b in chunk)
             ascii_part = ascii_part.ljust(_BYTES_PER_LINE)
-            lines.append(f"{start:08x}  {hexpart}{ascii_part}")
+            prefix = f"{start:08x}  " if self._show_offset else ""
+            lines.append(f"{prefix}{hexpart}{ascii_part}")
         return "\n".join(lines)
 
     # -- annotation --------------------------------------------------------
@@ -255,6 +305,7 @@ class HexView(QtWidgets.QPlainTextEdit):
             self.setExtraSelections([])
             return
         kind_colours = _kind_colours()
+        hidden = _DIAGNOSTIC_KINDS if not self._show_diagnostics else frozenset()
         # Group contiguous bytes that share a colour so selection count stays
         # proportional to the number of runs, not the number of bytes.
         run_kind: str | None = None
@@ -271,12 +322,13 @@ class HexView(QtWidgets.QPlainTextEdit):
                 selections.append(self._selection(start, stop, brush, foreground))
 
         for index, annotation in enumerate(self._annotations):
-            colour = kind_colours.get(annotation.kind)
+            kind = annotation.kind
+            colour = None if kind in hidden else kind_colours.get(kind)
             if colour != run_hex:
                 flush(index)
                 run_start = index
                 run_hex = colour
-                run_kind = annotation.kind
+                run_kind = kind
         flush(len(self._annotations))
         self.setExtraSelections(selections)
 
@@ -326,12 +378,12 @@ class HexView(QtWidgets.QPlainTextEdit):
         block = cursor.block()
         line_index = block.blockNumber()
         column = cursor.positionInBlock()
-        if column < _PREFIX:
+        if column < self._prefix:
             return None
-        if column < _ASCII_START:
-            byte_in_line = (column - _PREFIX) // 3
+        if column < self._ascii_start:
+            byte_in_line = (column - self._prefix) // 3
         else:
-            byte_in_line = column - _ASCII_START
+            byte_in_line = column - self._ascii_start
         if not 0 <= byte_in_line < _BYTES_PER_LINE:
             return None
         offset = line_index * _BYTES_PER_LINE + byte_in_line
@@ -361,7 +413,7 @@ class HexView(QtWidgets.QPlainTextEdit):
         if not (0 <= offset < max(1, len(self._data))):
             return
         cursor = self.textCursor()
-        cursor.setPosition(min(_byte_char_index(offset), self.document().characterCount() - 1))
+        cursor.setPosition(min(self._char_index(offset), self.document().characterCount() - 1))
         self.setTextCursor(cursor)
         self.centerCursor()
 
@@ -379,15 +431,26 @@ class HexView(QtWidgets.QPlainTextEdit):
         stop = max(start + 1, min(offset + length, len(self._data)))
         last = self.document().characterCount() - 1
         cursor = self.textCursor()
-        cursor.setPosition(min(_byte_char_index(start), last))
+        cursor.setPosition(min(self._char_index(start), last))
         cursor.setPosition(
-            min(_byte_char_index(stop - 1) + 2, last), QtGui.QTextCursor.MoveMode.KeepAnchor
+            min(self._char_index(stop - 1) + 2, last), QtGui.QTextCursor.MoveMode.KeepAnchor
         )
         self.setTextCursor(cursor)
         self.centerCursor()
 
+    def _char_index(self, offset: int) -> int:
+        """Document character index of the first hex digit of ``offset``.
+
+        Honours the optional offset column: the character offset of a byte moves
+        with the prefix, so the shown-offset index is shifted back when the
+        offset column is hidden.
+        """
+        base = _byte_char_index(offset)
+        return base if self._show_offset else base - _PREFIX
+
 
 def _byte_char_index(offset: int) -> int:
+    """Document character index of ``offset`` with the offset column shown."""
     line = offset // _BYTES_PER_LINE
     column = offset % _BYTES_PER_LINE
     return line * (_LINE_LEN + 1) + _PREFIX + column * 3
