@@ -50,6 +50,10 @@ capture that follows `docs/CONTRACT.md`. The third confirms the whole suite.
 Add `--verbose` to the normalize command to log read, session and export
 progress to stderr. Both CLIs stay quiet otherwise.
 
+The window opens its preferences with **View → Settings...** or **Ctrl+,**.
+Theme, interface language, hex and tree font sizes, default directories and the
+logging level are all set there; see [docs/SETTINGS.md](docs/SETTINGS.md).
+
 ## What is implemented
 
 | Area | State |
@@ -112,6 +116,8 @@ pytest tests/ -q
   line, as the fallback for the demonstration.
 - [docs/GUI_VERIFICATION.md](docs/GUI_VERIFICATION.md) — what the window was
   driven to show, and the defects found while checking it.
+- [docs/SETTINGS.md](docs/SETTINGS.md) — the preferences dialog, its four
+  sections, and the stored keys.
 - [REPORT.md](REPORT.md) — the investigation report.
 - [presentation/slides.pdf](presentation/slides.pdf) — the deck, eighteen
   slides, with the real window screenshots.
