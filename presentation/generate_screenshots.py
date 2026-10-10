@@ -143,6 +143,29 @@ def main() -> int:
     _park(app, window)
     written.append(_grab(window, "08_diff.png"))
 
+    # 09 provenance bar for a single byte: packet index, sequence, time.
+    window.open_capture(CAPTURE_01)
+    window.load_rule(RULE_V1)
+    window.session_tree.select_direction("s1", "A_to_B")
+    window.apply_rule()
+    window.reveal_offset(2)
+    _park(app, window)
+    written.append(_grab(window, "09_provenance.png"))
+
+    # 10 hypotheses tab: alternative readings with their metrics.
+    window.right_tabs.setCurrentWidget(window.hypotheses_view)
+    _park(app, window)
+    written.append(_grab(window, "10_hypotheses.png"))
+
+    # 11 version diff tab, text view of v1 -> v2 over the whole capture.
+    window.load_rule(RULE_V1)
+    window.apply_to_capture()
+    window.load_rule(RULE_V2)
+    window.apply_to_capture()
+    window.show_version_diff()
+    _park(app, window)
+    written.append(_grab(window, "11_version_diff.png"))
+
     window.close()
     for path in written:
         print(path.relative_to(REPO_ROOT))
