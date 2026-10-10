@@ -35,6 +35,12 @@ from .validation_view import ValidationView
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_REPORT = REPO_ROOT / "REPORT.md"
+APP_ICON = REPO_ROOT / "assets" / "icons" / "app" / "madrigal-protocol-lab.svg"
+
+
+def app_icon() -> QtGui.QIcon:
+    """Return the application icon, or an empty icon when the asset is absent."""
+    return QtGui.QIcon(str(APP_ICON)) if APP_ICON.is_file() else QtGui.QIcon()
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -44,6 +50,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__(parent)
         self._base_title = self.tr("Madrigal protocol laboratory")
         self.setWindowTitle(self._base_title)
+        self.setWindowIcon(app_icon())
         self.resize(1400, 860)
 
         self._capture: CaptureModel | None = None
@@ -860,6 +867,7 @@ def main(argv: list[str] | None = None) -> int:
 
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([sys.argv[0], *qt_argv])
     app.setApplicationName("Madrigal protocol laboratory")
+    app.setWindowIcon(app_icon())
     theme.load_fonts(app)
     window = open_default_window(app, capture=args.capture, rule=args.rule)
     window.show()
