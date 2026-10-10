@@ -19,7 +19,7 @@ import pytest  # noqa: E402
 # PySide6 cannot be imported the whole module is skipped rather than left as a
 # collection error, so a missing runtime never masks the rest of the suite.
 try:
-    from PySide6 import QtGui, QtTest, QtWidgets  # noqa: E402
+    from PySide6 import QtCore, QtGui, QtTest, QtWidgets  # noqa: E402
 
     from src.ui import theme  # noqa: E402
     from src.ui.compare_view import diff_bytes  # noqa: E402
@@ -528,6 +528,64 @@ def test_highlight_range_selects_the_whole_message(app):
     assert selected.count(" ") == 6
     view.highlight_range(1000, 4)  # clamped, must not raise
     assert view.textCursor().hasSelection()
+
+
+def _summary_width(item) -> int:
+    """Width of an item's traffic cell, in the font it is painted with."""
+    return QtGui.QFontMetrics(item.font(1)).horizontalAdvance(item.text(1))
+
+
+@corpus_required
+def test_traffic_column_fits_every_summary(app):
+    # Every session shows its joined direction summary ("A_to_B:300 B
+    # B_to_A:420 B"). The column must be wide enough for the widest of them, so
+    # no byte count is elided at the default window size.
+    window = open_window(app)
+    window.show()
+    QtCore.QCoreApplication.processEvents()
+    tree = window.session_tree
+    width = tree.columnWidth(1)
+    for index in range(tree.topLevelItemCount()):
+        item = tree.topLevelItem(index)
+        assert _summary_width(item) <= width
+    window.close()
+
+
+@corpus_required
+def test_traffic_column_keeps_its_floor_on_a_narrow_panel(app):
+    # A panel narrower than the values must not clip them: the column stops
+    # shrinking at the content width and the tree scrolls instead.
+    window = open_window(app)
+    window.show()
+    QtCore.QCoreApplication.processEvents()
+    tree = window.session_tree
+    widest = max(
+        _summary_width(tree.topLevelItem(index))
+        for index in range(tree.topLevelItemCount())
+    )
+    tree.resize(120, 300)
+    QtCore.QCoreApplication.processEvents()
+    assert tree.columnWidth(1) >= widest
+    window.close()
+
+
+@corpus_required
+def test_provenance_label_reserves_room_and_tooltips(app):
+    # The status line reserves width for its text, so a provenance value is not
+    # clipped, and it always carries the full text as a tooltip.
+    window = open_window(app)
+    window._show_provenance(0)
+    label = window._provenance_label
+    text = label.text()
+    assert text
+    assert label.minimumWidth() >= QtGui.QFontMetrics(label.font()).horizontalAdvance(text)
+    assert label.toolTip() == text
+    # The reservation is bounded, so a very long line cannot push the status
+    # bar apart; the tooltip still carries the whole text.
+    long_text = "x" * 400
+    window._set_provenance_text(long_text)
+    assert label.minimumWidth() < QtGui.QFontMetrics(label.font()).horizontalAdvance(long_text)
+    assert label.toolTip() == long_text
 
 
 def test_zoom_in_enlarges_the_bytes_and_the_tree(app):
