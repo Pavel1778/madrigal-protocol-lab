@@ -1,0 +1,39 @@
+#!/bin/sh
+# Fast pre-commit gate: lint staged Python files, then run the fast test subset.
+# Enable once per clone:  git config core.hooksPath .githooks
+# Bypass for a single commit with:  git commit --no-verify
+
+set -e
+
+runner=""
+for candidate in .venv/bin/python python3 python; do
+    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -m ruff --version >/dev/null 2>&1; then
+        runner="$candidate"
+        break
+    fi
+done
+
+if [ -z "$runner" ]; then
+    echo "pre-commit: no Python with ruff found; skipping."
+    exit 0
+fi
+
+staged=$("$runner" - <<'PY'
+import subprocess
+out = subprocess.run(
+    ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
+    capture_output=True, text=True, check=True).stdout
+files = [f for f in out.splitlines() if f.endswith(".py")]
+print("\n".join(files), end="")
+PY
+)
+
+if [ -n "$staged" ]; then
+    echo "pre-commit: ruff"
+    # shellcheck disable=SC2086
+    "$runner" -m ruff check --select "E4,E7,E9,F" --ignore E501 $staged
+fi
+
+echo "pre-commit: fast tests"
+"$runner" -m pytest tests/protocol tests/hypothesis -q -p no:cacheprovider
+echo "pre-commit: ok"
