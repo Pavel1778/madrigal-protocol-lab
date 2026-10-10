@@ -17,7 +17,13 @@ import pytest  # noqa: E402
 try:
     from PySide6 import QtSvg, QtWidgets  # noqa: E402
 
-    from src.ui.main_window import APP_ICON, MainWindow, app_icon  # noqa: E402
+    from src.ui.main_window import (  # noqa: E402
+        APP_DESKTOP_FILE,
+        APP_ICON,
+        MainWindow,
+        app_icon,
+        associate_with_desktop_entry,
+    )
 except ImportError:  # pragma: no cover - headless runner without Qt libraries
     pytest.skip("PySide6 is not importable", allow_module_level=True)
 
@@ -49,6 +55,33 @@ def test_window_icon_is_set(qapp: QtWidgets.QApplication) -> None:
 def test_application_icon_is_set(qapp: QtWidgets.QApplication) -> None:
     assert not app_icon().isNull()
     assert not qapp.windowIcon().isNull()
+
+
+def test_desktop_file_name_matches_the_installed_entry() -> None:
+    # The dock matches the .desktop file by id: the basename without the suffix,
+    # which install_desktop.sh and build_deb.sh place under /usr/share/applications.
+    assert APP_DESKTOP_FILE == "madrigal-protocol-lab"
+    source = APP_ICON.parents[3] / "packaging" / f"{APP_DESKTOP_FILE}.desktop"
+    assert source.is_file(), f"missing desktop entry: {source}"
+    text = source.read_text(encoding="utf-8")
+    assert "StartupNotify=true" in text
+
+
+def test_window_registers_the_desktop_file_name(qapp: QtWidgets.QApplication) -> None:
+    associate_with_desktop_entry(qapp)
+    assert qapp.desktopFileName() == APP_DESKTOP_FILE
+
+
+def test_open_default_window_registers_the_desktop_file_name(
+    qapp: QtWidgets.QApplication,
+) -> None:
+    from src.ui.main_window import open_default_window
+
+    window = open_default_window()
+    try:
+        assert qapp.desktopFileName() == APP_DESKTOP_FILE
+    finally:
+        window.close()
 
 
 @pytest.fixture(scope="module")
