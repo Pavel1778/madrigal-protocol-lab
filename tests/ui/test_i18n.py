@@ -149,3 +149,47 @@ def test_switching_language_keeps_open_capture(english_window):
     assert window._capture is not None
     assert window._session_id == session_before
     assert window._capture_name in window.windowTitle()
+
+
+_CATALOGUE_SOURCE = REPO_ROOT / "src" / "ui" / "locale" / "madrigal_ru.ts"
+
+
+def test_catalogue_has_no_unfinished_translations():
+    """Every message in the Russian source catalogue is translated.
+
+    A message left ``unfinished`` compiles anyway, so a Russian user would see
+    one English caption among Russian ones. The check is on the source
+    catalogue because that is what a translator edits.
+    """
+    import xml.etree.ElementTree as ElementTree
+
+    tree = ElementTree.parse(_CATALOGUE_SOURCE)
+    unfinished = [
+        message.findtext("source")
+        for message in tree.getroot().iter("message")
+        if message.find("translation") is not None
+        and message.find("translation").get("type") in ("unfinished", "vanished", "obsolete")
+    ]
+    assert unfinished == [], f"untranslated messages: {unfinished}"
+
+
+def test_catalogue_covers_the_navigable_captions():
+    """The catalogue carries the menu, tab and group-box captions.
+
+    A hand-picked list of the captions a user navigates by, so a caption added
+    without a translation fails here rather than shipping as English into the
+    Russian build.
+    """
+    import xml.etree.ElementTree as ElementTree
+
+    tree = ElementTree.parse(_CATALOGUE_SOURCE)
+    known = {message.findtext("source") for message in tree.getroot().iter("message")}
+    expected = {
+        "&File", "&Rule", "&Report", "&View", "&Help", "&Language",
+        "Interpretation", "Compare", "Hypotheses", "Report", "Version diff",
+        "Bytes", "Sessions", "direction", "session", "traffic",
+        "&Settings...", "&Quick help", "&About", "&Dark theme", "&Light theme",
+        "matched", "mismatched", "gap", "ambiguity", "uncovered", "incomplete",
+    }
+    missing = sorted(expected - known)
+    assert missing == [], f"missing from the catalogue: {missing}"

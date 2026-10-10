@@ -34,3 +34,6 @@ presentation/.vite-cache/
 
 # Reserve video: large binary, rebuilt from presentation/VIDEO.md
 presentation/video.mp4
+
+# Snapshot test artefacts (CI uploads them; never committed)
+.snapshot-actual/

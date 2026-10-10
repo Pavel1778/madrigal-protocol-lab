@@ -225,7 +225,7 @@ then load a rule (Ctrl+R) or press Load example in the Rule tab.</source>
     <message>
         <location filename="../main_window.py" line="252"/>
         <source>&amp;Settings...</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Настройки...</translation>
     </message>
     <message>
         <location filename="../main_window.py" line="253"/>
@@ -299,7 +299,7 @@ then load a rule (Ctrl+R) or press Load example in the Rule tab.</source>
     <message>
         <location filename="../main_window.py" line="480"/>
         <source>settings applied</source>
-        <translation type="unfinished"></translation>
+        <translation>настройки применены</translation>
     </message>
     <message>
         <location filename="../main_window.py" line="593"/>
@@ -528,7 +528,7 @@ The bytes are the source of truth; a rule is an interpretation checked against t
     <message>
         <location filename="../settings.py" line="154"/>
         <source>System</source>
-        <translation type="unfinished">Системный</translation>
+        <translation>Системный</translation>
     </message>
     <message>
         <location filename="../settings.py" line="157"/>
