@@ -85,3 +85,22 @@ the defense.
 - `87e722f` docs: add submission metadata and portability check
 - `29451c7` feat(docker): add container image and update portability notes
 - `c5b9cd2` docs: add metrics, roadmap and architecture decisions
+
+## Iteration 9 - installers, presentation, test isolation
+
+The packaging branch, the defense presentation, and locale-independent UI
+tests. This is the work after the `v1.0.0` tag.
+
+- `b192531` fix(packaging): ship Qt runtime libs in the image and the whole package tree in the wheel
+- `116e64b` docs: install guide for every format, delivery table, Docker in BINARY
+- `bc7d315` test(project): cover packaging scripts and record video measurement
+- `540e5fd` feat(presentation): team, killer features, web and roadmap slides, reserve video
+- `84362b8` test(ui): isolate window tests from the developer QSettings and locale
+
+## Iteration 10 - interface test coverage and verification
+
+The interface test suites, the CI matrix that runs them, and the consolidated
+verification of the deck, the screencast and the demo driver.
+
+- `4c3b1a3` chore(repo): add git attributes, hook, message template and hygiene doc
+- `1c8621f` test(ui): add locale, snapshot and state-isolation suites
