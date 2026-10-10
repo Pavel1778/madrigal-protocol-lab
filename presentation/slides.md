@@ -9,7 +9,7 @@ highlighter: shiki
 lineNumbers: false
 drawings:
   persist: false
-transition: fade
+transition: slide-left
 mdc: true
 fonts:
   sans: Montserrat
@@ -83,9 +83,9 @@ Python 3.12 · PySide6 · dpkt · pytest · Docker
 <img src="/assets/architecture.svg" alt="Архитектура" class="arch">
 
 <div class="cols-3 mt-4">
-<div class="card"><span class="tag">capture</span><br>pcap/pcapng → сессии → reassembly → provenance</div>
-<div class="card"><span class="tag">protocol + hypothesis</span><br>фрейминг, поля, применение, контрпримеры, версии</div>
-<div class="card"><span class="tag">ui</span><br>настольное окно PySide6</div>
+<v-click><div class="card"><span class="tag">capture</span><br>pcap/pcapng → сессии → reassembly → provenance</div></v-click>
+<v-click><div class="card"><span class="tag">protocol + hypothesis</span><br>фрейминг, поля, применение, контрпримеры, версии</div></v-click>
+<v-click><div class="card"><span class="tag">ui</span><br>настольное окно PySide6</div></v-click>
 </div>
 
 <div class="caption">Контракты зафиксированы JSON Schema (draft 2020-12) и не меняются молча.</div>
@@ -241,6 +241,7 @@ Python 3.12 · PySide6 · dpkt · pytest · Docker
 </div>
 <div>
 
+<v-click>
 <img src="/assets/precision_v1_v2.svg" alt="Precision" class="w-full">
 
 | показатель | v1 | v2 |
@@ -250,6 +251,7 @@ Python 3.12 · PySide6 · dpkt · pytest · Docker
 | precision | 0.43 | 1.00 |
 
 <div class="caption">Источник: `docs/METRICS.md`.</div>
+</v-click>
 
 </div>
 </div>
@@ -297,6 +299,8 @@ Python 3.12 · PySide6 · dpkt · pytest · Docker
 </div>
 <div>
 
+<v-click>
+
 **Как уточнили правило:**
 
 ```diff
@@ -311,6 +315,7 @@ Python 3.12 · PySide6 · dpkt · pytest · Docker
 Один байт, привязанный к пакету-источнику, превратил 80 контрпримеров в 0 (v1 → v2).
 
 </div>
+</v-click>
 
 </div>
 </div>
