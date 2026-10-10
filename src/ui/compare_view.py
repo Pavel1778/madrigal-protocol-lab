@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from . import theme
+from .constants import FONT_SIZE_BODY, FONT_SIZE_CAPTION
 from .model import RuleApplication
 
 EQUAL = "equal"
@@ -134,8 +135,8 @@ class CompareView(QtWidgets.QWidget):
         selectors = QtWidgets.QHBoxLayout()
         self.left_combo = QtWidgets.QComboBox()
         self.right_combo = QtWidgets.QComboBox()
-        self.left_combo.setFont(theme.body_font(9))
-        self.right_combo.setFont(theme.body_font(9))
+        self.left_combo.setFont(theme.body_font(FONT_SIZE_BODY))
+        self.right_combo.setFont(theme.body_font(FONT_SIZE_BODY))
         selectors.addWidget(QtWidgets.QLabel("A"))
         selectors.addWidget(self.left_combo, 1)
         selectors.addWidget(QtWidgets.QLabel("B"))
@@ -147,7 +148,7 @@ class CompareView(QtWidgets.QWidget):
         labels = legend_labels()
         for kind in (EQUAL, CHANGED, INSERTED, DELETED):
             chip = QtWidgets.QLabel(labels[kind])
-            chip.setFont(theme.mono_font(8))
+            chip.setFont(theme.mono_font(FONT_SIZE_CAPTION))
             legend.addWidget(chip)
             self._legend_chips[kind] = chip
         legend.addStretch(1)
@@ -156,7 +157,7 @@ class CompareView(QtWidgets.QWidget):
         self.table = QtWidgets.QTableWidget(0, 3)
         self.table.setHorizontalHeaderLabels([self.tr("offset"), "A", "B"])
         self.table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.table.setFont(theme.mono_font(9))
+        self.table.setFont(theme.mono_font(FONT_SIZE_BODY))
         self.table.verticalHeader().setVisible(False)
         self.table.horizontalHeader().setSectionResizeMode(
             0, QtWidgets.QHeaderView.ResizeMode.ResizeToContents
