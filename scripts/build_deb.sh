@@ -39,27 +39,29 @@ trap 'rm -rf "$STAGE"' EXIT
 mkdir -p "$STAGE/DEBIAN" \
          "$STAGE/usr/bin" \
          "$STAGE/usr/share/applications" \
-         "$STAGE/usr/share/icons/hicolor/scalable/apps" \
+         "$STAGE/usr/share/icons/hicolor" \
          "$STAGE/usr/share/madrigal-protocol-lab"
 
 install -m 0755 "$BINARY" "$STAGE/usr/bin/madrigal-lab"
-install -m 0644 "$ROOT/assets/icons/madrigal-lab.svg" \
-    "$STAGE/usr/share/icons/hicolor/scalable/apps/madrigal-lab.svg"
+
+# Install every rendered size under the hicolor theme so the launcher and the
+# window pick the sharpest bitmap; keep the scalable SVG as the master.
+while IFS= read -r -d '' png; do
+    rel="${png#"$ROOT/packaging/icons/hicolor"/}"
+    target="$STAGE/usr/share/icons/hicolor/$(dirname "$rel")"
+    mkdir -p "$target"
+    install -m 0644 "$png" "$target/$(basename "$png")"
+done < <(find "$ROOT/packaging/icons/hicolor" -type f -name '*.png' -print0)
+mkdir -p "$STAGE/usr/share/icons/hicolor/scalable/apps"
+install -m 0644 "$ROOT/assets/icons/app/madrigal-protocol-lab.svg" \
+    "$STAGE/usr/share/icons/hicolor/scalable/apps/madrigal-protocol-lab.svg"
 
 install -m 0644 "$ROOT/docs/demo.md" "$STAGE/usr/share/madrigal-protocol-lab/demo.md"
 cp -r "$ROOT/assets/fonts" "$STAGE/usr/share/madrigal-protocol-lab/fonts"
 cp -r "$ROOT/tests/corpus" "$STAGE/usr/share/madrigal-protocol-lab/corpus"
 
-cat > "$STAGE/usr/share/applications/madrigal-lab.desktop" <<DESKTOP
-[Desktop Entry]
-Type=Application
-Name=Madrigal Protocol Lab
-Comment=Investigate an undocumented binary protocol over TCP
-Exec=madrigal-lab
-Icon=madrigal-lab
-Terminal=false
-Categories=Development;Utility;
-DESKTOP
+install -m 0644 "$ROOT/packaging/madrigal-protocol-lab.desktop" \
+    "$STAGE/usr/share/applications/madrigal-protocol-lab.desktop"
 
 cat > "$STAGE/DEBIAN/control" <<CONTROL
 Package: ${NAME}
