@@ -247,18 +247,15 @@ v2 на том же корпусе: 140 matched, 0 mismatched, точность 
 
 ![Сравнение версий](presentation/screenshots/11_version_diff.png)
 
-## РАЗРАБОТЧИКИ
+## Участники
 
-![Команда](assets/team-avatar.png)
+![Team](assets/team-avatar.png)
 
-- **Сабадаш Павел** — архитектура; чтение PCAP/PCAPNG и провенанс
-  (`src/capture`); переносной проект и отчёты (`src/project`, `src/report`);
-  движок правил и гипотез (`src/protocol`, `src/hypothesis`); графический
-  интерфейс и веб-интерфейс (`src/ui`, `src/web`); координация —
-  <sabadaspaha@gmail.com>
+- Сабадаш Павел — архитектура, capture, project, report, координация, backend, GUI — [@Pasha1778](https://t.me/Pasha1778)
+- Предков Никита — backend, правила, тесты — [@petruan](https://t.me/petruan)
 
-Проект выполнялся одним участником. Правила участия и порядок внесения
-изменений описаны в [CONTRIBUTING.md](CONTRIBUTING.md).
+Правила участия и порядок внесения изменений описаны в
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Демо
 
