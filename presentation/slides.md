@@ -52,8 +52,8 @@ Python 3.12 · PySide6 · dpkt · pytest · Docker
 <div class="subtitle">HTTP 418 · UMIRHack 2026 · кейс #02 · Мадригал</div>
 
 - **Сабадаш Павел** — архитектура, capture, project, report, координация,
-  backend, GUI
-- **Предков Никита** — backend, правила, тесты
+  backend, GUI · [@Pasha1778](https://t.me/Pasha1778)
+- **Предков Никита** — backend, правила, тесты · [@petruan](https://t.me/petruan)
 
 <div class="meta">github.com/Pavel1778/madrigal-protocol-lab</div>
 
