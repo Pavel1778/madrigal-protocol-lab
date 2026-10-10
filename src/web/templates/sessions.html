@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Sessions{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1>Sessions</h1>
+  <p class="muted">
+    {{ sessions|length }} session(s) in
+    <code>{{ source_file or capture_id }}</code>.
+    Pick a session and a direction to inspect the bytes.
+  </p>
+  <div id="session-list">
+    {% include "_sessions.html" %}
+  </div>
+</section>
+
+<section class="panel" id="workspace">
+  <h2>Workspace</h2>
+  <p class="muted">Select a session to open its hex view here.</p>
+</section>
+{% endblock %}
