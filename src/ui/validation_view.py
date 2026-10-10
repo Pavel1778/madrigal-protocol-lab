@@ -12,6 +12,8 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..protocol.rule import ALL_FIELD_TYPES, load_rule_text, parse_rule
 from . import theme
+from .constants import FONT_SIZE_BODY
+from .layout import FlowLayout
 from .model import (
     MISMATCHED,
     RuleApplication,
@@ -62,10 +64,14 @@ class ValidationView(QtWidgets.QWidget):
 
         self._context = QtWidgets.QLabel(self.tr("no capture open"))
         self._context.setProperty("role", "secondary")
-        self._context.setFont(theme.body_font(9))
+        self._context.setFont(theme.body_font(FONT_SIZE_BODY))
         layout.addWidget(self._context)
 
         self._tabs = QtWidgets.QTabWidget()
+        # The rule dock is the narrowest panel; elide its captions rather than
+        # let the three of them set a floor on the panel width.
+        self._tabs.setElideMode(QtCore.Qt.TextElideMode.ElideRight)
+        self._tabs.setUsesScrollButtons(True)
         layout.addWidget(self._tabs, 1)
 
         # Rule tab.
@@ -73,7 +79,7 @@ class ValidationView(QtWidgets.QWidget):
         rule_layout = QtWidgets.QVBoxLayout(rule_page)
         rule_layout.setContentsMargins(0, 0, 0, 0)
         self.rule_edit = QtWidgets.QPlainTextEdit()
-        self.rule_edit.setFont(theme.mono_font(9))
+        self.rule_edit.setFont(theme.mono_font(FONT_SIZE_BODY))
         self.rule_edit.setPlaceholderText(self.tr("rule JSON or YAML"))
         self._completer = QtWidgets.QCompleter(sorted(ALL_FIELD_TYPES), self)
         self._completer.setWidget(self.rule_edit)
@@ -83,7 +89,7 @@ class ValidationView(QtWidgets.QWidget):
         self.rule_edit.installEventFilter(self)
         self.rule_edit.textChanged.connect(self._on_rule_text_changed)
         rule_layout.addWidget(self.rule_edit, 1)
-        rule_buttons = QtWidgets.QHBoxLayout()
+        rule_buttons = FlowLayout(spacing=6)
         self.apply_button = QtWidgets.QPushButton(self.tr("Apply to current direction"))
         self.apply_button.setProperty("accent", "true")
         self.apply_button.clicked.connect(self.applyRequested.emit)
@@ -95,14 +101,14 @@ class ValidationView(QtWidgets.QWidget):
         self.example_button.setToolTip(self.tr("Load the first rule from examples/"))
         self.example_button.clicked.connect(self.loadExampleRequested.emit)
         rule_buttons.addWidget(self.example_button)
-        rule_buttons.addStretch(1)
         rule_layout.addLayout(rule_buttons)
         self.rule_status = QtWidgets.QLabel("")
         self.rule_status.setProperty("role", "secondary")
-        self.rule_status.setFont(theme.body_font(9))
+        self.rule_status.setFont(theme.body_font(FONT_SIZE_BODY))
         self.rule_status.setWordWrap(True)
         rule_layout.addWidget(self.rule_status)
         self._tabs.addTab(rule_page, self.tr("Rule"))
+        self._tabs.setTabToolTip(0, self.tr("Rule"))
 
         # Messages tab.
         self.messages_table = QtWidgets.QTableWidget(0, 4)
@@ -111,7 +117,7 @@ class ValidationView(QtWidgets.QWidget):
         )
         self.messages_table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.messages_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
-        self.messages_table.setFont(theme.body_font(9))
+        self.messages_table.setFont(theme.body_font(FONT_SIZE_BODY))
         self.messages_table.verticalHeader().setVisible(False)
         header = self.messages_table.horizontalHeader()
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeMode.Stretch)
@@ -124,7 +130,7 @@ class ValidationView(QtWidgets.QWidget):
         counter_layout = QtWidgets.QVBoxLayout(counter_page)
         counter_layout.setContentsMargins(0, 0, 0, 0)
         self.counter_list = QtWidgets.QListWidget()
-        self.counter_list.setFont(theme.body_font(9))
+        self.counter_list.setFont(theme.body_font(FONT_SIZE_BODY))
         self.counter_list.itemSelectionChanged.connect(self._on_counter_selected)
         counter_layout.addWidget(self.counter_list, 1)
         self._tabs.addTab(counter_page, self.tr("Counterexamples"))
@@ -323,7 +329,7 @@ class ValidationView(QtWidgets.QWidget):
         for column, text in enumerate(cells):
             item = QtWidgets.QTableWidgetItem(text)
             if column == 3:
-                item.setFont(theme.mono_font(9))
+                item.setFont(theme.mono_font(FONT_SIZE_BODY))
             if message.status.value == MISMATCHED:
                 item.setForeground(QtGui.QColor(theme.current().status_mismatched_text))
             elif message.status.value == "matched":
@@ -416,11 +422,14 @@ class ValidationView(QtWidgets.QWidget):
         self.example_button.setText(self.tr("Load example"))
         self.example_button.setToolTip(self.tr("Load the first rule from examples/"))
         self._tabs.setTabText(0, self.tr("Rule"))
+        self._tabs.setTabToolTip(0, self.tr("Rule"))
         self.messages_table.setHorizontalHeaderLabels(
             [self.tr("offset"), self.tr("len"), self.tr("status"), self.tr("fields")]
         )
         self._tabs.setTabText(1, self.tr("Messages ({0})").format(self._message_count))
+        self._tabs.setTabToolTip(1, self.tr("Messages ({0})").format(self._message_count))
         self._tabs.setTabText(2, self.tr("Counterexamples ({0})").format(self.counterexample_count))
+        self._tabs.setTabToolTip(2, self.tr("Counterexamples ({0})").format(self.counterexample_count))
         if self._context.text() and self._session_id:
             self._context.setText(self.tr("session {0}   {1}").format(self._session_id, self._direction))
 
