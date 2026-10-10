@@ -27,7 +27,19 @@ jobs:
           cache: pip
           cache-dependency-path: pyproject.toml
       - run: pip install -e ".[dev]"
-      - run: pytest tests/ -v
+      # PySide6 links libEGL and libGL at import time. The GitHub runner image
+      # does not ship them, so without this the whole tests/ui package is
+      # skipped and the interface is never exercised in CI. The packages exist
+      # on both ubuntu-latest and ubuntu-22.04.
+      - name: Install Qt runtime libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libgl1 libglib2.0-0 libxkbcommon0 libdbus-1-3 libfontconfig1
+      - name: Run tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: pytest tests/ -v
 
   code-quality:
     name: code-quality

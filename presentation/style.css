@@ -1,4 +1,6 @@
-/* Madrigal theme for Slidev — dark technical B2B, engineering report look. */
+/* Madrigal theme for Slidev — dark technical B2B, engineering report look.
+   Palette split: brand fills for decoration, brighter text variants for AA.
+   Layout reserves a footer band so text and figures cannot collide. */
 
 @font-face {
   font-family: 'Tektur';
@@ -22,28 +24,41 @@
 }
 
 :root {
-  --bg: #131516;
-  --panel: #1D1D1D;
-  --text: #E0E0E0;
-  --secondary: #9F9F9F;
+  --bg: #0E1011;
+  --panel: #1A1C1E;
+  --panel-hi: #242628;
+  --text: #F0F0F0;
+  --secondary: #B0B0B0;
+  --caption: #9A9A9A;
+  --line: #2E3134;
+  /* Brand fills — decoration only, never text. */
   --accent: #6D071F;
   --highlight: #A2391D;
-  --line: #2A2C2E;
-  --matched: #2E7D5B;
-  --mismatched: #8E2A2A;
-  --ambiguous: #B8860B;
+  --brand-deep: #410913;
+  --brand-mid: #610D1C;
+  /* Readable accent for links, inline code, diff additions. */
+  --accent-text: #E0603A;
+  /* Status colours, each AA on the page background. */
+  --matched: #4CAF50;
+  --mismatched: #E53935;
+  --ambiguous: #FFB300;
+  --incomplete: #8C8C8C;
+  --uncovered: #858585;
+  --not-applicable: #9E9E9E;
+  --footer-h: 64px;
 }
 
 .slidev-layout {
+  position: relative;
   background: var(--bg);
   color: var(--text);
   font-family: 'Montserrat', sans-serif;
-  font-size: 24px;
+  font-size: 22px;
   line-height: 1.4;
-  padding: 56px 72px;
+  padding: 44px 64px calc(28px + var(--footer-h));
+  overflow: hidden;
 }
 
-/* Left accent bar, the one piece of gradient in the deck. */
 .slidev-layout::before {
   content: '';
   position: absolute;
@@ -51,201 +66,207 @@
   top: 0;
   width: 6px;
   height: 100%;
-  background: linear-gradient(180deg, #410913, var(--accent), var(--highlight));
+  background: linear-gradient(180deg, var(--brand-deep), var(--accent), var(--highlight));
+}
+
+/* Running footer, provided by global-bottom.vue. */
+.deck-footer {
+  position: absolute;
+  left: 64px;
+  right: 64px;
+  bottom: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  color: var(--caption);
+  pointer-events: none;
+}
+.deck-footer__page {
+  font-family: 'Tektur', sans-serif;
+  font-size: 15px;
+  color: var(--caption);
 }
 
 .slidev-layout h1 {
   font-family: 'Tektur', sans-serif;
   font-weight: 600;
-  font-size: 48px;
-  line-height: 1.15;
-  margin: 0 0 20px;
-  color: var(--text);
+  font-size: 44px;
+  line-height: 1.12;
+  margin: 0 0 16px;
+  color: #FFFFFF;
 }
-
 .slidev-layout h2 {
   font-family: 'Tektur', sans-serif;
   font-weight: 500;
-  font-size: 30px;
-  margin: 0 0 14px;
+  font-size: 28px;
+  margin: 0 0 12px;
   color: var(--secondary);
 }
-
-.slidev-layout p {
-  margin: 10px 0;
+.slidev-layout h3 {
+  font-family: 'Tektur', sans-serif;
+  font-size: 22px;
+  color: var(--text);
 }
-
+.slidev-layout p { margin: 8px 0; }
 .slidev-layout ul,
-.slidev-layout ol {
-  margin: 10px 0;
-  padding-left: 30px;
-}
-
-.slidev-layout li {
-  margin: 10px 0;
-}
+.slidev-layout ol { margin: 8px 0; padding-left: 28px; }
+.slidev-layout li { margin: 8px 0; }
 
 .slidev-layout code {
   font-family: 'DejaVu Sans Mono', monospace;
-  font-size: 0.85em;
-  color: var(--highlight);
+  font-size: 0.82em;
+  color: var(--accent-text);
   background: var(--panel);
   border-radius: 4px;
   padding: 1px 6px;
 }
-
-.slidev-layout strong {
-  color: #FFFFFF;
-  font-weight: 600;
-}
-
-.slidev-layout a {
-  color: var(--highlight);
-  text-decoration: none;
-}
-
-/* Title slide */
-.title-slide {
-  justify-content: center;
-}
-.title-slide h1 {
-  font-size: 64px;
-}
-.title-slide .subtitle {
-  font-size: 28px;
+.slidev-layout strong { color: #FFFFFF; font-weight: 600; }
+.slidev-layout a { color: var(--accent-text); text-decoration: none; }
+.slidev-layout .subtitle {
+  font-size: 26px;
   color: var(--secondary);
   margin-top: 8px;
 }
-.title-slide .meta {
-  margin-top: 32px;
+.slidev-layout .meta {
+  margin-top: 30px;
   color: var(--secondary);
-  font-size: 22px;
-}
-.title-slide .logo {
-  position: absolute;
-  right: 72px;
-  bottom: 56px;
-  width: 96px;
-  height: 96px;
+  font-size: 20px;
 }
 
-/* Section divider */
-.divider {
-  justify-content: center;
-  align-items: flex-start;
+.slidev-layout.cover { justify-content: center; }
+.slidev-layout.cover h1 { font-size: 60px; }
+.slidev-layout.cover .subtitle {
+  font-size: 26px;
+  color: var(--secondary);
+  margin-top: 8px;
 }
+.slidev-layout.cover .meta {
+  margin-top: 30px;
+  color: var(--secondary);
+  font-size: 20px;
+}
+.slidev-layout.cover .logo {
+  position: absolute;
+  right: 64px;
+  top: 44px;
+  width: 80px;
+  height: 80px;
+}
+
+.divider { justify-content: center; align-items: flex-start; }
 .divider .index {
   font-family: 'Tektur', sans-serif;
   font-weight: 600;
-  font-size: 96px;
-  color: var(--accent);
+  font-size: 80px;
+  color: var(--accent-text);
   line-height: 1;
 }
-.divider h1 {
-  font-size: 56px;
-  margin-top: 8px;
-}
+.divider h1 { font-size: 52px; margin-top: 8px; }
 .divider .bar {
-  margin-top: 24px;
+  margin-top: 22px;
   height: 6px;
-  width: 360px;
+  width: 340px;
   border-radius: 5px;
-  background: linear-gradient(90deg, #410913, var(--accent), var(--highlight));
+  background: linear-gradient(90deg, var(--brand-deep), var(--accent), var(--highlight));
 }
 
-/* Two-column helpers */
 .cols {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 32px;
+  gap: 30px;
   align-items: start;
 }
 .cols-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: 22px;
 }
 .figure {
   border: 1px solid var(--line);
   border-radius: 5px;
   overflow: hidden;
 }
-.figure img {
-  display: block;
-  width: 100%;
-}
+.figure img { display: block; width: 100%; border-radius: 5px; }
 .caption {
-  color: var(--secondary);
-  font-size: 18px;
+  color: var(--caption);
+  font-size: 16px;
   margin-top: 8px;
 }
 .kpi {
   font-family: 'Tektur', sans-serif;
-  font-size: 56px;
-  color: var(--text);
+  font-size: 46px;
+  color: #FFFFFF;
+  line-height: 1.1;
 }
-.kpi-label {
-  color: var(--secondary);
-  font-size: 20px;
-}
+.kpi-label { color: var(--secondary); font-size: 18px; }
 .card {
   background: var(--panel);
   border-left: 4px solid var(--highlight);
   border-radius: 5px;
-  padding: 18px 22px;
+  padding: 16px 20px;
 }
+.card.hi { background: var(--panel-hi); }
 .tag {
   display: inline-block;
-  font-size: 18px;
+  font-size: 16px;
   border: 1px solid var(--line);
   border-radius: 4px;
   padding: 2px 10px;
   margin-right: 8px;
   color: var(--secondary);
 }
+
 .status-matched { color: var(--matched); }
 .status-mismatched { color: var(--mismatched); }
 .status-ambiguous { color: var(--ambiguous); }
+.status-incomplete { color: var(--incomplete); }
+.status-uncovered { color: var(--uncovered); }
+.status-not-applicable { color: var(--not-applicable); }
+
 .icon {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   vertical-align: -4px;
   margin-right: 10px;
 }
 
-/* Plain table, no fills, thin rules only */
 .slidev-layout table {
   border-collapse: collapse;
-  margin: 14px 0;
-  font-size: 22px;
+  margin: 12px 0;
+  font-size: 20px;
 }
 .slidev-layout th,
 .slidev-layout td {
   border-bottom: 1px solid var(--line);
-  padding: 8px 20px;
+  padding: 7px 18px;
   text-align: left;
 }
-.slidev-layout th {
-  color: var(--secondary);
-  font-weight: 600;
-}
+.slidev-layout th { color: var(--secondary); font-weight: 600; }
 
-/* Slide number, small, as required by the brief */
 #slidev-page {
+  position: absolute;
+  right: 64px;
+  bottom: 24px;
   font-family: 'Tektur', sans-serif;
-  font-size: 16px;
-  color: var(--secondary);
+  font-size: 15px;
+  color: var(--caption);
 }
 
-/* Keep the accent bar visible on the print/PDF export too. */
+.slidev-vclick-target { transition: all 0.24s ease; }
+.slidev-vclick-hidden { opacity: 0; transform: translateY(6px); }
+
 @media print {
-  .slidev-layout::before {
+  .slidev-layout::before,
+  .slidev-layout::after {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 }
 
-/* Layout helpers */
 .wrap-center {
   display: flex;
   flex-direction: column;
@@ -255,22 +276,15 @@
 .slidev-layout .arch {
   display: block;
   width: 100%;
-  max-height: 300px;
+  max-height: 280px;
   margin: 8px auto 0;
 }
-.slidev-layout .figure img {
-  border-radius: 5px;
-}
 .slidev-layout p,
-.slidev-layout li {
-  font-size: 24px;
-}
+.slidev-layout li { font-size: 22px; }
 
-/* The layout fills the slide, but Slidev keeps a white page container behind
-   it; paint every container so the export and print match the screen. */
 html, body, #app, #slide-container, .slidev-page, .slidev-slide-container,
 .slidev-layout {
-  background: #131516 !important;
+  background: var(--bg) !important;
 }
 * {
   -webkit-print-color-adjust: exact;

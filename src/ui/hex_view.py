@@ -36,20 +36,103 @@ _HEX_WIDTH = _BYTES_PER_LINE * 3
 _ASCII_START = _PREFIX + _HEX_WIDTH
 _LINE_LEN = _ASCII_START + _BYTES_PER_LINE
 
-_KIND_COLOURS = {
-    GAP: (theme.GAP, theme.TEXT),
-    AMBIGUITY: (theme.AMBIGUOUS, theme.TEXT),
-    MATCHED: (theme.MATCHED, theme.TEXT),
-    MISMATCHED: (theme.MISMATCHED, theme.TEXT),
-    INCOMPLETE: (theme.INCOMPLETE, theme.TEXT),
-    AMBIGUOUS: (theme.AMBIGUOUS, theme.TEXT),
-    NOT_APPLICABLE: (theme.NOT_APPLICABLE, theme.TEXT_SECONDARY),
-    UNCOVERED: (theme.UNCOVERED, theme.TEXT_SECONDARY),
+# The annotation kinds that have a colour; the set does not depend on the theme.
+_KIND_KEYS = frozenset(
+    {
+        GAP,
+        AMBIGUITY,
+        MATCHED,
+        MISMATCHED,
+        INCOMPLETE,
+        AMBIGUOUS,
+        NOT_APPLICABLE,
+        UNCOVERED,
+    }
+)
+
+
+def _kind_colours() -> dict[str, tuple[str, str]]:
+    """Byte-annotation fills for the active theme."""
+    token = theme.current()
+    return {
+        GAP: (token.gap, token.text_primary),
+        AMBIGUITY: (token.status_ambiguous, token.text_primary),
+        MATCHED: (token.status_matched, token.text_primary),
+        MISMATCHED: (token.status_mismatched, token.text_primary),
+        INCOMPLETE: (token.status_incomplete, token.text_primary),
+        AMBIGUOUS: (token.status_ambiguous, token.text_primary),
+        NOT_APPLICABLE: (token.status_not_applicable, token.text_secondary),
+        UNCOVERED: (token.status_uncovered, token.text_secondary),
+    }
+
+# Kinds drawn with a hatch pattern instead of a flat fill, so a missing or
+# ambiguous range reads as different from a byte a rule simply matched. The
+# pattern is a small pixmap used as a QBrush texture.
+_HATCHED = {GAP, AMBIGUITY, AMBIGUOUS, INCOMPLETE, MISMATCHED}
+_HATCH_COLOUR = {
+    GAP: "gap",
+    AMBIGUITY: "status_ambiguous",
+    AMBIGUOUS: "status_ambiguous",
+    INCOMPLETE: "status_incomplete",
+    MISMATCHED: "status_mismatched",
 }
 
 
 def _printable(byte: int) -> str:
     return chr(byte) if 32 <= byte < 127 else "."
+
+
+def _hatch_pixmap(colour: str, base: str) -> QtGui.QPixmap:
+    """A 6x6 diagonal hatch pixmap used as a brush texture.
+
+    A texture rather than a solid fill so a missing or ambiguous range is
+    distinguishable from a plain status fill at a glance.
+    """
+    pixmap = QtGui.QPixmap(6, 6)
+    pixmap.fill(QtGui.QColor(base))
+    painter = QtGui.QPainter(pixmap)
+    painter.setPen(QtGui.QColor(colour))
+    painter.drawLine(0, 6, 6, 0)
+    painter.drawLine(-3, 3, 3, -3)
+    painter.drawLine(3, 9, 9, 3)
+    painter.end()
+    return pixmap
+
+
+def _brush_for(kind: str | None, background: str) -> QtGui.QBrush:
+    """The background brush for ``kind``: a hatch for gap and ambiguity, a
+    flat colour otherwise."""
+    if kind in _HATCHED:
+        token = theme.current()
+        colour = getattr(token, _HATCH_COLOUR[kind])
+        return QtGui.QBrush(_hatch_pixmap(colour, token.surface))
+    return QtGui.QBrush(QtGui.QColor(background))
+
+
+# Byte kinds shown in the legend, in the order a reader meets them.
+LEGEND_KINDS = (
+    (GAP, "gap"),
+    (AMBIGUITY, "ambiguity"),
+    (MATCHED, "matched"),
+    (MISMATCHED, "mismatched"),
+    (INCOMPLETE, "incomplete"),
+    (UNCOVERED, "uncovered"),
+)
+
+
+def legend_swatch(kind: str) -> QtGui.QPixmap:
+    """A swatch painted with the exact brush used for ``kind``.
+
+    The swatch is filled with the same :func:`_brush_for` result the view uses,
+    so the legend cannot drift from the bytes it explains.
+    """
+    background = _kind_colours()[kind][0]
+    pixmap = QtGui.QPixmap(12, 12)
+    pixmap.fill(QtGui.QColor(theme.current().surface))
+    painter = QtGui.QPainter(pixmap)
+    painter.fillRect(0, 0, 12, 12, _brush_for(kind, background))
+    painter.end()
+    return pixmap
 
 
 class HexView(QtWidgets.QPlainTextEdit):
@@ -73,9 +156,15 @@ class HexView(QtWidgets.QPlainTextEdit):
         self._annotations: list[ByteAnnotation] = []
         self._header = QtWidgets.QLabel(self)
         self._header.setFont(theme.body_font(9))
-        self._header.setStyleSheet(f"color: {theme.TEXT_SECONDARY}; background: {theme.PANEL};")
         self._header.setFixedHeight(20)
         self._header.setText(self._column_header())
+        self._style_header()
+
+    def _style_header(self) -> None:
+        token = theme.current()
+        self._header.setStyleSheet(
+            f"color: {token.text_secondary}; background: {token.surface};"
+        )
 
     def _column_header(self) -> str:
         return (
@@ -93,6 +182,11 @@ class HexView(QtWidgets.QPlainTextEdit):
         self.setPlainText(self._render_text())
         self._apply_annotations()
 
+    def apply_theme(self) -> None:
+        """Re-read the active theme: header colours and byte annotations."""
+        self._style_header()
+        self._apply_annotations()
+
     def set_annotations(self, annotations: list[ByteAnnotation] | None) -> None:
         """Replace the annotations without re-rendering the bytes."""
         self._annotations = list(annotations or [])
@@ -103,6 +197,17 @@ class HexView(QtWidgets.QPlainTextEdit):
         self._data = b""
         self._annotations = []
         self.setPlainText("")
+        self.setExtraSelections([])
+
+    def show_hint(self, text: str) -> None:
+        """Show a single explanatory line when there are no bytes to draw.
+
+        Used for the first-run state, so an empty view says why it is empty
+        instead of looking broken.
+        """
+        self._data = b""
+        self._annotations = []
+        self.setPlainText(text)
         self.setExtraSelections([])
 
     @property
@@ -128,6 +233,7 @@ class HexView(QtWidgets.QPlainTextEdit):
         if not self._data:
             self.setExtraSelections([])
             return
+        kind_colours = _kind_colours()
         # Group contiguous bytes that share a colour so selection count stays
         # proportional to the number of runs, not the number of bytes.
         run_kind: str | None = None
@@ -139,13 +245,12 @@ class HexView(QtWidgets.QPlainTextEdit):
             if run_kind is None or run_hex is None or end <= run_start:
                 return
             background, foreground = run_hex
+            brush = _brush_for(run_kind, background)
             for start, stop in _line_spans(run_start, end):
-                selections.append(self._selection(start, stop, background, foreground))
+                selections.append(self._selection(start, stop, brush, foreground))
 
         for index, annotation in enumerate(self._annotations):
-            colour = _KIND_COLOURS.get(annotation.kind)
-            if colour is None:
-                colour = None
+            colour = kind_colours.get(annotation.kind)
             if colour != run_hex:
                 flush(index)
                 run_start = index
@@ -154,10 +259,10 @@ class HexView(QtWidgets.QPlainTextEdit):
         flush(len(self._annotations))
         self.setExtraSelections(selections)
 
-    def _selection(self, start: int, end: int, background: str, foreground: str):
+    def _selection(self, start: int, end: int, brush, foreground: str):
         selection = QtWidgets.QTextEdit.ExtraSelection()
         fmt = QtGui.QTextCharFormat()
-        fmt.setBackground(QtGui.QColor(background))
+        fmt.setBackground(brush)
         fmt.setForeground(QtGui.QColor(foreground))
         cursor = self.textCursor()
         cursor.setPosition(_byte_char_index(start))
@@ -165,6 +270,32 @@ class HexView(QtWidgets.QPlainTextEdit):
         selection.cursor = cursor
         selection.format = fmt
         return selection
+
+    def annotation_at(self, offset: int) -> ByteAnnotation | None:
+        """The annotation for byte ``offset``, or ``None``."""
+        if 0 <= offset < len(self._annotations):
+            return self._annotations[offset]
+        return None
+
+    def byte_tooltip(self, offset: int) -> str:
+        """A tooltip for byte ``offset``: offset, hex, kind and origin."""
+        if not 0 <= offset < len(self._data):
+            return ""
+        annotation = self.annotation_at(offset)
+        parts = [f"offset {offset}", f"0x{self._data[offset]:02x}"]
+        if annotation is not None:
+            parts.append(annotation.kind)
+            if annotation.label:
+                parts.append(annotation.label)
+            if annotation.value is not None:
+                parts.append(f"value {annotation.value}")
+            if annotation.is_hypothesis:
+                parts.append("hypothesis")
+            if annotation.packet_index is not None:
+                parts.append(f"packet {annotation.packet_index}")
+            if annotation.seq is not None:
+                parts.append(f"seq {annotation.seq}")
+        return "  ".join(str(p) for p in parts)
 
     # -- interaction -------------------------------------------------------
 
@@ -198,7 +329,10 @@ class HexView(QtWidgets.QPlainTextEdit):
         """Emit :attr:`byteHovered` for the byte under the cursor."""
         offset = self.byte_at(event.position().toPoint())
         if offset is not None:
+            self.setToolTip(self.byte_tooltip(offset))
             self.byteHovered.emit(offset)
+        else:
+            self.setToolTip("")
         super().mouseMoveEvent(event)
 
     def scroll_to_byte(self, offset: int) -> None:
@@ -207,6 +341,27 @@ class HexView(QtWidgets.QPlainTextEdit):
             return
         cursor = self.textCursor()
         cursor.setPosition(min(_byte_char_index(offset), self.document().characterCount() - 1))
+        self.setTextCursor(cursor)
+        self.centerCursor()
+
+    def highlight_range(self, offset: int, length: int = 1) -> None:
+        """Select ``length`` bytes from ``offset`` and centre them.
+
+        The selection marks the whole message a counterexample belongs to, so
+        the bytes at fault are visible as a block, not as a single byte. The
+        cursor and the selection end are clamped to the document, so a range
+        that runs past the last byte still leaves a valid selection.
+        """
+        if not self._data or length <= 0:
+            return
+        start = max(0, min(offset, len(self._data) - 1))
+        stop = max(start + 1, min(offset + length, len(self._data)))
+        last = self.document().characterCount() - 1
+        cursor = self.textCursor()
+        cursor.setPosition(min(_byte_char_index(start), last))
+        cursor.setPosition(
+            min(_byte_char_index(stop - 1) + 2, last), QtGui.QTextCursor.MoveMode.KeepAnchor
+        )
         self.setTextCursor(cursor)
         self.centerCursor()
 
@@ -236,13 +391,27 @@ def annotations_from_stream(stream: DirectionalStream) -> list[ByteAnnotation]:
 
     Returns:
         One annotation per byte; diagnostics become ``gap``/``ambiguity`` and
-        every other byte ``not_applicable``.
+        every other byte ``not_applicable``. Each byte carries the packet index
+        and sequence number of the range it came from, when known.
     """
     annotations = [ByteAnnotation(kind=NOT_APPLICABLE) for _ in range(len(stream.data))]
+    for hole in stream.provenance:
+        for offset in range(hole.offset, min(hole.end, len(annotations))):
+            annotations[offset] = ByteAnnotation(
+                kind=NOT_APPLICABLE,
+                packet_index=getattr(hole, "packet_index", None),
+                seq=getattr(hole, "seq", None),
+            )
     for hole in stream.diagnostics:
         kind = GAP if hole.type == "gap" else AMBIGUITY if hole.type == "ambiguity" else UNCOVERED
         for offset in range(hole.offset, min(hole.end, len(annotations))):
-            annotations[offset] = ByteAnnotation(kind=kind, label=hole.type)
+            existing = annotations[offset]
+            annotations[offset] = ByteAnnotation(
+                kind=kind,
+                label=hole.type,
+                packet_index=existing.packet_index,
+                seq=existing.seq,
+            )
     return annotations
 
 
@@ -272,15 +441,18 @@ def annotations_from_application(
             start = message.offset + field.field_offset
             end = start + field.field_length
             status = field.status.value
-            kind = status if status in _KIND_COLOURS else FIELD
+            kind = status if status in _KIND_KEYS else FIELD
             for offset in range(start, min(end, len(annotations))):
                 if annotations[offset].kind in (GAP, AMBIGUITY):
                     continue
+                existing = annotations[offset]
                 annotations[offset] = ByteAnnotation(
                     kind=kind,
                     label=field.field_name,
                     value=field.value,
                     status=status,
                     is_hypothesis=bool(field.hypothesis),
+                    packet_index=existing.packet_index,
+                    seq=existing.seq,
                 )
     return annotations
