@@ -26,6 +26,9 @@ dev = [
     "pip-audit==2.10.1",
 ]
 
+[project.gui-scripts]
+madrigal-lab = "scripts.madrigal_lab:main"
+
 [tool.setuptools]
 packages = [
     "src",
@@ -35,6 +38,7 @@ packages = [
     "src.ui",
     "src.project",
     "src.report",
+    "scripts",
 ]
 
 [tool.pytest.ini_options]
