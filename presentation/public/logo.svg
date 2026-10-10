@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="madrigal-protocol-lab">
+  <rect width="256" height="256" rx="5" fill="#131516"/>
+  <rect x="16" y="16" width="224" height="224" rx="5" fill="#1D1D1D"/>
+  <g fill="none" stroke="#6D071F" stroke-width="10" stroke-linecap="square">
+    <path d="M56 168 L56 96 M56 96 L96 136 L136 96 M136 96 L136 168"/>
+    <path d="M176 96 L176 168 M176 132 L200 132"/>
+  </g>
+  <rect x="16" y="16" width="224" height="8" fill="#A2391D"/>
+</svg>
