@@ -36,29 +36,46 @@ _HEX_WIDTH = _BYTES_PER_LINE * 3
 _ASCII_START = _PREFIX + _HEX_WIDTH
 _LINE_LEN = _ASCII_START + _BYTES_PER_LINE
 
-_KIND_COLOURS = {
-    GAP: (theme.GAP, theme.TEXT),
-    AMBIGUITY: (theme.AMBIGUOUS, theme.TEXT),
-    MATCHED: (theme.MATCHED, theme.TEXT),
-    MISMATCHED: (theme.MISMATCHED, theme.TEXT),
-    INCOMPLETE: (theme.INCOMPLETE, theme.TEXT),
-    AMBIGUOUS: (theme.AMBIGUOUS, theme.TEXT),
-    NOT_APPLICABLE: (theme.NOT_APPLICABLE, theme.TEXT_SECONDARY),
-    UNCOVERED: (theme.UNCOVERED, theme.TEXT_SECONDARY),
-}
+# The annotation kinds that have a colour; the set does not depend on the theme.
+_KIND_KEYS = frozenset(
+    {
+        GAP,
+        AMBIGUITY,
+        MATCHED,
+        MISMATCHED,
+        INCOMPLETE,
+        AMBIGUOUS,
+        NOT_APPLICABLE,
+        UNCOVERED,
+    }
+)
+
+
+def _kind_colours() -> dict[str, tuple[str, str]]:
+    """Byte-annotation fills for the active theme."""
+    token = theme.current()
+    return {
+        GAP: (token.gap, token.text_primary),
+        AMBIGUITY: (token.status_ambiguous, token.text_primary),
+        MATCHED: (token.status_matched, token.text_primary),
+        MISMATCHED: (token.status_mismatched, token.text_primary),
+        INCOMPLETE: (token.status_incomplete, token.text_primary),
+        AMBIGUOUS: (token.status_ambiguous, token.text_primary),
+        NOT_APPLICABLE: (token.status_not_applicable, token.text_secondary),
+        UNCOVERED: (token.status_uncovered, token.text_secondary),
+    }
 
 # Kinds drawn with a hatch pattern instead of a flat fill, so a missing or
 # ambiguous range reads as different from a byte a rule simply matched. The
 # pattern is a small pixmap used as a QBrush texture.
 _HATCHED = {GAP, AMBIGUITY, AMBIGUOUS, INCOMPLETE, MISMATCHED}
 _HATCH_COLOUR = {
-    GAP: theme.GAP,
-    AMBIGUITY: theme.AMBIGUOUS,
-    AMBIGUOUS: theme.AMBIGUOUS,
-    INCOMPLETE: theme.INCOMPLETE,
-    MISMATCHED: theme.MISMATCHED,
+    GAP: "gap",
+    AMBIGUITY: "status_ambiguous",
+    AMBIGUOUS: "status_ambiguous",
+    INCOMPLETE: "status_incomplete",
+    MISMATCHED: "status_mismatched",
 }
-_HATCH_BASE = theme.PANEL
 
 
 def _printable(byte: int) -> str:
@@ -86,7 +103,9 @@ def _brush_for(kind: str | None, background: str) -> QtGui.QBrush:
     """The background brush for ``kind``: a hatch for gap and ambiguity, a
     flat colour otherwise."""
     if kind in _HATCHED:
-        return QtGui.QBrush(_hatch_pixmap(_HATCH_COLOUR[kind], _HATCH_BASE))
+        token = theme.current()
+        colour = getattr(token, _HATCH_COLOUR[kind])
+        return QtGui.QBrush(_hatch_pixmap(colour, token.surface))
     return QtGui.QBrush(QtGui.QColor(background))
 
 
@@ -107,10 +126,11 @@ def legend_swatch(kind: str) -> QtGui.QPixmap:
     The swatch is filled with the same :func:`_brush_for` result the view uses,
     so the legend cannot drift from the bytes it explains.
     """
+    background = _kind_colours()[kind][0]
     pixmap = QtGui.QPixmap(12, 12)
-    pixmap.fill(QtGui.QColor(_HATCH_BASE))
+    pixmap.fill(QtGui.QColor(theme.current().surface))
     painter = QtGui.QPainter(pixmap)
-    painter.fillRect(0, 0, 12, 12, _brush_for(kind, _KIND_COLOURS[kind][0]))
+    painter.fillRect(0, 0, 12, 12, _brush_for(kind, background))
     painter.end()
     return pixmap
 
@@ -136,9 +156,15 @@ class HexView(QtWidgets.QPlainTextEdit):
         self._annotations: list[ByteAnnotation] = []
         self._header = QtWidgets.QLabel(self)
         self._header.setFont(theme.body_font(9))
-        self._header.setStyleSheet(f"color: {theme.TEXT_SECONDARY}; background: {theme.PANEL};")
         self._header.setFixedHeight(20)
         self._header.setText(self._column_header())
+        self._style_header()
+
+    def _style_header(self) -> None:
+        token = theme.current()
+        self._header.setStyleSheet(
+            f"color: {token.text_secondary}; background: {token.surface};"
+        )
 
     def _column_header(self) -> str:
         return (
@@ -154,6 +180,11 @@ class HexView(QtWidgets.QPlainTextEdit):
         self._data = bytes(data)
         self._annotations = list(annotations or [])
         self.setPlainText(self._render_text())
+        self._apply_annotations()
+
+    def apply_theme(self) -> None:
+        """Re-read the active theme: header colours and byte annotations."""
+        self._style_header()
         self._apply_annotations()
 
     def set_annotations(self, annotations: list[ByteAnnotation] | None) -> None:
@@ -202,6 +233,7 @@ class HexView(QtWidgets.QPlainTextEdit):
         if not self._data:
             self.setExtraSelections([])
             return
+        kind_colours = _kind_colours()
         # Group contiguous bytes that share a colour so selection count stays
         # proportional to the number of runs, not the number of bytes.
         run_kind: str | None = None
@@ -218,7 +250,7 @@ class HexView(QtWidgets.QPlainTextEdit):
                 selections.append(self._selection(start, stop, brush, foreground))
 
         for index, annotation in enumerate(self._annotations):
-            colour = _KIND_COLOURS.get(annotation.kind)
+            colour = kind_colours.get(annotation.kind)
             if colour != run_hex:
                 flush(index)
                 run_start = index
@@ -409,7 +441,7 @@ def annotations_from_application(
             start = message.offset + field.field_offset
             end = start + field.field_length
             status = field.status.value
-            kind = status if status in _KIND_COLOURS else FIELD
+            kind = status if status in _KIND_KEYS else FIELD
             for offset in range(start, min(end, len(annotations))):
                 if annotations[offset].kind in (GAP, AMBIGUITY):
                     continue
