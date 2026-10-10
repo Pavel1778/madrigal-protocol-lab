@@ -106,8 +106,8 @@ pytest tests/ -q
 - [docs/GUI_VERIFICATION.md](docs/GUI_VERIFICATION.md) — what the window was
   driven to show, and the defects found while checking it.
 - [REPORT.md](REPORT.md) — the investigation report.
-- [presentation/slides.pdf](presentation/slides.pdf) — the deck, with the eight
-  window screenshots.
+- [presentation/slides.pdf](presentation/slides.pdf) — the deck, eighteen
+  slides, with the real window screenshots.
 
 ## Delivery formats
 
