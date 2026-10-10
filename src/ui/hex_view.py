@@ -120,6 +120,23 @@ LEGEND_KINDS = (
 )
 
 
+def legend_label(kind: str) -> str:
+    """The translated legend caption for a byte ``kind``.
+
+    The kind itself stays the contract identifier; only the caption shown next
+    to the swatch is translated.
+    """
+    labels = {
+        GAP: QtCore.QCoreApplication.translate("HexView", "gap"),
+        AMBIGUITY: QtCore.QCoreApplication.translate("HexView", "ambiguity"),
+        MATCHED: QtCore.QCoreApplication.translate("HexView", "matched"),
+        MISMATCHED: QtCore.QCoreApplication.translate("HexView", "mismatched"),
+        INCOMPLETE: QtCore.QCoreApplication.translate("HexView", "incomplete"),
+        UNCOVERED: QtCore.QCoreApplication.translate("HexView", "uncovered"),
+    }
+    return labels.get(kind, kind)
+
+
 def legend_swatch(kind: str) -> QtGui.QPixmap:
     """A swatch painted with the exact brush used for ``kind``.
 
@@ -170,7 +187,7 @@ class HexView(QtWidgets.QPlainTextEdit):
         return (
             "offset    "
             + "".join(f"{i:02x} " for i in range(_BYTES_PER_LINE))
-            + "ascii"
+            + self.tr("ascii")
         )
 
     # -- data --------------------------------------------------------------
@@ -198,6 +215,10 @@ class HexView(QtWidgets.QPlainTextEdit):
         self._annotations = []
         self.setPlainText("")
         self.setExtraSelections([])
+
+    def retranslate_ui(self) -> None:
+        """Refresh the column header caption in the active interface language."""
+        self._header.setText(self._column_header())
 
     def show_hint(self, text: str) -> None:
         """Show a single explanatory line when there are no bytes to draw.
@@ -290,7 +311,7 @@ class HexView(QtWidgets.QPlainTextEdit):
             if annotation.value is not None:
                 parts.append(f"value {annotation.value}")
             if annotation.is_hypothesis:
-                parts.append("hypothesis")
+                parts.append(self.tr("hypothesis"))
             if annotation.packet_index is not None:
                 parts.append(f"packet {annotation.packet_index}")
             if annotation.seq is not None:
