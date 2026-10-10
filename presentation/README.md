@@ -9,10 +9,11 @@ from the repository's own code. Every number is from `docs/METRICS.md`.
 
 | Path | What it is |
 | --- | --- |
-| `slides.md` | the deck source (19 slides, Madrigal theme, `v-click` build-ins) |
+| `slides.md` | the deck source (22 slides, Madrigal theme, `v-click` build-ins) |
 | `style.css` | the Madrigal theme: palette, Tektur + Montserrat, layout |
-| `slides.pdf` | the printed export, 19 pages (archive copy for submission) |
-| `slides.pptx` | the PPTX export (build-in steps expanded) |
+| `slides.pdf` | the printed export, 22 pages (archive copy for submission) |
+| `slides.pptx` | the editable PPTX: native text, entrance animations, transitions |
+| `scripts/build_pptx.py` | builds `slides.pptx` from code (python-pptx), not a picture dump |
 | `screenshots/` | 11 real GUI captures at 1920×1080 (`generate_screenshots.py`) |
 | `assets/` | 6 branded SVG visualisations (`build_visualizations.py`) |
 | `icons/` | Lucide line icons used by the deck (`fetch_icons.py`) |
