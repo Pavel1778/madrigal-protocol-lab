@@ -21,11 +21,18 @@ INSERTED = "inserted"
 DELETED = "deleted"
 
 _COLOUR = {
-    EQUAL: theme.TEXT_SECONDARY,
-    CHANGED: theme.MISMATCHED_TEXT,
-    INSERTED: theme.MATCHED_TEXT,
-    DELETED: theme.INCOMPLETE_TEXT,
+    EQUAL: theme.TEXT,  # agreeing bytes stay plain, no highlight
+    CHANGED: theme.MISMATCHED_TEXT,  # red
+    INSERTED: theme.MATCHED_TEXT,  # green
+    DELETED: theme.TEXT_SECONDARY,  # grey
 }
+
+_LEGEND = (
+    ("equal", theme.TEXT),
+    ("changed", theme.MISMATCHED_TEXT),
+    ("inserted", theme.MATCHED_TEXT),
+    ("deleted", theme.TEXT_SECONDARY),
+)
 
 
 @dataclass
@@ -81,9 +88,20 @@ def diff_bytes(left: bytes, right: bytes) -> list[DiffRow]:
             kind = CHANGED
         rows.append(DiffRow(offset, left_byte, right_byte, kind))
 
+    # The shared tail sits at a different absolute offset in each message when
+    # the two lengths differ, so the two indices are computed separately. Using
+    # one offset for both read past the end of the shorter message.
     for index in range(suffix):
-        offset = len(left) - suffix + index
-        rows.append(DiffRow(offset, f"{left[offset]:02x}", f"{right[offset]:02x}", EQUAL))
+        left_offset = len(left) - suffix + index
+        right_offset = len(right) - suffix + index
+        rows.append(
+            DiffRow(
+                left_offset,
+                f"{left[left_offset]:02x}",
+                f"{right[right_offset]:02x}",
+                EQUAL,
+            )
+        )
     return rows
 
 
@@ -106,6 +124,15 @@ class CompareView(QtWidgets.QWidget):
         selectors.addWidget(QtWidgets.QLabel("B"))
         selectors.addWidget(self.right_combo, 1)
         layout.addLayout(selectors)
+
+        legend = QtWidgets.QHBoxLayout()
+        for name, colour in _LEGEND:
+            chip = QtWidgets.QLabel(name)
+            chip.setFont(theme.mono_font(8))
+            chip.setStyleSheet(f"color: {colour};")
+            legend.addWidget(chip)
+        legend.addStretch(1)
+        layout.addLayout(legend)
 
         self.table = QtWidgets.QTableWidget(0, 3)
         self.table.setHorizontalHeaderLabels(["offset", "A", "B"])
@@ -141,6 +168,8 @@ class CompareView(QtWidgets.QWidget):
     def _refresh(self) -> None:
         self.table.setRowCount(0)
         if self._application is None:
+            return
+        if self.left_combo.currentData() is None or self.right_combo.currentData() is None:
             return
         left = self._application.message_at(int(self.left_combo.currentData()))
         right = self._application.message_at(int(self.right_combo.currentData()))
