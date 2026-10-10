@@ -178,3 +178,89 @@ directory.
   response stream but the rule scopes only `A_to_B`.
 - Editing a rule in the Rule tab creates a new version but the window does not
   yet offer to name or save the edited rule to disk.
+
+## Second pass on a real X display
+
+The pass above ran `QT_QPA_PLATFORM=offscreen`, which exercises the widgets but
+never a window manager, a dock, a real font raster or a real input path. A
+second pass was therefore run on an ordinary X server: `Xvfb :99` at
+1680x1050x24 with `openbox` as the window manager and `QT_QPA_PLATFORM=xcb`.
+Every step of `docs/demo.md` was driven with real pointer and key events
+(`xdotool`) at the live widget coordinates, and the window was captured after
+each step. The captures are under `docs/screenshots/verify/`.
+
+What the real display showed, beyond the offscreen pass:
+
+- The window opens and stays open for the whole walkthrough; no step crashes or
+  leaves a stale window behind. Two top-level windows exist (the application
+  window and a hidden 1x1 helper), both owned by the same process.
+- The session tree lists all three sessions with their two directions and the
+  byte count per direction. The columns fit their headers.
+- Clicking a session fills the hex view; selecting the `A_to_B` direction of
+  `s1` renders its 300 bytes (`B_to_A` renders 420); the direction selector and
+  length label agree.
+- The byte-kind fills paint correctly on the live widget: applying v1 to the
+  capture paints the `matched` bytes solid green and the `mismatched` bytes as a
+  hatch, and the legend swatches use the same brushes as the bytes they label.
+- The four status fills used for rule outcomes read as distinct on screen; the
+  hatched kinds (`gap`, `ambiguity`, `incomplete`, `mismatched`, `ambiguous`)
+  are a diagonal texture over the surface colour, so a diagnostic range cannot
+  be mistaken for a plain match at a glance.
+- The gap and ambiguity diagnostics render on the defects export: `s1 A_to_B`
+  paints 2 bytes as `gap` and 22 as `not_applicable`; `s1 B_to_A` paints 2 as
+  `ambiguity` and 48 as `not_applicable` (`docs/screenshots/verify/clean_dark_gap.png`,
+  `clean_dark_ambiguity.png`).
+- Text contrast measured from the rendered pixels is high in both themes: the
+  menu bar is 14.1:1 dark and 16.0:1 light; the hex view is 14.4:1 dark and
+  17.4:1 light.
+- Switching theme does not move or resize anything. The splitter sizes, the tree
+  and hex geometry, the tab panel, the menu and status bars and the two tree
+  column widths are identical before, during and after a dark to light to dark
+  cycle.
+- All four Settings tabs (General, Editor, Paths, Advanced) render as distinct
+  pages; each was opened with a real click and captured separately.
+- The View and Help menus open and populate over the window
+  (`view_menu_open.png`, `help_menu_open.png`).
+- The rule editor parses `corpus_rule_v1.json` and reports
+  `loaded corpus_rule_v1.json  rule v1` in its status strip.
+
+Findings from this pass, none of which is a crash:
+
+1. The `traffic` column shows the two directions joined, for example
+   `A_to_B:300 B  B_to_A:420 B`. The string needs about 193 px but the column is
+   131 px at the default window size, so the second direction is clipped. The
+   session column is sized to its header and the traffic column stretches; the
+   row data is not measured, so a header that fits can still hide the value
+   behind it. The per-direction counts can be recovered by widening the window or
+   the column, and the direction children carry the same figure, so no data is
+   lost, but the summary the demo points at is not fully visible at the default
+   size.
+2. The offscreen pass reported `3 sessions  capture_id ...` in the status bar,
+   while on the live display the same label was the longer
+   `3 sessions capture_id sha2...` after a selection. The label is the same
+   widget; only the visible prefix differs because the label is elided to the
+   left edge of the status bar. Nothing is lost, but the exact string depends on
+   the width, so a reader should not treat it as a fixed value.
+
+Nothing on the live display contradicted the offscreen pass: the counts, the
+version diff, the hypotheses scores, the byte provenance and the section on
+`Save result` all reproduce.
+
+## Portable project on the command line
+
+The window still has no project menu (limit 4 above), so the portable project
+was verified through `src.project.cli` on the reference capture:
+
+```
+python -m src.project.cli pipeline \
+  --pcap tests/corpus/corpus_capture_01.pcapng \
+  --project /tmp/verifyproj.madrigal --rule examples/corpus_rule_v2.json
+```
+
+This writes `manifest.json`, `annotations.sqlite`, `captures/`, `results/` and
+`reports/`. The digest recorded in the manifest
+(`sha256:1a2f3637124abcd43049bdf9432ae3d18024276cf7de29efd43562e0c61f272c`) equals
+a fresh `sha256sum` of the copied capture, the directory is self contained with
+relative paths, moving it to a different directory and reopening it succeeds, and
+`export` to an archive followed by `import` into a new target reports no broken
+files. A project therefore survives being moved between machines.
