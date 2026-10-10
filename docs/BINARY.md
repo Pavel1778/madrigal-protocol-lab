@@ -52,6 +52,9 @@ madrigal-lab
   runs until the timeout.
 - The `.deb` is built with `dpkg-deb`; extracting it and running
   `usr/bin/madrigal-lab --help` prints the usage.
+- The application registers its desktop file id (`madrigal-protocol-lab`) at
+  startup, so a dock resolves the window icon from the installed entry rather
+  than from the title-bar icon alone.
 - The package was built and checked on the development host, not installed
   system-wide, and not run on a second machine.
 
