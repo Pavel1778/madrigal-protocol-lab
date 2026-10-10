@@ -21,6 +21,10 @@ from src.ui.main_window import MainWindow  # noqa: E402
 from src.ui.settings import SettingsDialog  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+CATALOGUE = REPO_ROOT / "src" / "ui" / "locale" / "madrigal_ru.qm"
+catalogue_required = pytest.mark.skipif(
+    not CATALOGUE.is_file(), reason="Russian catalogue is not compiled"
+)
 
 
 @pytest.fixture(scope="session")
@@ -65,6 +69,37 @@ def test_dialog_has_four_tabs(app, isolated_settings):
     tabs = dialog.findChild(QtWidgets.QTabWidget)
     labels = [tabs.tabText(i) for i in range(tabs.count())]
     assert labels == ["General", "Editor", "Paths", "Advanced"]
+
+
+@catalogue_required
+def test_dialog_has_four_tabs_in_russian(app, isolated_settings):
+    window = MainWindow()
+    try:
+        window.set_language("ru")
+        dialog = SettingsDialog()
+        tabs = dialog.findChild(QtWidgets.QTabWidget)
+        labels = [tabs.tabText(i) for i in range(tabs.count())]
+        assert labels == ["Общие", "Редактор", "Пути", "Дополнительно"]
+    finally:
+        window._language_manager.set_language("system")
+        window.close()
+
+
+@catalogue_required
+def test_theme_names_are_translated(app, isolated_settings):
+    window = MainWindow()
+    try:
+        window.set_language("ru")
+        dialog = SettingsDialog()
+        combo = dialog._widgets["general"]["theme"]
+        labels = [combo.itemText(i) for i in range(combo.count())]
+        # The literals must be extracted into the catalogue; a tr() call whose
+        # argument is a variable is invisible to lupdate and would leave these
+        # in English.
+        assert labels == ["Тёмная", "Светлая", "Системный"]
+    finally:
+        window._language_manager.set_language("system")
+        window.close()
 
 
 def test_defaults_on_first_run(app, isolated_settings):

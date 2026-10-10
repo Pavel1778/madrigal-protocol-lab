@@ -11,6 +11,7 @@ from __future__ import annotations
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from . import theme
+from .constants import FONT_SIZE_WIDGET_DEFAULT
 from .model import CaptureModel, SessionInfo
 
 # Role holding whether an item carries a diagnostic (so it can be recoloured
@@ -42,7 +43,7 @@ class SessionTree(QtWidgets.QTreeWidget):
         self.setHeaderLabels([self.tr("session"), self.tr("traffic")])
         self.setRootIsDecorated(True)
         self.setUniformRowHeights(True)
-        self._font_size = 10
+        self._font_size = FONT_SIZE_WIDGET_DEFAULT
         self.setFont(theme.body_font(self._font_size))
         self.header().setStretchLastSection(True)
         self.header().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Interactive)
