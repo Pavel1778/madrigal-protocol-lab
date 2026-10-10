@@ -1,7 +1,12 @@
 """The dark token set.
 
-The Madrigal identity: near-black background, one bordeaux accent, muted status
-colours that mark a verdict rather than decorate. This is the default theme.
+The default theme. Surfaces are warm neutrals rather than pure black: the
+lightest layer sits closest to the reader (dialogs, popups), the darkest sits
+furthest back (the window), so the depth reads the way it does under a light
+from above. No surface is ``#000000`` and no text is ``#FFFFFF``, which avoids
+the smear and the glare of a hard black/white pair. The single bordeaux accent
+is used sparingly: as the row selection and the pressed-button fill only, so no
+large block of saturated colour sits on the screen.
 """
 
 from __future__ import annotations
@@ -10,36 +15,36 @@ from .tokens import Theme
 
 DARK = Theme(
     name="dark",
-    background="#131516",
-    surface="#1D1D1D",
-    surface_alt="#171819",
-    surface_elevated="#1D1D1D",
-    border="#2A2C2E",
-    text_primary="#E0E0E0",
-    text_secondary="#9F9F9F",
-    text_muted="#9F9F9F",
-    accent="#6D071F",
-    accent_hover="#A2391D",
-    accent_gradient=("#410913", "#610D1C", "#A2391D"),
-    text_on_accent="#E0E0E0",
-    selection="#6D071F",
-    selection_text="#E0E0E0",
-    menu_selection="#6D071F",
-    menu_selection_text="#E0E0E0",
-    button_pressed="#6D071F",
-    status_matched="#2F5D45",
-    status_matched_text="#7FBF9B",
-    status_mismatched="#6E2626",
-    status_mismatched_text="#E08A8A",
-    status_ambiguous="#6B5B14",
-    status_ambiguous_text="#E6D071",
-    status_incomplete="#6B5320",
-    status_incomplete_text="#D8B65C",
-    status_uncovered="#3A3C3E",
-    status_not_applicable="#202224",
-    status_outdated="#2A2C2E",
-    gap="#4A1414",
-    hypothesis="#A2391D",
+    background="#141210",
+    surface="#1C1917",
+    surface_alt="#171412",
+    surface_elevated="#242019",
+    border="#322D28",
+    text_primary="#E6E1DB",
+    text_secondary="#A8A099",
+    text_muted="#8C857E",
+    accent="#7A1224",
+    accent_hover="#A8391F",
+    accent_gradient=("#4A0A16", "#6C1020", "#A8391F"),
+    text_on_accent="#F2EDE7",
+    selection="#7A1224",
+    selection_text="#E6E1DB",
+    menu_selection="#7A1224",
+    menu_selection_text="#E6E1DB",
+    button_pressed="#7A1224",
+    status_matched="#2E5B44",
+    status_matched_text="#8FCBA8",
+    status_mismatched="#6E2A2A",
+    status_mismatched_text="#E79A9A",
+    status_ambiguous="#6E5C16",
+    status_ambiguous_text="#E8D67A",
+    status_incomplete="#6E5520",
+    status_incomplete_text="#DCBB6A",
+    status_uncovered="#3C3835",
+    status_not_applicable="#211E1C",
+    status_outdated="#2C2825",
+    gap="#521616",
+    hypothesis="#A8391F",
     font_heading="Tektur",
     font_body="Montserrat",
     font_mono="DejaVu Sans Mono",

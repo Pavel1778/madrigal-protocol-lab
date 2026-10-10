@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Protocol laboratory{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/htmx.min.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">Protocol lab</a>
+    {% if capture_id %}<span class="chip" title="{{ source_file }}">{{ capture_id[:19] }}</span>{% endif %}
+    {% if has_rule %}<span class="chip chip--accent">rule {{ rule_id }} v{{ rule_version }}</span>{% endif %}
+    <span class="spacer"></span>
+    <a class="button" href="/export/report">Export report</a>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
