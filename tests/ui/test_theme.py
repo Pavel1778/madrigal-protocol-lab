@@ -144,3 +144,49 @@ def test_main_window_switches_theme_live(app):
     finally:
         window.set_theme_mode("dark")
         window.close()
+
+
+def test_light_theme_uses_the_refined_surfaces():
+    light = theme.LIGHT
+    assert light.surface == "#FFFFFF"
+    assert light.surface_elevated == "#F5F5F5"
+    assert light.background == "#FAFAFA"
+    assert light.border == "#E0E0E0"
+    assert light.selection == "#E3F2FD"
+    assert light.menu_selection == "#EEEEEE"
+
+
+def test_light_selection_is_not_the_accent():
+    # The accent is a dark bordeaux; a selected row on a light surface must use
+    # the soft tint, not the accent fill.
+    assert theme.LIGHT.selection != theme.LIGHT.accent
+    assert theme.LIGHT.selection_text == theme.LIGHT.text_primary
+
+
+def test_light_stylesheet_covers_interactive_states():
+    sheet = theme.build_stylesheet(theme.LIGHT)
+    for selector in (
+        "QPushButton:hover",
+        "QPushButton:pressed",
+        "QPushButton:disabled",
+        "QLineEdit:focus",
+        "QTabBar::tab:selected",
+        "QMenu::item:selected",
+        "QScrollBar::handle:vertical",
+    ):
+        assert selector in sheet, selector
+
+
+def test_refined_theme_tokens_reach_wcag():
+    from src.ui.theme import contrast
+
+    for name in ("dark", "light"):
+        failures = [c for c in contrast.check(theme.THEMES[name]) if not c.passes]
+        assert not failures, f"{name}: {failures}"
+
+
+def test_dark_palette_highlight_is_the_accent():
+    # The dark selection fill stays the accent, so the dark look is unchanged.
+    palette = theme.build_palette(theme.DARK)
+    assert palette.color(QtGui.QPalette.ColorRole.Highlight).name().lower() == theme.DARK.accent.lower()
+    assert theme.DARK.button_pressed == theme.DARK.accent

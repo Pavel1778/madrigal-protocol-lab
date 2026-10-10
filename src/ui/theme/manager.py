@@ -61,8 +61,8 @@ def build_palette(theme: Theme | None = None) -> QtGui.QPalette:
         role.Text: theme.text_primary,
         role.Button: theme.surface,
         role.ButtonText: theme.text_primary,
-        role.Highlight: theme.accent,
-        role.HighlightedText: theme.text_primary,
+        role.Highlight: theme.selection,
+        role.HighlightedText: theme.selection_text,
         role.ToolTipBase: theme.surface,
         role.ToolTipText: theme.text_primary,
         role.PlaceholderText: theme.text_muted,
@@ -107,18 +107,23 @@ def build_stylesheet(theme: Theme | None = None) -> str:
         background-color: {theme.surface};
         border: 1px solid {theme.border};
         border-radius: {theme.radius}px;
-        selection-background-color: {theme.accent};
-        selection-color: {theme.text_primary};
+        selection-background-color: {theme.selection};
+        selection-color: {theme.selection_text};
         outline: none;
     }}
-    QTreeWidget::item:selected, QTableWidget::item:selected {{
-        background-color: {theme.accent};
+    QTreeWidget::item:hover, QTableWidget::item:hover, QListWidget::item:hover {{
+        background-color: {theme.surface_alt};
+    }}
+    QTreeWidget::item:selected, QTableWidget::item:selected, QListWidget::item:selected {{
+        background-color: {theme.selection};
+        color: {theme.selection_text};
     }}
     QHeaderView::section {{
         background-color: {theme.surface_alt};
         color: {theme.text_secondary};
         border: none;
         border-right: 1px solid {theme.border};
+        border-bottom: 1px solid {theme.border};
         padding: 4px 6px;
         font-family: "{theme.font_heading}";
     }}
@@ -130,10 +135,23 @@ def build_stylesheet(theme: Theme | None = None) -> str:
         color: {theme.text_primary};
     }}
     QPushButton:hover {{ border-color: {theme.accent}; }}
-    QPushButton:pressed {{ background-color: {theme.accent}; }}
+    QPushButton:pressed {{ background-color: {theme.button_pressed}; border-color: {theme.accent}; }}
+    QPushButton:disabled {{
+        color: {theme.text_muted};
+        border-color: {theme.border};
+        background-color: {theme.surface_alt};
+    }}
     QPushButton[accent="true"] {{
         background-color: {theme.accent};
         border-color: {theme.accent};
+        color: {theme.text_on_accent};
+    }}
+    QPushButton[accent="true"]:hover {{ background-color: {theme.accent_hover}; border-color: {theme.accent_hover}; }}
+    QPushButton[accent="true"]:pressed {{ background-color: {theme.accent_hover}; }}
+    QPushButton[accent="true"]:disabled {{
+        background-color: {theme.surface_alt};
+        border-color: {theme.border};
+        color: {theme.text_muted};
     }}
     QLineEdit, QComboBox, QSpinBox {{
         background-color: {theme.surface};
@@ -141,18 +159,53 @@ def build_stylesheet(theme: Theme | None = None) -> str:
         border-radius: {theme.radius}px;
         padding: 4px 6px;
     }}
+    QLineEdit:hover, QComboBox:hover, QSpinBox:hover {{ border-color: {theme.text_muted}; }}
+    QLineEdit:focus, QComboBox:focus, QSpinBox:focus {{ border: 1px solid {theme.accent}; }}
+    QLineEdit:disabled, QComboBox:disabled, QSpinBox:disabled {{
+        background-color: {theme.surface_alt};
+        color: {theme.text_muted};
+    }}
+    QTabWidget::pane {{ border: 1px solid {theme.border}; top: -1px; }}
+    QTabBar::tab {{
+        background-color: {theme.surface_alt};
+        color: {theme.text_secondary};
+        border: 1px solid {theme.border};
+        border-bottom: none;
+        padding: 5px 12px;
+    }}
+    QTabBar::tab:hover {{ color: {theme.text_primary}; }}
+    QTabBar::tab:selected {{
+        background-color: {theme.surface};
+        color: {theme.text_primary};
+        border-top: 2px solid {theme.accent};
+    }}
     QMenuBar {{ background-color: {theme.surface_alt}; }}
-    QMenuBar::item:selected {{ background-color: {theme.accent}; }}
+    QMenuBar::item:selected {{ background-color: {theme.menu_selection}; color: {theme.menu_selection_text}; }}
     QMenu {{ background-color: {theme.surface}; border: 1px solid {theme.border}; }}
-    QMenu::item:selected {{ background-color: {theme.accent}; }}
+    QMenu::item:selected {{ background-color: {theme.menu_selection}; color: {theme.menu_selection_text}; }}
     QStatusBar {{ background-color: {theme.surface_alt}; color: {theme.text_secondary}; }}
     QScrollBar:vertical {{
-        background: {theme.surface_alt}; width: 12px; margin: 0;
+        background: {theme.surface_alt}; width: 10px; margin: 0;
     }}
     QScrollBar::handle:vertical {{
-        background: {theme.border}; border-radius: {theme.radius}px; min-height: 24px;
+        background: {theme.border}; border-radius: 5px; min-height: 24px;
     }}
+    QScrollBar::handle:vertical:hover {{ background: {theme.text_muted}; }}
+    QScrollBar:horizontal {{
+        background: {theme.surface_alt}; height: 10px; margin: 0;
+    }}
+    QScrollBar::handle:horizontal {{
+        background: {theme.border}; border-radius: 5px; min-width: 24px;
+    }}
+    QScrollBar::handle:horizontal:hover {{ background: {theme.text_muted}; }}
     QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
+    QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{ width: 0; }}
+    QScrollBar::add-page, QScrollBar::sub-page {{ background: transparent; }}
+    QToolTip {{
+        background-color: {theme.surface};
+        color: {theme.text_primary};
+        border: 1px solid {theme.border};
+    }}
     QProgressBar {{
         background-color: {theme.surface_alt};
         border: 1px solid {theme.border};
