@@ -1,0 +1,13 @@
+{
+  "name": "madrigal-protocol-lab-presentation",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "slidev",
+    "build": "slidev build --base ./",
+    "export": "slidev export --format pdf"
+  },
+  "devDependencies": {
+    "playwright-chromium": "^1.64.0"
+  }
+}
