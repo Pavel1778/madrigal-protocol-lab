@@ -151,6 +151,28 @@ the defect fixtures, the streaming and regular pipelines agreeing, the project
 container round trip, the report renderers, and the corpus integration over the
 committed records.
 
+## 9. Install into the application menu
+
+The window ships with an icon and a freedesktop desktop entry. Install them for
+the current user, without root:
+
+```
+pip install -e .
+bash scripts/install_desktop.sh
+```
+
+The script copies `packaging/madrigal-protocol-lab.desktop` into
+`~/.local/share/applications` and the rendered PNGs into
+`~/.local/share/icons/hicolor/<size>x<size>/apps`, then refreshes the desktop
+and icon caches. The launcher runs `madrigal-lab`, the `gui-scripts` entry point
+declared in `pyproject.toml`, so install the package first. A fresh login session
+may be needed before the entry appears.
+
+Expected: an entry named "Madrigal Protocol Laboratory" in the application menu,
+opening the window with the hexagon icon in the title bar. The icon master is
+`assets/icons/app/madrigal-protocol-lab.svg`; regenerate the PNGs and their
+hicolor copies with `python scripts/render_icons.py`.
+
 ## Notes
 
 - All commands run offline.
