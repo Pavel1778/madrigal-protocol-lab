@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="Madrigal Protocol Laboratory">
+  <defs>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#410913"/>
+      <stop offset="0.5" stop-color="#610D1C"/>
+      <stop offset="1" stop-color="#A2391D"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="#131516"/>
+  <g fill="none" stroke="url(#accent)" stroke-width="16" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M128 44 L201 86 L201 170 L128 212 L55 170 L55 86 Z"/>
+    <path d="M128 128 L128 44 M128 128 L201 170 M128 128 L55 170"/>
+  </g>
+  <circle cx="128" cy="128" r="22" fill="url(#accent)"/>
+</svg>
