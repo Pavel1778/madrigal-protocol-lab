@@ -15,6 +15,7 @@ from __future__ import annotations
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from . import theme
+from .constants import FONT_SIZE_BODY
 
 # Score bands for the colour code: high, middle, low.
 HIGH_SCORE = 0.9
@@ -68,7 +69,7 @@ class HypothesesView(QtWidgets.QWidget):
 
         self.header = QtWidgets.QLabel(self.tr("no rule applied"))
         self.header.setProperty("role", "secondary")
-        self.header.setFont(theme.body_font(9))
+        self.header.setFont(theme.body_font(FONT_SIZE_BODY))
         self.header.setWordWrap(True)
         layout.addWidget(self.header)
 
@@ -78,7 +79,7 @@ class HypothesesView(QtWidgets.QWidget):
         )
         self.table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table.setFont(theme.body_font(9))
+        self.table.setFont(theme.body_font(FONT_SIZE_BODY))
         self.table.verticalHeader().setVisible(False)
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)

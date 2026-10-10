@@ -20,6 +20,12 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from ..protocol.result import build_result, write_result
 from . import theme
 from .compare_view import CompareView
+from .constants import (
+    FONT_SIZE_BODY,
+    FONT_SIZE_CAPTION,
+    LEGEND_SWATCH_PX,
+    PROGRESS_BAR_WIDTH,
+)
 from .hex_view import (
     LEGEND_KINDS,
     HexView,
@@ -30,6 +36,7 @@ from .hex_view import (
 )
 from .hypotheses_view import HypothesesView
 from .i18n import LanguageManager
+from .layout import FlowLayout
 from .model import CaptureModel, RuleModel, verify_rule_on_corpus
 from .session_tree import SessionTree
 from .settings import (
@@ -282,26 +289,24 @@ class MainWindow(QtWidgets.QMainWindow):
         centre_layout.setSpacing(6)
         controls = QtWidgets.QHBoxLayout()
         self.direction_combo = QtWidgets.QComboBox()
-        self.direction_combo.setFont(theme.body_font(9))
+        self.direction_combo.setFont(theme.body_font(FONT_SIZE_BODY))
         self.direction_combo.currentTextChanged.connect(self._on_direction_changed)
         self._direction_label = QtWidgets.QLabel(self.tr("direction"))
         controls.addWidget(self._direction_label)
         controls.addWidget(self.direction_combo)
         controls.addStretch(1)
         self.annotation_legend = QtWidgets.QWidget()
-        legend_layout = QtWidgets.QHBoxLayout(self.annotation_legend)
-        legend_layout.setContentsMargins(0, 0, 0, 0)
-        legend_layout.setSpacing(8)
+        legend_layout = FlowLayout(self.annotation_legend, margin=0, spacing=8)
         self._legend_chips: list[QtWidgets.QLabel] = []
         for kind, _name in LEGEND_KINDS:
             label = legend_label(kind)
             chip = QtWidgets.QLabel(label)
-            chip.setFont(theme.body_font(8))
+            chip.setFont(theme.body_font(FONT_SIZE_CAPTION))
             chip.setProperty("role", "secondary")
             chip.setToolTip(label)
             swatch = QtWidgets.QLabel()
             swatch.setPixmap(legend_swatch(kind))
-            swatch.setFixedSize(12, 12)
+            swatch.setFixedSize(LEGEND_SWATCH_PX, LEGEND_SWATCH_PX)
             legend_layout.addWidget(swatch)
             legend_layout.addWidget(chip)
             self._legend_chips.append(chip)
@@ -313,6 +318,11 @@ class MainWindow(QtWidgets.QMainWindow):
         splitter.addWidget(self._bytes_box)
 
         self.right_tabs = QtWidgets.QTabWidget()
+        # The right dock is narrow and its captions are longer in Russian; elide
+        # them and keep the full text in a tooltip rather than letting the bar
+        # force the splitter wider than the panel can afford.
+        self.right_tabs.setElideMode(QtCore.Qt.TextElideMode.ElideRight)
+        self.right_tabs.setUsesScrollButtons(True)
         self.validation_view = ValidationView()
         self.right_tabs.addTab(self.validation_view, "")
         self.compare_view = CompareView()
@@ -321,11 +331,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.right_tabs.addTab(self.hypotheses_view, "")
         self.report_view = QtWidgets.QPlainTextEdit()
         self.report_view.setReadOnly(True)
-        self.report_view.setFont(theme.mono_font(9))
+        self.report_view.setFont(theme.mono_font(FONT_SIZE_BODY))
         self.right_tabs.addTab(self.report_view, "")
         self.diff_view = QtWidgets.QPlainTextEdit()
         self.diff_view.setReadOnly(True)
-        self.diff_view.setFont(theme.mono_font(9))
+        self.diff_view.setFont(theme.mono_font(FONT_SIZE_BODY))
         self.right_tabs.addTab(self.diff_view, "")
         self._relabel_tabs()
         splitter.addWidget(self.right_tabs)
@@ -344,7 +354,11 @@ class MainWindow(QtWidgets.QMainWindow):
         return box
 
     def _relabel_tabs(self) -> None:
-        """Translate the right-hand tab captions in place."""
+        """Translate the right-hand tab captions in place.
+
+        The full caption is also set as the tab tooltip, so an elided caption in
+        a narrow dock is still readable on hover.
+        """
         for index, label in enumerate(
             (
                 self.tr("Interpretation"),
@@ -355,18 +369,19 @@ class MainWindow(QtWidgets.QMainWindow):
             )
         ):
             self.right_tabs.setTabText(index, label)
+            self.right_tabs.setTabToolTip(index, label)
 
     def _build_status(self) -> None:
         bar = self.statusBar()
         self._provenance_label = QtWidgets.QLabel()
-        self._provenance_label.setFont(theme.body_font(9))
+        self._provenance_label.setFont(theme.body_font(FONT_SIZE_BODY))
         self._provenance_label.setTextInteractionFlags(
             QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
         )
         bar.addWidget(self._provenance_label, 1)
         self._set_provenance_text(self.tr("no byte selected"))
         self._progress = QtWidgets.QProgressBar()
-        self._progress.setFixedWidth(140)
+        self._progress.setFixedWidth(PROGRESS_BAR_WIDTH)
         self._progress.setRange(0, 100)
         self._progress.setValue(0)
         self._progress.setVisible(False)
@@ -418,8 +433,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.hypotheses_view,
         ):
             view.apply_theme()
-        self.report_view.setFont(theme.mono_font(9))
-        self.diff_view.setFont(theme.mono_font(9))
+        self.report_view.setFont(theme.mono_font(FONT_SIZE_BODY))
+        self.diff_view.setFont(theme.mono_font(FONT_SIZE_BODY))
 
     # -- zoom --------------------------------------------------------------
 
@@ -518,9 +533,13 @@ class MainWindow(QtWidgets.QMainWindow):
             if self._language_manager is None or self._language_manager.preference != language:
                 self.set_language(language)
 
-        self.hex_view.set_font_size(int(editor.get("hex_font_size", 13)))
+        self.hex_view.set_font_size(
+            int(editor.get("hex_font_size", DEFAULTS["editor"]["hex_font_size"]))
+        )
         self.hex_view.set_show_offset(bool(editor.get("show_offset", True)))
-        self.session_tree.set_font_size(int(editor.get("tree_font_size", 11)))
+        self.session_tree.set_font_size(
+            int(editor.get("tree_font_size", DEFAULTS["editor"]["tree_font_size"]))
+        )
         self.hex_view.set_show_diagnostics(bool(advanced.get("show_diagnostics", True)))
 
         level = str(advanced.get("log_level", "INFO"))
