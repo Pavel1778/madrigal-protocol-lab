@@ -31,3 +31,6 @@ out/
 presentation/node_modules/
 presentation/dist/
 presentation/.vite-cache/
+
+# Reserve video: large binary, rebuilt from presentation/VIDEO.md
+presentation/video.mp4
