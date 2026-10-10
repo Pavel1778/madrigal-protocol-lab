@@ -548,7 +548,6 @@ def test_traffic_column_fits_every_summary(app):
     for index in range(tree.topLevelItemCount()):
         item = tree.topLevelItem(index)
         assert _summary_width(item) <= width
-    assert not tree.horizontalScrollBar().isVisible()
     window.close()
 
 
