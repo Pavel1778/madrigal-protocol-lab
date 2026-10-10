@@ -4,8 +4,8 @@ The archive is a self-contained copy of the solution: the source, the tests,
 the committed corpus and reference exports, the documentation, and a
 ``SUBMISSION.md`` that describes the entry. It is meant to be handed over as a
 single file and to run after unpacking, so the builder refuses to produce one
-while the working tree is dirty, while the branch is not the expected one, or
-while the test suite is red.
+while the working tree is dirty or while the test suite is red. A branch can be
+pinned with ``--branch``; by default the builder runs on any branch.
 
     python -m scripts.build_submission
 
@@ -29,7 +29,8 @@ from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parent.parent
 
-EXPECTED_BRANCH = "agent1/capture"
+# Empty means the builder runs on any branch; pass --branch to pin one.
+EXPECTED_BRANCH = ""
 
 # Directories copied into the archive when present.
 INCLUDE_DIRS = (
