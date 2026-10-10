@@ -17,6 +17,16 @@ ffmpeg -f x11grab -framerate 25 -video_size 1440x880 -i :0.0+0,0 \
   -c:v libx264 -pix_fmt yuv420p presentation/video.mp4
 ```
 
+An offline driver, `record_demo.py`, performs the six scenes with the real
+window code and a caption band, so the take is reproducible without a speaker.
+It is a recording aid only: the window is unchanged and each action is the one a
+menu performs. Record the screen while it runs, then crop to the window frame it
+prints at start-up:
+
+```
+python presentation/record_demo.py     # under a display, prints its geometry
+```
+
 Before recording, set the window to 1440 by 880, hide the terminal, and mute
 notifications. Keep the pointer still while the narration runs.
 
