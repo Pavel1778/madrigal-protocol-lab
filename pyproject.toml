@@ -27,7 +27,7 @@ dev = [
 ]
 
 [project.gui-scripts]
-madrigal-lab = "scripts.madrigal_lab:main"
+madrigal-lab = "src.ui.main_window:main"
 
 [tool.setuptools]
 packages = [
@@ -38,7 +38,6 @@ packages = [
     "src.ui",
     "src.project",
     "src.report",
-    "scripts",
 ]
 
 [tool.pytest.ini_options]
