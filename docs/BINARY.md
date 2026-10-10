@@ -35,6 +35,7 @@ to support: the result does not run on an older one.
 | `dist/protocol-lab-x86_64.AppImage` | about 71 MB |
 | `dist/madrigal-lab.run` | about 71 MB |
 | `dist/madrigal_protocol_lab-1.0.0-py3-none-any.whl` | about 175 KB |
+| `dist/madrigal-protocol-lab-docker.tar.gz` | about 540 MB (compressed image) |
 
 Most of the size is Qt and the bundled CPython. The binary is not compressed; the
 AppImage and the `.run` carry the same binary in a SquashFS and a gzipped
@@ -81,6 +82,38 @@ The wheel installs the package and its dependencies:
 pip install dist/madrigal_protocol_lab-1.0.0-py3-none-any.whl
 ```
 
+## Docker
+
+The image carries the source, the tests, the corpus and the pinned
+dependencies, plus the Qt runtime libraries the window needs. It runs the
+suite or the window with no host setup:
+
+```
+docker build -t madrigal-protocol-lab .
+docker run --rm madrigal-protocol-lab pytest tests/ -q
+docker run --rm madrigal-protocol-lab python -m src.ui.main_window --help
+```
+
+`QT_QPA_PLATFORM=offscreen` is set in the image, so the default `CMD`
+(`python -m src.ui.main_window`) starts the window headless. A visible window
+additionally needs the X socket:
+
+```
+docker run --rm -e DISPLAY \
+    -v /tmp/.X11-unix:/tmp/.X11-unix madrigal-protocol-lab
+```
+
+Save and load a built image as one file:
+
+```
+docker save madrigal-protocol-lab | gzip > dist/madrigal-protocol-lab-docker.tar.gz
+docker load < dist/madrigal-protocol-lab-docker.tar.gz
+```
+
+The compressed image is large (about 540 MB): it is Debian slim plus CPython,
+PySide6 and the Qt libraries, not a reduction of the 71 MB binary, so it is a
+build-from-`Dockerfile` path rather than a download path.
+
 ## What was verified
 
 - The binary prints the usage of the window entry point and starts the window
@@ -93,7 +126,14 @@ pip install dist/madrigal_protocol_lab-1.0.0-py3-none-any.whl
 - The `.run` is built with `makeself`, installed into a temporary `PREFIX`, and
   the installed `bin/madrigal-lab --help` prints the usage; the desktop entry
   and all rendered icon sizes land under the prefix.
-- The wheel builds with `python -m build` and reports the version `1.0.0`.
+- The wheel builds with `python -m build` and reports the version `1.0.0`. A
+  fresh virtualenv installed from the wheel resolves `madrigal-lab` as a console
+  script and prints the window usage.
+- The Docker image builds with `docker build`; `docker run --rm ... python -m
+  src.ui.main_window --help` prints the usage and the default `CMD` starts the
+  window headless (offscreen). The Qt runtime libraries are installed in the
+  image, so the window imports without a host `libglib`. The image is exported
+  with `docker save | gzip`.
 - The application registers its desktop file id (`madrigal-protocol-lab`) at
   startup, so a dock resolves the window icon from the installed entry rather
   than from the title-bar icon alone.
