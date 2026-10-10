@@ -286,24 +286,24 @@ v2 на том же корпусе: 140 matched, 0 mismatched, точность 
 
 Основная поставка — исходное дерево с инструкцией выше, упакованное скриптом
 `python scripts/build_submission.py` в `dist/submission_*.zip`. Архив
-распаковывается и запускается тем же порядком. Готовые сборки релиза
-`v1.0.0` лежат на странице Releases репозитория; шаги установки из них — в
-[docs/INSTALL.md](docs/INSTALL.md).
+распаковывается и запускается тем же порядком. Готовые сборки лежат в релизе
+[v1.0.0](https://github.com/Pavel1778/madrigal-protocol-lab/releases/tag/v1.0.0);
+пошаговая установка из них — в [docs/INSTALL.md](docs/INSTALL.md).
 
-| Формат | Состояние | Команда / файл |
-| --- | --- | --- |
-| Архив исходников | в поставке | `python scripts/build_submission.py` |
-| Демонстрация (HTML/PDF) | в поставке | `cd presentation && npm install && npm run build` |
-| Docker-образ | в поставке, `Dockerfile` в дереве | `docker build -t protocol-lab .` |
-| Linux-бинарник | собирается по требованию | `scripts/build_linux_binary.sh` |
-| Пакет `.deb` | собирается по требованию | `scripts/build_deb.sh` |
-| AppImage | собирается по требованию | `scripts/build_appimage.sh` |
-| Самораспаковывающийся `.run` | собирается по требованию | `scripts/build_run.sh` |
-| Python-колесо | собирается по требованию | `python -m build --wheel` |
+| Формат | Установка | Размер | Команда |
+| --- | --- | --- | --- |
+| AppImage | не требуется | ~71 МБ | `chmod +x; ./protocol-lab-*.AppImage` |
+| `.deb` | dpkg | ~71 МБ | `sudo dpkg -i madrigal-protocol-lab_*.deb` |
+| `.run` | самозапуск | ~71 МБ | `chmod +x; ./madrigal-lab.run` |
+| Binary | portable | ~71 МБ | `chmod +x; ./madrigal-lab` |
+| Docker | docker | ~540 МБ | `docker load < *.tar.gz` |
+| pip | pip | ~15 МБ | `pip install madrigal_protocol_lab-*.whl` |
+| Source | venv | ~7 МБ | `pip install -e .` |
 
-Бинарник, `.deb`, AppImage, `.run` и колесо — собранные артефакты, в репозиторий
-не коммитятся; скрипты их сборки коммитятся. Архив проверяется после сборки: он
-распаковывается во временный каталог, и тесты запускаются уже оттуда.
+Бинарник, `.deb`, AppImage, `.run`, образ Docker и колесо — собранные артефакты,
+в репозиторий не коммитятся; скрипты их сборки коммитятся. Архив проверяется
+после сборки: он распаковывается во временный каталог, и тесты запускаются уже
+оттуда.
 
 ## Ограничения
 
