@@ -33,9 +33,9 @@ pip install --upgrade pip
 pip install -e ".[dev]"
 ```
 
-The window carries the `madrigal-protocol-lab` icon (`assets/icons/app/`), and
-`bash scripts/install_desktop.sh` adds a "Madrigal Protocol Laboratory" entry to
-the application menu; see [docs/USAGE.md](docs/USAGE.md).
+The window uses the packaged application icon (`assets/icons/app/`), and
+`bash scripts/install_desktop.sh` adds it to the application menu; see
+[docs/USAGE.md](docs/USAGE.md).
 
 ## Quick start
 
@@ -56,7 +56,10 @@ progress to stderr. Both CLIs stay quiet otherwise.
 
 The window opens its preferences with **View → Settings...** or **Ctrl+,**.
 Theme, interface language, hex and tree font sizes, default directories and the
-logging level are all set there; see [docs/SETTINGS.md](docs/SETTINGS.md).
+logging level are all set there; see [docs/SETTINGS.md](docs/SETTINGS.md). While
+reading a stream, **Ctrl +** (or **Ctrl =**) and **Ctrl −** enlarge and shrink
+the bytes and the session tree together, and **Ctrl 0** restores the default
+size.
 
 ## What is implemented
 
