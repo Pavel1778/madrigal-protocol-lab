@@ -25,3 +25,8 @@ out/
 
 # PyInstaller
 *.spec
+
+# Presentation (Slidev) build artifacts
+presentation/node_modules/
+presentation/dist/
+presentation/.vite-cache/
