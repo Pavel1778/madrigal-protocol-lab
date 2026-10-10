@@ -24,7 +24,7 @@ Those rows are from the capture, project and report revision. The suite has
 since grown with the protocol and window modules; the authoritative counts for
 the submitted revision are in "Submission archive check" below.
 
-## Submission revision (664 tests)
+## Submission revision (741 tests)
 
 The submission revision is checked from a clean unpack, so the archived tree
 and not the working copy is what runs. The skip below is the archive's only
@@ -33,8 +33,8 @@ that reads a script's executable bit is skipped rather than failed.
 
 | Source | Python | Suite | Lint |
 | --- | --- | --- | --- |
-| Git checkout at this head | 3.13.5 | 664 passed, 0 skipped | All checks passed |
-| `dist/submission_*.zip`, clean unpack | 3.13.5 | 663 passed, 1 skipped | All checks passed |
+| Git checkout at this head | 3.13.5 | 741 passed, 0 skipped | All checks passed |
+| `dist/submission_*.zip`, clean unpack | 3.13.5 | 740 passed, 1 skipped | All checks passed |
 
 No other test skipped on either: the corpus, the reference export and the
 `examples/` rules are inside the archive.
@@ -88,7 +88,7 @@ from the repository, so a forgotten file cannot hide behind the working tree.
 | Python | 3.13.5 (the archive targets 3.12 or newer) |
 | Archive | `dist/submission_20261010_2038.zip`, 375 entries, 8.3 MiB |
 | Install time | a fresh venv with `pip install -e ".[dev]"` |
-| Suite | 663 passed, 1 skipped (the executable-bit test; see above) |
+| Suite | 740 passed, 1 skipped (the executable-bit test; see above) |
 | Static check | `ruff check . --select "E4,E7,E9,F" --ignore E501`: All checks passed |
 | Pipeline | `src.project.cli pipeline` with the corpus rule: 3 sessions, `REPORT.md` and `REPORT.html` written |
 | Window | opened headless against the reference export and the corpus rule |

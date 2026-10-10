@@ -258,20 +258,21 @@ After the merge:
 
 ## 11. Final state
 
-Checked at the submission revision, after the presentation, UI and test-isolation
-changes were merged into `main`.
+Checked at the merged revision, after the interface locale and snapshot suites,
+the perceptual baseline comparison and the repository hygiene were merged into
+`main`.
 
 | Item | Value |
 | --- | --- |
-| `main` head | `f9680fe` |
-| Suite (checkout) | 664 passed, 0 skipped |
-| Suite (`dist/submission_*.zip`, clean unpack) | 663 passed, 1 skipped (the executable-bit test; a zip drops the mode) |
+| `main` head | the merge of the interface test suites into `main` |
+| Suite (checkout) | 741 passed, 0 skipped |
+| Suite (`dist/submission_*.zip`, clean unpack) | 740 passed, 1 skipped (the executable-bit test; a zip drops the mode) |
 | Lint | `ruff check . --select "E4,E7,E9,F" --ignore E501`: All checks passed |
 | Coverage | 90% over `src/` (`pytest --cov=src`); the largest gap is `src/ui/` wiring |
-| CI | green on `main`: test matrix (3.12 and 3.13), `code-quality`, `dependency-audit`, run `38083510278` |
-| Largest tracked file | `presentation/presentation_html.zip`, 1.5 MiB, well under 5 MiB |
-| Submission archive | the latest `dist/submission_*.zip`, rebuilt at this head: 8.3 MiB, 375 entries |
-| Fresh unpack | 663 passed, 1 skipped from a clean unpack at this head |
+| CI | green on `main`: test matrix (3.12 and 3.13), `ui` matrix, `code-quality`, `dependency-audit` |
+| Largest tracked file | `presentation/presentation_html.zip`, 1.8 MiB, well under 5 MiB |
+| Submission archive | the latest `dist/submission_*.zip`, rebuilt at this head |
+| Fresh unpack | 740 passed, 1 skipped from a clean unpack at this head |
 
 Trace checks at this revision:
 
