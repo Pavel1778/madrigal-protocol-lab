@@ -58,6 +58,23 @@ The window opens its preferences with **View → Settings...** or **Ctrl+,**.
 Theme, interface language, hex and tree font sizes, default directories and the
 logging level are all set there; see [docs/SETTINGS.md](docs/SETTINGS.md).
 
+## Web interface (optional)
+
+The desktop window stays the primary interface. There is also an optional,
+local-only web page over the same capture and rule engines, for looking at a
+capture in a browser:
+
+```
+pip install -e ".[web]"
+python -m src.web.app --capture out/cap01.json --rule examples/corpus_rule_v1.json --port 8765
+```
+
+Open <http://127.0.0.1:8765>. The server binds `127.0.0.1` only, keeps all
+state in memory, and needs no database. It lists sessions, shows the hex with
+verdict highlighting, applies a rule, shows per-byte provenance, and exports a
+self-contained HTML report. See [docs/WEB.md](docs/WEB.md) for the details and
+the deliberately excluded scope.
+
 ## What is implemented
 
 | Area | State |
@@ -68,6 +85,7 @@ logging level are all set there; see [docs/SETTINGS.md](docs/SETTINGS.md).
 | `src/ui/` | Done. PySide6 interface: session tree, hex view with provenance, message comparison, rule and validation panels, hypotheses panel, version diff; Russian and English interface, dark and light theme. |
 | `src/project/` | Done. Portable on-disk investigation, manifest with relative paths and sha256, zip export and import with a digest check. |
 | `src/report/` | Done. Investigation rendered to Markdown and to a self-contained HTML page. |
+| `src/web/` | Done, optional. FastAPI + Jinja2 + HTMX page over the same engines: sessions, hex with verdicts, rule apply, per-byte provenance, HTML report export. Local-only, in-memory. |
 
 ## Layout
 
@@ -77,6 +95,7 @@ logging level are all set there; see [docs/SETTINGS.md](docs/SETTINGS.md).
 - `src/ui/` — PySide6 interface
 - `src/project/` — portable on-disk project
 - `src/report/` — investigation reports
+- `src/web/` — optional local web interface (FastAPI + HTMX)
 - `scripts/` — deterministic generators and benchmarks
 - `docs/` — contracts, schemas, API notes, style, benchmark
 - `tests/fixtures/` — small synthetic captures, one behaviour each
@@ -122,6 +141,8 @@ pytest tests/ -q
   driven to show, and the defects found while checking it.
 - [docs/SETTINGS.md](docs/SETTINGS.md) — the preferences dialog, its four
   sections, and the stored keys.
+- [docs/WEB.md](docs/WEB.md) — the optional local web interface: install, run,
+  what it does and what it deliberately leaves out.
 - [REPORT.md](REPORT.md) — the investigation report.
 - [presentation/slides.pdf](presentation/slides.pdf) — the deck, eighteen
   slides, with the real window screenshots.
