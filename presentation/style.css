@@ -273,6 +273,21 @@
   justify-content: center;
   height: 100%;
 }
+.team {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 48px;
+  height: 100%;
+}
+.team-avatar {
+  width: 240px;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 2px solid var(--line);
+  flex: none;
+}
 .team-info { flex: 1; }
 .team-info h1 { margin: 0 0 12px; }
 .web-shot {
