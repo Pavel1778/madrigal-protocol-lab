@@ -1,30 +1,121 @@
-# madrigal-protocol-lab
+# Инструмент исследования бинарного протокола поверх TCP
 
-A local desktop laboratory for investigating an undocumented binary protocol
-over TCP: open a PCAP or PCAPNG capture, identify TCP sessions, rebuild each
-directional stream, inspect the bytes, state hypotheses about the message
-structure, apply declarative interpretation rules, verify them on a corpus, find
-counterexamples, and save the whole investigation as a portable project with a
-report.
+Настольное приложение для разбора недокументированного бинарного протокола
+поверх TCP. Оно открывает захват трафика формата PCAP или PCAPNG, выделяет
+TCP-сессии, собирает направленные потоки, показывает байты с привязкой к
+пакетам, позволяет выдвигать гипотезы о структуре сообщений, применять
+декларативные правила интерпретации, проверять их на корпусе, находить
+контрпримеры и сохранять всё исследование переносным проектом с отчётом.
 
-The guiding rule is that a fact and a guess are never mixed. Every byte range in
-a rebuilt stream is tied to the packet it came from, a gap or an ambiguous
-overlap is shown as such rather than filled in, and a rule that matches examples
-is reported as confirmed in the tested scope, not as proven.
+Главный принцип: факт и догадка не смешиваются. Каждый диапазон байт в
+восстановленном потоке связан с породившим его пакетом; пропуск или
+неоднозначное наложение показываются как есть, а не заполняются; правило,
+согласованное с примерами, считается подтверждённым в проверенном объёме, а не
+доказанным.
 
-The window ships in Russian and English (switch under the language menu; the
-choice is remembered) and in a dark and a light theme (View menu; the dark set is
-the default).
+Интерфейс доступен на русском и английском языке (переключается в меню языка,
+выбор запоминается) и в тёмной и светлой теме (меню «Вид», тёмная по умолчанию).
+Все команды работают офлайн.
 
-## Requirements
+## Реализованная функциональность
 
-- Linux x86-64
-- Python 3.12 or newer
-- For the reference workload (up to 100 MiB PCAP, 250k packets, 1000 TCP
-  sessions, 100k messages, responses up to 64 KiB): 4 vCPU and 8 GB RAM. The
-  measured figures are in `docs/BENCHMARK.md`.
+- **Чтение захватов.** PCAP и PCAPNG, включая несколько блоков интерфейса,
+  разные типы канального уровня и разбор временных меток.
+- **TCP-сессии.** Идентификация соединений по четвёркам адрес/порт, отслеживание
+  открытия, закрытия (FIN) и сброса (RST), порядок потоков.
+- **Потоковая сборка.** Восстановление каждого направления по номерам
+  последовательности, диагностика пропусков и неоднозначных перекрытий,
+  отметка повторных передач.
+- **Привязка к пакетам.** Для каждого байта восстановленного потока хранится
+  ссылка на исходный пакет (номер, файл, смещение, временная метка).
+- **Нормализованный экспорт.** Единый JSON-контракт между всеми стадиями
+  (`docs/CONTRACT.md`), пригодный для внешних инструментов.
+- **Потоковый режим.** Нормализация больших захватов без удержания всего файла
+  в памяти.
+- **Экспорт в Wireshark.** Запись восстановленных потоков обратно в pcap.
+- **Фрейминг сообщений.** Несколько стратегий выделения границ сообщений
+  (по префиксу длины, разделителю, фиксированному размеру, длине с конца).
+- **Декларативные правила.** Описание структуры сообщения в версионируемом
+  формате; движок применяет правило ко всему потоку или корпусу и выдаёт
+  машинно-читаемый результат.
+- **Проверка и контрпримеры.** Сверка правила с корпусом, классификация
+  сообщений (`matched`, `mismatched`, `incomplete`, `uncovered`), показ
+  конкретных байт, опровергающих гипотезу.
+- **Версионирование.** Правила и результаты версионируются; поддерживается
+  сравнение двух версий правила и двух результатов.
+- **Альтернативные гипотезы.** Панель гипотез оценивает конкурирующие прочтения
+  полей по всему корпусу, а не по отдельному примеру.
+- **Переносной проект.** Исследование сохраняется на диск каталогом с манифестом
+  (относительные пути и sha256), экспортируется и импортируется zip-архивом с
+  проверкой целости.
+- **Отчёты.** Исследование отрисовывается в Markdown и в самодостаточную
+  HTML-страницу.
+- **Графический интерфейс.** Дерево сессий, шестнадцатеричный вид с привязкой к
+  пакетам, сравнение сообщений, панель правила и валидации, панель гипотез,
+  сравнение версий, диалог настроек.
+- **Интерфейс и темы.** Русский и английский язык, тёмная и светлая тема,
+  размеры шрифтов, каталоги по умолчанию и уровень логирования — в диалоге
+  настроек.
+- **Веб-интерфейс (необязательно).** Локальная страница поверх тех же движков:
+  сессии, шестнадцатеричный вид с вердиктами, применение правила, провенанс
+  байта, экспорт HTML-отчёта. Только `127.0.0.1`, состояние в памяти.
 
-## Installation
+## Особенность проекта в следующем
+
+1. **Байт всегда связан с пакетом.** Привязка провенанса не надстройка, а
+   свойство самой модели потока: любой байт можно раскрыть до пакета, из
+   которого он пришёл. Это делает вывод проверяемым, а не правдоподобным.
+2. **Совпадение не считается доказательством.** Правило, согласованное со всеми
+   примерами, отчитывается как подтверждённое в проверенном объёме. Корпус
+   целенаправленно содержит контрпример — команду, которую узкое правило v1 не
+   допускало и которая уточнила правило до v2.
+3. **Пропуск виден, а не заполнен.** Пропуски и неоднозначные перекрытия в
+   потоке не маскируются: они показываются отдельными категориями с координатами
+   и остаются входными данными для следующего шага.
+
+## Основной стек технологий
+
+| Слой | Технологии |
+| --- | --- |
+| Язык | Python 3.12+ |
+| Интерфейс | PySide6 6.8.1 (Qt 6), свой набор токенов темы, шрифты Tektur и Montserrat |
+| Разбор захватов | dpkt 1.9.8 |
+| Конфигурация правил | JSON, JSON Schema (`jsonschema`) |
+| Тесты | pytest, pytest-cov |
+| Качество кода | ruff |
+| Сборка | setuptools, PyInstaller, dpkg-deb, Docker |
+
+Графический интерфейс, разбор захватов, движок правил и отчёты не зависят от
+сторонних сетевых сервисов: приложение полностью локальное.
+
+## СРЕДА ЗАПУСКА
+
+- **Операционная система:** Linux x86-64.
+- **Python:** 3.12 или новее.
+- **Графическая среда:** требуется для окна; движок и командные интерфейсы
+  работают без графики.
+- **Ресурсы под эталонную нагрузку** (PCAP до 100 МиБ, 250k пакетов, 1000
+  TCP-сессий, 100k сообщений, ответы до 64 КиБ): 4 vCPU и 8 ГБ ОЗУ. Измеренные
+  значения — в `docs/BENCHMARK.md`.
+- **Сеть:** все команды выполняются офлайн.
+
+## УСТАНОВКА
+
+### Установка пакета и утилит
+
+Выполните:
+
+```
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install -y python3.12 python3.12-venv git
+git clone https://github.com/Pavel1778/madrigal-protocol-lab
+cd madrigal-protocol-lab
+```
+
+### Установка зависимостей проекта
+
+Зависимости ставятся через виртуальное окружение Python:
 
 ```
 python3.12 -m venv .venv
@@ -33,145 +124,185 @@ pip install --upgrade pip
 pip install -e ".[dev]"
 ```
 
-The window carries the `madrigal-protocol-lab` icon (`assets/icons/app/`), and
-`bash scripts/install_desktop.sh` adds a "Madrigal Protocol Laboratory" entry to
-the application menu; see [docs/USAGE.md](docs/USAGE.md).
+### Подготовка тестовых данных
 
-## Quick start
-
-Three commands: build the test data, normalize a capture, validate the result.
+Корпус и синтетические фикстуры детерминированы и собираются одной командой:
 
 ```
 python -m scripts.generate_corpus
-python -m src.capture.cli --pcap tests/corpus/corpus_capture_01.pcapng --out out/cap01.json --source-name captures/corpus_capture_01.pcapng
-python -m pytest tests/ -q
 ```
 
-The first command writes the deterministic corpus into `tests/corpus/` and the
-synthetic fixtures into `tests/fixtures/`. The second produces a normalized
-capture that follows `docs/CONTRACT.md`. The third confirms the whole suite.
+Команда пишет корпус в `tests/corpus/` и фикстуры в `tests/fixtures/`.
 
-Add `--verbose` to the normalize command to log read, session and export
-progress to stderr. Both CLIs stay quiet otherwise.
+## Пример запуска
 
-The window opens its preferences with **View → Settings...** or **Ctrl+,**.
-Theme, interface language, hex and tree font sizes, default directories and the
-logging level are all set there; see [docs/SETTINGS.md](docs/SETTINGS.md).
+### Командная строка
 
-## Web interface (optional)
+Нормализация захвата:
 
-The desktop window stays the primary interface. There is also an optional,
-local-only web page over the same capture and rule engines, for looking at a
-capture in a browser:
+```
+python -m src.capture.cli --pcap tests/corpus/corpus_capture_01.pcapng \
+  --out out/cap01.json --source-name captures/corpus_capture_01.pcapng
+```
+
+Полный конвейер (захват → проект → отчёт):
+
+```
+python -m src.project.cli pipeline \
+  --pcap tests/corpus/corpus_capture_01.pcapng \
+  --project project.lab --report REPORT.md
+```
+
+Флаг `--verbose` включает журнал чтения, сессий и экспорта в stderr; без него
+интерфейсы командной строки молчат.
+
+### Графический интерфейс
+
+```
+python -m src.ui.main_window \
+  --capture tests/corpus/reference_export/corpus_capture_01.normalized.json \
+  --rule examples/corpus_rule_v1.json
+```
+
+Настройки открываются через **Вид → Настройки…** или **Ctrl+,**.
+
+### Веб-интерфейс (необязательно)
+
+Дополнительно есть локальная веб-страница поверх тех же движков захвата и правил.
+Основным остаётся окно PySide6; веб-слой лишь оборачивает `src.capture` и
+`src.protocol` и не содержит собственной логики протокола.
 
 ```
 pip install -e ".[web]"
-python -m src.web.app --capture out/cap01.json --rule examples/corpus_rule_v1.json --port 8765
+python -m src.web.app \
+  --capture tests/corpus/reference_export/corpus_capture_01.normalized.json \
+  --rule examples/corpus_rule_v1.json --port 8765
 ```
 
-Open <http://127.0.0.1:8765>. The server binds `127.0.0.1` only, keeps all
-state in memory, and needs no database. It lists sessions, shows the hex with
-verdict highlighting, applies a rule, shows per-byte provenance, and exports a
-self-contained HTML report. See [docs/WEB.md](docs/WEB.md) for the details and
-the deliberately excluded scope.
+Откройте <http://127.0.0.1:8765>. Сервер слушает только `127.0.0.1`, всё
+состояние держит в памяти, базы данных нет. Страница показывает список сессий,
+шестнадцатеричный вид с подсветкой вердиктов, применение правила, провенанс
+каждого байта и экспорт самодостаточного HTML-отчёта. Подробности и осознанно
+исключённый объём — в [docs/WEB.md](docs/WEB.md).
 
-## What is implemented
-
-| Area | State |
-| ---- | ----- |
-| `src/capture/` | Done. PCAP and PCAPNG reading, TCP session identification, directional reassembly with gap and ambiguity diagnostics, per-byte provenance, normalized JSON export, streaming mode for large captures, Wireshark export of rebuild streams, CLI. |
-| `src/protocol/` | Done. Framing strategies, declarative versioned rules, the rule engine, CLI re-application. |
-| `src/hypothesis/` | Done. Result classification, corpus verification, counterexamples, rule and result versioning. |
-| `src/ui/` | Done. PySide6 interface: session tree, hex view with provenance, message comparison, rule and validation panels, hypotheses panel, version diff; Russian and English interface, dark and light theme. |
-| `src/project/` | Done. Portable on-disk investigation, manifest with relative paths and sha256, zip export and import with a digest check. |
-| `src/report/` | Done. Investigation rendered to Markdown and to a self-contained HTML page. |
-| `src/web/` | Done, optional. FastAPI + Jinja2 + HTMX page over the same engines: sessions, hex with verdicts, rule apply, per-byte provenance, HTML report export. Local-only, in-memory. |
-
-## Layout
-
-- `src/capture/` — PCAP/PCAPNG reading, TCP sessions, stream reassembly, provenance
-- `src/protocol/` — framing and the rule engine
-- `src/hypothesis/` — result classification, corpus verification, versioning
-- `src/ui/` — PySide6 interface
-- `src/project/` — portable on-disk project
-- `src/report/` — investigation reports
-- `src/web/` — optional local web interface (FastAPI + HTMX)
-- `scripts/` — deterministic generators and benchmarks
-- `docs/` — contracts, schemas, API notes, style, benchmark
-- `tests/fixtures/` — small synthetic captures, one behaviour each
-- `tests/fixtures/defects/` — deliberately damaged captures
-- `tests/corpus/` — the research corpus and its reference export
-- `tests/integration/` — the corpus run end to end
-
-## Tests
+### Тесты
 
 ```
 pytest tests/ -q
 ```
 
-## Documentation
+## Структура проекта
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — the approach, the modules, the formats,
-  the dependencies, and what is not implemented.
-- [docs/CAPTURE_API.md](docs/CAPTURE_API.md) — the capture engine API, with
-  quick start, scenarios, the full reference, diagnostics, and limits.
-- [docs/PROTOCOL_API.md](docs/PROTOCOL_API.md) — the protocol and hypothesis
-  engine API (added with that module).
-- [docs/CONTRACT.md](docs/CONTRACT.md) — the JSON contracts between the stages.
-- [docs/INTEGRATION.md](docs/INTEGRATION.md) — how the stages hand work to each
-  other, and the seam check to run after a change.
-- [docs/INTEGRATION_CHECKLIST.md](docs/INTEGRATION_CHECKLIST.md) — the checklist
-  for the integration day.
-- [docs/BENCHMARK.md](docs/BENCHMARK.md) — measured time and memory at the
-  reference workload.
-- [docs/METRICS.md](docs/METRICS.md) — the numbers to quote on defense, each
-  with its source.
-- [docs/PORTABILITY.md](docs/PORTABILITY.md) — the environments the suite is
-  checked in, and the result.
-- [docs/ROADMAP.md](docs/ROADMAP.md) — what is implemented, what was left out of
-  the MVP, the technical debt, and the plan beyond the hackathon.
-- [docs/ARCHITECTURE_DECISIONS.md](docs/ARCHITECTURE_DECISIONS.md) — the
-  architecture decision records.
-- [docs/AUDIT.md](docs/AUDIT.md) — the trace audit and the lint and typing
-  findings.
-- [docs/demo.md](docs/demo.md) — the window walkthrough on the reference corpus.
-- [docs/demo_cli.md](docs/demo_cli.md) — the same investigation from the command
-  line, as the fallback for the demonstration.
-- [docs/GUI_VERIFICATION.md](docs/GUI_VERIFICATION.md) — what the window was
-  driven to show, and the defects found while checking it.
-- [docs/SETTINGS.md](docs/SETTINGS.md) — the preferences dialog, its four
-  sections, and the stored keys.
-- [docs/WEB.md](docs/WEB.md) — the optional local web interface: install, run,
-  what it does and what it deliberately leaves out.
-- [REPORT.md](REPORT.md) — the investigation report.
-- [presentation/slides.pdf](presentation/slides.pdf) — the deck, eighteen
-  slides, with the real window screenshots.
+- `src/capture/` — чтение PCAP/PCAPNG, TCP-сессии, сборка потоков, провенанс
+- `src/protocol/` — фрейминг и движок правил
+- `src/hypothesis/` — классификация результатов, проверка на корпусе, версии
+- `src/ui/` — интерфейс на PySide6
+- `src/project/` — переносной проект на диске
+- `src/report/` — отчёты об исследовании
+- `src/web/` — необязательный локальный веб-интерфейс (FastAPI + HTMX)
+- `scripts/` — детерминированные генераторы и бенчмарки
+- `docs/` — контракты, схемы, заметки по API, стиль, бенчмарк
+- `tests/fixtures/` — небольшие синтетические захваты, по одному поведению
+- `tests/fixtures/defects/` — намеренно повреждённые захваты
+- `tests/corpus/` — исследовательский корпус и его эталонный экспорт
+- `tests/integration/` — прогон корпуса от начала до конца
+- `presentation/` — материалы демонстрации и реальные снимки окна
 
-## Delivery formats
+## Как пользоваться
 
-The primary delivery is the source tree with the setup instructions above,
-packed by `python scripts/build_submission.py` into `dist/submission_*.zip`.
-Unpack the archive and follow the same setup to run it from scratch.
+### Сценарий 1. От захвата к нормализованному JSON
 
-| Format | State | Command |
+1. Соберите тестовые данные: `python -m scripts.generate_corpus`.
+2. Нормализуйте захват командой из раздела «Пример запуска».
+3. Сверьте результат с контрактом `docs/CONTRACT.md` и схемами в `docs/schemas/`.
+
+Окно со списком сессий:
+
+![Список сессий](presentation/screenshots/02_sessions.png)
+
+### Сценарий 2. От гипотезы к правилу и контрпримеру
+
+1. Откройте окно с первым правилом `examples/corpus_rule_v1.json`.
+2. Перейдите на вкладку «Интерпретация»: видно `matched` и `mismatched`.
+3. Изучите контрпример — конкретные байты, опровергающие узкое правило.
+
+![Гипотезы и точность](presentation/screenshots/10_hypotheses.png)
+
+Точность узкого правила v1: 0.43 (60 support, 80 contradict). Уточнённое правило
+v2 на том же корпусе: 140 matched, 0 mismatched, точность 1.00. Источник —
+`docs/METRICS.md`.
+
+![Валидация правила](presentation/screenshots/05_validation.png)
+
+### Сценарий 3. От байта к пакету
+
+1. В шестнадцатеричном виде наведите курсор на байт.
+2. Всплывающая подсказка показывает смещение, байты и пакет-источник.
+
+![Провенанс байта](presentation/screenshots/09_provenance.png)
+
+Сравнение двух версий правила и расхождения между ними:
+
+![Сравнение версий](presentation/screenshots/11_version_diff.png)
+
+## РАЗРАБОТЧИКИ
+
+#### Сабадаш Павел — backend и GUI (Python, PySide6, сетевой анализ) <sabadaspaha@gmail.com>
+
+Проект выполнялся одним участником. Правила участия и порядок внесения
+изменений описаны в [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Демо
+
+Пошаговый сценарий работы в окне на эталонном корпусе — в
+[docs/demo.md](docs/demo.md). То же исследование из командной строки, как
+резервный вариант демонстрации, — в [docs/demo_cli.md](docs/demo_cli.md).
+Снимки окна лежат в `presentation/screenshots/`, отчёт об исследовании — в
+[REPORT.md](REPORT.md).
+
+## Документация
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — подход, модули, форматы, зависимости.
+- [docs/CONTRACT.md](docs/CONTRACT.md) — JSON-контракты между стадиями.
+- [docs/CAPTURE_API.md](docs/CAPTURE_API.md) — API движка захвата.
+- [docs/PROTOCOL_API.md](docs/PROTOCOL_API.md) — API движка правил и гипотез.
+- [docs/INTEGRATION.md](docs/INTEGRATION.md) — стыковка стадий и проверка шва.
+- [docs/BENCHMARK.md](docs/BENCHMARK.md) — время и память на эталонной нагрузке.
+- [docs/METRICS.md](docs/METRICS.md) — числа с указанием источника.
+- [docs/SETTINGS.md](docs/SETTINGS.md) — диалог настроек и хранимые ключи.
+- [docs/WEB.md](docs/WEB.md) — локальный веб-интерфейс: установка, запуск, объём.
+- [docs/PORTABILITY.md](docs/PORTABILITY.md) — проверенные окружения.
+- [docs/AUDIT.md](docs/AUDIT.md) — трассировка и замечания линтера и типизации.
+- [docs/SUBMISSION.md](docs/SUBMISSION.md) — сведения о сдаче.
+
+## Форматы поставки
+
+Основная поставка — исходное дерево с инструкцией выше, упакованное скриптом
+`python scripts/build_submission.py` в `dist/submission_*.zip`. Архив
+распаковывается и запускается тем же порядком.
+
+| Формат | Состояние | Команда |
 | --- | --- | --- |
-| Source archive | shipped | `python scripts/build_submission.py` |
-| Docker image | shipped, `Dockerfile` and `.dockerignore` in the tree | `docker build -t madrigal-lab .` |
-| Linux binary | shipped, built on demand | `scripts/build_linux_binary.sh` |
-| `.deb` | shipped, built on demand | `scripts/build_deb.sh` |
-| Presentation (animated HTML) | shipped, built on demand | `cd presentation && npm install && npm run build && python bundle_html.py` |
-| Presentation (PDF, 18 slides) | shipped, `presentation/slides.pdf` | `cd presentation && bash export_pdf.sh` |
-| Presentation (PPTX) | shipped, `presentation/slides.pptx`, 18 slides plus build-in steps | `cd presentation && npx slidev export --format pptx` |
+| Архив исходников | в поставке | `python scripts/build_submission.py` |
+| Docker-образ | в поставке, `Dockerfile` в дереве | `docker build -t protocol-lab .` |
+| Linux-бинарник | собирается по требованию | `scripts/build_linux_binary.sh` |
+| Пакет `.deb` | собирается по требованию | `scripts/build_deb.sh` |
+| Демонстрация (HTML) | собирается по требованию | `cd presentation && npm install && npm run build` |
 
-The binary and the `.deb` are built artefacts and are not committed; the scripts
-that produce them are. See [docs/BINARY.md](docs/BINARY.md) for the size, the
-run commands, and what was verified.
+Бинарник и `.deb` — собранные артефакты, в репозиторий не коммитятся; скрипты
+их сборки коммитятся. Архив проверяется после сборки: он распаковывается во
+временный каталог, и тесты запускаются уже оттуда.
 
-The archive is verified after the build: it is extracted into a temporary
-directory and the suite is run from there, so a broken archive is never
-reported as ready.
+## Ограничения
 
-## License
+| Область | Состояние |
+| --- | --- |
+| IPv6 | Не поддерживается; сообщается диагностикой, запись пропускается. |
+| Фрагментация IP | Не собирается; фрагментированная нагрузка отмечается как неполная. |
+| Зашифрованные нагрузки | Вне области; байты показываются как есть. |
+| Контрольные суммы | Перестановка трактуется как диагностика. |
+| Эталонные захваты организаторов | Недоступны в окне разработки; корпус синтетический и воспроизводится из `scripts.generate_corpus`. |
 
-MIT, see [LICENSE](LICENSE).
+## Лицензия
 
+MIT, см. [LICENSE](LICENSE).

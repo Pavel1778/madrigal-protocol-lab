@@ -17,6 +17,12 @@ from .model import CaptureModel, SessionInfo
 # when the theme changes without rebuilding the tree).
 _DIAG_ROLE = QtCore.Qt.ItemDataRole.UserRole + 1
 
+# A label is never clipped: each column is at least wide enough for its header
+# text plus this padding. The floor is capped so one long label cannot push the
+# data columns off screen; the last column still stretches to fill the rest.
+_HEADER_PADDING = 28
+_HEADER_FLOOR_CAP = 120
+
 
 class SessionTree(QtWidgets.QTreeWidget):
     """Tree of sessions and their directions."""
@@ -32,7 +38,8 @@ class SessionTree(QtWidgets.QTreeWidget):
         self._font_size = 10
         self.setFont(theme.body_font(self._font_size))
         self.header().setStretchLastSection(True)
-        self.header().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self.header().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Interactive)
+        self.header().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
         self._model: CaptureModel | None = None
         self.itemSelectionChanged.connect(self._on_selection)
 
@@ -61,6 +68,24 @@ class SessionTree(QtWidgets.QTreeWidget):
             first.setExpanded(True)
             if first.childCount():
                 first.child(0).setSelected(True)
+        self._fit_header_columns()
+
+    def _fit_header_columns(self) -> None:
+        """Widen each column so its header label is not clipped.
+
+        The header font is not the item font, so the label width is measured
+        with the header's own metrics. Column 0 (the session label) is sized to
+        its header; the last column stretches, so a floor for it is only set
+        when the header is wider than the space left.
+        """
+        metrics = self.header().fontMetrics()
+        last = self.columnCount() - 1
+        for column in range(self.columnCount()):
+            text = self.headerItem().text(column) if self.headerItem() else ""
+            need = min(metrics.horizontalAdvance(text) + _HEADER_PADDING, _HEADER_FLOOR_CAP)
+            if column == last:
+                need = min(need, max(self.viewport().width() // 3, _HEADER_PADDING))
+            self.setColumnWidth(column, max(self.columnWidth(column), need))
 
     def _add_session(self, session: SessionInfo) -> None:
         diagnostics = session.diagnostics
@@ -107,6 +132,8 @@ class SessionTree(QtWidgets.QTreeWidget):
         self.setHeaderLabels([self.tr("session"), self.tr("traffic")])
         if self._model is not None:
             self.load(self._model)
+        else:
+            self._fit_header_columns()
 
     def apply_theme(self) -> None:
         """Recolour diagnostic items in the active theme."""

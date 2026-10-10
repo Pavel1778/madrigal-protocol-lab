@@ -321,3 +321,9 @@ a live socket.
 - **Backup video.** A screen recording of the run is still to be made.
 - **Group name.** Resolved: the submission records the participant and the
   group `ИС-24`.
+
+## 14. Historical authorship
+
+Historical commits contain `openhands@all-hands.dev` as author or committer.
+Left in place (no rewrite). Display is normalized via `.mailmap`. See
+`.agent-cache/openhands-signature-audit.md`.
