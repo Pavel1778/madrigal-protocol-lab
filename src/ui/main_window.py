@@ -11,6 +11,7 @@ separate concern.
 
 from __future__ import annotations
 
+import logging
 import sys
 from pathlib import Path
 
@@ -31,11 +32,14 @@ from .hypotheses_view import HypothesesView
 from .i18n import LanguageManager
 from .model import CaptureModel, RuleModel, verify_rule_on_corpus
 from .session_tree import SessionTree
+from .settings import SettingsDialog, read_settings, write_settings
 from .validation_view import ValidationView
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_REPORT = REPO_ROOT / "REPORT.md"
 APP_ICON = REPO_ROOT / "assets" / "icons" / "app" / "madrigal-protocol-lab.svg"
+
+logger = logging.getLogger(__name__)
 
 
 def app_icon() -> QtGui.QIcon:
@@ -62,6 +66,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._theme_manager = None
         self._language_manager: LanguageManager | None = None
         self._capture_name: str = ""
+        self._settings: dict = read_settings()
 
         self._build_menu()
         self._build_central()
@@ -70,6 +75,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._show_empty_state()
         self._install_theme()
         self._install_language()
+        self._apply_stored_settings(adopt_from_managers=True)
 
     def _show_empty_state(self) -> None:
         """Explain the first-run window before a capture is opened."""
@@ -124,6 +130,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self._actions["theme_dark"] = self._action(view_menu, "&Dark theme", lambda: self.set_theme_mode("dark"), "Ctrl+1")
         self._actions["theme_light"] = self._action(view_menu, "&Light theme", lambda: self.set_theme_mode("light"), "Ctrl+2")
         self._actions["theme_system"] = self._action(view_menu, "&System theme", lambda: self.set_theme_mode("system"), "Ctrl+3")
+        view_menu.addSeparator()
+
+        self._actions["settings"] = self._action(
+            view_menu, "&Settings...", self.open_settings_dialog, "Ctrl+,"
+        )
         view_menu.addSeparator()
 
         self._language_menu = view_menu.addMenu("")
@@ -187,6 +198,7 @@ class MainWindow(QtWidgets.QMainWindow):
             "theme_dark": self.tr("&Dark theme"),
             "theme_light": self.tr("&Light theme"),
             "theme_system": self.tr("&System theme"),
+            "settings": self.tr("&Settings..."),
             "quick_help": self.tr("&Quick help"),
             "about": self.tr("&About"),
         }
@@ -346,6 +358,62 @@ class MainWindow(QtWidgets.QMainWindow):
         self.report_view.setFont(theme.mono_font(9))
         self.diff_view.setFont(theme.mono_font(9))
 
+    # -- settings ----------------------------------------------------------
+
+    def open_settings_dialog(self) -> SettingsDialog:
+        """Open the preferences dialog and apply what the user accepts."""
+        dialog = SettingsDialog(self._settings, self)
+        dialog.settingsChanged.connect(self.apply_settings)
+        dialog.exec()
+        return dialog
+
+    def apply_settings(self, values: dict) -> None:
+        """Apply a settings mapping and persist it.
+
+        ``Cancel`` also emits, with the mapping the dialog opened with, so the
+        same path restores the previous state without a second code path.
+        """
+        self._settings = values
+        write_settings(values)
+        self._apply_stored_settings()
+        self._notify(self.tr("settings applied"))
+
+    def _apply_stored_settings(self, adopt_from_managers: bool = False) -> None:
+        """Push the stored values into the widgets and the logging root.
+
+        At construction the theme and language managers have already read their
+        own keys, so ``adopt_from_managers`` copies their effective choice back
+        into the mapping instead of forcing the dialog defaults over a choice
+        the menu saved earlier.
+        """
+        general = self._settings.get("general", {})
+        editor = self._settings.get("editor", {})
+        advanced = self._settings.get("advanced", {})
+
+        if adopt_from_managers:
+            if self._theme_manager is not None:
+                general["theme"] = self._theme_manager.mode
+            if self._language_manager is not None:
+                general["language"] = self._language_manager.preference
+            self._settings["general"] = general
+        else:
+            theme_mode = str(general.get("theme", "system"))
+            if self._theme_manager is None or self._theme_manager.mode != theme_mode:
+                self.set_theme_mode(theme_mode)
+
+            language = str(general.get("language", "system"))
+            if self._language_manager is None or self._language_manager.preference != language:
+                self.set_language(language)
+
+        self.hex_view.set_font_size(int(editor.get("hex_font_size", 13)))
+        self.hex_view.set_show_offset(bool(editor.get("show_offset", True)))
+        self.session_tree.set_font_size(int(editor.get("tree_font_size", 11)))
+        self.hex_view.set_show_diagnostics(bool(advanced.get("show_diagnostics", True)))
+
+        level = str(advanced.get("log_level", "INFO"))
+        if level in logging.getLevelNamesMapping():
+            logging.getLogger().setLevel(level)
+
     # -- interface language ------------------------------------------------
 
     def _install_language(self) -> None:
@@ -442,10 +510,26 @@ class MainWindow(QtWidgets.QMainWindow):
     def _start_dir(self, fallback: Path) -> str:
         """The directory a file dialog should open at.
 
-        Remembers the last directory a file was opened from or saved to, so the
-        second open does not start at the repository root again.
+        Remembers the last directory a file was opened from or saved to, then
+        falls back to the configured captures directory, and only then to the
+        caller's fallback, so the second open does not start at the repository
+        root again.
         """
-        return str(self._last_dir if self._last_dir is not None else fallback)
+        if self._last_dir is not None:
+            return str(self._last_dir)
+        configured = str(self._settings.get("paths", {}).get("capture_dir", ""))
+        if configured and Path(configured).is_dir():
+            return configured
+        return str(fallback)
+
+    def _output_dir(self, fallback: Path) -> str:
+        """The directory a save dialog should open at."""
+        if self._last_dir is not None:
+            return str(self._last_dir)
+        configured = str(self._settings.get("paths", {}).get("project_dir", ""))
+        if configured and Path(configured).is_dir():
+            return configured
+        return str(fallback)
 
     def _remember_dir(self, path: str | Path) -> None:
         parent = Path(path).resolve().parent
@@ -707,7 +791,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._rule is None or self._rule.root is None:
             self._notify(self.tr("apply a rule before saving a result"))
             return
-        path, _ = QtWidgets.QFileDialog.getSaveFileName(self, self.tr("Save result"), self._start_dir(REPO_ROOT), "JSON (*.json)")
+        path, _ = QtWidgets.QFileDialog.getSaveFileName(self, self.tr("Save result"), self._output_dir(REPO_ROOT), "JSON (*.json)")
         if not path:
             return
         self._remember_dir(path)

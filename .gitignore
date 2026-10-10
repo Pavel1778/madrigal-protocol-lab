@@ -20,6 +20,7 @@ dist/
 .coverage
 htmlcov/
 .agent-cache/
+.openhands/
 .benchmark/
 out/
 
