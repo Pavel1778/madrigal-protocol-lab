@@ -181,7 +181,7 @@ def build_stylesheet(theme: Theme | None = None) -> str:
     }}
     QMenuBar {{ background-color: {theme.surface_alt}; }}
     QMenuBar::item:selected {{ background-color: {theme.menu_selection}; color: {theme.menu_selection_text}; }}
-    QMenu {{ background-color: {theme.surface}; border: 1px solid {theme.border}; }}
+    QMenu {{ background-color: {theme.surface_elevated}; border: 1px solid {theme.border}; }}
     QMenu::item:selected {{ background-color: {theme.menu_selection}; color: {theme.menu_selection_text}; }}
     QStatusBar {{ background-color: {theme.surface_alt}; color: {theme.text_secondary}; }}
     QScrollBar:vertical {{
@@ -202,7 +202,7 @@ def build_stylesheet(theme: Theme | None = None) -> str:
     QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{ width: 0; }}
     QScrollBar::add-page, QScrollBar::sub-page {{ background: transparent; }}
     QToolTip {{
-        background-color: {theme.surface};
+        background-color: {theme.surface_elevated};
         color: {theme.text_primary};
         border: 1px solid {theme.border};
     }}
