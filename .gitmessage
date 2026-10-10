@@ -1,0 +1,17 @@
+
+# Commit message template. Enable once per clone:
+#     git config commit.template .gitmessage
+#
+# Conventional Commits: <type>(<scope>): <subject>
+# Types: feat fix docs test chore refactor style perf build ci revert
+# Subject: imperative, English, no trailing period, 72 characters or fewer.
+
+# --- subject (50 chars ideal, 72 max) ---
+
+
+# --- body: what changed and why, wrapped at 72 ---
+
+
+# --- footer: refs, breaking changes ---
+# Refs: #issue
+# BREAKING CHANGE: <description>

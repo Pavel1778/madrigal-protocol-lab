@@ -1,0 +1,20 @@
+"""Snapshot coverage: light theme, English interface.
+
+Five images, one per supported window size. The window state is pinned by
+``tests.ui.support``; the reference capture and rule are the ones the product
+ships.
+"""
+
+from __future__ import annotations
+
+
+from tests.ui.snapshot._diff import assert_snapshot
+from tests.ui.support import grab, set_state, snapshot_name
+
+THEME = "light"
+LANGUAGE = "en"
+
+
+def test_dark_en(window, app, resolution):
+    set_state(window, app, language=LANGUAGE, theme_mode=THEME, resolution=resolution, zoom=100)
+    assert_snapshot(snapshot_name(THEME, LANGUAGE, resolution), grab(window))
