@@ -76,7 +76,7 @@ leftover bytes; `payload_and_length_field` and `entire_message` do not.
 
 | Rule | Counterexamples in the corpus |
 | --- | --- |
-| v1 | 80 (every command byte 2 not in the expected set `[1]`) |
+| v1 | 80 (60 command bytes of value `2`, 20 of value `3`, none in the expected set `[1]`) |
 | v2 | 0 |
 
 Resolved by the v1 -> v2 change: 80. Introduced: 0.

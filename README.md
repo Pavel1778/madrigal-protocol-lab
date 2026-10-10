@@ -12,6 +12,10 @@ a rebuilt stream is tied to the packet it came from, a gap or an ambiguous
 overlap is shown as such rather than filled in, and a rule that matches examples
 is reported as confirmed in the tested scope, not as proven.
 
+The window ships in Russian and English (switch under the language menu; the
+choice is remembered) and in a dark and a light theme (View menu; the dark set is
+the default).
+
 ## Requirements
 
 - Linux x86-64
@@ -61,7 +65,7 @@ logging level are all set there; see [docs/SETTINGS.md](docs/SETTINGS.md).
 | `src/capture/` | Done. PCAP and PCAPNG reading, TCP session identification, directional reassembly with gap and ambiguity diagnostics, per-byte provenance, normalized JSON export, streaming mode for large captures, Wireshark export of rebuild streams, CLI. |
 | `src/protocol/` | Done. Framing strategies, declarative versioned rules, the rule engine, CLI re-application. |
 | `src/hypothesis/` | Done. Result classification, corpus verification, counterexamples, rule and result versioning. |
-| `src/ui/` | Done. PySide6 interface: session tree, hex view with provenance, message comparison, rule and validation panels, version diff. |
+| `src/ui/` | Done. PySide6 interface: session tree, hex view with provenance, message comparison, rule and validation panels, hypotheses panel, version diff; Russian and English interface, dark and light theme. |
 | `src/project/` | Done. Portable on-disk investigation, manifest with relative paths and sha256, zip export and import with a digest check. |
 | `src/report/` | Done. Investigation rendered to Markdown and to a self-contained HTML page. |
 
