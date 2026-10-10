@@ -66,8 +66,17 @@ def check(theme: Theme) -> list[ContrastCheck]:
         ("body text on surface", theme.text_primary, theme.surface, body),
         ("secondary text on background", theme.text_secondary, theme.background, body),
         ("secondary text on surface", theme.text_secondary, theme.surface, body),
+        ("secondary text on surface_alt", theme.text_secondary, theme.surface_alt, body),
         ("muted text on background", theme.text_muted, theme.background, body),
+        ("muted text on surface", theme.text_muted, theme.surface, body),
         ("heading on background", theme.text_primary, theme.background, large),
+        ("selected text on selection", theme.selection_text, theme.selection, body),
+        (
+            "menu text on menu highlight",
+            theme.menu_selection_text,
+            theme.menu_selection,
+            body,
+        ),
         ("matched text on surface", theme.status_matched_text, theme.surface, large),
         (
             "mismatched text on surface",

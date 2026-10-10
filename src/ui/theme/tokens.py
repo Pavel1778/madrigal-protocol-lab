@@ -38,6 +38,23 @@ class Theme:
     accent_gradient: tuple[str, str, str]
     text_on_accent: str
 
+    # Selection: the fill behind a selected row and its text. The dark set keeps
+    # the accent as the selection fill; the light set uses a soft tint so a
+    # selected row does not glare.
+    selection: str
+    selection_text: str
+
+    # Menu highlight: the fill and text behind a hovered/selected menu entry.
+    # Kept apart from ``selection`` because the dark set highlights a menu with
+    # the accent fill, while the light set uses a soft grey with accent text.
+    menu_selection: str
+    menu_selection_text: str
+
+    # The fill behind a pressed (non-accent) button. The dark set keeps the
+    # accent, matching the flat dark look; the light set uses a soft grey so a
+    # press does not flash a saturated fill.
+    button_pressed: str
+
     # Status verdicts. ``status_*`` is a fill behind bytes; ``status_*_text`` is
     # the text colour for the same verdict.
     status_matched: str
