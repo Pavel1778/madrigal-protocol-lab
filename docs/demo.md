@@ -54,7 +54,7 @@ packet.
 
 ## Step 2 - provenance of a byte (1 min)
 
-Do: select session `s1`, direction `A_to_B`. Move the pointer over the first
+Do: select session `s2`, direction `A_to_B`. Move the pointer over the first
 bytes.
 
 See: the status bar shows the session, the direction, the offset, and the packet
