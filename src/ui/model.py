@@ -81,13 +81,19 @@ class SessionInfo:
 
 @dataclass
 class ByteAnnotation:
-    """What is known about one byte of a stream, for the hex view."""
+    """What is known about one byte of a stream, for the hex view.
+
+    ``packet_index`` and ``seq`` carry the byte's origin so the view can show a
+    tooltip without reaching back into the capture.
+    """
 
     kind: str
     label: str = ""
     value: object | None = None
     status: str | None = None
     is_hypothesis: bool = False
+    packet_index: int | None = None
+    seq: int | None = None
 
 
 class CaptureModel:

@@ -16,18 +16,25 @@ scenario is `tests/ui/test_e2e.py`.
 ## What opens
 
 - Title: `Madrigal protocol laboratory - corpus_capture_01.normalized.json`.
-- Menu bar: File (Open capture, Open rule, Save result, Quit), Rule (Apply to
-  current direction, Apply to whole capture, Compare versions), Report (Show
-  REPORT.md, Export Markdown, Export HTML), Help (About).
+- Menu bar: File (Open normalized capture, Open rule, Save result, Quit), Rule
+  (Apply to current direction, Apply to whole capture, Compare versions), Report
+  (Show REPORT.md, Export Markdown, Export HTML), Help (Quick help, About).
+  Every menu and item carries a keyboard mnemonic; Quick help is F1.
 - Central splitter, three columns:
   - left: the session tree, group box "Sessions";
-  - centre: a direction selector, the annotation legend, and the hex view,
-    group box "Bytes";
+  - centre: a direction selector, a colour-chip annotation legend, and the hex
+    view, group box "Bytes";
   - right: a tab widget with Interpretation, Compare, Report and Version diff.
 - Status bar: the byte provenance label on the left, a progress bar on the
-  right, and a transient message area.
-- Interpretation tab, three sub-tabs: Rule (editable text plus an Apply button),
-  Messages (a table of offset, length, status, fields) and Counterexamples.
+  right (hidden while idle), and a transient message area.
+- Interpretation tab, three sub-tabs: Rule (editable text, live parse feedback,
+  field-type completion, and Apply to current direction / Apply to whole capture
+  / Load example buttons), Messages (a table of offset, length, status, fields)
+  and Counterexamples.
+
+The legend is not a text label. Each byte kind is a swatch painted with the same
+brush the hex view uses, so `gap` and `ambiguity` show their hatch and the names
+sit next to their colour; the legend cannot drift from the bytes it explains.
 
 ## Session tree (step 1-2)
 
@@ -59,11 +66,21 @@ With `corpus_rule_v1.json` loaded, applying to `s1 A_to_B` reports
 Messages tab titles become `Messages (60)` and `Counterexamples (60)`. Selecting
 the first counterexample scrolls the hex view to its offset and the status bar
 shows that offset again. Every counterexample is tied to real bytes, not to a
-description of them.
+description of them. A direction with no mismatch is not left blank: the
+Counterexamples tab reads `no counterexamples in this direction`, so an empty
+list is never mistaken for a clean result.
 
 Applying to the whole capture reports
 `matched=60, mismatched=80, incomplete=0, ambiguous=0, uncovered=0, not_applicable=140, outdated=0, unknown=0`,
-which is the count the research report states.
+which is the count the research report states. The same run fills the
+Counterexamples tab from the corpus report, so the tab and the status line agree
+and each corpus counterexample carries its session and direction; clicking one
+switches to that session and direction and jumps to its bytes.
+
+`File - Save result` writes the contract result: the file validates against
+`docs/schemas/result.schema.json` and carries `contract_version`, `rule_id`,
+`rule_version`, `capture_id`, `messages` and `summary`, so a saved result is the
+same shape the command line produces.
 
 ## Version diff (step 5)
 
@@ -126,6 +143,14 @@ but not changed.
    capture reproducing the same counts, which is what `tests/ui/test_e2e.py`
    checks. A project menu remains open work.
 
+A later interaction pass over the same window raised further items; the ones
+closed on this branch are: the corpus run now refreshes the Messages and
+Counterexamples tabs (they had shown the previous single-direction run); a
+counterexample can be browsed from the corpus report; `Save result` writes the
+contract shape above; the legend is painted swatches; the progress bar resets;
+the empty panels explain themselves; and the file dialogs remember the last
+directory.
+
 ## What works
 
 - Opens the reference capture and lists its sessions and directions.
@@ -136,6 +161,15 @@ but not changed.
 - Selecting a counterexample jumps the hex view to its bytes.
 - The version diff reports resolved and introduced counterexamples.
 - Reopening on the same capture reproduces the same verdicts.
+- An empty panel states why it is empty: the Messages tab reads `no messages
+  yet - apply a rule...` before any run, and a clean direction reads `no
+  counterexamples in this direction` rather than showing nothing.
+- The file dialogs remember the last directory used, so a second open does not
+  start at the repository root again.
+- The progress bar resets to zero and hides when a run finishes, so it never
+  shows a stale fraction of a previous run.
+- The rule editor gives live parse feedback (a red status on invalid text, a
+  plain one when the rule parses) and completes field types as they are typed.
 
 ## What requires further work
 
