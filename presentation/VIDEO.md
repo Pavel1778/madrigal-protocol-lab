@@ -1,8 +1,11 @@
-# Video scenario
+# Reserve video
 
-A three to five minute screen recording of the reference investigation. The
-recording can be made on any machine with a display; the tool is not tied to a
-particular platform.
+A three to five minute screen recording of the reference investigation, kept as
+a fallback for the defense in case the live demonstration fails. The recording
+runs on any machine with a display; the tool is not tied to a platform.
+
+Target length: 4 minutes. Six scenes. Every number spoken is from
+`docs/METRICS.md`; the window path is the one in `docs/demo.md`.
 
 ## Tool
 
@@ -14,26 +17,78 @@ ffmpeg -f x11grab -framerate 25 -video_size 1440x880 -i :0.0+0,0 \
   -c:v libx264 -pix_fmt yuv420p presentation/video.mp4
 ```
 
-Before recording, set the window to 1440 by 880 and hide the terminal.
+Before recording, set the window to 1440 by 880, hide the terminal, and mute
+notifications. Keep the pointer still while the narration runs.
 
-## Shot list
+## Recording script (run once before pressing record)
 
-| time | shot | action | narration |
-| --- | --- | --- | --- |
-| 0:00 | title | show the window title bar | The tool reconstructs an undocumented binary protocol from captures. |
-| 0:15 | sessions | open `corpus_capture_01.normalized.json` | Three sessions, two directions each, and the diagnostics of the capture. |
-| 0:40 | provenance | hover the first bytes of `s1 A_to_B` | Each byte remembers its packet, sequence number and time. |
-| 1:05 | framing | switch to the Rule tab, show the framing block | One description frames the whole stream; packet boundaries are not message boundaries. |
-| 1:30 | apply v1 | press F5 | The first rule matches reads and fails on the other commands; the failures are counterexamples. |
-| 2:00 | counterexample | open the Counterexamples tab, select the first entry | Command `2` was not allowed; the bytes are highlighted and tied to a packet. |
-| 2:30 | refine | open `corpus_rule_v2.json`, press F5 | The allowed commands widen to `1`, `2`, `3`; the counterexamples disappear. |
-| 3:00 | whole capture | press F6 | Over the whole capture: 140 matched, 0 counterexamples. The earlier run is marked outdated. |
-| 3:30 | boundary | open the synthetic capture, press F6 | A different layout: nothing matches. The rule does not transfer, and the tool says so. |
-| 4:00 | report | Report, Show REPORT.md | The investigation, its counterexamples and its limits are written up. |
+```
+python -m scripts.generate_corpus
+python -m src.capture.cli --pcap tests/corpus/corpus_capture_01.pcapng \
+  --out tests/corpus/reference_export/corpus_capture_01.normalized.json \
+  --source-name captures/corpus_capture_01.pcapng
+python -m src.ui.main_window \
+  --capture tests/corpus/reference_export/corpus_capture_01.normalized.json \
+  --rule examples/corpus_rule_v1.json
+```
+
+Then, in the window, do exactly the six scenes below. Each scene starts from the
+state the previous one left, so the recording is one continuous take.
+
+## Storyboard
+
+### Scene 1 — Title and sessions (0:00–0:40)
+
+| | |
+| --- | --- |
+| Screen | the main window with the capture already loaded |
+| Action | pause on the session tree; expand `s1`, `s2`, `s3` |
+| Say | The tool reconstructs an undocumented binary protocol from captures. This capture has three sessions, two directions each. Each byte here belongs to a packet; nothing is invented. |
+
+### Scene 2 — Bytes and provenance (0:40–1:25)
+
+| | |
+| --- | --- |
+| Screen | the hex view, centre panel |
+| Action | select session `s2`, direction `A_to_B`; hover the first bytes and click one |
+| Say | The bytes are ordered by sequence number, not by arrival. A click shows the source packet, its sequence number and its time. A retransmission adds provenance, not bytes; a gap is a marker, not zeros. |
+
+### Scene 3 — Rule and first apply (1:25–2:15)
+
+| | |
+| --- | --- |
+| Screen | the Rule and Interpretation tabs |
+| Action | open `examples/corpus_rule_v1.json` (Ctrl+R); press F5 |
+| Say | A rule is a declarative description: where a message ends and what its fields mean. Packet boundaries are not message boundaries. Applying it to the whole capture, some messages match and some do not; the mismatches are kept as counterexamples. |
+
+### Scene 4 — Counterexample and refinement (2:15–3:05)
+
+| | |
+| --- | --- |
+| Screen | the Counterexamples panel; then the Rule tab with v2 |
+| Action | select the first counterexample; click it to jump to its bytes; open `examples/corpus_rule_v2.json`; press F5 |
+| Say | This byte carries command 2, which rule v1 did not allow; it is tied to a packet. Widening the allowed commands from 1 to 1, 2, 3 removes all 80 counterexamples: matched rises from 60 to 140, precision from 0.43 to 1.00. The old result keeps its version and is marked outdated. |
+
+### Scene 5 — Transfer and boundary (3:05–3:45)
+
+| | |
+| --- | --- |
+| Screen | the whole capture (F6); then the second capture |
+| Action | open `corpus_capture_02.normalized.json`, press F6; then open the synthetic capture's normalized export and press F6 |
+| Say | The same rule transfers to the second capture: 40 requests, 0 counterexamples. On a foreign capture with a different layout it matches nothing, and the tool says so instead of guessing. That is the measured boundary. |
+
+### Scene 6 — Report and close (3:45–4:15)
+
+| | |
+| --- | --- |
+| Screen | the Report tab |
+| Action | Show REPORT.md, then scroll to the limitations section |
+| Say | The investigation, its counterexamples and its limits are written up with the bytes attached. The interpretation is confirmed inside the tested scope and silent outside it. The repository and the report are on the last slide. |
 
 ## Notes
 
-- Keep the pointer still while the narration runs.
-- Do not cut the boundary shot: it is the part that shows the limits are real.
-- If the window is unavailable, record the command line from `docs/demo.md`
-  instead; the steps and the narration are the same.
+- Do not cut scene 5: the boundary is the part that shows the limits are real.
+- If the window is unavailable, record the command line from `docs/demo_cli.md`
+  instead; the narration is unchanged.
+- Write the finished file to `presentation/video.mp4` (large binary, not
+  committed; the shot list and the script are the committed artifacts).

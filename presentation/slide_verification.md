@@ -53,6 +53,7 @@ JSON Schema draft 2020-12 (`docs/schemas/`).
 | claim | evidence |
 | --- | --- |
 | v1: 60 matched, 80 mismatched | `python -m src.protocol.cli verify --rule examples/corpus_rule_v1.json --capture tests/corpus/reference_export/corpus_capture_01.normalized.json` |
+| the 80 counterexamples are 60 bytes of `2` and 20 bytes of `3` | the same `verify` output: 60 `value 2 not in expected [1]` in `s2`, 20 `value 3 not in expected [1]` in `s3` |
 | precision v1 0.43, v2 1.00 | `docs/METRICS.md`, `docs/RULE_V1_V2.md` |
 
 ### Slide 12 — Сравнение версий
