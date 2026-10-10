@@ -131,6 +131,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self._actions["theme_light"] = self._action(view_menu, "&Light theme", lambda: self.set_theme_mode("light"), "Ctrl+2")
         self._actions["theme_system"] = self._action(view_menu, "&System theme", lambda: self.set_theme_mode("system"), "Ctrl+3")
         view_menu.addSeparator()
+        self._actions["zoom_in"] = self._action(
+            view_menu, "Zoom &in", lambda: self.zoom_by(10), "Ctrl+="
+        )
+        # On most layouts the "+" needs Shift, and the keypad "+" is a different
+        # key again, so accept all three spellings.
+        self._actions["zoom_in"].setShortcuts(
+            ["Ctrl+=", "Ctrl++", "Ctrl+Shift+="]
+        )
+        self._actions["zoom_out"] = self._action(
+            view_menu, "Zoom &out", lambda: self.zoom_by(-10), "Ctrl+-"
+        )
+        self._actions["zoom_out"].setShortcuts(["Ctrl+-", "Ctrl+_"])
+        self._actions["zoom_reset"] = self._action(
+            view_menu, "&Reset zoom", self.reset_zoom, "Ctrl+0"
+        )
+        view_menu.addSeparator()
 
         self._actions["settings"] = self._action(
             view_menu, "&Settings...", self.open_settings_dialog, "Ctrl+,"
@@ -198,6 +214,9 @@ class MainWindow(QtWidgets.QMainWindow):
             "theme_dark": self.tr("&Dark theme"),
             "theme_light": self.tr("&Light theme"),
             "theme_system": self.tr("&System theme"),
+            "zoom_in": self.tr("Zoom &in"),
+            "zoom_out": self.tr("Zoom &out"),
+            "zoom_reset": self.tr("&Reset zoom"),
             "settings": self.tr("&Settings..."),
             "quick_help": self.tr("&Quick help"),
             "about": self.tr("&About"),
@@ -358,6 +377,47 @@ class MainWindow(QtWidgets.QMainWindow):
         self.report_view.setFont(theme.mono_font(9))
         self.diff_view.setFont(theme.mono_font(9))
 
+    # -- zoom --------------------------------------------------------------
+
+    def zoom_by(self, delta: int) -> None:
+        """Change the interface zoom by *delta* percentage points."""
+        theme.step_zoom(delta)
+        self.apply_zoom()
+        self._notify(self.tr("zoom {0}%").format(theme.zoom()))
+
+    def reset_zoom(self) -> None:
+        """Return the interface zoom to 100 %."""
+        theme.set_zoom(theme.DEFAULT_ZOOM)
+        self.apply_zoom()
+        self._notify(self.tr("zoom {0}%").format(theme.zoom()))
+
+    def apply_zoom(self) -> None:
+        """Re-read every font at the active zoom, on the whole window.
+
+        The application style sheet carries the base text size, so it is
+        rebuilt too; the views then re-apply their own fonts. The byte views
+        keep their offset/annotation layout, so a zoom only changes the size.
+        """
+        percent = theme.zoom()
+        app = QtWidgets.QApplication.instance()
+        if app is not None and self._theme_manager is not None:
+            app.setStyleSheet(theme.build_stylesheet(self._theme_manager.theme))
+        for view in (
+            self.session_tree,
+            self.hex_view,
+            self.validation_view,
+            self.compare_view,
+            self.hypotheses_view,
+        ):
+            view.apply_zoom()
+        self.direction_combo.setFont(theme.body_font(9))
+        for chip in self._legend_chips:
+            chip.setFont(theme.body_font(8))
+        self._provenance_label.setFont(theme.body_font(9))
+        self.report_view.setFont(theme.mono_font(9))
+        self.diff_view.setFont(theme.mono_font(9))
+        logger.debug("zoom applied: %d%%", percent)
+
     # -- settings ----------------------------------------------------------
 
     def open_settings_dialog(self) -> SettingsDialog:
@@ -409,6 +469,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.hex_view.set_show_offset(bool(editor.get("show_offset", True)))
         self.session_tree.set_font_size(int(editor.get("tree_font_size", 11)))
         self.hex_view.set_show_diagnostics(bool(advanced.get("show_diagnostics", True)))
+
+        # The zoom is applied after the base sizes so the new scale multiplies
+        # the sizes the user just chose, not the previous ones.
+        theme.set_zoom(int(editor.get("zoom", theme.DEFAULT_ZOOM)))
+        self.apply_zoom()
 
         level = str(advanced.get("log_level", "INFO"))
         if level in logging.getLevelNamesMapping():
@@ -822,6 +887,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "Keys\n"
                 "Ctrl+O open capture   Ctrl+R open rule   Ctrl+S save result\n"
                 "F5 apply direction    F6 apply capture   F1 this help\n"
+                "Ctrl+= / Ctrl+- zoom in and out       Ctrl+0 reset zoom\n"
                 "\n"
                 "The bytes are the source of truth. A rule is an interpretation; a\n"
                 "mismatch is a counterexample kept against it, not discarded."

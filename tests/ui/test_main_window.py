@@ -528,3 +528,40 @@ def test_highlight_range_selects_the_whole_message(app):
     assert selected.count(" ") == 6
     view.highlight_range(1000, 4)  # clamped, must not raise
     assert view.textCursor().hasSelection()
+
+
+@corpus_required
+def test_zoom_actions_scale_the_hex_view(app):
+    window = open_window(app)
+    try:
+        theme.set_zoom(theme.DEFAULT_ZOOM)
+        window.apply_zoom()
+        base = window.hex_view.font().pixelSize()
+        assert window._actions["zoom_in"].shortcut().toString() in ("Ctrl+=", "Ctrl++")
+        window.zoom_by(10)
+        assert theme.zoom() == 110
+        assert window.hex_view.font().pixelSize() > base
+        window.zoom_by(-20)
+        assert theme.zoom() == 90
+        window.reset_zoom()
+        assert theme.zoom() == theme.DEFAULT_ZOOM
+        assert window.hex_view.font().pixelSize() == base
+    finally:
+        theme.set_zoom(theme.DEFAULT_ZOOM)
+        window.apply_zoom()
+        window.close()
+
+
+def test_zoom_is_clamped_at_the_limits(app):
+    window = MainWindow()
+    try:
+        for _ in range(50):
+            window.zoom_by(10)
+        assert theme.zoom() == theme.MAX_ZOOM
+        for _ in range(50):
+            window.zoom_by(-10)
+        assert theme.zoom() == theme.MIN_ZOOM
+    finally:
+        theme.set_zoom(theme.DEFAULT_ZOOM)
+        window.apply_zoom()
+        window.close()

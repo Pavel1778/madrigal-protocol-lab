@@ -31,6 +31,7 @@ DEFAULTS: dict[str, dict[str, Any]] = {
     "editor": {
         "hex_font_size": 13,
         "tree_font_size": 11,
+        "zoom": 100,
         "show_offset": True,
     },
     "paths": {
@@ -168,14 +169,21 @@ class SettingsDialog(QtWidgets.QDialog):
         tree_size = QtWidgets.QSpinBox()
         tree_size.setRange(6, 48)
         tree_size.setValue(int(get(self._initial, "editor", "tree_font_size")))
+        zoom = QtWidgets.QSpinBox()
+        zoom.setRange(60, 300)
+        zoom.setSingleStep(10)
+        zoom.setSuffix(" %")
+        zoom.setValue(int(get(self._initial, "editor", "zoom")))
         show_offset = QtWidgets.QCheckBox()
         show_offset.setChecked(bool(get(self._initial, "editor", "show_offset")))
         form.addRow(self.tr("Hex font size"), hex_size)
         form.addRow(self.tr("Tree font size"), tree_size)
+        form.addRow(self.tr("Interface zoom"), zoom)
         form.addRow(self.tr("Show offset column"), show_offset)
         self._widgets["editor"] = {
             "hex_font_size": hex_size,
             "tree_font_size": tree_size,
+            "zoom": zoom,
             "show_offset": show_offset,
         }
         return page
@@ -229,6 +237,7 @@ class SettingsDialog(QtWidgets.QDialog):
         language = self._widgets["general"]["language"]
         hex_size = self._widgets["editor"]["hex_font_size"]
         tree_size = self._widgets["editor"]["tree_font_size"]
+        zoom = self._widgets["editor"]["zoom"]
         show_offset = self._widgets["editor"]["show_offset"]
         project = self._widgets["paths"]["project_dir"]
         capture = self._widgets["paths"]["capture_dir"]
@@ -243,6 +252,7 @@ class SettingsDialog(QtWidgets.QDialog):
             "editor": {
                 "hex_font_size": hex_size.value(),
                 "tree_font_size": tree_size.value(),
+                "zoom": zoom.value(),
                 "show_offset": show_offset.isChecked(),
             },
             "paths": {

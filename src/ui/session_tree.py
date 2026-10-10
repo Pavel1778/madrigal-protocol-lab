@@ -43,6 +43,13 @@ class SessionTree(QtWidgets.QTreeWidget):
         both are refreshed, not just the widget default.
         """
         self._font_size = max(6, int(size))
+        self._reapply_row_fonts()
+
+    def apply_zoom(self) -> None:
+        """Re-read every row font so the tree follows the active zoom."""
+        self._reapply_row_fonts()
+
+    def _reapply_row_fonts(self) -> None:
         self.setFont(theme.body_font(self._font_size))
         for index in range(self.topLevelItemCount()):
             parent = self.topLevelItem(index)

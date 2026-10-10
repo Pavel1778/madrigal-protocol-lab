@@ -219,3 +219,11 @@ class CompareView(QtWidgets.QWidget):
         for kind, chip in self._legend_chips.items():
             chip.setStyleSheet(f"color: {colours[kind]};")
         self._refresh()
+
+    def apply_zoom(self) -> None:
+        """Re-read every font so the view follows the active zoom."""
+        self.left_combo.setFont(theme.body_font(9))
+        self.right_combo.setFont(theme.body_font(9))
+        for chip in self._legend_chips.values():
+            chip.setFont(theme.mono_font(8))
+        self.table.setFont(theme.mono_font(9))

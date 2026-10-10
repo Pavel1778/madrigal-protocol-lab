@@ -16,13 +16,19 @@ from __future__ import annotations
 from .dark import DARK
 from .fonts import (
     BODY_FAMILY,
+    DEFAULT_ZOOM,
     HEADING_FAMILY,
+    MAX_ZOOM,
+    MIN_ZOOM,
     MONO_FAMILY,
     body_font,
     fonts_dir,
     heading_font,
     load_fonts,
     mono_font,
+    set_zoom,
+    step_zoom,
+    zoom,
 )
 from .light import LIGHT
 from .manager import (
@@ -77,6 +83,7 @@ __all__ = [
     "BORDER",
     "DARK",
     "DEFAULT_MODE",
+    "DEFAULT_ZOOM",
     "GAP",
     "HEADING_FAMILY",
     "HYPOTHESIS",
@@ -86,6 +93,8 @@ __all__ = [
     "LIGHT_CARD",
     "MATCHED",
     "MATCHED_TEXT",
+    "MAX_ZOOM",
+    "MIN_ZOOM",
     "MISMATCHED",
     "MISMATCHED_TEXT",
     "MODES",
@@ -112,5 +121,8 @@ __all__ = [
     "load_fonts",
     "mono_font",
     "set_current",
+    "set_zoom",
+    "step_zoom",
     "system_scheme",
+    "zoom",
 ]

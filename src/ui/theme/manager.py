@@ -76,11 +76,13 @@ def build_palette(theme: Theme | None = None) -> QtGui.QPalette:
 def build_stylesheet(theme: Theme | None = None) -> str:
     """Return the Qt style sheet for *theme* (the active one by default)."""
     theme = theme or _active
+    base_px = max(9, round(13 * fonts.zoom() / 100))
     return f"""
     QWidget {{
         background-color: {theme.background};
         color: {theme.text_primary};
         font-family: "{theme.font_body}";
+        font-size: {base_px}px;
     }}
     QMainWindow, QDialog {{ background-color: {theme.background}; }}
     QLabel {{ background: transparent; }}
@@ -143,7 +145,7 @@ def build_stylesheet(theme: Theme | None = None) -> str:
     }}
     QMenuBar {{ background-color: {theme.surface_alt}; }}
     QMenuBar::item:selected {{ background-color: {theme.accent}; }}
-    QMenu {{ background-color: {theme.surface}; border: 1px solid {theme.border}; }}
+    QMenu {{ background-color: {theme.surface_elevated}; border: 1px solid {theme.border}; }}
     QMenu::item:selected {{ background-color: {theme.accent}; }}
     QStatusBar {{ background-color: {theme.surface_alt}; color: {theme.text_secondary}; }}
     QScrollBar:vertical {{

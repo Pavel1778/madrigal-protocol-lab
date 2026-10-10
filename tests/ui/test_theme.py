@@ -144,3 +144,55 @@ def test_main_window_switches_theme_live(app):
     finally:
         window.set_theme_mode("dark")
         window.close()
+
+
+def _luminance(token: str) -> float:
+    from src.ui.theme import contrast
+
+    return contrast.relative_luminance(token)
+
+
+def test_dark_theme_avoids_pure_black_and_white():
+    """The dark ground must not be #000000 (OLED smear) nor snow-white text."""
+    dark = theme.DARK
+    assert dark.background.lower() != "#000000"
+    for token in (dark.background, dark.surface, dark.surface_alt, dark.border):
+        assert _luminance(token) > 0.0, token
+    assert dark.text_primary.lower() != "#ffffff"
+    assert _luminance(dark.text_primary) < 1.0
+
+
+def test_dark_theme_has_elevation_order():
+    """Nearer surfaces are lighter: background < surface < surface_elevated."""
+    dark = theme.DARK
+    assert _luminance(dark.background) < _luminance(dark.surface)
+    assert _luminance(dark.surface) < _luminance(dark.surface_elevated)
+    assert _luminance(dark.surface_alt) <= _luminance(dark.surface_elevated)
+    # A raised surface must actually differ from the panel, or the elevation is
+    # invisible.
+    assert dark.surface_elevated.lower() != dark.surface.lower()
+
+
+def test_zoom_clamps_and_scales_fonts(app):
+    base = theme.body_font(10).pixelSize()
+    try:
+        assert theme.set_zoom(10_000) == theme.MAX_ZOOM
+        assert theme.body_font(10).pixelSize() > base
+        assert theme.set_zoom(1) == theme.MIN_ZOOM
+        assert theme.body_font(10).pixelSize() < base
+    finally:
+        theme.set_zoom(theme.DEFAULT_ZOOM)
+    assert theme.body_font(10).pixelSize() == base
+    assert theme.zoom() == theme.DEFAULT_ZOOM
+
+
+def test_stylesheet_scales_with_zoom(app):
+    theme.set_zoom(theme.DEFAULT_ZOOM)
+    base = theme.build_stylesheet(theme.DARK)
+    try:
+        theme.set_zoom(200)
+        scaled = theme.build_stylesheet(theme.DARK)
+        assert scaled != base
+        assert "font-size: 26px;" in scaled
+    finally:
+        theme.set_zoom(theme.DEFAULT_ZOOM)

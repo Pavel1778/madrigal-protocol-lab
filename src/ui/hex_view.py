@@ -220,6 +220,11 @@ class HexView(QtWidgets.QPlainTextEdit):
         if self._data:
             self._apply_annotations()
 
+    def apply_zoom(self) -> None:
+        """Re-read the fonts so the view follows the active zoom."""
+        self.setFont(theme.mono_font(self._font_size))
+        self._header.setFont(self._header_font())
+
     def set_show_offset(self, show: bool) -> None:
         """Show or hide the offset column and re-render the bytes."""
         self._show_offset = bool(show)

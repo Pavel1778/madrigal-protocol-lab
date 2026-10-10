@@ -430,6 +430,16 @@ class ValidationView(QtWidgets.QWidget):
         if self._application is not None:
             self.show_application(self._application)
 
+    def apply_zoom(self) -> None:
+        """Re-read every font so the view follows the active zoom."""
+        self._context.setFont(theme.body_font(9))
+        self.rule_edit.setFont(theme.mono_font(9))
+        self.rule_status.setFont(theme.body_font(9))
+        self.messages_table.setFont(theme.body_font(9))
+        self.counter_list.setFont(theme.body_font(9))
+        if self._application is not None:
+            self.show_application(self._application)
+
 
 def _provenance_tooltip(message) -> str:
     for field in message.fields:

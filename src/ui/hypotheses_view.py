@@ -141,6 +141,11 @@ class HypothesesView(QtWidgets.QWidget):
         if self._fields:
             self.show_fields(self._fields)
 
+    def apply_zoom(self) -> None:
+        """Re-read every font so the view follows the active zoom."""
+        self.header.setFont(theme.body_font(9))
+        self.table.setFont(theme.body_font(9))
+
     def _fill_row(self, row: int, field_name: str, reading: str, candidate, score) -> None:
         support = "" if candidate is None else f"{candidate.support}"
         contradict = "" if candidate is None else f"{candidate.contradict}"
