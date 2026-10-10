@@ -331,7 +331,7 @@ Python 3.12 · PySide6 · dpkt · pytest · Docker
 <div><span class="kpi">280</span><br><span class="kpi-label">сообщений в захвате 01</span></div>
 </div>
 <div class="cols mt-4">
-<div><span class="kpi">8/8</span><br><span class="kpi-label">перенос на захват 02</span></div>
+<div><span class="kpi">40/40</span><br><span class="kpi-label">перенос на захват 02</span></div>
 <div><span class="kpi">5/5</span><br><span class="kpi-label">CI зелёный</span></div>
 </div>
 
