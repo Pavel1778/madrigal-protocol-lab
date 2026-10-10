@@ -49,6 +49,14 @@ APP_ICON = REPO_ROOT / "assets" / "icons" / "app" / "madrigal-protocol-lab.svg"
 # keeps the suffix: /usr/share/applications/madrigal-protocol-lab.desktop.
 APP_DESKTOP_FILE = "madrigal-protocol-lab"
 
+# The status line shows the provenance of the selected byte. The text changes
+# with every click and can be long, so the label reserves room for its text up
+# to this many characters and always carries the full text as a tooltip. A
+# window narrower than the reservation cannot hard-clip a value the reader still
+# needs; the same text is then one hover away.
+_PROVENANCE_CHAR_CAP = 120
+_PROVENANCE_LABEL_PADDING = 8
+
 # Zoom bounds for the byte and tree fonts. The tree tracks the bytes a little
 # smaller; both are kept in these ranges so the layout cannot be zoomed into a
 # state where a column collapses or a row is taller than the viewport.
@@ -350,9 +358,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _build_status(self) -> None:
         bar = self.statusBar()
-        self._provenance_label = QtWidgets.QLabel(self.tr("no byte selected"))
+        self._provenance_label = QtWidgets.QLabel()
         self._provenance_label.setFont(theme.body_font(9))
+        self._provenance_label.setTextInteractionFlags(
+            QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         bar.addWidget(self._provenance_label, 1)
+        self._set_provenance_text(self.tr("no byte selected"))
         self._progress = QtWidgets.QProgressBar()
         self._progress.setFixedWidth(140)
         self._progress.setRange(0, 100)
@@ -574,7 +586,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.session_tree.retranslate_ui()
         self.hex_view.retranslate_ui()
         if self._capture_name:
-            self._provenance_label.setText(self._capture_summary())
+            self._set_provenance_text(self._capture_summary())
 
     def _refresh_title(self) -> None:
         """Set the window title, including the open capture's name."""
@@ -604,7 +616,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.session_tree.load(model)
         self._capture_name = Path(path).name
         self._refresh_title()
-        self._provenance_label.setText(self._capture_summary())
+        self._set_provenance_text(self._capture_summary())
         if model.sessions:
             self._on_direction_selected(
                 model.sessions[0].session_id, model.directions(model.sessions[0].session_id)[0]
@@ -853,7 +865,22 @@ class MainWindow(QtWidgets.QMainWindow):
         diagnostics = stream.holes(offset, offset + 1)
         for hole in diagnostics:
             parts.append(f"{hole.type} ({hole.offset}+{hole.length})")
-        self._provenance_label.setText("   ".join(str(p) for p in parts))
+        self._set_provenance_text("   ".join(str(p) for p in parts))
+
+    def _set_provenance_text(self, text: str) -> None:
+        """Show *text* on the status line, reserving room for it and tooltipping it.
+
+        The label keeps the text readable at the widths the window actually uses
+        and never hard-clips it: the width is reserved for the text (bounded, so
+        one very long line cannot push the progress indicator away) and the full
+        text is always the tooltip.
+        """
+        self._provenance_label.setText(text)
+        self._provenance_label.setToolTip(text)
+        metrics = QtGui.QFontMetrics(self._provenance_label.font())
+        reserve = _PROVENANCE_CHAR_CAP if len(text) > _PROVENANCE_CHAR_CAP else len(text)
+        width = metrics.horizontalAdvance(text[:reserve]) + _PROVENANCE_LABEL_PADDING
+        self._provenance_label.setMinimumWidth(width)
 
     # -- report ------------------------------------------------------------
 
