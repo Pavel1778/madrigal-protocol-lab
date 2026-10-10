@@ -17,7 +17,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 import pytest  # noqa: E402
 
 try:
-    from PySide6 import QtWidgets  # noqa: E402
+    from PySide6 import QtCore, QtWidgets  # noqa: E402
 
     from src.ui import theme  # noqa: E402
     from src.ui.main_window import open_default_window  # noqa: E402
@@ -43,6 +43,26 @@ def app():
     theme.load_fonts(application)
     application.setStyleSheet(theme.build_stylesheet())
     return application
+
+
+@pytest.fixture(autouse=True)
+def _restore_language(app):
+    """Undo a persisted language choice after each test.
+
+    ``set_language`` stores the preference in ``QSettings``, and the choice is
+    shared with every later test in the run, so a test that switches to Russian
+    must put the stored value back or it would translate the English-string
+    assertions in the other modules.
+    """
+    settings = QtCore.QSettings("madrigal", "protocol-lab")
+    keys = ("interface/language", "appearance/theme")
+    saved = {key: (settings.contains(key), settings.value(key)) for key in keys}
+    yield
+    for key, (had, previous) in saved.items():
+        if had:
+            settings.setValue(key, previous)
+        else:
+            settings.remove(key)
 
 
 @pytest.fixture
@@ -73,20 +93,25 @@ def test_rule_application_reports_counts(window):
 def test_language_switch_keeps_selected_session(window):
     session_before = window._session_id
     direction_before = window._direction
+    previous = window._language_manager.preference
     window.set_language("ru")
     assert window._session_id == session_before
     assert window._direction == direction_before
-    window.set_language("en")
+    assert window._language_manager.language == "ru"
+    # Restore the previous preference; an installed translator is application
+    # wide and would otherwise translate the English-string tests that follow.
+    window.set_language(previous)
     assert window._session_id == session_before
 
 
 @corpus_required
 def test_theme_change_keeps_the_capture(window):
     capture_before = window._capture
+    previous = window._theme_manager.mode
     window.set_theme_mode("light")
     assert window._capture is capture_before
     assert window._session_id
-    window.set_theme_mode("dark")
+    window.set_theme_mode(previous)
 
 
 @corpus_required

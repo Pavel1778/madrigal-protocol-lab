@@ -16,7 +16,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 import pytest  # noqa: E402
 
 try:
-    from PySide6 import QtWidgets  # noqa: E402
+    from PySide6 import QtCore, QtWidgets  # noqa: E402
 
     from src.ui import theme  # noqa: E402
     from src.ui.layout import FlowLayout  # noqa: E402
@@ -43,6 +43,20 @@ def app():
     theme.load_fonts(application)
     application.setStyleSheet(theme.build_stylesheet())
     return application
+
+
+@pytest.fixture(autouse=True)
+def _restore_preferences(app):
+    """Undo any preference a layout test persisted to ``QSettings``."""
+    settings = QtCore.QSettings("madrigal", "protocol-lab")
+    keys = ("interface/language", "appearance/theme")
+    saved = {key: (settings.contains(key), settings.value(key)) for key in keys}
+    yield
+    for key, (had, previous) in saved.items():
+        if had:
+            settings.setValue(key, previous)
+        else:
+            settings.remove(key)
 
 
 def test_flow_layout_minimum_is_widest_child(app):
@@ -75,6 +89,7 @@ def test_flow_layout_wraps_onto_more_lines(app):
 @corpus_required
 def test_window_shrinks_to_minimum_size_in_russian(app):
     window = open_default_window(app, capture=DEFAULT_CAPTURE, rule=DEFAULT_RULE)
+    previous = window._language_manager.preference
     window.set_language("ru")
     window.resize(800, 600)
     window.show()
@@ -82,6 +97,10 @@ def test_window_shrinks_to_minimum_size_in_russian(app):
     # The splitter used to refuse to shrink below 1510 px; a small window must
     # now be honoured rather than silently widened.
     assert window.minimumSizeHint().width() <= 1000
+    # Switching language installs an application-wide translator; put the
+    # previous choice back so the English-string tests that run later are not
+    # translated.
+    window.set_language(previous)
     window.close()
 
 
