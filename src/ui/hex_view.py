@@ -16,6 +16,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..protocol.stream import DirectionalStream
 from . import theme
+from .constants import FONT_SIZE_WIDGET_DEFAULT, LEGEND_SWATCH_PX
 from .model import (
     AMBIGUITY,
     AMBIGUOUS,
@@ -148,10 +149,10 @@ def legend_swatch(kind: str) -> QtGui.QPixmap:
     so the legend cannot drift from the bytes it explains.
     """
     background = _kind_colours()[kind][0]
-    pixmap = QtGui.QPixmap(12, 12)
+    pixmap = QtGui.QPixmap(LEGEND_SWATCH_PX, LEGEND_SWATCH_PX)
     pixmap.fill(QtGui.QColor(theme.current().surface))
     painter = QtGui.QPainter(pixmap)
-    painter.fillRect(0, 0, 12, 12, _brush_for(kind, background))
+    painter.fillRect(0, 0, LEGEND_SWATCH_PX, LEGEND_SWATCH_PX, _brush_for(kind, background))
     painter.end()
     return pixmap
 
@@ -165,7 +166,7 @@ class HexView(QtWidgets.QPlainTextEdit):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.setReadOnly(True)
-        self._font_size = 10
+        self._font_size = FONT_SIZE_WIDGET_DEFAULT
         self._show_offset = True
         self._show_diagnostics = True
         self._prefix = _PREFIX
@@ -182,7 +183,7 @@ class HexView(QtWidgets.QPlainTextEdit):
         self._annotations: list[ByteAnnotation] = []
         self._header = QtWidgets.QLabel(self)
         self._header.setFont(self._header_font())
-        self._header.setFixedHeight(20)
+        self._header.setFixedHeight(self.fontMetrics().height())
         self._header.setText(self._column_header())
         self._style_header()
 
