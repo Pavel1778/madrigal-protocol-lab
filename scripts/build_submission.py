@@ -38,6 +38,7 @@ INCLUDE_DIRS = (
     "assets",
     "docs",
     "examples",
+    "packaging",
     "presentation",
     "scripts",
     "src",

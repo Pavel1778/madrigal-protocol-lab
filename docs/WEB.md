@@ -43,6 +43,20 @@ interface cannot be exposed on the network by accident.
 The session list links each direction to the hex view; applying the rule turns
 the byte colours into verdicts, and clicking a byte shows its origin packet.
 
+## Verified
+
+Checked on the merged `main` (after the submission README rewrite) against
+`tests/corpus/reference_export/corpus_capture_01.normalized.json` with
+`examples/corpus_rule_v1.json`: sessions → hex → apply → click byte →
+provenance. All three directions resolve, the rule reports `matched`, and the
+provenance card shows packet 3, seq 1001, ts 1700000000.004 for byte 0. The
+full suite passes at 633 tests. A capture of that run is in
+[screenshots/verify/web.png](screenshots/verify/web.png).
+
+The web module itself did not change during the merge; only `README.md`
+conflicted, because `main` rewrote it in the submission format.
+
+
 ## What it does
 
 - Open a capture and list its sessions, with endpoints, roles and diagnostics.

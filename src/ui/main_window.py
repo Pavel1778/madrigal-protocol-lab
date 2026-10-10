@@ -38,6 +38,9 @@ from .validation_view import ValidationView
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_REPORT = REPO_ROOT / "REPORT.md"
 APP_ICON = REPO_ROOT / "assets" / "icons" / "app" / "madrigal-protocol-lab.svg"
+# The desktop id, without the ``.desktop`` suffix Qt expects. The installed file
+# keeps the suffix: /usr/share/applications/madrigal-protocol-lab.desktop.
+APP_DESKTOP_FILE = "madrigal-protocol-lab"
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +48,20 @@ logger = logging.getLogger(__name__)
 def app_icon() -> QtGui.QIcon:
     """Return the application icon, or an empty icon when the asset is absent."""
     return QtGui.QIcon(str(APP_ICON)) if APP_ICON.is_file() else QtGui.QIcon()
+
+
+def associate_with_desktop_entry(app: QtGui.QGuiApplication | None = None) -> None:
+    """Tie the running application to its installed desktop entry.
+
+    A Linux dock resolves a window icon from the desktop entry whose id matches
+    the application, not from :meth:`setWindowIcon`. Without this the taskbar
+    shows a generic icon even though the title bar carries the right one. The id
+    is the desktop file basename without the ``.desktop`` suffix, so the daemon
+    finds ``/usr/share/applications/madrigal-protocol-lab.desktop``.
+    """
+    application = app or QtGui.QGuiApplication.instance()
+    if application is not None:
+        application.setDesktopFileName(APP_DESKTOP_FILE)
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -930,6 +947,7 @@ def open_default_window(
     embedded in the application itself.
     """
     window = MainWindow()
+    associate_with_desktop_entry()
     if capture is not None and Path(capture).is_file():
         window.open_capture(capture)
     if rule is not None and Path(rule).is_file():
@@ -951,6 +969,7 @@ def main(argv: list[str] | None = None) -> int:
 
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([sys.argv[0], *qt_argv])
     app.setApplicationName("Madrigal protocol laboratory")
+    associate_with_desktop_entry(app)
     app.setWindowIcon(app_icon())
     theme.load_fonts(app)
     window = open_default_window(app, capture=args.capture, rule=args.rule)
