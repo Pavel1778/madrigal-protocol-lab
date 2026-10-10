@@ -29,6 +29,10 @@ pip install --upgrade pip
 pip install -e ".[dev]"
 ```
 
+The window carries the `madrigal-protocol-lab` icon (`assets/icons/app/`), and
+`bash scripts/install_desktop.sh` adds a "Madrigal Protocol Laboratory" entry to
+the application menu; see [docs/USAGE.md](docs/USAGE.md).
+
 ## Quick start
 
 Three commands: build the test data, normalize a capture, validate the result.
