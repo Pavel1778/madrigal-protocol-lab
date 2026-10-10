@@ -1,0 +1,45 @@
+<table class="sessions">
+  <thead>
+    <tr>
+      <th>session</th>
+      <th>endpoints</th>
+      <th>roles</th>
+      <th>directions</th>
+      <th>diagnostics</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for session in sessions %}
+    <tr>
+      <td><code>{{ session.session_id }}</code></td>
+      <td>{{ session.endpoints }}</td>
+      <td class="muted">{{ session.role_a }} / {{ session.role_b }}</td>
+      <td>
+        {% for direction in session.directions %}
+        <a class="button button--small"
+           href="/session/{{ session.session_id }}/hex?direction={{ direction }}"
+           hx-get="/session/{{ session.session_id }}/hex?direction={{ direction }}"
+           hx-target="#workspace"
+           hx-swap="innerHTML">{{ direction }}
+          <span class="muted">{{ session.direction_bytes.get(direction, 0) }} B</span>
+        </a>
+        {% endfor %}
+      </td>
+      <td>
+        {% if session.diagnostics %}
+          {% for diagnostic in session.diagnostics %}
+          <span class="chip chip--{{ diagnostic.type }}"
+                title="{{ diagnostic.type }} at {{ diagnostic.offset }} (+{{ diagnostic.length }})">
+            {{ diagnostic.type }} @{{ diagnostic.offset }}
+          </span>
+          {% endfor %}
+        {% else %}
+          <span class="muted">none</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="muted">This capture has no sessions.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>

@@ -1,0 +1,56 @@
+<h2>
+  Hex
+  <span class="muted">{{ session.session_id }} · {{ direction }}
+    · {{ session.direction_bytes.get(direction, 0) }} bytes</span>
+</h2>
+
+<div class="toolbar">
+  {% if has_rule %}
+  <button class="button"
+          hx-post="/apply"
+          hx-vals='{"session": "{{ session.session_id }}", "direction": "{{ direction }}"}'
+          hx-target="#messages"
+          hx-swap="innerHTML">Apply rule</button>
+  {% else %}
+  <span class="muted">No rule loaded — every byte is <b>uncovered</b>.</span>
+  {% endif %}
+  <span class="spacer"></span>
+  <span class="legend">
+    <span class="swatch swatch--matched"></span>matched
+    <span class="swatch swatch--mismatched"></span>mismatched
+    <span class="swatch swatch--gap"></span>gap
+    <span class="swatch swatch--ambiguous"></span>ambiguity
+    <span class="swatch swatch--uncovered"></span>uncovered
+  </span>
+</div>
+
+<div class="hex" id="hex">
+  {% for line in lines %}
+  <div class="hex-row">
+    <span class="hex-offset">{{ "%08x"|format(line.offset) }}</span>
+    <span class="hex-bytes">
+      {%- for cell in line.cells -%}
+        <span class="byte {{ status_class(cell.kind) }}"
+              data-offset="{{ cell.offset }}"
+              title="offset {{ cell.offset }} · {{ cell.kind }}{% if cell.label %} · {{ cell.label }}{% endif %}{% if cell.packet_index is not none %} · packet {{ cell.packet_index }}{% endif %}"
+              hx-get="/message/{{ cell.offset }}/provenance/card?session={{ session.session_id }}&direction={{ direction }}"
+              hx-target="#provenance"
+              hx-swap="innerHTML">{{ "%02x"|format(cell.value) }}</span>
+      {%- endfor -%}
+    </span>
+    <span class="hex-ascii">{{ line.ascii }}</span>
+  </div>
+  {% else %}
+  <p class="muted">This direction carries no bytes.</p>
+  {% endfor %}
+</div>
+
+<h2>Provenance</h2>
+<div id="provenance" class="panel panel--inset">
+  <p class="muted">Click a byte to see the packet it came from.</p>
+</div>
+
+<h2>Messages</h2>
+<div id="messages">
+  {% include "_messages.html" %}
+</div>

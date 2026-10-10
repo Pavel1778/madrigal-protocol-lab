@@ -1,0 +1,17 @@
+<div class="provenance-card">
+  <dl>
+    <dt>offset</dt><dd><code>{{ info.offset }}</code></dd>
+    <dt>byte</dt><dd><code>{{ info.hex }}</code> ({{ info.ascii }})</dd>
+    <dt>verdict</dt><dd><span class="chip {{ status_class(info.kind) }}">{{ info.kind }}</span>
+      {% if info.label %}<span class="muted">{{ info.label }}</span>{% endif %}</dd>
+    {% if info.in_gap %}<dt>gap</dt><dd>the bytes here were never observed</dd>{% endif %}
+    {% if info.in_ambiguity %}<dt>ambiguity</dt><dd>overlapping data disagrees</dd>{% endif %}
+    <dt>packet index</dt><dd>{{ info.packet_index if info.packet_index is not none else "—" }}</dd>
+    <dt>seq</dt><dd>{{ info.seq if info.seq is not none else "—" }}</dd>
+    <dt>ts</dt><dd>{{ info.ts if info.ts is not none else "—" }}</dd>
+    {% if info.message_offset is not none %}
+    <dt>message</dt><dd>offset <code>{{ info.message_offset }}</code>
+      <span class="chip {{ status_class(info.message_status) }}">{{ info.message_status }}</span></dd>
+    {% endif %}
+  </dl>
+</div>

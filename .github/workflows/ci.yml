@@ -26,7 +26,7 @@ jobs:
           python-version: ${{ matrix.python }}
           cache: pip
           cache-dependency-path: pyproject.toml
-      - run: pip install -e ".[dev]"
+      - run: pip install -e ".[dev,web]"
       # PySide6 links libEGL and libGL at import time. The GitHub runner image
       # does not ship them, so without this the whole tests/ui package is
       # skipped and the interface is never exercised in CI. The packages exist
@@ -51,7 +51,7 @@ jobs:
           python-version: '3.12'
           cache: pip
           cache-dependency-path: pyproject.toml
-      - run: pip install -e ".[dev]"
+      - run: pip install -e ".[dev,web]"
       - run: ruff check .
       # Post-defense: ruff format --check over the whole tree and mypy . The
       # formatting and typing findings are in modules outside this change and
