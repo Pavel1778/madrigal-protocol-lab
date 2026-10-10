@@ -160,6 +160,19 @@ scripts/update_translations.sh
 The script scans the window sources, updates the `.ts` in place (keeping the
 existing translations) and recompiles the `.qm`.
 
+## 7.2 Settings
+
+`View -> Settings...` (or `Ctrl+,`) opens the preferences dialog. It has four
+sections: `General` for the theme and interface language, `Editor` for the hex
+and tree font sizes and the offset column, `Paths` for the directories the file
+dialogs start in, and `Advanced` for the logging level and the hex diagnostics
+shading. `OK` applies and closes, `Apply` applies without closing, and `Cancel`
+restores whatever was active when the dialog opened.
+
+Theme and language apply at once through the same managers the menus use. The
+values are stored with `QSettings` under `madrigal/protocol-lab`. The full list
+of keys is in `docs/SETTINGS.md`.
+
 ## 8. Tests
 
 ```
