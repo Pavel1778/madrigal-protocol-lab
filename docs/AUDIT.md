@@ -268,8 +268,8 @@ Checked at the submission revision.
 | Lint | `ruff check . --select "E4,E7,E9,F" --ignore E501`: All checks passed |
 | Coverage | 95% (see the coverage section above) |
 | CI | green: test matrix (3.12 and 3.13), `code-quality`, `dependency-audit`, run `37995221037` |
-| Largest tracked file | `presentation/slides.pdf`, 1.06 MiB, well under 5 MiB |
-| Submission archive | the latest `dist/submission_*.zip`, rebuilt at this head: 2.5 MiB, 207 entries |
+| Largest tracked file | `presentation/slides.pptx`, 2.24 MiB, well under 5 MiB |
+| Submission archive | the latest `dist/submission_*.zip`, rebuilt at this head: 6.5 MiB, 291 entries |
 | Fresh unpack | 411 passed, 0 skipped from a clean unpack at this head |
 
 Trace checks at this revision:

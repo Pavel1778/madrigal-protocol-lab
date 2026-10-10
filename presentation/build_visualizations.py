@@ -121,7 +121,11 @@ def coverage_donut() -> None:
     values = [140, 140, 0, 0, 0]
     labels = ["matched", "not applicable", "mismatched", "incomplete", "uncovered"]
     colors = [MATCHED, UNCOVERED, MISMATCHED, INCOMPLETE, AMBIGUOUS]
-    present = [(v, l, c) for v, l, c in zip(values, labels, colors) if v > 0]
+    present = [
+        (value, label, color)
+        for value, label, color in zip(values, labels, colors)
+        if value > 0
+    ]
     sizes = [p[0] for p in present]
     wedges, _ = ax.pie(
         sizes, colors=[p[2] for p in present], startangle=90,
