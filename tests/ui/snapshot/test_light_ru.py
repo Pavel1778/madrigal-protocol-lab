@@ -15,6 +15,6 @@ THEME = "light"
 LANGUAGE = "ru"
 
 
-def test_dark_en(window, app, resolution):
+def test_snapshot(window, app, resolution):
     set_state(window, app, language=LANGUAGE, theme_mode=THEME, resolution=resolution, zoom=100)
     assert_snapshot(snapshot_name(THEME, LANGUAGE, resolution), grab(window))
