@@ -249,7 +249,13 @@ v2 на том же корпусе: 140 matched, 0 mismatched, точность 
 
 ## РАЗРАБОТЧИКИ
 
-#### Сабадаш Павел — backend и GUI (Python, PySide6, сетевой анализ) <sabadaspaha@gmail.com>
+![Команда](assets/team-avatar.png)
+
+- **Сабадаш Павел** — архитектура; чтение PCAP/PCAPNG и провенанс
+  (`src/capture`); переносной проект и отчёты (`src/project`, `src/report`);
+  движок правил и гипотез (`src/protocol`, `src/hypothesis`); графический
+  интерфейс и веб-интерфейс (`src/ui`, `src/web`); координация —
+  <sabadaspaha@gmail.com>
 
 Проект выполнялся одним участником. Правила участия и порядок внесения
 изменений описаны в [CONTRIBUTING.md](CONTRIBUTING.md).
