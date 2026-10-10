@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from ..protocol.rule import ALL_FIELD_TYPES, load_rule_text, parse_rule
 from . import theme
 from .model import (
     MISMATCHED,
@@ -46,8 +47,11 @@ class ValidationView(QtWidgets.QWidget):
     """Rule editor, message table and counterexample list."""
 
     applyRequested = QtCore.Signal()
-    counterexampleSelected = QtCore.Signal(int)
+    applyCaptureRequested = QtCore.Signal()
+    loadExampleRequested = QtCore.Signal()
+    counterexampleSelected = QtCore.Signal(str, str, int, int)  # session, direction, offset, length
     ruleLoaded = QtCore.Signal(str)
+    ruleValidityChanged = QtCore.Signal(bool, str)  # valid, message
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
@@ -70,12 +74,26 @@ class ValidationView(QtWidgets.QWidget):
         self.rule_edit = QtWidgets.QPlainTextEdit()
         self.rule_edit.setFont(theme.mono_font(9))
         self.rule_edit.setPlaceholderText("rule JSON or YAML")
+        self._completer = QtWidgets.QCompleter(sorted(ALL_FIELD_TYPES), self)
+        self._completer.setWidget(self.rule_edit)
+        self._completer.setCompletionMode(QtWidgets.QCompleter.CompletionMode.PopupCompletion)
+        self._completer.setCaseSensitivity(QtCore.Qt.CaseSensitivity.CaseSensitive)
+        self._completer.activated.connect(self._insert_completion)
+        self.rule_edit.installEventFilter(self)
+        self.rule_edit.textChanged.connect(self._on_rule_text_changed)
         rule_layout.addWidget(self.rule_edit, 1)
         rule_buttons = QtWidgets.QHBoxLayout()
         self.apply_button = QtWidgets.QPushButton("Apply to current direction")
         self.apply_button.setProperty("accent", "true")
         self.apply_button.clicked.connect(self.applyRequested.emit)
         rule_buttons.addWidget(self.apply_button)
+        self.apply_capture_button = QtWidgets.QPushButton("Apply to whole capture")
+        self.apply_capture_button.clicked.connect(self.applyCaptureRequested.emit)
+        rule_buttons.addWidget(self.apply_capture_button)
+        self.example_button = QtWidgets.QPushButton("Load example")
+        self.example_button.setToolTip("Load the first rule from examples/")
+        self.example_button.clicked.connect(self.loadExampleRequested.emit)
+        rule_buttons.addWidget(self.example_button)
         rule_buttons.addStretch(1)
         rule_layout.addLayout(rule_buttons)
         self.rule_status = QtWidgets.QLabel("")
@@ -96,6 +114,7 @@ class ValidationView(QtWidgets.QWidget):
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.messages_table.itemSelectionChanged.connect(self._on_message_selected)
         self._tabs.addTab(self.messages_table, "Messages")
+        self._show_messages_empty_state()
 
         # Counterexamples tab.
         counter_page = QtWidgets.QWidget()
@@ -108,6 +127,8 @@ class ValidationView(QtWidgets.QWidget):
         self._tabs.addTab(counter_page, "Counterexamples")
 
         self._application: RuleApplication | None = None
+        self._session_id = ""
+        self._direction = ""
 
     # -- rule --------------------------------------------------------------
 
@@ -127,18 +148,122 @@ class ValidationView(QtWidgets.QWidget):
 
     def set_context(self, session_id: str, direction: str) -> None:
         """Show which session and direction the panel is working on."""
+        self._session_id = session_id
+        self._direction = direction
         self._context.setText(f"session {session_id}   {direction}")
 
+    # -- editor feedback ---------------------------------------------------
+
+    def _on_rule_text_changed(self) -> None:
+        """Validate the rule text as it is typed.
+
+        An empty editor is not an error: it is the state before a rule is
+        loaded. Any other text must parse and build a rule; a failure is
+        reported in the status line and by :attr:`ruleValidityChanged` without
+        touching the current application.
+        """
+        text = self.rule_edit.toPlainText()
+        if not text.strip():
+            self.set_rule_status("")
+            self.ruleValidityChanged.emit(False, "empty")
+            return
+        try:
+            parse_rule(load_rule_text(text))
+        except Exception as exc:  # noqa: BLE001 - JSON and YAML raise different types
+            self.set_rule_status(f"invalid rule: {exc}", error=True)
+            self.ruleValidityChanged.emit(False, str(exc))
+            return
+        self.set_rule_status("rule parses")
+        self.ruleValidityChanged.emit(True, "")
+
+    def _insert_completion(self, completion: str) -> None:
+        """Insert ``completion`` at the text cursor, replacing the prefix."""
+        cursor = self.rule_edit.textCursor()
+        prefix = self._completion_prefix(cursor)
+        cursor.movePosition(
+            QtGui.QTextCursor.MoveOperation.Left,
+            QtGui.QTextCursor.MoveMode.KeepAnchor,
+            len(prefix),
+        )
+        cursor.insertText(completion)
+        self.rule_edit.setTextCursor(cursor)
+
+    def _completion_prefix(self, cursor: QtGui.QTextCursor) -> str:
+        """The identifier characters immediately before ``cursor``."""
+        text = self.rule_edit.toPlainText()
+        position = cursor.position()
+        start = position
+        while start > 0 and (text[start - 1].isalnum() or text[start - 1] == "_"):
+            start -= 1
+        return text[start:position]
+
+    def eventFilter(self, obj, event):  # noqa: N802 - Qt name
+        """Offer a field-type completion while the rule editor is typed into.
+
+        The completer lives on the panel but the keystrokes go to the editor, so
+        the editor's events are filtered here rather than handled in a
+        ``keyPressEvent`` the panel would never receive.
+        """
+        if obj is self.rule_edit and event.type() == QtCore.QEvent.Type.KeyPress:
+            completer = self._completer
+            if completer.popup().isVisible() and event.key() in (
+                QtCore.Qt.Key.Key_Enter,
+                QtCore.Qt.Key.Key_Return,
+                QtCore.Qt.Key.Key_Escape,
+                QtCore.Qt.Key.Key_Tab,
+                QtCore.Qt.Key.Key_Backtab,
+            ):
+                event.ignore()
+                return True
+            is_shortcut = (
+                event.modifiers() & QtCore.Qt.KeyboardModifier.ControlModifier
+                and event.key() in (QtCore.Qt.Key.Key_E, QtCore.Qt.Key.Key_J)
+            )
+            if not is_shortcut and event.text() and not event.text().isspace():
+                prefix = self._completion_prefix(self.rule_edit.textCursor())
+                if prefix:
+                    completer.setCompletionPrefix(prefix)
+                    if completer.completionCount():
+                        rect = self.rule_edit.cursorRect()
+                        rect.setWidth(
+                            completer.popup().sizeHintForColumn(0)
+                            + completer.popup().verticalScrollBar().sizeHint().width()
+                        )
+                        completer.complete(rect)
+        return super().eventFilter(obj, event)
+
+    def show_rule_validity(self, valid: bool, message: str) -> None:
+        """Report the parse state of the rule editor."""
+        if valid:
+            self.set_rule_status("rule parses")
+        elif message == "empty":
+            self.set_rule_status("")
+        else:
+            self.set_rule_status(f"invalid rule: {message}", error=True)
+
     # -- results -----------------------------------------------------------
+
+    def _show_messages_empty_state(self) -> None:
+        """State in the table why it is empty, instead of leaving it blank."""
+        self.messages_table.setRowCount(1)
+        self.messages_table.setSpan(0, 0, 1, 4)
+        item = QtWidgets.QTableWidgetItem(
+            "no messages yet - apply a rule to this direction (F5) or to the capture (F6)"
+        )
+        item.setForeground(QtGui.QColor(theme.TEXT_SECONDARY))
+        self.messages_table.setItem(0, 0, item)
 
     def show_application(self, application: RuleApplication) -> None:
         """Fill the message table and counterexample list from *application*."""
         self._application = application
+        self.messages_table.clearSpans()
         self.messages_table.setRowCount(0)
         ordered = sorted(
             application.messages,
             key=lambda m: (_STATUS_RANK.get(m.status.value, 9), m.offset),
         )
+        if not ordered:
+            self._show_messages_empty_state()
         self.messages_table.setRowCount(len(ordered))
         for row, message in enumerate(ordered):
             self._fill_row(row, message)
@@ -150,9 +275,18 @@ class ValidationView(QtWidgets.QWidget):
                 f"offset {message.offset}  {message.bytes_hex}  {message.reason or ''}"
             )
             item.setForeground(QtGui.QColor(theme.MISMATCHED_TEXT))
-            item.setData(QtCore.Qt.ItemDataRole.UserRole, message.offset)
+            item.setData(
+                QtCore.Qt.ItemDataRole.UserRole,
+                (application.session_id, application.direction, message.offset, message.length),
+            )
             item.setToolTip(_provenance_tooltip(message))
             self.counter_list.addItem(item)
+        if not counterexamples:
+            # A run with no mismatch in this direction is not a proof; say so,
+            # and point at the corpus run, which is where mismatches appear.
+            self.counter_list.addItem(
+                QtWidgets.QListWidgetItem("no counterexamples in this direction")
+            )
 
         counts = application.counts
         summary = "  ".join(f"{k}:{v}" for k, v in sorted(counts.items()))
@@ -185,14 +319,65 @@ class ValidationView(QtWidgets.QWidget):
         rows = self.messages_table.selectionModel().selectedRows()
         if not rows:
             return
-        item = self.messages_table.item(rows[0].row(), 0)
-        if item is not None:
-            self.counterexampleSelected.emit(int(item.data(QtCore.Qt.ItemDataRole.UserRole)))
+        row = rows[0].row()
+        item = self.messages_table.item(row, 0)
+        if item is None or item.data(QtCore.Qt.ItemDataRole.UserRole) is None:
+            return  # the empty-state row carries no offset
+        length = int(self.messages_table.item(row, 1).text())
+        self.counterexampleSelected.emit(
+            self._session_id,
+            self._direction,
+            int(item.data(QtCore.Qt.ItemDataRole.UserRole)),
+            length,
+        )
 
     def _on_counter_selected(self) -> None:
         items = self.counter_list.selectedItems()
-        if items:
-            self.counterexampleSelected.emit(int(items[0].data(QtCore.Qt.ItemDataRole.UserRole)))
+        if not items:
+            return
+        data = items[0].data(QtCore.Qt.ItemDataRole.UserRole)
+        if data is None:  # the "no counterexamples" placeholder
+            return
+        session_id, direction, offset, length = data
+        self.counterexampleSelected.emit(session_id, direction, offset, length)
+
+    def show_corpus_report(self, report) -> None:
+        """Fill the counterexample list from a whole-capture report.
+
+        A whole-capture run frames every direction, so its counterexamples carry
+        their own session and direction. The list is filled here so the tab and
+        the status line agree after a capture-wide run, and so a corpus
+        counterexample can be jumped to. The message table is not rebuilt: it
+        shows one direction, and mixing directions into it would be misleading.
+        """
+        self.counter_list.clear()
+        for counter in sorted(report.contradictions, key=lambda c: (c.session_id, c.direction, c.message_offset)):
+            text = (
+                f"{counter.session_id} {counter.direction}  "
+                f"offset {counter.message_offset}  {counter.bytes_hex or ''}  {counter.reason or ''}"
+            )
+            item = QtWidgets.QListWidgetItem(text)
+            item.setForeground(QtGui.QColor(theme.MISMATCHED_TEXT))
+            item.setData(
+                QtCore.Qt.ItemDataRole.UserRole,
+                (counter.session_id, counter.direction, counter.message_offset, counter.message_length),
+            )
+            item.setToolTip(_counter_provenance_tooltip(counter))
+            self.counter_list.addItem(item)
+        if not report.contradictions:
+            self.counter_list.addItem(
+                QtWidgets.QListWidgetItem("no counterexamples in this capture")
+            )
+        self._tabs.setTabText(2, f"Counterexamples ({len(report.contradictions)})")
+
+    @property
+    def counterexample_count(self) -> int:
+        """Number of real counterexample rows, excluding the empty-state note."""
+        return sum(
+            1
+            for row in range(self.counter_list.count())
+            if self.counter_list.item(row).data(QtCore.Qt.ItemDataRole.UserRole) is not None
+        )
 
     def show_message_count(self, count: int) -> None:
         """Show that the rule was applied to ``count`` messages."""
@@ -212,3 +397,19 @@ def _provenance_tooltip(message) -> str:
             label += f"\n{message.bytes_hex}"
             return label.strip()
     return message.bytes_hex
+
+
+def _counter_provenance_tooltip(counter) -> str:
+    """A tooltip for a corpus counterexample: session, direction and packets."""
+    parts = [f"{counter.session_id} {counter.direction}", f"offset {counter.message_offset}"]
+    provenance = counter.provenance_range or {}
+    packets = provenance.get("packets")
+    if packets:
+        parts.append(f"packets {packets}")
+    if provenance.get("seq") is not None:
+        parts.append(f"seq {provenance['seq']}")
+    if provenance.get("ts") is not None:
+        parts.append(f"ts {provenance['ts']}")
+    if counter.bytes_hex:
+        parts.append(counter.bytes_hex)
+    return "\n".join(str(p) for p in parts)
