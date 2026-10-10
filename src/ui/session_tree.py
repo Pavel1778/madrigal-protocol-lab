@@ -13,6 +13,10 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from . import theme
 from .model import CaptureModel, SessionInfo
 
+# Role holding whether an item carries a diagnostic (so it can be recoloured
+# when the theme changes without rebuilding the tree).
+_DIAG_ROLE = QtCore.Qt.ItemDataRole.UserRole + 1
+
 
 class SessionTree(QtWidgets.QTreeWidget):
     """Tree of sessions and their directions."""
@@ -61,7 +65,10 @@ class SessionTree(QtWidgets.QTreeWidget):
             f"packets: {session.packet_count}",
         )
         if types:
-            parent.setForeground(0, QtGui.QColor(theme.INCOMPLETE_TEXT))
+            parent.setData(0, _DIAG_ROLE, True)
+            parent.setForeground(0, QtGui.QColor(theme.current().status_incomplete_text))
+        else:
+            parent.setData(0, _DIAG_ROLE, False)
         self.addTopLevelItem(parent)
 
         for direction, size in session.direction_bytes.items():
@@ -72,9 +79,25 @@ class SessionTree(QtWidgets.QTreeWidget):
                 0,
                 f"{session.session_id} {direction}: {size} bytes",
             )
-            if any(d.direction == direction for d in diagnostics):
-                child.setForeground(0, QtGui.QColor(theme.INCOMPLETE_TEXT))
+            has_diag = any(d.direction == direction for d in diagnostics)
+            child.setData(0, _DIAG_ROLE, has_diag)
+            if has_diag:
+                child.setForeground(0, QtGui.QColor(theme.current().status_incomplete_text))
             parent.addChild(child)
+
+    def apply_theme(self) -> None:
+        """Recolour diagnostic items in the active theme."""
+        colour = QtGui.QColor(theme.current().status_incomplete_text)
+        for index in range(self.topLevelItemCount()):
+            parent = self.topLevelItem(index)
+            self._recolour(parent, 0, colour)
+            for child_index in range(parent.childCount()):
+                self._recolour(parent.child(child_index), 0, colour)
+
+    @staticmethod
+    def _recolour(item: QtWidgets.QTreeWidgetItem, column: int, colour: QtGui.QColor) -> None:
+        brush = QtGui.QBrush(colour) if item.data(column, _DIAG_ROLE) else QtGui.QBrush()
+        item.setForeground(column, brush)
 
     def _on_selection(self) -> None:
         items = self.selectedItems()
