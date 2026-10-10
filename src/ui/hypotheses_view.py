@@ -46,10 +46,10 @@ def score_colour(score: float) -> str:
         One of the theme's text colours.
     """
     if score >= HIGH_SCORE:
-        return theme.MATCHED_TEXT
+        return theme.current().status_matched_text
     if score >= MID_SCORE:
-        return theme.INCOMPLETE_TEXT
-    return theme.TEXT_SECONDARY
+        return theme.current().status_incomplete_text
+    return theme.current().text_secondary
 
 
 class HypothesesView(QtWidgets.QWidget):
@@ -82,6 +82,7 @@ class HypothesesView(QtWidgets.QWidget):
         layout.addWidget(self.table, 1)
 
         self._offsets: list[int] = []
+        self._fields: list = []
 
     def show_fields(self, fields: list) -> None:
         """Fill the panel from a list of ``FieldAlternatives``.
@@ -90,6 +91,7 @@ class HypothesesView(QtWidgets.QWidget):
             fields: Per-field alternatives, as returned by
                 ``suggest_alternatives``. Each candidate is drawn as one row.
         """
+        self._fields = list(fields)
         self.table.setRowCount(0)
         self._offsets = []
         rows = []
@@ -114,7 +116,13 @@ class HypothesesView(QtWidgets.QWidget):
         """Empty the panel."""
         self.table.setRowCount(0)
         self._offsets = []
+        self._fields = []
         self.header.setText("no rule applied")
+
+    def apply_theme(self) -> None:
+        """Rebuild the panel so the score colours follow the active theme."""
+        if self._fields:
+            self.show_fields(self._fields)
 
     def _fill_row(self, row: int, field_name: str, reading: str, candidate, score) -> None:
         support = "" if candidate is None else f"{candidate.support}"
