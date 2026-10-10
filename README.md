@@ -269,6 +269,8 @@ v2 на том же корпусе: 140 matched, 0 mismatched, точность 
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — подход, модули, форматы, зависимости.
 - [docs/CONTRACT.md](docs/CONTRACT.md) — JSON-контракты между стадиями.
+- [docs/INSTALL.md](docs/INSTALL.md) — установка из готовых сборок релиза.
+- [docs/BINARY.md](docs/BINARY.md) — однофайловые сборки и колесо.
 - [docs/CAPTURE_API.md](docs/CAPTURE_API.md) — API движка захвата.
 - [docs/PROTOCOL_API.md](docs/PROTOCOL_API.md) — API движка правил и гипотез.
 - [docs/INTEGRATION.md](docs/INTEGRATION.md) — стыковка стадий и проверка шва.
@@ -284,19 +286,24 @@ v2 на том же корпусе: 140 matched, 0 mismatched, точность 
 
 Основная поставка — исходное дерево с инструкцией выше, упакованное скриптом
 `python scripts/build_submission.py` в `dist/submission_*.zip`. Архив
-распаковывается и запускается тем же порядком.
+распаковывается и запускается тем же порядком. Готовые сборки релиза
+`v1.0.0` лежат на странице Releases репозитория; шаги установки из них — в
+[docs/INSTALL.md](docs/INSTALL.md).
 
-| Формат | Состояние | Команда |
+| Формат | Состояние | Команда / файл |
 | --- | --- | --- |
 | Архив исходников | в поставке | `python scripts/build_submission.py` |
+| Демонстрация (HTML/PDF) | в поставке | `cd presentation && npm install && npm run build` |
 | Docker-образ | в поставке, `Dockerfile` в дереве | `docker build -t protocol-lab .` |
 | Linux-бинарник | собирается по требованию | `scripts/build_linux_binary.sh` |
 | Пакет `.deb` | собирается по требованию | `scripts/build_deb.sh` |
-| Демонстрация (HTML) | собирается по требованию | `cd presentation && npm install && npm run build` |
+| AppImage | собирается по требованию | `scripts/build_appimage.sh` |
+| Самораспаковывающийся `.run` | собирается по требованию | `scripts/build_run.sh` |
+| Python-колесо | собирается по требованию | `python -m build --wheel` |
 
-Бинарник и `.deb` — собранные артефакты, в репозиторий не коммитятся; скрипты
-их сборки коммитятся. Архив проверяется после сборки: он распаковывается во
-временный каталог, и тесты запускаются уже оттуда.
+Бинарник, `.deb`, AppImage, `.run` и колесо — собранные артефакты, в репозиторий
+не коммитятся; скрипты их сборки коммитятся. Архив проверяется после сборки: он
+распаковывается во временный каталог, и тесты запускаются уже оттуда.
 
 ## Ограничения
 
