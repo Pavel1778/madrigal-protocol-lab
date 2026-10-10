@@ -1,0 +1,46 @@
+# Normalize text files to LF in the repository; keep CRLF only on checkout
+# for batch/PowerShell helpers, none of which are shipped here.
+* text=auto eol=lf
+
+# Fonts and other binary assets: never diff, never merge line-wise.
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.mp4 binary
+*.zip binary
+*.gz binary
+*.whl binary
+*.deb binary
+*.run binary
+*.AppImage binary
+*.so binary
+*.dylib binary
+*.dll binary
+
+# Captures are data, not text.
+*.pcap binary
+*.pcapng binary
+
+# Generated artefacts: collapse diffs to a one-line summary.
+dist/** -diff
+build/** -diff
+*.egg-info/** -diff
+
+# Source: keep language statistics honest.
+*.py text
+*.md text
+*.json text
+*.yaml text
+*.yml text
+*.toml text
+*.css text
+*.js text
+*.html text
+*.sh text eol=lf
