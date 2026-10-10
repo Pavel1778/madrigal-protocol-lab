@@ -20,8 +20,14 @@ The source and the PDF agree on the set of slides. The one ordering difference
 is the team slide: `slides.md` places it second, the committed PDF places it on
 page 5. Both carry all 22 slides; only the position differs. The PDF was
 exported from an earlier revision of `slides.md`, before the title and section
-divider slides were inserted ahead of the team slide. To remove the difference,
-re-export once with `presentation/export_pdf.sh`.
+divider slides were inserted ahead of the team slide.
+
+This is a cosmetic ordering difference and the deck reads correctly as it
+stands. Re-exporting to close it carries a risk: the Slidev export renders the
+team slide (avatar plus HTML text) blank in some environments, so a locally
+rebuilt `slides.pdf` can be worse than the committed one. Keep the committed PDF
+unless a re-export is checked page by page, and never commit one whose team page
+is blank.
 
 Per-page headings, from `pdftotext -layout presentation/slides.pdf`:
 
