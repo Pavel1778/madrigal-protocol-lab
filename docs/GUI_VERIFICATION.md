@@ -202,6 +202,5 @@ whole value on hover.
 Both are exercised on a live X display
 (`docs/screenshots/verify/traffic_and_provenance_fix_live.png`): the byte counts
 are read in full and the provenance line is not clipped. Three tests cover the
-behaviour: the column fits every summary and stays off a scroll bar at the
-default size, the column keeps its floor on a narrow panel, and the status line
-reserves room and tooltips its text.
+behaviour: the column fits every summary, the column keeps its floor on a
+narrow panel, and the status line reserves room and tooltips its text.
