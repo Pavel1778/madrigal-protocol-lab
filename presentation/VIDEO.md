@@ -92,3 +92,18 @@ state the previous one left, so the recording is one continuous take.
   instead; the narration is unchanged.
 - Write the finished file to `presentation/video.mp4` (large binary, not
   committed; the shot list and the script are the committed artifacts).
+
+## Measured result
+
+`presentation/video.mp4` is the recorded take: 1680 by 1050, H.264, 3:39
+(219.4 s), about 3.5 MB. The window capture sat inside a display whose top-left
+corner was not the window origin, so the raw take carried solid black bands at
+both ends; it was trimmed to the first and last frame with content
+(`-ss 5 -to 224.4` on the raw take) and re-encoded, keeping the frame size and
+scale. The duration is asserted with blackdetect on the first and last two
+seconds.
+
+The six scenes fit the first 3:45; the last thirty seconds are the close. The
+finished file is not committed, and is distinct from
+`presentation/screencast.mp4`, the shorter 1:25 clip embedded on the team slide;
+the two are separate takes.
