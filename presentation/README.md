@@ -12,7 +12,7 @@ from the repository's own code. Every number is from `docs/METRICS.md`.
 | `slides.md` | the deck source (18 slides, Madrigal theme, `v-click` build-ins) |
 | `style.css` | the Madrigal theme: palette, Tektur + Montserrat, layout |
 | `slides.pdf` | the printed export, 18 pages (archive copy for submission) |
-| `slides.pptx` | the PPTX export (21 pages: 18 slides plus the build-in steps) |
+| `slides.pptx` | the PPTX export (26 pages: 18 slides plus the build-in steps) |
 | `screenshots/` | 11 real GUI captures at 1920×1080 (`generate_screenshots.py`) |
 | `assets/` | 6 branded SVG visualisations (`build_visualizations.py`) |
 | `icons/` | Lucide line icons used by the deck (`fetch_icons.py`) |
@@ -69,5 +69,8 @@ python -m presentation.fetch_icons
 - Fonts (Tektur, Montserrat) are bundled: `public/fonts/` for Slidev,
   `assets/fonts/` for the visualisation script.
 - `node_modules/`, `dist/` and `.vite-cache/` are ignored by git.
-- The deck uses the Madrigal palette: background `#131516`, accent `#6D071F`,
-  gradient `#410913 → #A2391D`, text `#E0E0E0`, rounded corners 4–5 px.
+- The deck uses the Madrigal palette. Brand fills stay `#131516` / `#6D071F` /
+  `#410913 → #A2391D`; the page background is `#0E1011` and body text is
+  `#F0F0F0`, so every label passes WCAG AA. The accent orange used for links and
+  inline code is `#E0603A` (the dark `#A2391D` is decoration only). Rounded
+  corners 4–5 px. Slide transition is `slide-left`; build-ins are `v-click`.
