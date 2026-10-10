@@ -293,9 +293,9 @@ tests over the real bytes and the real engine).
 | `docs/RULE_V1_V2.md` | the version record for the two corpus rules |
 | `docs/GUI_VERIFICATION.md` | what the window was driven to show, and the defects found |
 | `presentation/slide_verification.md` | each deck claim mapped to its evidence |
-| `presentation/slides.pdf` | the deck, fifteen slides, with the eight screenshots |
+| `presentation/slides.pdf` | the deck, eighteen slides, with the real screenshots |
 | `presentation/defense_script.md` | the slide-by-slide speaker script for the defense |
-| `presentation/screenshots/01_main.png` ... `08_diff.png` | the eight window captures |
+| `presentation/screenshots/` | the eleven window captures |
 | `tests/ui/test_e2e.py` | the scenario as fourteen offscreen tests |
 
 The section above is produced by `render_hypothesis_narrative`; the figures are

@@ -108,7 +108,7 @@ The engine enumerates named candidates: `constant`, `counter`, `message_length`,
 `checksum_<algorithm>_<region>` and `journal_<key>`. A meaning outside the set
 will not be proposed. This is stated as a limitation on the deck and here.
 Evidence: `src/hypothesis/alternatives.py`,
-`presentation/slide_verification.md` slide 13.
+`presentation/slide_verification.md`, the limitations slide.
 
 ## 14. How do you know the corpus rule is not overfit to one capture?
 
@@ -149,7 +149,7 @@ Evidence: `tests/integration/test_reference_report.py` (skip marker),
 It is constant (`0x00`) in every observed message, so no reading can be told
 apart from any other; the rule declares `expected: [0]` and nothing more. A
 meaning would be a guess with no evidence. Evidence: `docs/CORPUS_ANALYSIS.md`
-section 3, `presentation/slide_verification.md` slide 13.
+section 3, `presentation/slide_verification.md`, the limitations slide.
 
 ## 20. What would you do next?
 

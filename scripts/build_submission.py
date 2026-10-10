@@ -78,9 +78,11 @@ EXCLUDED_DIRS = frozenset(
         ".pytest_cache",
         ".ruff_cache",
         ".venv",
+        ".vite-cache",
         "__pycache__",
         "build",
         "dist",
+        "node_modules",
         "out",
         "venv",
     }
