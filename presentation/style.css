@@ -273,6 +273,30 @@
   justify-content: center;
   height: 100%;
 }
+.team-avatar-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.team-avatar {
+  display: block;
+  width: 240px;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid var(--highlight);
+}
+.member { border-left: 4px solid var(--highlight); padding-left: 16px; }
+.member .role { color: var(--secondary); font-size: 18px; margin-top: 4px; }
+.web-shot {
+  display: block;
+  width: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  object-position: top;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
 .slidev-layout .arch {
   display: block;
   width: 100%;
