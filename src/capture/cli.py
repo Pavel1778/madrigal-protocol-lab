@@ -82,6 +82,14 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
 
+    if args.stream and args.wireshark_pcap is not None:
+        print(
+            "--wireshark-pcap is not supported in --stream mode; "
+            "run without --stream to write the reassembled pcap",
+            file=sys.stderr,
+        )
+        return 2
+
     source_name = args.source_name if args.source_name is not None else str(args.pcap)
 
     try:
