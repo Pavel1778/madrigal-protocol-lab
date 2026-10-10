@@ -56,6 +56,12 @@ class SessionTree(QtWidgets.QTreeWidget):
             parent.setFont(0, theme.heading_font(self._font_size))
             for child_index in range(parent.childCount()):
                 parent.child(child_index).setFont(0, theme.body_font(self._font_size))
+        self._fit_header_columns()
+
+    @property
+    def font_size(self) -> int:
+        """The current session-tree font size."""
+        return self._font_size
 
     def load(self, model: CaptureModel) -> None:
         """Rebuild the tree from *model* and select the first direction."""

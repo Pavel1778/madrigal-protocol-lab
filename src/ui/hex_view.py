@@ -220,6 +220,11 @@ class HexView(QtWidgets.QPlainTextEdit):
         if self._data:
             self._apply_annotations()
 
+    @property
+    def font_size(self) -> int:
+        """The current byte font size."""
+        return self._font_size
+
     def set_show_offset(self, show: bool) -> None:
         """Show or hide the offset column and re-render the bytes."""
         self._show_offset = bool(show)

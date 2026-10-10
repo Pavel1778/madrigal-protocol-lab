@@ -31,6 +31,13 @@ The hex font size scales the byte grid and its column header together. Hiding th
 offset column removes the address gutter; the hex and ASCII columns keep their
 alignment and the byte-to-packet lookup keeps working.
 
+The same sizes are reachable without the dialog: **Ctrl +** enlarges and
+**Ctrl −** shrinks the bytes and the tree together, and **Ctrl 0** restores the
+defaults above. The keyboard zoom steps the byte size within 8–28 px and keeps
+the tree two points smaller, so repeated zooming cannot drift the two apart; the
+dialog range stays wider for a one-off fine adjustment. Both write the same
+`editor/hex_font_size` and `editor/tree_font_size` keys.
+
 ## Paths
 
 | Setting | Meaning | Default |
