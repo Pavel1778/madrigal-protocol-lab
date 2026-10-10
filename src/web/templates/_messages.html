@@ -1,0 +1,35 @@
+<table class="messages">
+  <thead>
+    <tr>
+      <th>offset</th>
+      <th>length</th>
+      <th>status</th>
+      <th>fields</th>
+      <th>bytes</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for message in messages %}
+    <tr>
+      <td><code>{{ message.offset }}</code></td>
+      <td>{{ message.length }}</td>
+      <td><span class="chip {{ status_class(message.status) }}">{{ message.status }}</span>
+        {% if message.reason %}<span class="muted">{{ message.reason }}</span>{% endif %}</td>
+      <td>
+        {% for field in message.fields %}
+        <span class="field" title="{{ field.type }} @+{{ field.offset }} ({{ field.length }} B)">
+          {{ field.name }}<span class="field-value">{{ field.value }}</span>
+        </span>
+        {% else %}
+        <span class="muted">—</span>
+        {% endfor %}
+      </td>
+      <td><code class="bytes">{{ message.bytes_hex }}</code></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="muted">
+      No messages were framed in this direction.
+    </td></tr>
+    {% endfor %}
+  </tbody>
+</table>
