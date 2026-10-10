@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Madrigal Protocol Laboratory
+Name[ru]=Лаборатория протоколов Мадригал
+Comment=Protocol reverse engineering tool
+Comment[ru]=Инструмент для исследования сетевых протоколов
+Exec=madrigal-lab
+Icon=madrigal-protocol-lab
+Terminal=false
+Categories=Development;Network;
+StartupNotify=true
