@@ -26,6 +26,9 @@ dev = [
     "pip-audit==2.10.1",
 ]
 
+[project.gui-scripts]
+madrigal-lab = "src.ui.main_window:main"
+
 [tool.setuptools]
 packages = [
     "src",
