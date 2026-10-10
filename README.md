@@ -121,6 +121,9 @@ Unpack the archive and follow the same setup to run it from scratch.
 | Docker image | shipped, `Dockerfile` and `.dockerignore` in the tree | `docker build -t madrigal-lab .` |
 | Linux binary | shipped, built on demand | `scripts/build_linux_binary.sh` |
 | `.deb` | shipped, built on demand | `scripts/build_deb.sh` |
+| Presentation (animated HTML) | shipped, built on demand | `cd presentation && npm install && npm run build && python bundle_html.py` |
+| Presentation (PDF, 18 slides) | shipped, `presentation/slides.pdf` | `cd presentation && bash export_pdf.sh` |
+| Presentation (PPTX) | shipped, `presentation/slides.pptx`, 18 slides plus build-in steps | `cd presentation && npx slidev export --format pptx` |
 
 The binary and the `.deb` are built artefacts and are not committed; the scripts
 that produce them are. See [docs/BINARY.md](docs/BINARY.md) for the size, the

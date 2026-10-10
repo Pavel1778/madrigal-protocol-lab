@@ -12,6 +12,7 @@ from the repository's own code. Every number is from `docs/METRICS.md`.
 | `slides.md` | the deck source (18 slides, Madrigal theme, `v-click` build-ins) |
 | `style.css` | the Madrigal theme: palette, Tektur + Montserrat, layout |
 | `slides.pdf` | the printed export, 18 pages (archive copy for submission) |
+| `slides.pptx` | the PPTX export (21 pages: 18 slides plus the build-in steps) |
 | `screenshots/` | 11 real GUI captures at 1920×1080 (`generate_screenshots.py`) |
 | `assets/` | 6 branded SVG visualisations (`build_visualizations.py`) |
 | `icons/` | Lucide line icons used by the deck (`fetch_icons.py`) |
@@ -19,6 +20,7 @@ from the repository's own code. Every number is from `docs/METRICS.md`.
 | `defense_script.md` | the 8-minute speaker script, one section per slide |
 | `VIDEO.md` | shot list for the reserve screen recording |
 | `export_pdf.sh` | exports `slides.pdf` with a retry for the Slidev race |
+| `bundle_html.py` | packs the built `dist/` into `presentation_html.zip` |
 
 ## Build (one command)
 
