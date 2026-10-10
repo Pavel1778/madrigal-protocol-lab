@@ -116,11 +116,15 @@ def test_switching_language_recomputes_the_widths(window):
     window.set_language("ru")
     QtCore.QCoreApplication.processEvents()
     russian = window.session_tree.columnWidth(0)
-    # The Russian label must not be clipped when the language changes while the
-    # window is already narrow.
-    text_width = window.session_tree.header().fontMetrics().horizontalAdvance("сессия")
-    assert russian >= text_width
-    assert russian >= english
+    # The session column is sized to its header, so each language must fit its
+    # own label once the language changes while the window is already narrow.
+    # The two scripts differ in width, so the Russian column need not be at
+    # least the English one; both must fit their own header text.
+    english_text = window.session_tree.header().fontMetrics().horizontalAdvance("session")
+    russian_text = window.session_tree.header().fontMetrics().horizontalAdvance("сессия")
+    assert russian >= russian_text
+    assert english >= english_text
+    assert russian != english or russian_text == english_text
 
 
 @catalogue_required

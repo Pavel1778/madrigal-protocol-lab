@@ -20,8 +20,15 @@ _DIAG_ROLE = QtCore.Qt.ItemDataRole.UserRole + 1
 # A label is never clipped: each column is at least wide enough for its header
 # text plus this padding. The floor is capped so one long label cannot push the
 # data columns off screen; the last column still stretches to fill the rest.
-_HEADER_PADDING = 28
+_HEADER_PADDING = 12
 _HEADER_FLOOR_CAP = 120
+
+# The traffic column holds one joined summary per session ("A_to_B:300 B
+# B_to_A:420 B"), which is wider than its short header. The column is sized to
+# the widest summary it holds plus this padding, so the byte counts are read in
+# full rather than clipped; the last section stays stretched, so this width is
+# the floor it falls back to when the panel is narrow.
+_TRAFFIC_PADDING = 24
 
 
 class SessionTree(QtWidgets.QTreeWidget):
@@ -54,8 +61,12 @@ class SessionTree(QtWidgets.QTreeWidget):
         for index in range(self.topLevelItemCount()):
             parent = self.topLevelItem(index)
             parent.setFont(0, theme.heading_font(self._font_size))
+            parent.setFont(1, theme.body_font(self._font_size))
             for child_index in range(parent.childCount()):
-                parent.child(child_index).setFont(0, theme.body_font(self._font_size))
+                child = parent.child(child_index)
+                child.setFont(0, theme.body_font(self._font_size))
+                child.setFont(1, theme.body_font(self._font_size))
+        self._fit_header_columns()
 
     def load(self, model: CaptureModel) -> None:
         """Rebuild the tree from *model* and select the first direction."""
@@ -70,22 +81,74 @@ class SessionTree(QtWidgets.QTreeWidget):
                 first.child(0).setSelected(True)
         self._fit_header_columns()
 
-    def _fit_header_columns(self) -> None:
-        """Widen each column so its header label is not clipped.
+    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
+        """Re-apply the column floors after the panel changes size.
 
-        The header font is not the item font, so the label width is measured
-        with the header's own metrics. Column 0 (the session label) is sized to
-        its header; the last column stretches, so a floor for it is only set
-        when the header is wider than the space left.
+        The last column stretches to fill the panel, so the width set when the
+        tree was loaded is replaced by the first layout pass. Re-applying the
+        floor here keeps the byte counts readable at every panel width: on a
+        narrower panel the column stops shrinking at the content width and a
+        horizontal scroll bar appears instead of clipping the text.
         """
-        metrics = self.header().fontMetrics()
+        super().resizeEvent(event)
+        self._fit_header_columns()
+
+    def _fit_header_columns(self) -> None:
+        """Widen each column so its header and values are not clipped.
+
+        The header font is not the item font, so a header is measured with the
+        header's own metrics. Column 0 (the session label) is sized to its
+        header; the last column is sized to the widest value it holds, which for
+        a session row is the joined direction summary. The last section stays
+        stretched, so the width computed here is the floor the column falls back
+        to when the panel is narrow; the reserved width is kept small enough that
+        the column still fits the default pane without a scroll bar.
+        """
+        header_metrics = self.header().fontMetrics()
+        fallback_font = self.font()
         last = self.columnCount() - 1
         for column in range(self.columnCount()):
             text = self.headerItem().text(column) if self.headerItem() else ""
-            need = min(metrics.horizontalAdvance(text) + _HEADER_PADDING, _HEADER_FLOOR_CAP)
+            need = min(
+                header_metrics.horizontalAdvance(text) + _HEADER_PADDING,
+                _HEADER_FLOOR_CAP,
+            )
             if column == last:
-                need = min(need, max(self.viewport().width() // 3, _HEADER_PADDING))
-            self.setColumnWidth(column, max(self.columnWidth(column), need))
+                # The last column stretches, so keep the widest floor seen: a
+                # narrower panel must not drop the byte counts behind a bar.
+                need = max(need, self._widest_value_width(column, fallback_font))
+                self.setColumnWidth(column, max(self.columnWidth(column), need))
+            else:
+                # Sized to its header on every pass, so the width follows the
+                # active language and never keeps a stale default in place.
+                self.setColumnWidth(column, need)
+
+    def _widest_value_width(self, column: int, fallback_font: QtGui.QFont) -> int:
+        """The width needed by the widest value in *column*, plus the padding.
+
+        Each item is measured with the font it actually paints column *column*
+        with, so the reserved width matches what the reader sees. The fallback
+        font is used for a column an item does not override.
+        """
+        widest = 0
+        for index in range(self.topLevelItemCount()):
+            item = self.topLevelItem(index)
+            widest = max(widest, self._item_text_width(item, column, fallback_font))
+            for child_index in range(item.childCount()):
+                widest = max(
+                    widest,
+                    self._item_text_width(item.child(child_index), column, fallback_font),
+                )
+        return widest + _TRAFFIC_PADDING if widest else 0
+
+    @staticmethod
+    def _item_text_width(
+        item: QtWidgets.QTreeWidgetItem, column: int, fallback_font: QtGui.QFont
+    ) -> int:
+        font = item.font(column)
+        if font.pointSize() < 0 and font.pixelSize() < 0:
+            font = fallback_font
+        return QtGui.QFontMetrics(font).horizontalAdvance(item.text(column))
 
     def _add_session(self, session: SessionInfo) -> None:
         diagnostics = session.diagnostics
@@ -98,7 +161,9 @@ class SessionTree(QtWidgets.QTreeWidget):
             label = f"{label}   [{', '.join(types)}]"
         parent = QtWidgets.QTreeWidgetItem([label, summary])
         parent.setFont(0, theme.heading_font(self._font_size))
+        parent.setFont(1, theme.body_font(self._font_size))
         parent.setData(0, QtCore.Qt.ItemDataRole.UserRole, ("session", session.session_id))
+        parent.setToolTip(1, summary)
         parent.setToolTip(
             0,
             f"{session.endpoints}\n"
@@ -116,6 +181,7 @@ class SessionTree(QtWidgets.QTreeWidget):
         for direction, size in session.direction_bytes.items():
             child = QtWidgets.QTreeWidgetItem([direction, f"{size} B"])
             child.setFont(0, theme.body_font(self._font_size))
+            child.setFont(1, theme.body_font(self._font_size))
             child.setData(0, QtCore.Qt.ItemDataRole.UserRole, ("direction", session.session_id, direction))
             child.setToolTip(
                 0,

@@ -178,3 +178,30 @@ directory.
   response stream but the rule scopes only `A_to_B`.
 - Editing a rule in the Rule tab creates a new version but the window does not
   yet offer to name or save the edited rule to disk.
+
+## Traffic column and status line fixes
+
+The live pass above found two places where a value could be read only in part.
+Both are fixed.
+
+The session tree's `traffic` column held each session's joined direction
+summary (`A_to_B:300 B  B_to_A:420 B`) but was sized to its short header, so the
+second direction was clipped at the default window size. The column is now sized
+to the widest summary it actually holds, measured in the font each row is
+painted with; the header padding was trimmed so the column still fits the
+default pane without a scroll bar. A panel dragged narrower than the values
+stops the column at the content width and scrolls instead of clipping, because
+the floor is re-applied on every resize.
+
+The status line shows the provenance of the selected byte. It now reserves
+width for its text (bounded, so one very long line cannot push the progress
+indicator away), carries the full text as a tooltip, and lets the text be
+selected with the mouse. A window narrow enough to clip the text still shows the
+whole value on hover.
+
+Both are exercised on a live X display
+(`docs/screenshots/verify/traffic_and_provenance_fix_live.png`): the byte counts
+are read in full and the provenance line is not clipped. Three tests cover the
+behaviour: the column fits every summary and stays off a scroll bar at the
+default size, the column keeps its floor on a narrow panel, and the status line
+reserves room and tooltips its text.
