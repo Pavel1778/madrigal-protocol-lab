@@ -38,20 +38,12 @@ dev = [
 [project.gui-scripts]
 madrigal-lab = "src.ui.main_window:main"
 
-[tool.setuptools]
-packages = [
-    "src",
-    "src.capture",
-    "src.protocol",
-    "src.hypothesis",
-    "src.ui",
-    "src.project",
-    "src.report",
-    "src.web",
-]
+[tool.setuptools.packages.find]
+include = ["src", "src.*"]
 
 [tool.setuptools.package-data]
 "src.web" = ["templates/*.html", "static/*.js", "static/*.css"]
+"src.ui.locale" = ["*.qm", "*.ts"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
