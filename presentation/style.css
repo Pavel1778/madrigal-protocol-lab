@@ -118,11 +118,24 @@
 
 .slidev-layout code {
   font-family: 'DejaVu Sans Mono', monospace;
-  font-size: 0.82em;
+  font-size: 0.72em;
   color: var(--accent-text);
   background: var(--panel);
   border-radius: 4px;
   padding: 1px 6px;
+}
+.slidev-layout pre {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 12px 16px;
+  overflow-x: auto;
+}
+.slidev-layout pre code {
+  background: none;
+  white-space: pre;
+  font-size: 13px;
+  line-height: 1.4;
 }
 .slidev-layout strong { color: #FFFFFF; font-weight: 600; }
 .slidev-layout a { color: var(--accent-text); text-decoration: none; }
