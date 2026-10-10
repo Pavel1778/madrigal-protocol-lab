@@ -140,6 +140,26 @@ inspect the bytes with their packet provenance, and open a rule and its results.
 The report and the machine-readable result are the durable output; the interface
 is a viewer over them.
 
+## 7.1 Interface language
+
+The window ships with an English and a Russian interface. Choose the language
+under the `Language` menu: `Russian`, `English` or `System`. `System` follows the
+desktop locale and falls back to English when no catalogue matches. The choice is
+stored with `QSettings` and restored on the next launch; switching languages
+relabels the open window immediately without reloading the capture.
+
+The translations live in `src/ui/locale/`. English is the source language, so it
+needs no catalogue; Russian is compiled from `madrigal_ru.ts` into
+`madrigal_ru.qm`, and the `.qm` is committed so the window works without a Qt
+toolchain. After adding or changing a string, refresh the catalogue:
+
+```
+scripts/update_translations.sh
+```
+
+The script scans the window sources, updates the `.ts` in place (keeping the
+existing translations) and recompiles the `.qm`.
+
 ## 8. Tests
 
 ```
