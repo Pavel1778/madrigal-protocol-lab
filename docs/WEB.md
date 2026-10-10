@@ -50,7 +50,7 @@ Checked on the merged `main` (after the submission README rewrite) against
 `examples/corpus_rule_v1.json`: sessions → hex → apply → click byte →
 provenance. All three directions resolve, the rule reports `matched`, and the
 provenance card shows packet 3, seq 1001, ts 1700000000.004 for byte 0. The
-full suite passes at 633 tests. A capture of that run is in
+full suite passes at 664 tests. A capture of that run is in
 [screenshots/verify/web.png](screenshots/verify/web.png).
 
 The web module itself did not change during the merge; only `README.md`

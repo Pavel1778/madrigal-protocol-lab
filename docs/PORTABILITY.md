@@ -24,18 +24,19 @@ Those rows are from the capture, project and report revision. The suite has
 since grown with the protocol and window modules; the authoritative counts for
 the submitted revision are in "Submission archive check" below.
 
-## Submission revision (385 tests)
+## Submission revision (664 tests)
 
-The submission revision is checked on both ends of the supported Python range
-from a clean unpack, so the archived tree and not the working copy is what
-runs.
+The submission revision is checked from a clean unpack, so the archived tree
+and not the working copy is what runs. The skip below is the archive's only
+known difference from a checkout: a zip drops the file mode, so the one test
+that reads a script's executable bit is skipped rather than failed.
 
-| Python | Install | Suite | Lint |
+| Source | Python | Suite | Lint |
 | --- | --- | --- | --- |
-| 3.12.14 | 15 s | 385 passed | All checks passed |
-| 3.13.15 | 16 s | 385 passed | All checks passed |
+| Git checkout at this head | 3.13.5 | 664 passed, 0 skipped | All checks passed |
+| `dist/submission_*.zip`, clean unpack | 3.13.5 | 663 passed, 1 skipped | All checks passed |
 
-No test skipped on either version: the corpus, the reference export and the
+No other test skipped on either: the corpus, the reference export and the
 `examples/` rules are inside the archive.
 
 ## Docker
@@ -81,15 +82,15 @@ from the repository, so a forgotten file cannot hide behind the working tree.
 
 | Field | Value |
 | --- | --- |
-| Date | 2026-10-09 20:11 UTC |
+| Date | 2026-10-10 20:43 UTC |
 | Host | Debian GNU/Linux 13 (trixie), kernel 6.8.0-1055-gke |
-| Architecture | x86_64, 4 CPUs, 16 GiB RAM |
-| Python | 3.13.15 (the archive targets 3.12 or newer) |
-| Archive | `dist/submission_20261009_2010.zip`, 188 entries, 2.5 MiB |
-| Install time | 16 s, `python -m venv .venv` + `pip install -e ".[dev]"` |
-| Suite | 385 passed, 0 skipped |
+| Architecture | x86_64, 4 CPUs, 15 GiB RAM |
+| Python | 3.13.5 (the archive targets 3.12 or newer) |
+| Archive | `dist/submission_20261010_2038.zip`, 375 entries, 8.3 MiB |
+| Install time | a fresh venv with `pip install -e ".[dev]"` |
+| Suite | 663 passed, 1 skipped (the executable-bit test; see above) |
 | Static check | `ruff check . --select "E4,E7,E9,F" --ignore E501`: All checks passed |
-| Pipeline | `src.project.cli pipeline` with the corpus rule: 3 sessions, `REPORT.md` (17 KiB) and `REPORT.html` (28 KiB) written |
+| Pipeline | `src.project.cli pipeline` with the corpus rule: 3 sessions, `REPORT.md` and `REPORT.html` written |
 | Window | opened headless against the reference export and the corpus rule |
 
 The first build omitted `examples/`, which holds the corpus rules. That made
