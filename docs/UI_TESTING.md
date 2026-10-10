@@ -23,15 +23,21 @@ language (`en`, `ru`), one image per supported window size:
 `test_zoom_states.py` covers the three documented zoom levels (100, 150, 200
 percent) and checks that the rendered image actually changes between them.
 
-A render is pinned four ways so it is reproducible byte for byte: the language,
+A render is pinned four ways so its layout is reproducible: the language,
 the theme, the zoom and the window size are all set explicitly, and the window
 is offscreen. `tests/ui/conftest.py` redirects `XDG_CONFIG_HOME` and pins
 `LANG`, so neither the developer's saved preferences nor the desktop locale can
 move the result.
 
-The comparison is exact. The freshly rendered image and the baseline are both
-converted to RGBA8888 before the pixel bytes are compared, so the round trip
-through the PNG encoder is symmetric and no tolerance is needed.
+The comparison is perceptual. A window rendered offscreen does not rasterise its
+glyphs identically across Qt builds and platforms, so a byte comparison passes
+on the machine that recorded a baseline and fails on a runner that draws the
+same window a shade differently. Both frames are instead reduced to greyscale
+and pooled into 8x8 blocks; a frame passes only when the mean difference is
+under a small limit and no more than a small fraction of blocks differ strongly.
+That absorbs antialiasing and a focus ring, while a swapped theme, a changed
+layout or a resized frame moves whole regions a lot and fails. The limits live in
+`tests/ui/snapshot/_diff.py`.
 
 ### Baselines
 
@@ -43,9 +49,11 @@ MADRIGAL_UPDATE_SNAPSHOTS=1 pytest tests/ui/snapshot
 ```
 
 A missing baseline is written and the test skipped, so the first run on a clean
-checkout records rather than fails. A differing baseline writes the actual image
-and a highlighted difference image under `.snapshot-actual` and fails with the
-paths.
+checkout records rather than fails. A baseline that differs beyond tolerance
+writes the actual image, a highlighted difference image and a text file with the
+measured metrics under `.snapshot-actual` and fails with the paths. The CI job
+publishes that directory as an artefact; the containing directory starts with a
+dot, so the upload step sets `include-hidden-files: true`.
 
 ## No-state-loss tests
 

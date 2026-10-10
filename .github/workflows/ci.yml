@@ -89,6 +89,7 @@ jobs:
         with:
           name: snapshot-diff-${{ matrix.python }}-${{ matrix.os }}
           path: .snapshot-actual/
+          include-hidden-files: true
           if-no-files-found: ignore
       - name: Comment the snapshot difference
         if: failure() && github.event_name == 'pull_request'
