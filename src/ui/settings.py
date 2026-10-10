@@ -146,8 +146,15 @@ class SettingsDialog(QtWidgets.QDialog):
         page = QtWidgets.QWidget()
         form = QtWidgets.QFormLayout(page)
         theme = QtWidgets.QComboBox()
-        for mode, label in (("dark", "Dark"), ("light", "Light"), ("system", "System")):
-            theme.addItem(self.tr(label), mode)
+        # Translate literal arguments: lupdate cannot see a tr() call whose
+        # argument is a variable, so passing the label through a loop variable
+        # would leave the theme names English in every language.
+        for mode, label in (
+            ("dark", self.tr("Dark")),
+            ("light", self.tr("Light")),
+            ("system", self.tr("System")),
+        ):
+            theme.addItem(label, mode)
         language = QtWidgets.QComboBox()
         language.addItem("Русский", "ru")
         language.addItem("English", "en")
