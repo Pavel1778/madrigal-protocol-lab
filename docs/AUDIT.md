@@ -19,15 +19,15 @@ development interpreter.
 | Dead or commented-out code | manual grep | None found | None |
 | Static types | `mypy src/` | 3 errors, all real | Fixed |
 | Style and correctness | `ruff check` | 31 findings | 31 resolved |
-| Test coverage | `pytest --cov` | TOTAL 89%, every zone over target | None needed |
+| Test coverage | `pytest --cov=src` | TOTAL 90%, every zone over target | None needed |
 | File size | `wc -l` | 3 scripts over 500 lines | Noted below |
 | Dependencies | `pip-audit`, `pip list --outdated` | 1 advisory in `pytest` | Upgraded |
 | Dependency advisories | `pip-audit` | None found | None |
 | Secrets in history | `git log --all -p | grep -iE 'ghp_|github_pat_'` | None | None |
 | Cache directory tracked | `git ls-files | grep -i agent-cache` | Not tracked, ignored | None |
-| Repository size | `du -sh .git` | 3.0 MiB | None |
-| Large files tracked | `git ls-files | xargs du -b` | Largest 30 KiB, no file over 1 MiB | None |
-| Fresh-clone commands | clone + `pip install -e ".[dev]"` + README/USAGE commands | All run; rule path needs `src.protocol` | Noted |
+| Repository size | `du -sh .git` | 31 MiB | None |
+| Large files tracked | `git ls-files | xargs du -b` | Largest 1.5 MiB, no file over 5 MiB | None |
+| Fresh-clone commands | clone + `pip install -e ".[dev]"` + README/USAGE commands | All run | None |
 
 ## 1. Annotation traces
 
@@ -161,9 +161,9 @@ at their pinned versions: the specification fixes the versions, and moving
 - `git log --all -p | grep -iE 'ghp_|github_pat_'` returns no token. The only
   lines that match are the audit text itself, which quotes the search string.
 - `git ls-files | grep -i cache` finds no tracked cache directory.
-- The largest tracked files are `scripts/run_benchmark.py` (30 KiB) and the
-  corpus captures under `tests/corpus/` (29 KiB). Nothing tracked exceeds 1 MiB,
-  far under the 5 MiB threshold. `.git` is 3.0 MiB.
+- The largest tracked files are the presentation media — `presentation_html.zip`
+  (1.5 MiB), `slides.pdf` and `slides.pptx` (1.3 MiB each). Nothing tracked
+  exceeds 5 MiB. `.git` is 31 MiB.
 
 ## 8. Fresh-clone verification
 
@@ -258,19 +258,20 @@ After the merge:
 
 ## 11. Final state
 
-Checked at the submission revision.
+Checked at the submission revision, after the presentation, UI and test-isolation
+changes were merged into `main`.
 
 | Item | Value |
 | --- | --- |
-| `main` head | `5c269da` (then the audit pass) |
-| `agent1/capture` head | equal to `main` |
-| Suite | 411 passed, 0 skipped |
+| `main` head | `f9680fe` |
+| Suite (checkout) | 664 passed, 0 skipped |
+| Suite (`dist/submission_*.zip`, clean unpack) | 663 passed, 1 skipped (the executable-bit test; a zip drops the mode) |
 | Lint | `ruff check . --select "E4,E7,E9,F" --ignore E501`: All checks passed |
-| Coverage | 95% (see the coverage section above) |
-| CI | green: test matrix (3.12 and 3.13), `code-quality`, `dependency-audit`, run `37995221037` |
-| Largest tracked file | `presentation/slides.pptx`, 2.24 MiB, well under 5 MiB |
-| Submission archive | the latest `dist/submission_*.zip`, rebuilt at this head: 6.5 MiB, 291 entries |
-| Fresh unpack | 411 passed, 0 skipped from a clean unpack at this head |
+| Coverage | 90% over `src/` (`pytest --cov=src`); the largest gap is `src/ui/` wiring |
+| CI | green on `main`: test matrix (3.12 and 3.13), `code-quality`, `dependency-audit`, run `38083510278` |
+| Largest tracked file | `presentation/presentation_html.zip`, 1.5 MiB, well under 5 MiB |
+| Submission archive | the latest `dist/submission_*.zip`, rebuilt at this head: 8.3 MiB, 375 entries |
+| Fresh unpack | 663 passed, 1 skipped from a clean unpack at this head |
 
 Trace checks at this revision:
 
