@@ -162,18 +162,14 @@ Python 3.12 · PySide6 · dpkt · pytest · Docker
 <div>
 
 ```json
-{
-  "framing": {
-    "type": "length_prefixed",
-    "length_offset": 2, "length_size": 2,
-    "byte_order": "big", "length_covers": "payload"
-  },
+{ "framing": {
+  "type": "length_prefixed",
+  "length_offset": 2 },
   "fields": [
-    {"name": "command", "offset": 0,
-     "type": "uint8", "hypothesis": true,
-     "expected": [1]}
-  ]
-}
+    {"name": "command",
+     "offset": 0,
+     "type": "uint8",
+     "expected": [1]} ] }
 ```
 
 </div>
