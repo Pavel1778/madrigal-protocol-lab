@@ -31,15 +31,16 @@ _STATUS_RANK = {
 
 def _field_summary(message) -> str:
     parts = []
+    marker = " " + QtCore.QCoreApplication.translate("ValidationView", "(hypothesis)")
     for field in message.fields:
         if field.status.value == "not_applicable":
             continue
         value = field.value
-        marker = " (hypothesis)" if field.hypothesis else ""
+        field_marker = marker if field.hypothesis else ""
         if value is None:
-            parts.append(f"{field.field_name}: {field.reason or field.status.value}{marker}")
+            parts.append(f"{field.field_name}: {field.reason or field.status.value}{field_marker}")
         else:
-            parts.append(f"{field.field_name}={value}{marker}")
+            parts.append(f"{field.field_name}={value}{field_marker}")
     return "  ".join(parts)
 
 
@@ -59,7 +60,7 @@ class ValidationView(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
 
-        self._context = QtWidgets.QLabel("no capture open")
+        self._context = QtWidgets.QLabel(self.tr("no capture open"))
         self._context.setProperty("role", "secondary")
         self._context.setFont(theme.body_font(9))
         layout.addWidget(self._context)
@@ -73,7 +74,7 @@ class ValidationView(QtWidgets.QWidget):
         rule_layout.setContentsMargins(0, 0, 0, 0)
         self.rule_edit = QtWidgets.QPlainTextEdit()
         self.rule_edit.setFont(theme.mono_font(9))
-        self.rule_edit.setPlaceholderText("rule JSON or YAML")
+        self.rule_edit.setPlaceholderText(self.tr("rule JSON or YAML"))
         self._completer = QtWidgets.QCompleter(sorted(ALL_FIELD_TYPES), self)
         self._completer.setWidget(self.rule_edit)
         self._completer.setCompletionMode(QtWidgets.QCompleter.CompletionMode.PopupCompletion)
@@ -83,15 +84,15 @@ class ValidationView(QtWidgets.QWidget):
         self.rule_edit.textChanged.connect(self._on_rule_text_changed)
         rule_layout.addWidget(self.rule_edit, 1)
         rule_buttons = QtWidgets.QHBoxLayout()
-        self.apply_button = QtWidgets.QPushButton("Apply to current direction")
+        self.apply_button = QtWidgets.QPushButton(self.tr("Apply to current direction"))
         self.apply_button.setProperty("accent", "true")
         self.apply_button.clicked.connect(self.applyRequested.emit)
         rule_buttons.addWidget(self.apply_button)
-        self.apply_capture_button = QtWidgets.QPushButton("Apply to whole capture")
+        self.apply_capture_button = QtWidgets.QPushButton(self.tr("Apply to whole capture"))
         self.apply_capture_button.clicked.connect(self.applyCaptureRequested.emit)
         rule_buttons.addWidget(self.apply_capture_button)
-        self.example_button = QtWidgets.QPushButton("Load example")
-        self.example_button.setToolTip("Load the first rule from examples/")
+        self.example_button = QtWidgets.QPushButton(self.tr("Load example"))
+        self.example_button.setToolTip(self.tr("Load the first rule from examples/"))
         self.example_button.clicked.connect(self.loadExampleRequested.emit)
         rule_buttons.addWidget(self.example_button)
         rule_buttons.addStretch(1)
@@ -101,11 +102,13 @@ class ValidationView(QtWidgets.QWidget):
         self.rule_status.setFont(theme.body_font(9))
         self.rule_status.setWordWrap(True)
         rule_layout.addWidget(self.rule_status)
-        self._tabs.addTab(rule_page, "Rule")
+        self._tabs.addTab(rule_page, self.tr("Rule"))
 
         # Messages tab.
         self.messages_table = QtWidgets.QTableWidget(0, 4)
-        self.messages_table.setHorizontalHeaderLabels(["offset", "len", "status", "fields"])
+        self.messages_table.setHorizontalHeaderLabels(
+            [self.tr("offset"), self.tr("len"), self.tr("status"), self.tr("fields")]
+        )
         self.messages_table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.messages_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.messages_table.setFont(theme.body_font(9))
@@ -113,7 +116,7 @@ class ValidationView(QtWidgets.QWidget):
         header = self.messages_table.horizontalHeader()
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.messages_table.itemSelectionChanged.connect(self._on_message_selected)
-        self._tabs.addTab(self.messages_table, "Messages")
+        self._tabs.addTab(self.messages_table, self.tr("Messages"))
         self._show_messages_empty_state()
 
         # Counterexamples tab.
@@ -124,12 +127,13 @@ class ValidationView(QtWidgets.QWidget):
         self.counter_list.setFont(theme.body_font(9))
         self.counter_list.itemSelectionChanged.connect(self._on_counter_selected)
         counter_layout.addWidget(self.counter_list, 1)
-        self._tabs.addTab(counter_page, "Counterexamples")
+        self._tabs.addTab(counter_page, self.tr("Counterexamples"))
 
         self._application: RuleApplication | None = None
         self._session_id = ""
         self._direction = ""
         self._status_error = False
+        self._message_count = 0
 
     # -- rule --------------------------------------------------------------
 
@@ -159,7 +163,7 @@ class ValidationView(QtWidgets.QWidget):
         """Show which session and direction the panel is working on."""
         self._session_id = session_id
         self._direction = direction
-        self._context.setText(f"session {session_id}   {direction}")
+        self._context.setText(self.tr("session {0}   {1}").format(session_id, direction))
 
     # -- editor feedback ---------------------------------------------------
 
@@ -179,10 +183,10 @@ class ValidationView(QtWidgets.QWidget):
         try:
             parse_rule(load_rule_text(text))
         except Exception as exc:  # noqa: BLE001 - JSON and YAML raise different types
-            self.set_rule_status(f"invalid rule: {exc}", error=True)
+            self.set_rule_status(self.tr("invalid rule: {0}").format(exc), error=True)
             self.ruleValidityChanged.emit(False, str(exc))
             return
-        self.set_rule_status("rule parses")
+        self.set_rule_status(self.tr("rule parses"))
         self.ruleValidityChanged.emit(True, "")
 
     def _insert_completion(self, completion: str) -> None:
@@ -244,11 +248,11 @@ class ValidationView(QtWidgets.QWidget):
     def show_rule_validity(self, valid: bool, message: str) -> None:
         """Report the parse state of the rule editor."""
         if valid:
-            self.set_rule_status("rule parses")
+            self.set_rule_status(self.tr("rule parses"))
         elif message == "empty":
             self.set_rule_status("")
         else:
-            self.set_rule_status(f"invalid rule: {message}", error=True)
+            self.set_rule_status(self.tr("invalid rule: {0}").format(message), error=True)
 
     # -- results -----------------------------------------------------------
 
@@ -257,7 +261,7 @@ class ValidationView(QtWidgets.QWidget):
         self.messages_table.setRowCount(1)
         self.messages_table.setSpan(0, 0, 1, 4)
         item = QtWidgets.QTableWidgetItem(
-            "no messages yet - apply a rule to this direction (F5) or to the capture (F6)"
+            self.tr("no messages yet - apply a rule to this direction (F5) or to the capture (F6)")
         )
         item.setForeground(QtGui.QColor(theme.current().text_secondary))
         self.messages_table.setItem(0, 0, item)
@@ -273,6 +277,9 @@ class ValidationView(QtWidgets.QWidget):
         )
         if not ordered:
             self._show_messages_empty_state()
+            self._message_count = 0
+        else:
+            self._message_count = len(ordered)
         self.messages_table.setRowCount(len(ordered))
         for row, message in enumerate(ordered):
             self._fill_row(row, message)
@@ -294,15 +301,17 @@ class ValidationView(QtWidgets.QWidget):
             # A run with no mismatch in this direction is not a proof; say so,
             # and point at the corpus run, which is where mismatches appear.
             self.counter_list.addItem(
-                QtWidgets.QListWidgetItem("no counterexamples in this direction")
+                QtWidgets.QListWidgetItem(self.tr("no counterexamples in this direction"))
             )
 
         counts = application.counts
         summary = "  ".join(f"{k}:{v}" for k, v in sorted(counts.items()))
-        self._tabs.setTabText(1, f"Messages ({len(ordered)})")
-        self._tabs.setTabText(2, f"Counterexamples ({len(counterexamples)})")
+        self._tabs.setTabText(1, self.tr("Messages ({0})").format(len(ordered)))
+        self._tabs.setTabText(2, self.tr("Counterexamples ({0})").format(len(counterexamples)))
         if not self.rule_status.text():
-            self.set_rule_status(f"rule v{application.rule.rule_version}  {summary}")
+            self.set_rule_status(
+                self.tr("rule v{0}  {1}").format(application.rule.rule_version, summary)
+            )
 
     def _fill_row(self, row: int, message) -> None:
         cells = [
@@ -375,9 +384,11 @@ class ValidationView(QtWidgets.QWidget):
             self.counter_list.addItem(item)
         if not report.contradictions:
             self.counter_list.addItem(
-                QtWidgets.QListWidgetItem("no counterexamples in this capture")
+                QtWidgets.QListWidgetItem(self.tr("no counterexamples in this capture"))
             )
-        self._tabs.setTabText(2, f"Counterexamples ({len(report.contradictions)})")
+        self._tabs.setTabText(
+            2, self.tr("Counterexamples ({0})").format(len(report.contradictions))
+        )
 
     @property
     def counterexample_count(self) -> int:
@@ -390,7 +401,28 @@ class ValidationView(QtWidgets.QWidget):
 
     def show_message_count(self, count: int) -> None:
         """Show that the rule was applied to ``count`` messages."""
-        self.set_rule_status(f"rule applied to {count} messages")
+        self.set_rule_status(self.tr("rule applied to {0} messages").format(count))
+
+    def retranslate_ui(self) -> None:
+        """Re-apply the static labels to the active interface language.
+
+        Only labels the view owns are refreshed. Table contents are rebuilt
+        when a rule is next applied, so a language switch never leaves stale
+        translations on the controls themselves.
+        """
+        self.rule_edit.setPlaceholderText(self.tr("rule JSON or YAML"))
+        self.apply_button.setText(self.tr("Apply to current direction"))
+        self.apply_capture_button.setText(self.tr("Apply to whole capture"))
+        self.example_button.setText(self.tr("Load example"))
+        self.example_button.setToolTip(self.tr("Load the first rule from examples/"))
+        self._tabs.setTabText(0, self.tr("Rule"))
+        self.messages_table.setHorizontalHeaderLabels(
+            [self.tr("offset"), self.tr("len"), self.tr("status"), self.tr("fields")]
+        )
+        self._tabs.setTabText(1, self.tr("Messages ({0})").format(self._message_count))
+        self._tabs.setTabText(2, self.tr("Counterexamples ({0})").format(self.counterexample_count))
+        if self._context.text() and self._session_id:
+            self._context.setText(self.tr("session {0}   {1}").format(self._session_id, self._direction))
 
     def apply_theme(self) -> None:
         """Recolour the status line and rebuild the table in the active theme."""
