@@ -33,6 +33,9 @@ dev = [
     "pytest-cov==7.1.0",
     "pip-audit==2.10.1",
     "httpx>=0.27",
+    # Only the snapshot tests use it, and only to draw the difference image that
+    # CI uploads when a baseline changes. The comparison itself does not need it.
+    "Pillow>=10.4",
 ]
 
 [project.gui-scripts]
