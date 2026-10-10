@@ -20,18 +20,27 @@ CHANGED = "changed"
 INSERTED = "inserted"
 DELETED = "deleted"
 
-_COLOUR = {
-    EQUAL: theme.TEXT,  # agreeing bytes stay plain, no highlight
-    CHANGED: theme.MISMATCHED_TEXT,  # red
-    INSERTED: theme.MATCHED_TEXT,  # green
-    DELETED: theme.TEXT_SECONDARY,  # grey
-}
 
-_LEGEND = (
-    ("equal", theme.TEXT),
-    ("changed", theme.MISMATCHED_TEXT),
-    ("inserted", theme.MATCHED_TEXT),
-    ("deleted", theme.TEXT_SECONDARY),
+def _colours() -> dict[object, str]:
+    """Diff colours for the active theme.
+
+    Agreeing bytes stay plain (no highlight); a changed byte is red, an
+    inserted byte green, a deleted byte grey.
+    """
+    token = theme.current()
+    return {
+        EQUAL: token.text_primary,
+        CHANGED: token.status_mismatched_text,
+        INSERTED: token.status_matched_text,
+        DELETED: token.text_secondary,
+    }
+
+
+_LEGEND_NAMES = (
+    ("equal", EQUAL),
+    ("changed", CHANGED),
+    ("inserted", INSERTED),
+    ("deleted", DELETED),
 )
 
 
@@ -126,11 +135,12 @@ class CompareView(QtWidgets.QWidget):
         layout.addLayout(selectors)
 
         legend = QtWidgets.QHBoxLayout()
-        for name, colour in _LEGEND:
+        self._legend_chips: dict[object, QtWidgets.QLabel] = {}
+        for name, kind in _LEGEND_NAMES:
             chip = QtWidgets.QLabel(name)
             chip.setFont(theme.mono_font(8))
-            chip.setStyleSheet(f"color: {colour};")
             legend.addWidget(chip)
+            self._legend_chips[kind] = chip
         legend.addStretch(1)
         layout.addLayout(legend)
 
@@ -176,12 +186,20 @@ class CompareView(QtWidgets.QWidget):
         if left is None or right is None:
             return
         rows = diff_bytes(bytes.fromhex(left.bytes_hex), bytes.fromhex(right.bytes_hex))
+        colours = _colours()
         self.table.setRowCount(len(rows))
         for index, row in enumerate(rows):
-            colour = QtGui.QColor(_COLOUR[row.kind])
+            colour = QtGui.QColor(colours[row.kind])
             for column, text in enumerate(
                 (f"{row.offset:04x}", row.left, row.right)
             ):
                 item = QtWidgets.QTableWidgetItem(text)
                 item.setForeground(colour)
                 self.table.setItem(index, column, item)
+
+    def apply_theme(self) -> None:
+        """Recolour the diff table and its legend in the active theme."""
+        colours = _colours()
+        for kind, chip in self._legend_chips.items():
+            chip.setStyleSheet(f"color: {colours[kind]};")
+        self._refresh()
