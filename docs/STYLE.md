@@ -8,19 +8,24 @@ with no restart.
 
 ## Palette — dark (default)
 
-The Madrigal identity: near-black background, one bordeaux accent.
+The Madrigal identity: a warm near-black background, one bordeaux accent. The
+surfaces are layered by depth: the layer closest to the reader (menus, tooltips)
+is the lightest, the window is the darkest. No surface is pure black and no text
+is pure white.
 
 | Token | Field | Value |
 | --- | --- | --- |
-| Background | `background` | `#131516` |
-| Panel | `surface` | `#1D1D1D` |
-| Panel, alternate | `surface_alt` | `#171819` |
-| Border | `border` | `#2A2C2E` |
-| Accent | `accent` | `#6D071F` |
-| Accent hover | `accent_hover` | `#A2391D` |
-| Accent gradient | `accent_gradient` | `#410913` → `#610D1C` → `#A2391D` |
-| Text | `text_primary` | `#E0E0E0` |
-| Secondary text | `text_secondary` | `#9F9F9F` |
+| Background | `background` | `#141210` |
+| Panel | `surface` | `#1C1917` |
+| Panel, alternate | `surface_alt` | `#171412` |
+| Panel, elevated | `surface_elevated` | `#242019` |
+| Border | `border` | `#322D28` |
+| Accent | `accent` | `#7A1224` |
+| Accent hover | `accent_hover` | `#A8391F` |
+| Accent gradient | `accent_gradient` | `#4A0A16` → `#6C1020` → `#A8391F` |
+| Text | `text_primary` | `#E6E1DB` |
+| Secondary text | `text_secondary` | `#A8A099` |
+| Muted text | `text_muted` | `#8C857E` |
 
 ## Palette — light
 
@@ -65,6 +70,13 @@ with dark text, the dark set uses muted fills with light text. The names are
 - No soft shadows.
 - No gradients except the accent gradient.
 - Dense modular grid.
+
+## Zoom
+
+- **Ctrl +** and **Ctrl −** step the byte size within 8–28 px and move the tree
+  two points behind it, so the two never drift apart; **Ctrl 0** restores the
+  defaults (13 px bytes, 11 px tree). The steps are clamped at the limits and
+  the menu entries disable when a limit is reached.
 
 ## Rules
 

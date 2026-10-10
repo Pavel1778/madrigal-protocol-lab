@@ -190,3 +190,47 @@ def test_dark_palette_highlight_is_the_accent():
     palette = theme.build_palette(theme.DARK)
     assert palette.color(QtGui.QPalette.ColorRole.Highlight).name().lower() == theme.DARK.accent.lower()
     assert theme.DARK.button_pressed == theme.DARK.accent
+
+
+def test_dark_avoids_pure_black_and_white():
+    # Pure black smears on OLED and carries no room for depth; pure white on a
+    # dark ground glares and tires the eye. Both are kept off every surface and
+    # text token.
+    dark = theme.DARK
+    for value in dark.colour_tokens().values():
+        assert value.lower() not in ("#000000", "#ffffff")
+
+
+def test_dark_surfaces_are_layered_by_depth():
+    # The layer closest to the reader (elevated) is the lightest; the window is
+    # the darkest, and the alternative surface sits between them.
+    from src.ui.theme.contrast import relative_luminance as lum
+
+    dark = theme.DARK
+    assert lum(dark.surface_elevated) > lum(dark.surface) > lum(dark.surface_alt) > lum(dark.background)
+    # The popup layer must not collapse onto the panel layer, as it did before.
+    assert dark.surface_elevated != dark.surface
+
+
+def test_dark_has_a_distinct_muted_text_tier():
+    from src.ui.theme.contrast import relative_luminance as lum
+
+    dark = theme.DARK
+    assert dark.text_muted != dark.text_secondary
+    assert lum(dark.text_primary) > lum(dark.text_secondary) > lum(dark.text_muted)
+
+
+def test_dark_popups_use_the_elevated_surface():
+    sheet = theme.build_stylesheet(theme.DARK)
+    assert f"QMenu {{ background-color: {theme.DARK.surface_elevated};" in sheet
+    assert f"background-color: {theme.DARK.surface_elevated};" in sheet
+
+
+def test_dark_accent_fills_stay_faint():
+    # A large bright block is what a dark theme should avoid; the accent fills
+    # stay close to the surface so a table of them does not glow.
+    from src.ui.theme.contrast import contrast_ratio
+
+    dark = theme.DARK
+    for fill in (dark.accent, dark.gap, dark.status_mismatched):
+        assert contrast_ratio(fill, dark.surface) <= 1.8
