@@ -528,3 +528,70 @@ def test_highlight_range_selects_the_whole_message(app):
     assert selected.count(" ") == 6
     view.highlight_range(1000, 4)  # clamped, must not raise
     assert view.textCursor().hasSelection()
+
+
+def test_zoom_in_enlarges_the_bytes_and_the_tree(app):
+    window = open_window(app)
+    before_hex = window.hex_view.font_size
+    before_tree = window.session_tree.font_size
+    window.zoom_in()
+    assert window.hex_view.font_size == before_hex + 1
+    assert window.session_tree.font_size == before_tree + 1
+    window.close()
+
+
+def test_zoom_out_shrinks_the_bytes_and_the_tree(app):
+    window = open_window(app)
+    window.zoom_in()
+    window.zoom_in()
+    before = window.hex_view.font_size
+    window.zoom_out()
+    assert window.hex_view.font_size == before - 1
+    assert window.session_tree.font_size == before - 1 - 2
+    window.close()
+
+
+def test_zoom_reset_restores_the_default_size(app):
+    from src.ui.settings import DEFAULTS
+
+    window = open_window(app)
+    window.zoom_in()
+    window.zoom_in()
+    window.zoom_reset()
+    assert window.hex_view.font_size == DEFAULTS["editor"]["hex_font_size"]
+    assert window.session_tree.font_size == DEFAULTS["editor"]["tree_font_size"]
+    window.close()
+
+
+def test_zoom_is_clamped_at_the_limits(app):
+    from src.ui import main_window
+
+    window = open_window(app)
+    for _ in range(60):
+        window.zoom_in()
+    assert window.hex_view.font_size == main_window.ZOOM_MAX_FONT
+    assert not window._actions["zoom_in"].isEnabled()
+    for _ in range(60):
+        window.zoom_out()
+    assert window.hex_view.font_size == main_window.ZOOM_MIN_FONT
+    assert not window._actions["zoom_out"].isEnabled()
+    window.close()
+
+
+def test_zoom_actions_carry_the_shortcuts(app):
+    window = open_window(app)
+    assert window._actions["zoom_in"].shortcut().toString() == "Ctrl+="
+    assert window._actions["zoom_out"].shortcut().toString() == "Ctrl+-"
+    assert window._actions["zoom_reset"].shortcut().toString() == "Ctrl+0"
+    # Ctrl+Plus is a separate action because a shifted keyboard delivers "+".
+    assert window._actions["zoom_in_alt"].shortcut().toString() == "Ctrl++"
+    window.close()
+
+
+def test_zoom_keeps_the_settings_mapping_in_step(app):
+    window = open_window(app)
+    window.zoom_in()
+    editor = window._settings["editor"]
+    assert editor["hex_font_size"] == window.hex_view.font_size
+    assert editor["tree_font_size"] == window.session_tree.font_size
+    window.close()

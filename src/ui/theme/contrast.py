@@ -64,9 +64,17 @@ def check(theme: Theme) -> list[ContrastCheck]:
     pairs = [
         ("body text on background", theme.text_primary, theme.background, body),
         ("body text on surface", theme.text_primary, theme.surface, body),
+        ("body text on surface_alt", theme.text_primary, theme.surface_alt, body),
+        ("body text on surface_elevated", theme.text_primary, theme.surface_elevated, body),
         ("secondary text on background", theme.text_secondary, theme.background, body),
         ("secondary text on surface", theme.text_secondary, theme.surface, body),
         ("secondary text on surface_alt", theme.text_secondary, theme.surface_alt, body),
+        (
+            "secondary text on surface_elevated",
+            theme.text_secondary,
+            theme.surface_elevated,
+            body,
+        ),
         ("muted text on background", theme.text_muted, theme.background, body),
         ("muted text on surface", theme.text_muted, theme.surface, body),
         ("heading on background", theme.text_primary, theme.background, large),
