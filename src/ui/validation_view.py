@@ -108,6 +108,7 @@ class ValidationView(QtWidgets.QWidget):
         self._tabs.addTab(counter_page, "Counterexamples")
 
         self._application: RuleApplication | None = None
+        self._status_error = False
 
     # -- rule --------------------------------------------------------------
 
@@ -121,9 +122,17 @@ class ValidationView(QtWidgets.QWidget):
 
     def set_rule_status(self, text: str, error: bool = False) -> None:
         """Show ``text`` in the rule status line, red when ``error``."""
-        colour = theme.MISMATCHED_TEXT if error else theme.TEXT_SECONDARY
-        self.rule_status.setStyleSheet(f"color: {colour};")
+        self._status_error = error
+        self._style_status()
         self.rule_status.setText(text)
+
+    def _style_status(self) -> None:
+        colour = (
+            theme.current().status_mismatched_text
+            if self._status_error
+            else theme.current().text_secondary
+        )
+        self.rule_status.setStyleSheet(f"color: {colour};")
 
     def set_context(self, session_id: str, direction: str) -> None:
         """Show which session and direction the panel is working on."""
@@ -149,7 +158,7 @@ class ValidationView(QtWidgets.QWidget):
             item = QtWidgets.QListWidgetItem(
                 f"offset {message.offset}  {message.bytes_hex}  {message.reason or ''}"
             )
-            item.setForeground(QtGui.QColor(theme.MISMATCHED_TEXT))
+            item.setForeground(QtGui.QColor(theme.current().status_mismatched_text))
             item.setData(QtCore.Qt.ItemDataRole.UserRole, message.offset)
             item.setToolTip(_provenance_tooltip(message))
             self.counter_list.addItem(item)
@@ -173,9 +182,9 @@ class ValidationView(QtWidgets.QWidget):
             if column == 3:
                 item.setFont(theme.mono_font(9))
             if message.status.value == MISMATCHED:
-                item.setForeground(QtGui.QColor(theme.MISMATCHED_TEXT))
+                item.setForeground(QtGui.QColor(theme.current().status_mismatched_text))
             elif message.status.value == "matched":
-                item.setForeground(QtGui.QColor(theme.MATCHED_TEXT))
+                item.setForeground(QtGui.QColor(theme.current().status_matched_text))
             self.messages_table.setItem(row, column, item)
         self.messages_table.item(row, 0).setData(
             QtCore.Qt.ItemDataRole.UserRole, message.offset
@@ -197,6 +206,12 @@ class ValidationView(QtWidgets.QWidget):
     def show_message_count(self, count: int) -> None:
         """Show that the rule was applied to ``count`` messages."""
         self.set_rule_status(f"rule applied to {count} messages")
+
+    def apply_theme(self) -> None:
+        """Recolour the status line and rebuild the table in the active theme."""
+        self._style_status()
+        if self._application is not None:
+            self.show_application(self._application)
 
 
 def _provenance_tooltip(message) -> str:
