@@ -41,6 +41,28 @@ Python 3.12 · PySide6 · dpkt · pytest · Docker
 
 ---
 
+<div class="team">
+
+<img src="/team-avatar.png" alt="Команда HTTP 418" class="team-avatar">
+
+<div class="team-info">
+
+# Состав команды
+
+<div class="subtitle">HTTP 418 · UMIRHack 2026 · кейс #02 · Мадригал</div>
+
+- **Сабадаш Павел** — архитектура и координация; чтение PCAP/PCAPNG и
+  провенанс (`capture`); переносной проект и отчёты (`project`, `report`);
+  движок правил и гипотез (`protocol`, `hypothesis`); GUI и веб (`ui`, `web`)
+
+<div class="meta">github.com/Pavel1778/madrigal-protocol-lab</div>
+
+</div>
+
+</div>
+
+---
+
 # Задача: восстановить протокол, а не угадать его
 
 <div class="cols">
