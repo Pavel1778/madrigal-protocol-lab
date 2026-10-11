@@ -208,8 +208,8 @@ is claimed.
 
 ## 10. Alternative explanations
 
-Because H3 and H4 are assumptions, competing readings of those fields were scored
-over the framed corpus. Score is `support / (support + contradict)`.
+Because H2, H3 and H4 are assumptions, competing readings of those fields were
+scored over the framed corpus. Score is `support / (support + contradict)`.
 
 Field `command` (140 values) — the declared meaning is the command code:
 
@@ -334,9 +334,10 @@ the loop is meant to expose. The full record is in
 | `docs/RULE_V1_V2.md` | the version record for the two corpus rules |
 | `docs/GUI_VERIFICATION.md` | what the window was driven to show, and the defects found |
 | `presentation/slide_verification.md` | each deck claim mapped to its evidence |
-| `presentation/slides.pdf` | the deck, twenty-two slides, with the real screenshots |
+| `presentation/slides.pdf` | the deck, nineteen slides, with the real screenshots |
+| `presentation/slides-light.pdf` | the same deck in the light theme, nineteen slides |
 | `presentation/slides.pptx` | the same deck as editable native text, with click build-ins |
-| `presentation/defense_script.md` | the slide-by-slide speaker script for the defense |
+| `presentation/defense_script.md` | the 5- and 10-minute speaker routes for the defense |
 | `presentation/screenshots/` | the eleven window captures |
 | `tests/ui/test_e2e.py` | the scenario as fourteen offscreen tests |
 

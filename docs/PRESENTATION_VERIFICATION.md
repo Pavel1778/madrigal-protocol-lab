@@ -15,7 +15,7 @@ Reproduce any line below with the command in the same row.
 | --- | --- | --- |
 | pages in the committed PDF (dark) | 19 | `pdfinfo presentation/slides.pdf` |
 | pages in the committed PDF (light) | 19 | `pdfinfo presentation/slides-light.pdf` |
-| slides in the source | 19 | `grep -c '^---$' presentation/slides.md` |
+| slides in the source | 19 | `grep -c '^---$' presentation/slides.md` = 20, minus the frontmatter fence = 19 |
 | slides in the PPTX | 19 | `python -m presentation.scripts.build_pptx` |
 | page size | 735.12 x 414 pts, 16:9 | `pdfinfo presentation/slides.pdf` |
 | empty pages | 0 | render scan below |
@@ -103,7 +103,7 @@ Slide 19 is a closing slide, not a "Вопросы" slide. It carries the one-li
 conclusion «Инструмент превращает байты в проверяемое знание», two QR codes
 (repository and release) with captions, and the contact line
 `github.com/Pavel1778/madrigal-protocol-lab · @Pasha1778`. It carries no
-technical metric — no 741, no 90 %, no test count, no coverage figure, no release
+technical metric — no 781, no 90 %, no test count, no coverage figure, no release
 asset count — and the word «Вопросы» appears nowhere in the deck.
 
 ## PPTX
