@@ -18,10 +18,11 @@ import pytest
 
 from src.capture.export import export_capture
 from src.capture.pipeline import normalize
+from src.hypothesis.corpus import CorpusStream, verify_on_corpus
 from src.hypothesis.journal import correlate, load_journal
 from src.protocol.engine import apply_rule
 from src.protocol.rule import load_rule
-from src.protocol.stream import load_capture
+from src.protocol.stream import capture_from_dict, load_capture
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REAL = REPO_ROOT / "tests" / "corpus" / "real"
@@ -48,6 +49,21 @@ DIAGNOSTICS = {
 @functools.lru_cache(maxsize=None)
 def _normalized(path: str):
     return normalize(Path(path))
+
+
+@functools.lru_cache(maxsize=None)
+def _payload(path: str) -> str:
+    capture = normalize(Path(path))
+    handle = tempfile.NamedTemporaryFile(suffix=".normalized.json", delete=False)
+    handle.close()
+    export_capture(
+        capture.sessions,
+        Path(handle.name),
+        source_file=str(path),
+        capture_id=capture.capture_id,
+        streams=capture.streams,
+    )
+    return Path(handle.name).read_text(encoding="utf-8")
 
 
 @functools.lru_cache(maxsize=None)
@@ -228,3 +244,27 @@ def test_dataset_manifest_lists_every_research_capture() -> None:
         assert (REAL / relative).is_file()
     for item in manifest["diagnostics"]:
         assert (REAL / item["file"]).is_file()
+
+
+def _corpus_streams(name: str) -> list[CorpusStream]:
+    capture = capture_from_dict(json.loads(_payload(str(RESEARCH[name]))))
+    return [
+        CorpusStream(stream=stream, session_id=session_id, direction=direction)
+        for session_id, direction, stream in capture.iter_streams()
+    ]
+
+
+def test_request_rule_refinement_removes_counterexamples() -> None:
+    streams = _corpus_streams("01_configuration")
+    naive = verify_on_corpus(load_rule(str(EXAMPLES / "thermostand_request_v1.json")), streams)
+    refined = verify_on_corpus(load_rule(str(EXAMPLES / "thermostand_request_v2.json")), streams)
+    assert naive.contradictions
+    assert not refined.contradictions
+    assert refined.totals["matched"] > naive.totals["matched"]
+
+
+def test_investigation_report_is_reproducible() -> None:
+    from scripts.investigate_dataset import build_report
+
+    committed = (REPO_ROOT / "docs" / "DATASET_INVESTIGATION.md").read_text(encoding="utf-8")
+    assert build_report() == committed
