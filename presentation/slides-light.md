@@ -52,9 +52,11 @@ layout: default
 <div class="member__info">
 <div class="member__name">Сабадаш Павел</div>
 <div class="member__role">Архитектура · захват · интерфейс</div>
-<div class="member__handle">@Pasha1778</div>
-</div>
+<div class="member__contact">
+<span class="member__handle">@Pasha1778</span>
 <img src="/qr_telegram_pasha.png" alt="QR: @Pasha1778" class="member__qr">
+</div>
+</div>
 </div>
 
 <div class="member" v-click>
@@ -62,9 +64,11 @@ layout: default
 <div class="member__info">
 <div class="member__name">Предков Никита</div>
 <div class="member__role">Правила · тесты · ревью</div>
-<div class="member__handle">@petruan</div>
-</div>
+<div class="member__contact">
+<span class="member__handle">@petruan</span>
 <img src="/qr_telegram_nikita.png" alt="QR: @petruan" class="member__qr">
+</div>
+</div>
 </div>
 
 </div>
@@ -174,31 +178,13 @@ layout: default
 layout: default
 ---
 
-# Каждый байт знает свой пакет
-
-<div class="shot shot--side">
+# От интерпретации можно вернуться к исходным данным
 
 <div class="shot__frame" v-click>
-<img src="/public/screenshot-provenance.png" alt="Дерево сессий, байты и панель происхождения">
+<img class="shot--full" src="/public/screenshot-provenance.png" alt="Байты сообщения и панель происхождения: пакет, последовательность, время">
 </div>
 
-<div class="shot__side">
-
-<div class="panel" v-click>
-<div class="lead">Происхождение</div>
-<div>Клик по байту связывает его с пакетом, номером последовательности и временем.</div>
-</div>
-
-<div class="byte-card" v-click>
-<div class="byte-mono">packet 3 · seq 1001</div>
-<div class="byte-note">ts 1700000000.004, сессия <code>s1</code></div>
-</div>
-
-</div>
-
-</div>
-
-<div class="caption">От интерпретации можно вернуться к исходным данным. Повторные передачи одного сообщения — отдельная тема.</div>
+<div class="byte-line" v-click>packet 3 · seq 1001 · ts 1700000000.004 · сессия <code>s1</code></div>
 
 ---
 layout: default
@@ -206,19 +192,13 @@ layout: default
 
 # Правило проверяется на всём корпусе сразу
 
-<div class="pair">
-
 <div class="shot__frame" v-click>
-<img src="/public/screenshot-rule.png" alt="Редактор правила">
+<img class="shot--half" src="/public/screenshot-rule.png" alt="Правило в редакторе: JSON крупным планом">
 </div>
 
 <div class="shot__frame" v-click>
-<img src="/public/screenshot-validation.png" alt="Результат применения правила">
+<img class="shot--half" src="/public/screenshot-validation.png" alt="Результат применения правила к потоку">
 </div>
-
-</div>
-
-<div class="caption" v-click>Одно правило описывает весь поток; сообщения не перечисляют вручную</div>
 
 ---
 layout: default
@@ -250,6 +230,8 @@ layout: default
 
 </div>
 
+<div class="caption">Значение <code>2</code> повторяется в 4 независимых сессиях и связано с действием «изменить настройку» в журнале</div>
+
 ---
 transition: slide-left
 layout: default
@@ -273,7 +255,9 @@ layout: default
 
 <div class="metric">
 
-# Уточнили правило: 60/140 → 140/140
+# Уточнили правило: 60 из 140 → 140 из 140
+
+<div class="metric__sub">На корпусе уточнения. Отдельно проверено на реальном датасете: 45 + 45, precision 1.00</div>
 
 <div class="metric__grid">
 
@@ -311,7 +295,7 @@ layout: default
 
 <div>
 <div class="bignum" v-click>90</div>
-<div class="metric__note" v-click>45 запросов и 45 ответов, все matched, покрытие байтов 100 %</div>
+<div class="metric__note" v-click>45 запросов + 45 ответов. Все matched.</div>
 </div>
 
 <div class="metric__figure" v-click>
@@ -319,6 +303,8 @@ layout: default
 </div>
 
 </div>
+
+<div class="caption">Данные не использовались при уточнении правила</div>
 
 </div>
 
@@ -334,7 +320,7 @@ layout: default
 
 <div>
 <div class="bignum" v-click>12 с</div>
-<div class="metric__note" v-click>Условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ</div>
+<div class="metric__note" v-click>Пик памяти 350 МиБ при бюджете 4 ГиБ</div>
 </div>
 
 <div class="metric__figure" v-click>
@@ -344,10 +330,12 @@ layout: default
 </div>
 
 <div class="metric-row">
-<span v-click><b>12.1 с</b> общее время</span>
+<span v-click><b>12 с</b> общее время</span>
 <span v-click><b>350 МиБ</b> пик памяти</span>
-<span v-click><b>4 ГиБ</b> бюджет</span>
+<span v-click><b>250k</b> пакетов</span>
 </div>
+
+<div class="caption">Условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ</div>
 
 </div>
 
@@ -377,7 +365,7 @@ layout: default
 # Живое окно
 
 <div class="live__frame" v-click>
-<img src="/public/screenshot-main.png" alt="Главное окно: сессии, байты, интерпретация, диагностика">
+<img class="shot--live" src="/public/screenshot-main.png" alt="Главное окно: сессии, байты, интерпретация, диагностика">
 </div>
 
 <div class="caption" v-click>Сессии, байты, интерпретация, происхождение и диагностика в одном окне</div>
@@ -388,11 +376,11 @@ layout: default
 layout: default
 ---
 
-# Запись прогона на случай, если экран не поднимется
+# Резерв: 2 минуты записи прогона
 
 <video src="/screencast.mp4" controls muted loop playsinline class="cast"></video>
 
-<div class="caption">Четыре минуты: шесть сцен референсного исследования</div>
+<div class="caption">Полный прогон референсного исследования, если экран не поднимется</div>
 
 ---
 transition: slide-left
