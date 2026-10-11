@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Protocol laboratory{% endblock %}</title>
+  <link rel="icon" type="image/png" href="/static/favicon.png">
   <link rel="stylesheet" href="/static/style.css">
   <script src="/static/htmx.min.js" defer></script>
 </head>
@@ -13,7 +14,7 @@
     {% if capture_id %}<span class="chip" title="{{ source_file }}">{{ capture_id[:19] }}</span>{% endif %}
     {% if has_rule %}<span class="chip chip--accent">rule {{ rule_id }} v{{ rule_version }}</span>{% endif %}
     <span class="spacer"></span>
-    <a class="button" href="/export/report">Export report</a>
+    <a class="button" href="/export/report" title="Download the interpretation of every session as a self-contained HTML page">Export report (HTML)</a>
   </header>
   <main>
     {% block content %}{% endblock %}

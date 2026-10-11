@@ -263,17 +263,42 @@ then load a rule (Ctrl+R) or press Load example in the Rule tab.</source>
     <message>
         <location filename="../main_window.py" line="364"/>
         <source>Interpretation</source>
-        <translation>Интерпретация</translation>
+        <translation>Анализ</translation>
     </message>
     <message>
         <location filename="../main_window.py" line="365"/>
         <source>Compare</source>
+        <translation>Сравн.</translation>
+    </message>
+    <message>
+        <location filename="../main_window.py" line="370"/>
+        <source>Interpretation tab</source>
+        <translation>Интерпретация</translation>
+    </message>
+    <message>
+        <location filename="../main_window.py" line="371"/>
+        <source>Compare tab</source>
         <translation>Сравнение</translation>
+    </message>
+    <message>
+        <location filename="../main_window.py" line="372"/>
+        <source>Hypotheses tab</source>
+        <translation>Гипотезы</translation>
+    </message>
+    <message>
+        <location filename="../main_window.py" line="373"/>
+        <source>Report tab</source>
+        <translation>Отчёт</translation>
+    </message>
+    <message>
+        <location filename="../main_window.py" line="374"/>
+        <source>Version diff tab</source>
+        <translation>Различие версий</translation>
     </message>
     <message>
         <location filename="../main_window.py" line="366"/>
         <source>Hypotheses</source>
-        <translation>Гипотезы</translation>
+        <translation>Гип.</translation>
     </message>
     <message>
         <location filename="../main_window.py" line="367"/>
@@ -283,7 +308,7 @@ then load a rule (Ctrl+R) or press Load example in the Rule tab.</source>
     <message>
         <location filename="../main_window.py" line="368"/>
         <source>Version diff</source>
-        <translation>Различие версий</translation>
+        <translation>Диф.</translation>
     </message>
     <message>
         <location filename="../main_window.py" line="382"/>
