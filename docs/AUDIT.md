@@ -315,10 +315,13 @@ a live socket.
 
 ## 13. Open questions
 
-- **Organizer captures.** The case mentions real data from the organizers; no
-  capture was available during the window, so the corpus is synthetic and
-  reproducible from `scripts/generate_corpus.py`. A real capture would test the
-  parser and the applicability boundary further.
+- **Organizer captures.** Received after the development window and analysed:
+  the dataset is committed under `tests/corpus/real/`, the pipeline reproduces
+  the session counts in `dataset_manifest.json`, and both directions frame and
+  match across four research captures. Results are in
+  `docs/REAL_CORPUS_ANALYSIS.md`; the generated report is
+  `docs/DATASET_INVESTIGATION.md`. The synthetic corpus remains for the framing
+  discussion, since the organizer generated the network framing.
 - **Defense rehearsals.** Two rehearsals of the walkthrough are still to be run.
 - **Backup video.** A screen recording of the run is still to be made.
 - **Group name.** Resolved: the submission records the participant and the
