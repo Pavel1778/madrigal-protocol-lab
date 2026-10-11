@@ -10,6 +10,7 @@ lineNumbers: false
 drawings:
   persist: false
 transition: slide-left
+colorSchema: dark
 mdc: true
 fonts:
   sans: Montserrat
@@ -266,7 +267,7 @@ Python 3.12 · PySide6 · dpkt · pytest · Docker
 <div>
 
 <div class="figure"><img src="/screenshots/10_hypotheses.png" alt="Гипотезы"></div>
-<div class="caption">Чтение, объявленное правилом v1, даёт 0.43 (60 support, 80 contradict).</div>
+<div class="caption">Чтение, объявленное правилом v1, даёт 0.43 (60 matched, 80 mismatched). Каждый mismatched-байт привязан к пакету-источнику и сохранён.</div>
 
 </div>
 <div>
@@ -385,29 +386,25 @@ Python 3.12 · PySide6 · dpkt · pytest · Docker
 
 # Расширения: веб-интерфейс на localhost поверх того же ядра
 
-<div class="cols">
+<div class="cols-60-40">
 <div>
 
+<v-click>
 <img src="/web.png" alt="Веб-интерфейс на localhost" class="web-shot">
+</v-click>
 
 <div class="caption">FastAPI + HTMX, `127.0.0.1`, отдельный extra `.[web]`.</div>
 
 </div>
 <div>
 
-<div class="card">
+<v-click>
 
-Ядро отделено от GUI контрактами JSON, поэтому веб — тонкая обёртка, не дубль.
-
-</div>
-
-<div class="mt-6">
-
-- Те же `src.capture` и `src.protocol`, свой логики нет.
+- Ядро отделено от GUI контрактами JSON.
+- Те же `src.capture` и `src.protocol` — своей логики нет.
 - Ставится отдельно: `pip install -e ".[web]"`.
-- Полезно там, где PySide6 не установлен.
 
-</div>
+</v-click>
 
 </div>
 </div>
@@ -505,6 +502,25 @@ REPORT.md · docs/REFERENCE_INVESTIGATION.md · docs/demo.md
 
 <div class="subtitle">Команда HTTP 418 · UMIRHack 2026</div>
 
+<div class="cols-3 mt-8 kpi-row">
+<div><span class="kpi">741</span><br><span class="kpi-label">тест</span></div>
+<div><span class="kpi">90%</span><br><span class="kpi-label">покрытие</span></div>
+<div><span class="kpi">8</span><br><span class="kpi-label">артефактов в релизе</span></div>
+</div>
+
+<div class="qr-row mt-8">
+<div class="qr-item">
+<img src="/qr_repo.png" alt="QR: репозиторий" class="w-40">
+<div class="caption">Репозиторий</div>
+</div>
+<div class="qr-item">
+<img src="/qr_release.png" alt="QR: релиз v1.0.0" class="w-40">
+<div class="caption">Релиз v1.0.0</div>
+</div>
+</div>
+
 <div class="meta">github.com/Pavel1778/madrigal-protocol-lab</div>
+
+<div class="thanks">Спасибо за внимание</div>
 
 </div>
