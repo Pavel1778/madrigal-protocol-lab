@@ -23,23 +23,26 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 
+from presentation.reproducible import freeze_zip
+
 ROOT = Path(__file__).resolve().parents[2]
 PRES = ROOT / "presentation"
 OUT = PRES / "slides.pptx"
 
 # --- palette (mirrors presentation/style.css, brand book) --------------------
-BG = RGBColor(0x13, 0x15, 0x16)
-SURFACE = RGBColor(0x1D, 0x1D, 0x1D)
-SURFACE_HI = RGBColor(0x26, 0x26, 0x2A)
-TEXT = RGBColor(0xED, 0xED, 0xED)
-SECONDARY = RGBColor(0xB8, 0xB8, 0xB8)
-ACCENT = RGBColor(0xA2, 0x39, 0x1D)
+BG = RGBColor(0x0E, 0x10, 0x11)
+SURFACE = RGBColor(0x1F, 0x21, 0x24)
+SURFACE_HI = RGBColor(0x26, 0x28, 0x2B)
+TEXT = RGBColor(0xF4, 0xF1, 0xEC)
+SECONDARY = RGBColor(0xA8, 0xA2, 0x9E)
+ACCENT = RGBColor(0xD0, 0x60, 0x3A)
+ACCENT_HOVER = RGBColor(0xE8, 0x7A, 0x52)
 ACCENT_DEEP = RGBColor(0x61, 0x0D, 0x1C)
-MATCHED = RGBColor(0x2E, 0x7D, 0x5B)
-MISMATCHED = RGBColor(0x8E, 0x2A, 0x2A)
+MATCHED = RGBColor(0x16, 0xA3, 0x4A)
+MISMATCHED = RGBColor(0xDC, 0x26, 0x26)
 WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 
-F_HEAD = "Montserrat"
+F_HEAD = "Tektur"
 F_BODY = "Montserrat"
 F_MONO = "JetBrains Mono"
 
@@ -145,7 +148,7 @@ SECTIONS = ((1, "Постановка и метод"), (10, "Результат�
 
 
 def footer(slide, page):
-    tb, tf = textbox(slide, MARGIN, SLIDE_H - FOOTER_H, SLIDE_W - 2 * MARGIN,
+    tb, tf = textbox(slide, MARGIN, SLIDE_H - FOOTER_H, Inches(4.2),
                      Inches(0.3))
     add_runs(tf.paragraphs[0], "Команда HTTP 418 · кейс #02 · Мадригал", 10,
              SECONDARY)
@@ -153,21 +156,21 @@ def footer(slide, page):
     for start, label in SECTIONS:
         if page >= start:
             section = label
-    tb1, tf1 = textbox(slide, MARGIN, SLIDE_H - FOOTER_H, SLIDE_W - 2 * MARGIN,
+    tb1, tf1 = textbox(slide, Inches(4.8), SLIDE_H - FOOTER_H, Inches(3.7),
                        Inches(0.3))
     p1 = tf1.paragraphs[0]
     p1.alignment = PP_ALIGN.CENTER
     add_runs(p1, section, 10, SECONDARY)
-    tb2, tf2 = textbox(slide, MARGIN, SLIDE_H - FOOTER_H, SLIDE_W - 2 * MARGIN,
+    tb2, tf2 = textbox(slide, Inches(8.9), SLIDE_H - FOOTER_H, Inches(3.5),
                        Inches(0.3))
     p2 = tf2.paragraphs[0]
     p2.alignment = PP_ALIGN.RIGHT
     add_runs(p2, f"{page} / {TOTAL}", 10, SECONDARY)
 
 
-def heading(slide, text, size=32):
+def heading(slide, text, size=40, height=Inches(1.15)):
     tb, tf = textbox(slide, MARGIN, Inches(0.5), SLIDE_W - 2 * MARGIN,
-                     Inches(1.15))
+                     height)
     add_runs(tf.paragraphs[0], text, size, TEXT, bold=True, font=F_HEAD)
     return tb
 
@@ -465,7 +468,7 @@ def build_slide(prs, spec):
         caption(slide, spec["caption"])
 
     elif kind == "shot_side":
-        heading(slide, spec["title"])
+        heading(slide, spec["title"], height=Inches(0.8))
         if spec.get("kicker"):
             tb, tf = textbox(slide, MARGIN, BODY_TOP - Inches(0.55),
                              SLIDE_W - 2 * MARGIN, Inches(0.35))
@@ -520,23 +523,23 @@ def build_slide(prs, spec):
         add_runs(tf.paragraphs[0], spec["note"], 16, SECONDARY)
 
     elif kind == "metric":
-        tb, tf = textbox(slide, MARGIN, Inches(1.5), SLIDE_W - 2 * MARGIN,
-                         Inches(0.8))
-        add_runs(tf.paragraphs[0], spec["title"], 26, SECONDARY, bold=True,
+        tb, tf = textbox(slide, MARGIN, Inches(1.3), SLIDE_W - 2 * MARGIN,
+                         Inches(0.9))
+        add_runs(tf.paragraphs[0], spec["title"], 30, TEXT, bold=True,
                  font=F_HEAD)
         if spec.get("sub"):
-            tb, tf = textbox(slide, MARGIN, Inches(2.05),
+            tb, tf = textbox(slide, MARGIN, Inches(2.15),
                              SLIDE_W - 2 * MARGIN, Inches(0.5))
             add_runs(tf.paragraphs[0], spec["sub"], 14, SECONDARY)
         tb, tf = textbox(slide, MARGIN, Inches(2.5), Inches(5.6), Inches(2.0))
-        add_runs(tf.paragraphs[0], spec["big"], 88, ACCENT, bold=True,
-                 font=F_HEAD)
+        add_runs(tf.paragraphs[0], spec["big"], spec.get("bigsize", 88), ACCENT,
+                 bold=True, font=F_HEAD)
         steps.append((tb.shape_id, "fade"))
         tb, tf = textbox(slide, MARGIN, Inches(4.6), Inches(5.6), Inches(1.2))
         add_runs(tf.paragraphs[0], spec["note"], 16, TEXT)
         if spec.get("image"):
-            pic = fit_picture(slide, spec["image"], Inches(7.0), Inches(2.4),
-                              SLIDE_W - Inches(7.0) - MARGIN, Inches(3.6))
+            pic = fit_picture(slide, spec["image"], Inches(6.6), Inches(2.2),
+                              SLIDE_W - Inches(6.6) - MARGIN, Inches(4.0))
             steps.append((pic.shape_id, "wipe"))
         if spec.get("chips"):
             cx = MARGIN
@@ -555,39 +558,45 @@ def build_slide(prs, spec):
             caption(slide, spec["caption"])
 
     elif kind == "bars":
-        tb, tf = textbox(slide, MARGIN, Inches(1.5), SLIDE_W - 2 * MARGIN,
-                         Inches(0.8))
-        add_runs(tf.paragraphs[0], spec["title"], 26, SECONDARY, bold=True,
+        tb, tf = textbox(slide, MARGIN, Inches(1.3), SLIDE_W - 2 * MARGIN,
+                         Inches(0.9))
+        add_runs(tf.paragraphs[0], spec["title"], 30, TEXT, bold=True,
                  font=F_HEAD)
         if spec.get("sub"):
-            tb, tf = textbox(slide, MARGIN, Inches(2.05),
+            tb, tf = textbox(slide, MARGIN, Inches(2.15),
                              SLIDE_W - 2 * MARGIN, Inches(0.5))
             add_runs(tf.paragraphs[0], spec["sub"], 14, SECONDARY)
-        tb, tf = textbox(slide, MARGIN, Inches(2.5), Inches(4.4), Inches(1.6))
-        add_runs(tf.paragraphs[0], spec["big"], 88, ACCENT, bold=True,
-                 font=F_HEAD)
-        steps.append((tb.shape_id, "fade"))
-        tb, tf = textbox(slide, MARGIN, Inches(4.2), Inches(4.4), Inches(1.6))
-        add_runs(tf.paragraphs[0], spec["note"], 16, TEXT)
-        steps.append((tb.shape_id, "fade"))
+        if spec.get("big"):
+            tb, tf = textbox(slide, MARGIN, Inches(2.5), Inches(4.4), Inches(1.6))
+            add_runs(tf.paragraphs[0], spec["big"], 88, ACCENT, bold=True,
+                     font=F_HEAD)
+            steps.append((tb.shape_id, "fade"))
+        if spec.get("note"):
+            tb, tf = textbox(slide, MARGIN, Inches(5.9), SLIDE_W - 2 * MARGIN,
+                             Inches(0.6))
+            add_runs(tf.paragraphs[0], spec["note"], 16, TEXT)
+            steps.append((tb.shape_id, "fade"))
 
-        bx = Inches(7.0)
-        bw = SLIDE_W - bx - MARGIN
+        bx = MARGIN
+        bw = SLIDE_W - 2 * MARGIN
         for i, (label, value, ratio, color) in enumerate(spec["bars"]):
-            y = Inches(2.8) + i * Inches(1.1)
-            tb, tf = textbox(slide, bx, y, Inches(0.6), Inches(0.4))
-            add_runs(tf.paragraphs[0], label, 16, SECONDARY, font=F_MONO)
-            track = rect(slide, bx + Inches(0.7), y + Inches(0.05),
-                         bw - Inches(1.9), Inches(0.32), SURFACE_HI)
-            fill = rect(slide, bx + Inches(0.7), y + Inches(0.05),
-                        (bw - Inches(1.9)) * ratio, Inches(0.32), color)
-            tb, tf = textbox(slide, bx + bw - Inches(1.1), y, Inches(1.1),
-                             Inches(0.4), anchor=MSO_ANCHOR.MIDDLE)
+            y = Inches(3.05) + i * Inches(1.3)
+            tb, tf = textbox(slide, bx, y, Inches(1.0), Inches(0.7),
+                             anchor=MSO_ANCHOR.MIDDLE)
+            add_runs(tf.paragraphs[0], label, 22, SECONDARY, font=F_MONO)
+            track = rect(slide, bx + Inches(1.1), y + Inches(0.05),
+                         bw - Inches(3.4), Inches(0.6), SURFACE_HI)
+            fill = rect(slide, bx + Inches(1.1), y + Inches(0.05),
+                        (bw - Inches(3.4)) * ratio, Inches(0.6), color)
+            tb, tf = textbox(slide, bx + bw - Inches(2.2), y, Inches(2.2),
+                             Inches(0.7), anchor=MSO_ANCHOR.MIDDLE)
             tf.paragraphs[0].alignment = PP_ALIGN.RIGHT
-            add_runs(tf.paragraphs[0], value, 18, TEXT, bold=True, font=F_HEAD)
+            add_runs(tf.paragraphs[0], value, 40, TEXT, bold=True, font=F_HEAD)
             steps.append((track.shape_id, "fade"))
             steps.append((fill.shape_id, "fade"))
             steps.append((tb.shape_id, "fade"))
+        if spec.get("caption"):
+            caption(slide, spec["caption"])
 
     elif kind == "live":
         heading(slide, spec["title"])
@@ -599,8 +608,21 @@ def build_slide(prs, spec):
     elif kind == "video":
         heading(slide, spec["title"])
         pic = fit_picture(slide, spec["poster"], MARGIN, BODY_TOP,
-                          SLIDE_W - 2 * MARGIN, Inches(4.0))
+                          SLIDE_W - 2 * MARGIN, Inches(3.6))
         steps.append((pic.shape_id, "fade"))
+        cx = pic.left + pic.width // 2
+        cy = pic.top + pic.height // 2
+        ring = rect(slide, cx - Inches(0.62), cy - Inches(0.62), Inches(1.24),
+                    Inches(1.24), BG, shape=MSO_SHAPE.OVAL, line=ACCENT)
+        ring.line.width = Pt(3)
+        ring.fill.background()
+        tri = rect(slide, cx - Inches(0.16), cy - Inches(0.24), Inches(0.5),
+                   Inches(0.48), ACCENT, shape=MSO_SHAPE.ISOSCELES_TRIANGLE)
+        tri.rotation = 90
+        if spec.get("meta"):
+            tb, tf = textbox(slide, MARGIN, Inches(5.9), SLIDE_W - 2 * MARGIN,
+                             Inches(0.4))
+            add_runs(tf.paragraphs[0], spec["meta"], 14, SECONDARY, font=F_MONO)
         caption(slide, spec["caption"])
 
     elif kind == "limits":
@@ -699,18 +721,17 @@ def deck() -> list[dict]:
              blocks=[dict(accent=True, lead="",
                           text="02 00 00 03 13 00 55  —  команда 2 вне ожидаемого набора [1]"),
                      dict(lead="Один байт — 80 контрпримеров",
-                          text="Все 80 несоответствий v1 сидели на offset 0 в сессиях s2 и s3.")],
+                          text="80 несоответствий v1 — на offset 0 в сессиях s2 и s3.")],
              caption="Значение 2 повторяется в 4 независимых сессиях и связано с действием «изменить настройку» в журнале"),
         dict(kind="divider", page=10, index="01", title="Что получилось",
              note="Точность, покрытие корпуса организаторов, ресурсы"),
         dict(kind="bars", page=11, title="Уточнили правило: 60 из 140 → 140 из 140",
-             big="1.00",
              sub="На корпусе уточнения. Отдельно проверено на реальном датасете: 45 + 45, precision 1.00",
              note="Было 60 matched из 140 и 80 контрпримеров. Стало 140 matched из 140 и ноль контрпримеров",
              bars=[("v1", "0.43", 0.43, MISMATCHED),
                    ("v2", "1.00", 1.0, MATCHED)]),
         dict(kind="metric", page=12, title="Набор организаторов разобран целиком",
-             big="90", image="assets/coverage_donut.png",
+             big="90", bigsize=120, image="assets/coverage_donut.png",
              note="45 запросов + 45 ответов. Все matched.",
              caption="Данные не использовались при уточнении правила"),
         dict(kind="metric", page=13, title="95 МиБ разбираются за 12 секунд",
@@ -724,9 +745,10 @@ def deck() -> list[dict]:
              image="public/screenshot-main.png",
              caption="Сессии, байты, интерпретация, происхождение и диагностика в одном окне"),
         dict(kind="video", page=16,
-             title="Резерв: 2 минуты записи прогона",
-             poster="public/screenshot-main.png",
-             caption="Полный прогон референсного исследования, если экран не поднимется"),
+             title="Резерв: запись прогона",
+             poster="public/screencast-poster.png",
+             meta="Полный прогон референсного исследования · 2:22 · без звука",
+             caption="Играется, если живое окно не поднимется на защите"),
         dict(kind="divider", page=17, index="03", title="Границы и итог",
              note="Что мы не утверждаем и что осталось за рамками"),
         dict(kind="limits", page=18, title="Что мы не утверждаем",
@@ -758,6 +780,7 @@ def main() -> None:
         add_transition(slide, "push" if spec["kind"] == "divider" else "fade")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     prs.save(str(OUT))
+    freeze_zip(OUT)
     print(f"wrote {OUT} ({OUT.stat().st_size} bytes, {len(prs.slides)} slides)")
 
 

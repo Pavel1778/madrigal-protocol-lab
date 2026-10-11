@@ -211,8 +211,14 @@ layout: default
 
 <div class="shot shot--side">
 
+<div class="shot__col">
+
 <div class="shot__frame" v-click>
 <img src="/screenshot-counterexamples.png" alt="Список контрпримеров, привязанных к байту">
+</div>
+
+<div class="caption">Значение <code>2</code> повторяется в 4 независимых сессиях и связано с действием «изменить настройку» в журнале</div>
+
 </div>
 
 <div class="shot__side">
@@ -224,14 +230,12 @@ layout: default
 
 <div class="panel" v-click>
 <div class="lead">Один байт — 80 контрпримеров</div>
-<div>Все 80 несоответствий v1 сидели на offset 0 в сессиях <code>s2</code> и <code>s3</code>.</div>
+<div>80 несоответствий v1 — на offset 0 в сессиях <code>s2</code> и <code>s3</code>.</div>
 </div>
 
 </div>
 
 </div>
-
-<div class="caption">Значение <code>2</code> повторяется в 4 независимых сессиях и связано с действием «изменить настройку» в журнале</div>
 
 ---
 transition: slide-left
@@ -260,27 +264,20 @@ layout: default
 
 <div class="metric__sub">На корпусе уточнения. Отдельно проверено на реальном датасете: 45 + 45, precision 1.00</div>
 
-<div class="metric__grid">
-
-<div>
-<div class="bignum" v-click>1.00</div>
-<div class="metric__note" v-click>Было 60 matched из 140 и 80 контрпримеров. Стало 140 matched из 140 и ноль контрпримеров</div>
-</div>
-
-<div class="bars" v-click>
-<div class="bars__row">
+<div class="bars bars--lg">
+<div class="bars__row" v-click>
 <span class="bars__label">v1</span>
 <span class="bars__track"><i class="bars__fill bars__fill--bad" style="width: 43%"></i></span>
 <span class="bars__value">0.43</span>
 </div>
-<div class="bars__row">
+<div class="bars__row" v-click>
 <span class="bars__label">v2</span>
 <span class="bars__track"><i class="bars__fill bars__fill--good" style="width: 100%"></i></span>
 <span class="bars__value">1.00</span>
 </div>
 </div>
 
-</div>
+<div class="caption" v-click>Было 60 matched из 140 и 80 контрпримеров. Стало 140 matched из 140 и ноль контрпримеров</div>
 
 </div>
 
@@ -377,11 +374,26 @@ layout: default
 layout: default
 ---
 
-# Резерв: 2 минуты записи прогона
+# Резерв: запись прогона
 
-<video src="/screencast.mp4" controls muted loop playsinline class="cast"></video>
+<div class="recording">
 
-<div class="caption">Полный прогон референсного исследования, если экран не поднимется</div>
+<div class="recording__frame">
+<img src="/screencast-poster.png" alt="Кадр записи: главное окно с разобранным сообщением">
+<svg class="recording__play" viewBox="0 0 120 120" role="img" aria-label="Запись прогона">
+<circle cx="60" cy="60" r="54" fill="none" stroke="#D0603A" stroke-width="3"/>
+<polygon points="48,38 48,82 84,60" fill="#D0603A"/>
+</svg>
+</div>
+
+<div class="recording__meta">
+<span>Полный прогон референсного исследования</span>
+<span>2:22 · без звука</span>
+</div>
+
+</div>
+
+<div class="caption">Играется, если живое окно не поднимется на защите</div>
 
 ---
 transition: slide-left
