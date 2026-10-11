@@ -2,7 +2,8 @@
 
 Everything here is derived from a committed source, nothing is drawn by hand:
 
-* ``team-avatar-round.png``  a circular crop of ``public/team-avatar.png``;
+* ``avatar_pavel_round.png`` / ``avatar_nikita_round.png``  the per-member team
+  photos (``1.jpg`` / ``2.jpg`` at the repository root), cropped to circles;
 * ``qr_telegram_pasha.png`` / ``qr_telegram_nikita.png``  Telegram codes;
 * ``screenshot-*.png``  crops of the real GUI captures at the panel seams
   detected in the pixel data, so each slide can show the region it talks about
@@ -41,6 +42,12 @@ TELEGRAM = {
     "qr_telegram_nikita.png": "https://t.me/petruan",
 }
 
+# Per-member team photos, kept at the repository root so a teammate can drop in
+# a replacement without hunting through the presentation tree. Cropped to a
+# circle and sized for the 180 px slot on slide 2 (2x for crisp rendering).
+MEMBER_PHOTOS = (("1.jpg", "avatar_pavel_round.png"),
+                 ("2.jpg", "avatar_nikita_round.png"))
+
 # Per-member QR shown next to the handle on the team slide. The avatar is
 # cropped to a circle and the role line stays visible, so a viewer can scan a
 # contact without reading a URL.
@@ -51,8 +58,6 @@ MEMBER_QR = {
 
 # name -> (source, box). Boxes are (left, top, right, bottom) in the source.
 CROPS = {
-    # slide 2: square head for the corner avatar
-    "team-avatar-square.png": ("team-avatar.png", None),
     # slide 7: the hex dump only, trimmed to the byte rows. The window is
     # 1920x1080 but the hex panel ends at y=400; cropping the dead space below
     # roughly doubles the byte size on the slide.
@@ -83,17 +88,6 @@ def _circular(src: Path, dst: Path, size: int = 760) -> None:
     out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     out.paste(im, (0, 0), mask)
     out.save(dst)
-    print(f"presentation/public/{dst.name}")
-
-
-def _square(src: Path, dst: Path, size: int = 200) -> None:
-    im = Image.open(src).convert("RGBA")
-    side = min(im.size)
-    left = (im.width - side) // 2
-    top = (im.height - side) // 2
-    im.crop((left, top, left + side, top + side)).resize(
-        (size, size), Image.LANCZOS
-    ).save(dst)
     print(f"presentation/public/{dst.name}")
 
 
@@ -138,21 +132,18 @@ def _detect_seams(path: Path) -> list[int]:
 def main() -> int:
     PUBLIC.mkdir(parents=True, exist_ok=True)
 
-    for name, path in (("team-avatar.png", PUBLIC / "team-avatar.png"),
-                       ("01_main.png", SHOTS / "01_main.png")):
+    for name, path in (("01_main.png", SHOTS / "01_main.png"),):
         seams = _detect_seams(path)
         print(f"seams {name}: {[tuple(map(int, s)) for s in seams]}")
 
-    _circular(PUBLIC / "team-avatar.png", PUBLIC / "team-avatar-round.png")
+    for src_name, dst_name in MEMBER_PHOTOS:
+        _circular(REPO_ROOT / src_name, PUBLIC / dst_name, size=360)
     for name, url in TELEGRAM.items():
         _qr(url, PUBLIC / name)
 
     for dst_name, (src_name, box) in CROPS.items():
         src = (PUBLIC / src_name) if (PUBLIC / src_name).is_file() else (SHOTS / src_name)
-        if src_name == "team-avatar.png":
-            _square(src, PUBLIC / dst_name)
-        else:
-            _crop(src, PUBLIC / dst_name, box)
+        _crop(src, PUBLIC / dst_name, box)
     return 0
 
 

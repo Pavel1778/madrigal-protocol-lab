@@ -120,7 +120,7 @@ Prints `280 messages, 80 counterexamples` then `280 messages, 0 counterexamples`
 | Qt import error (`libEGL`) | `sudo apt-get install -y libegl1 libgl1 libglib2.0-0 libxkbcommon0 libdbus-1-3 libfontconfig1`, retry; or use the CLI fallback B4. |
 | Web does not start | Skip it; the window and the CLI carry the same point. |
 | Real data unreadable | Use `tests/corpus/reference_export/` instead (the whole of Flow B). |
-| Screen fails entirely | Play `presentation/screencast.mp4` (2:05, committed). |
+| Screen fails entirely | Play `presentation/screencast.mp4` (2:22, committed). |
 
 ## Know by heart
 
