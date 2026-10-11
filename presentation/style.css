@@ -1,162 +1,118 @@
-/* Madrigal theme for Slidev — dark technical B2B, engineering report look.
-   Palette split: brand fills for decoration, brighter text variants for AA.
-   Layout reserves a footer band so text and figures cannot collide. */
+/* Лаборатория протоколов — deck theme.
+   Two palettes (dark default, light for washed-out projectors). Layouts are
+   deliberately different from slide to slide: a title, a statement, a diagram,
+   a metric, a full-bleed screenshot. No slide is "heading + bullets" twice in a
+   row. Content is capped so nothing reaches the footer band. */
 
 @font-face {
-  font-family: 'Tektur';
-  src: url('/fonts/Tektur-Medium.ttf') format('truetype');
-  font-weight: 500;
-}
-@font-face {
-  font-family: 'Tektur';
-  src: url('/fonts/Tektur-SemiBold.ttf') format('truetype');
-  font-weight: 600;
-}
-@font-face {
-  font-family: 'Montserrat';
-  src: url('/fonts/Montserrat-Regular.ttf') format('truetype');
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Regular.ttf') format('truetype');
   font-weight: 400;
 }
 @font-face {
-  font-family: 'Montserrat';
-  src: url('/fonts/Montserrat-SemiBold.ttf') format('truetype');
+  font-family: 'Inter';
+  src: url('/fonts/Inter-SemiBold.ttf') format('truetype');
   font-weight: 600;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Regular.ttf') format('truetype');
+  font-weight: 400;
 }
 
 :root {
   --bg: #0E1011;
-  --panel: #1A1C1E;
-  --panel-hi: #242628;
-  --text: #EDEDED;
-  --secondary: #B8B8B8;
-  --caption: #A6A6A6;
+  --surface: #17181A;
+  --surface-hi: #202224;
+  --text: #E8E6E3;
+  --secondary: #A8A29E;
+  --caption: #A8A29E;
   --line: #2E3134;
-  /* Brand fills — decoration only, never text. */
-  --accent: #6D071F;
-  --highlight: #D0603A;
-  --brand-deep: #410913;
-  --brand-mid: #610D1C;
-  /* Readable accent for links, inline code, diff additions. */
-  --accent-text: #E0603A;
-  /* Status colours, each AA on the page background. */
-  --matched: #4CAF50;
-  --mismatched: #E53935;
-  --ambiguous: #FFB300;
-  --incomplete: #8C8C8C;
-  --uncovered: #858585;
-  --not-applicable: #9E9E9E;
-  --footer-h: 64px;
+  --accent: #D0603A;
+  --accent-soft: rgba(208, 96, 58, 0.14);
+  --matched: #16A34A;
+  --mismatched: #DC2626;
+  --ambiguous: #EA580C;
+  --incomplete: #71717A;
+  --uncovered: #A1A1AA;
+  --footer-h: 56px;
+  --pad-x: 72px;
+  --pad-top: 56px;
 }
 
-/* Light fallback for a washed-out projector (slides-light.md sets
-   colorSchema: light, which puts the `light` class on <html>). The dark block
-   above stays the source of truth for the dark deck; only the tokens change. */
+/* Light palette is final — the projector variant. Only tokens change. */
 html.light {
-  --bg: #FAFAFA;
-  --panel: #EFEFEF;
-  --panel-hi: #E4E4E4;
-  --text: #1A1A1A;
-  --secondary: #4A4A4A;
-  --caption: #5A5A5A;
-  --line: #D6D6D6;
-  --accent: #B7301A;
-  --highlight: #C7311C;
-  --brand-deep: #8A2312;
-  --brand-mid: #A82A15;
-  --accent-text: #C7311C;
-  --matched: #2E7D32;
-  --mismatched: #C62828;
-  --ambiguous: #8A6D00;
-  --incomplete: #8A8A8A;
-  --uncovered: #9E9E9E;
-  --not-applicable: #757575;
+  --bg: #FAF9F7;
+  --surface: #FFFFFF;
+  --surface-hi: #F1EFEC;
+  --text: #1C1917;
+  --secondary: #57534E;
+  --caption: #57534E;
+  --line: #D9D5D0;
+  --accent: #C2410C;
+  --accent-soft: rgba(194, 65, 12, 0.10);
+  --matched: #15803D;
+  --mismatched: #B91C1C;
+  --ambiguous: #C2410C;
+  --incomplete: #57534E;
+  --uncovered: #78716C;
 }
-html.light .slidev-layout h1,
-html.light .slidev-layout h2,
-html.light .slidev-layout h3,
-html.light .slidev-layout strong,
-html.light .slidev-layout .kpi { color: #111111; }
 
 .slidev-layout {
   position: relative;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Montserrat', sans-serif;
-  font-size: 22px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 21px;
   line-height: 1.4;
-  padding: 44px 64px calc(28px + var(--footer-h));
+  padding: var(--pad-top) var(--pad-x) calc(24px + var(--footer-h));
   overflow: hidden;
 }
 
+/* A single accent rule down the left edge — the one repeated element. */
 .slidev-layout::before {
   content: '';
   position: absolute;
   left: 0;
   top: 0;
-  width: 6px;
+  width: 5px;
   height: 100%;
-  background: linear-gradient(180deg, var(--brand-deep), var(--accent), var(--highlight));
-}
-
-/* Running footer, provided by global-bottom.vue. */
-.deck-footer {
-  position: absolute;
-  left: 64px;
-  right: 64px;
-  bottom: 24px;
-  display: flex;
-  justify-content: center;
-  align-items: baseline;
-  gap: 8px;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
-  letter-spacing: 0.02em;
-  color: var(--caption);
-  pointer-events: none;
-}
-.deck-footer__page {
-  font-family: 'Tektur', sans-serif;
-  font-size: 15px;
-  color: var(--caption);
+  background: var(--accent);
 }
 
 .slidev-layout h1 {
-  font-family: 'Tektur', sans-serif;
-  font-weight: 600;
-  font-size: 44px;
-  line-height: 1.12;
-  margin: 0 0 16px;
-  color: #FFFFFF;
-}
-.slidev-layout h2 {
-  font-family: 'Tektur', sans-serif;
-  font-weight: 500;
-  font-size: 28px;
-  margin: 0 0 12px;
-  color: var(--secondary);
-}
-.slidev-layout h3 {
-  font-family: 'Tektur', sans-serif;
-  font-size: 22px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 42px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0 0 20px;
   color: var(--text);
 }
-.slidev-layout p { margin: 8px 0; }
+.slidev-layout p { margin: 10px 0; }
 .slidev-layout ul,
-.slidev-layout ol { margin: 8px 0; padding-left: 28px; }
-.slidev-layout li { margin: 8px 0; }
+.slidev-layout ol { margin: 10px 0; padding-left: 26px; }
+.slidev-layout li { margin: 10px 0; }
+.slidev-layout strong { font-weight: 600; }
+.slidev-layout a { color: var(--accent); text-decoration: none; }
 
 .slidev-layout code {
-  font-family: 'DejaVu Sans Mono', monospace;
-  font-size: 0.72em;
-  color: var(--accent-text);
-  background: var(--panel);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.74em;
+  color: var(--accent);
+  background: var(--surface);
   border-radius: 4px;
   padding: 1px 6px;
 }
 .slidev-layout pre {
-  background: var(--panel);
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 5px;
+  border-radius: 6px;
   padding: 12px 16px;
   overflow-x: auto;
 }
@@ -164,214 +120,203 @@ html.light .slidev-layout .kpi { color: #111111; }
   background: none;
   white-space: pre;
   font-size: 13px;
-  line-height: 1.4;
-}
-.slidev-layout strong { color: #FFFFFF; font-weight: 600; }
-.slidev-layout a { color: var(--accent-text); text-decoration: none; }
-.slidev-layout .subtitle {
-  font-size: 26px;
-  color: var(--secondary);
-  margin-top: 8px;
-}
-.slidev-layout .meta {
-  margin-top: 30px;
-  color: var(--secondary);
-  font-size: 20px;
+  color: var(--text);
 }
 
-.slidev-layout.cover { justify-content: center; }
-.slidev-layout.cover h1 { font-size: 60px; }
-.slidev-layout.cover .subtitle {
-  font-size: 26px;
-  color: var(--secondary);
-  margin-top: 8px;
-}
-.slidev-layout.cover .meta {
-  margin-top: 30px;
-  color: var(--secondary);
-  font-size: 20px;
-}
-.slidev-layout.cover .logo {
-  position: absolute;
-  right: 64px;
-  top: 44px;
-  width: 80px;
-  height: 80px;
-}
-
-.divider { justify-content: center; align-items: flex-start; }
-.divider .index {
-  font-family: 'Tektur', sans-serif;
-  font-weight: 600;
-  font-size: 80px;
-  color: var(--accent-text);
-  line-height: 1;
-}
-.divider h1 { font-size: 52px; margin-top: 8px; }
-.divider .bar {
-  margin-top: 22px;
-  height: 6px;
-  width: 340px;
-  border-radius: 5px;
-  background: linear-gradient(90deg, var(--brand-deep), var(--accent), var(--highlight));
-}
-
-.cols {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
-  align-items: start;
-}
-.cols-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
-}
-.figure {
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  overflow: hidden;
-}
-.figure img { display: block; width: 100%; border-radius: 5px; }
 .caption {
   color: var(--caption);
   font-size: 16px;
-  margin-top: 8px;
-}
-.kpi {
-  font-family: 'Tektur', sans-serif;
-  font-size: 46px;
-  color: #FFFFFF;
-  line-height: 1.1;
-}
-.kpi-label { color: var(--secondary); font-size: 18px; }
-.card {
-  background: var(--panel);
-  border-left: 4px solid var(--highlight);
-  border-radius: 5px;
-  padding: 16px 20px;
-}
-.card.hi { background: var(--panel-hi); }
-.tag {
-  display: inline-block;
-  font-size: 16px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 2px 10px;
-  margin-right: 8px;
-  color: var(--secondary);
+  margin-top: 10px;
 }
 
-.status-matched { color: var(--matched); }
-.status-mismatched { color: var(--mismatched); }
-.status-ambiguous { color: var(--ambiguous); }
-.status-incomplete { color: var(--incomplete); }
-.status-uncovered { color: var(--uncovered); }
-.status-not-applicable { color: var(--not-applicable); }
-
-.icon {
-  width: 26px;
-  height: 26px;
-  vertical-align: -4px;
-  margin-right: 10px;
-}
-
-.slidev-layout table {
-  border-collapse: collapse;
-  margin: 12px 0;
-  font-size: 20px;
-}
-.slidev-layout th,
-.slidev-layout td {
-  border-bottom: 1px solid var(--line);
-  padding: 7px 18px;
-  text-align: left;
-}
-.slidev-layout th { color: var(--secondary); font-weight: 600; }
-
-#slidev-page {
+/* --- running footer (global-bottom.vue) ---------------------------------- */
+.deck-footer {
   position: absolute;
-  right: 64px;
-  bottom: 24px;
-  font-family: 'Tektur', sans-serif;
-  font-size: 15px;
+  left: var(--pad-x);
+  right: var(--pad-x);
+  bottom: 22px;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
   color: var(--caption);
+  pointer-events: none;
+}
+.deck-footer .deck-footer__page {
+  font-family: 'JetBrains Mono', monospace;
 }
 
-.slidev-vclick-target { transition: all 0.24s ease; }
-.slidev-vclick-hidden { opacity: 0; transform: translateY(6px); }
+/* --- layout: title -------------------------------------------------------- */
+.title-slide {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  height: 100%;
+}
+.title-avatar {
+  width: 220px;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  flex: none;
+}
+.title-text h1 { font-size: 54px; margin-bottom: 16px; }
+.title-line { font-size: 20px; color: var(--secondary); }
 
-@media print {
-  .slidev-layout::before,
-  .slidev-layout::after {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
+/* --- layout: generic two-column ------------------------------------------- */
+.cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+.center { display: flex; justify-content: center; align-items: center; height: 100%; }
+.avatar-lg {
+  width: 260px;
+  height: 260px;
+  object-fit: cover;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+}
+.lead {
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
 }
 
-.wrap-center {
+/* --- layout: statement (one big sentence) --------------------------------- */
+.statement {
   display: flex;
   flex-direction: column;
   justify-content: center;
   height: 100%;
 }
-.team {
+.statement h1 { font-size: 56px; max-width: 15ch; margin-bottom: 22px; }
+.statement-sub { font-size: 24px; color: var(--secondary); }
+
+/* --- layout: work moment (a human aside) ---------------------------------- */
+.moment {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 48px;
+  flex-direction: column;
+  justify-content: center;
   height: 100%;
+  border-left: 4px solid var(--accent);
+  padding-left: 32px;
 }
-.team-avatar {
-  width: 240px;
-  height: 240px;
-  object-fit: cover;
-  border-radius: 16px;
-  border: 2px solid var(--line);
-  flex: none;
-}
-.team-info { flex: 1; }
-.team-info h1 { margin: 0 0 12px; }
-.web-shot {
+.moment h1 { font-size: 40px; max-width: 24ch; margin-bottom: 18px; }
+.moment-sub { font-size: 22px; color: var(--secondary); max-width: 42ch; }
+
+/* --- layout: diagram ------------------------------------------------------ */
+.diagram {
   display: block;
   width: 100%;
-  max-height: 520px;
+  max-height: 400px;
+  margin: 12px auto 0;
+  object-fit: contain;
+}
+
+/* --- layout: figure / screenshot ------------------------------------------ */
+.figure {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.figure img { display: block; width: 100%; }
+.slidev-layout .figure img { max-height: 350px; object-fit: cover; object-position: top; }
+
+/* --- layout: byte card ---------------------------------------------------- */
+.byte-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 22px 24px;
+}
+.byte-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 30px;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+.byte-note { margin-top: 14px; font-size: 18px; color: var(--secondary); }
+
+/* --- layout: divider ------------------------------------------------------ */
+.divider { display: flex; flex-direction: column; justify-content: center; height: 100%; }
+.divider .index {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 72px;
+  color: var(--accent);
+  line-height: 1;
+}
+.divider h1 { font-size: 50px; margin: 12px 0 0; }
+.divider .bar { margin-top: 24px; height: 5px; width: 300px; background: var(--accent); }
+
+/* --- layout: single metric ------------------------------------------------ */
+.metric { display: flex; flex-direction: column; justify-content: center; height: 100%; }
+.metric h1 { font-size: 34px; color: var(--secondary); font-weight: 600; margin-bottom: 8px; }
+.bignum {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 132px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--accent);
+}
+.metric-note { margin-top: 18px; font-size: 22px; color: var(--text); max-width: 46ch; }
+
+/* --- layout: full-bleed screenshot / video -------------------------------- */
+.fullshot { display: flex; flex-direction: column; height: 100%; }
+.fullshot h1 { margin-bottom: 12px; }
+.fullshot img {
+  display: block;
+  width: 100%;
+  max-height: 390px;
   object-fit: cover;
   object-position: top;
   border: 1px solid var(--line);
-  border-radius: 5px;
+  border-radius: 8px;
 }
-.slidev-layout .arch {
+.cast {
   display: block;
   width: 100%;
-  max-height: 420px;
-  margin: 8px auto 0;
+  max-height: 390px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #000;
 }
-/* Web slide: the screenshot keeps 60% and the three points take 40%. */
-.cols-60-40 {
-  display: grid;
-  grid-template-columns: 3fr 2fr;
-  gap: 30px;
-  align-items: start;
-}
-/* Final slide: three KPI figures and two labelled QR codes. */
-.kpi-row { align-items: start; }
-.qr-row {
+
+/* --- layout: closing (conclusion + QR) ------------------------------------ */
+.closing {
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  gap: 56px;
+  align-items: center;
+  height: 100%;
+  text-align: center;
 }
+.closing h1 { font-size: 44px; max-width: 20ch; margin-bottom: 36px; }
+.qr-row { display: flex; gap: 56px; }
 .qr-item { text-align: center; }
-.qr-item .caption { margin-top: 4px; }
-.slidev-layout .w-40 { width: 160px; }
-.slidev-layout .thanks {
-  margin-top: 22px;
-  font-family: 'Tektur', sans-serif;
-  font-size: 24px;
+.qr-item img { width: 150px; height: 150px; display: block; }
+.qr-item .caption { margin-top: 6px; }
+.closing-line {
+  margin-top: 30px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
   color: var(--secondary);
 }
-.slidev-layout p,
-.slidev-layout li { font-size: 22px; }
+
+/* --- shared bits ---------------------------------------------------------- */
+.card {
+  background: var(--surface);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  padding: 14px 18px;
+  font-size: 18px;
+}
 
 html, body, #app, #slide-container, .slidev-page, .slidev-slide-container,
 .slidev-layout {
