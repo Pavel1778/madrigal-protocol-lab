@@ -83,7 +83,7 @@ strings in the public API.
 start of the audit (119 tests, 1 skipped); the second is the state after the
 boundary tests added in this iteration (177 tests, 1 skipped). The counts in
 this section are the historical ones from that iteration; the suite has since
-grown to 768 tests (section 11).
+grown to 781 tests (section 11).
 
 Before:
 
@@ -181,7 +181,7 @@ and every command in `README.md` and `docs/USAGE.md` was run:
 - `python -m src.project.cli create/add-capture/open/export/import` round trip
   reports `"broken": []`.
 - `pytest tests/ -q` gives 177 passed, 1 skipped (the historical count of that
-  iteration; the suite is 768 tests at the final revision, section 11).
+  iteration; the suite is 781 tests at the final revision, section 11).
 
 The one command that cannot run from this branch is the rule path in sections 4
 and 6 of `docs/USAGE.md`, because `src.protocol` ships with the protocol/GUI
@@ -254,7 +254,7 @@ nothing.
 After the merge:
 
 - `pytest tests/ -q` reports 385 passed (the historical count at that merge;
-  the suite is 768 tests at the final revision, section 11).
+  the suite is 781 tests at the final revision, section 11).
 - `ruff check . --select "E4,E7,E9,F" --ignore E501` reports All checks passed.
 - CI run 37983669575 is green: the test matrix (3.12 and 3.13 on
   `ubuntu-latest`, 3.12 on `ubuntu-22.04`), `code-quality`, and
@@ -269,14 +269,14 @@ the perceptual baseline comparison and the repository hygiene were merged into
 | Item | Value |
 | --- | --- |
 | `main` head | the merge of the presentation work into `main` (`519c585`) |
-| Suite (checkout) | 768 passed, 0 skipped |
-| Suite (`submission_*.zip` from release v1.0.0, clean unpack) | 767 passed, 1 skipped (the executable-bit test; a zip drops the mode) |
+| Suite (checkout) | 781 passed, 0 skipped |
+| Suite (`submission_*.zip` from release v1.0.0, clean unpack) | 780 passed, 1 skipped (the executable-bit test; a zip drops the mode) |
 | Lint | `ruff check . --select "E4,E7,E9,F" --ignore E501`: All checks passed |
 | Coverage | 90% over `src/` (`pytest --cov=src`); the largest gap is `src/ui/` wiring |
 | CI | green on `main`: test matrix (3.12 and 3.13), `ui` matrix, `code-quality`, `dependency-audit` |
 | Largest tracked file | `presentation/presentation_html.zip`, 1.8 MiB, well under 5 MiB |
 | Submission archive | `submission_20261011_1316.zip`, the published `v1.0.0` asset |
-| Fresh unpack | 767 passed, 1 skipped from a clean unpack of that asset |
+| Fresh unpack | 780 passed, 1 skipped from a clean unpack of that asset |
 
 Trace checks at this revision:
 

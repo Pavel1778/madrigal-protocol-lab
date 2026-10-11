@@ -138,7 +138,7 @@ is the merge of PR #14 (`f637644`); the entries below are the work that followed
   revision, and the deck and verification documents resynced to the 19-slide
   deck (PR #16, PR #18, PR #25, PR #26).
 - The README, the audit, the portability report and the presentation
-  verification now quote 768 tests and the published `v1.0.0` archive
+  verification now quote 781 tests and the published `v1.0.0` archive
   (PR #26).
 
 ### Fixed

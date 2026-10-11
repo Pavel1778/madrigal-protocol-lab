@@ -26,7 +26,7 @@ message is classified. Rule v2 transfers to `corpus_capture_02` with 40 matched
 and 0 counterexamples, and fails openly on `synthetic_live`. See `REPORT.md`
 sections 7-8, `tests/integration/test_reference_report.py`.
 
-## 4. Why 768 tests, and not more?
+## 4. Why 781 tests, and not more?
 
 The suite covers every module and every status the engine can emit, including
 the boundary and defect fixtures; coverage is 90 % over `src/`, and the
@@ -108,7 +108,7 @@ next version. A reader can always tell which rule produced which verdict. See
 
 The investigation is a portable directory: relative paths plus sha256 digests,
 exportable and importable as a zip with integrity checking. A clean unpack runs
-the whole suite (767 passed, 1 skipped from the published archive). See
+the whole suite (780 passed, 1 skipped from the published archive). See
 `docs/PORTABILITY.md`, `src/project/`.
 
 ## Where to look next
