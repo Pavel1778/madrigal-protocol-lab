@@ -2,9 +2,10 @@
 
 Twenty-eight questions a reviewer is likely to ask, with the answer and the file,
 command or figure that backs it. Nothing here is asserted without a source. The
-twenty-eight were re-checked against `main = 519c585`; every path and test name
-below resolves, and the figures match `docs/METRICS.md`. A shorter list for a
-judge who wants the essentials first is `docs/FAQ_FOR_JUDGES.md`.
+twenty-eight were re-checked against the repository at the final revision; every
+path and test name below resolves, and the figures match `docs/METRICS.md`. A
+shorter list for a judge who wants the essentials first is
+`docs/FAQ_FOR_JUDGES.md`.
 
 ## 1. How do you keep an observation separate from a hypothesis?
 

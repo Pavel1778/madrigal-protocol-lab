@@ -289,6 +289,10 @@ v2 на том же корпусе: 140 matched, 0 mismatched, точность 
 - [docs/INTEGRATION.md](docs/INTEGRATION.md) — стыковка стадий и проверка шва.
 - [docs/BENCHMARK.md](docs/BENCHMARK.md) — время и память на эталонной нагрузке.
 - [docs/METRICS.md](docs/METRICS.md) — числа с указанием источника.
+- [docs/DEFENSE_CHECKLIST.md](docs/DEFENSE_CHECKLIST.md) — предполётный список к защите.
+- [docs/DEMO_CHEATSHEET.md](docs/DEMO_CHEATSHEET.md) — одностраничник для печати на защиту.
+- [docs/DEFENSE_FAQ.md](docs/DEFENSE_FAQ.md) и [docs/FAQ_FOR_JUDGES.md](docs/FAQ_FOR_JUDGES.md) — вероятные вопросы и ответы.
+- [presentation/Q_and_A.md](presentation/Q_and_A.md) — пятнадцать вопросов защиты в сжатой форме.
 - [docs/SETTINGS.md](docs/SETTINGS.md) — диалог настроек и хранимые ключи.
 - [docs/WEB.md](docs/WEB.md) — локальный веб-интерфейс: установка, запуск, объём.
 - [docs/PORTABILITY.md](docs/PORTABILITY.md) — проверенные окружения.
