@@ -176,3 +176,20 @@ python -m src.protocol.cli alternatives --rule examples/corpus_rule_v1.json \
 ```
 
 The framing census is produced by `scripts/run_reference_investigation.py`.
+
+## 10. The organizer dataset
+
+This analysis uses the synthetic corpus, because it exercises the framing
+choices deliberately. The organizer supplied a second, independent capture set
+for the thermal-stand protocol; it is committed under `tests/corpus/real/` and
+studied in `docs/REAL_CORPUS_ANALYSIS.md`. It runs the same loop against a
+different protocol (`0xa65c` magic, a header-counting length field): the naive
+rule leaves six counterexamples, the header-bias rule clears them, and all 90
+messages across four captures match with full byte coverage. The synthetic
+corpus stays the reference for the framing discussion; the real corpus is the
+applicability check.
+
+```
+python -m scripts.investigate_dataset
+python -m pytest tests/hypothesis/test_real_corpus.py -q
+```

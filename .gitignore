@@ -27,6 +27,12 @@ out/
 # PyInstaller
 *.spec
 
+# Build outputs
+*.deb
+*.AppImage
+*.run
+*.whl
+
 # Presentation (Slidev) build artifacts
 presentation/node_modules/
 presentation/dist/
