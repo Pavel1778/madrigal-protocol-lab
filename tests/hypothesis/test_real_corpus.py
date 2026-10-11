@@ -268,3 +268,42 @@ def test_investigation_report_is_reproducible() -> None:
 
     committed = (REPO_ROOT / "docs" / "DATASET_INVESTIGATION.md").read_text(encoding="utf-8")
     assert build_report() == committed
+
+
+def test_corpus_totals_match_the_published_figures() -> None:
+    """The aggregate numbers quoted in docs/REAL_CORPUS_ANALYSIS.md."""
+    sessions = 0
+    requests = 0
+    responses = 0
+    for name in RESEARCH:
+        capture = _capture(str(RESEARCH[name]))
+        sessions += len({session_id for session_id, _, _ in capture.iter_streams()})
+        for rule_name in ("thermostand_request_v2.json", "thermostand_response_v2.json"):
+            messages = _messages(name, rule_name)
+            assert _counts(messages).get("matched", 0) == len(messages)
+            if rule_name == "thermostand_request_v2.json":
+                requests += len(messages)
+            else:
+                responses += len(messages)
+    assert sessions == 5
+    assert requests == 45
+    assert responses == 45
+
+
+def test_every_research_request_correlates_with_the_journal() -> None:
+    """Every decoded request maps to a recorded operator action."""
+    entries = load_journal(str(REAL / "action_journal.csv"))
+    for name in RESEARCH:
+        messages = _messages(name, "thermostand_request_v2.json")
+        report = correlate(messages, entries)
+        assert len(report.correlated) == len(messages)
+
+
+def test_naive_request_rule_leaves_six_counterexamples() -> None:
+    """The v1 to v2 refinement is the documented counterexample story."""
+    streams = _corpus_streams("01_configuration")
+    naive = verify_on_corpus(load_rule(str(EXAMPLES / "thermostand_request_v1.json")), streams)
+    assert len(naive.contradictions) == 6
+    refined = verify_on_corpus(load_rule(str(EXAMPLES / "thermostand_request_v2.json")), streams)
+    assert not refined.contradictions
+    assert refined.totals["matched"] == 14
