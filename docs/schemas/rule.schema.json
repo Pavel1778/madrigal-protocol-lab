@@ -46,6 +46,10 @@
           "deprecated": true,
           "description": "Deprecated in favour of length_covers. true maps to entire_message, false maps to payload."
         },
+        "length_bias": {
+          "type": "integer",
+          "description": "Added to the message length after length_covers is applied. Zero when the length field is the last header field; it accounts for a fixed-size header part that lies between the length field and the payload (for example magic, counter and type)."
+        },
         "size": { "type": "integer", "minimum": 0 },
         "start_bytes": {},
         "end_bytes": {},
@@ -99,6 +103,11 @@
           "enum": ["uint8", "uint16", "uint32", "int8", "int16", "int32", "bytes"]
         },
         "element_length": { "type": "integer", "minimum": 0 },
+        "element_stride": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Distance in bytes between the start of consecutive elements. Defaults to the element size. It is larger than the element size when a record interleaves fixed fields (for example a timestamp, a value and a flag)."
+        },
         "count": { "type": "integer", "minimum": 0 },
         "count_field": { "type": "string", "minLength": 1 },
         "algorithm": { "type": "string", "enum": ["xor", "sum", "crc8", "crc16"] },
@@ -115,7 +124,7 @@
         },
         {
           "if": { "properties": { "type": { "const": "string" } }, "required": ["type"] },
-          "then": { "anyOf": [{ "required": ["length"] }, { "required": ["terminated"] }] }
+          "then": { "anyOf": [{ "required": ["length"] }, { "required": ["terminated"] }, { "required": ["count_field"] }] }
         },
         {
           "if": { "properties": { "type": { "const": "array" } }, "required": ["type"] },
@@ -144,13 +153,18 @@
     },
     "condition": {
       "type": "object",
-      "additionalProperties": false,
-      "required": ["field", "op"],
       "properties": {
         "field": { "type": "string", "minLength": 1 },
-        "op": { "type": "string", "enum": ["eq", "ne", "bit_set", "bit_clear", "gt", "lt"] },
-        "value": {}
-      }
+        "op": { "type": "string", "enum": ["eq", "ne", "in", "bit_set", "bit_clear", "gt", "lt"] },
+        "value": {},
+        "all": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/condition" } },
+        "any": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/condition" } }
+      },
+      "anyOf": [
+        { "required": ["field", "op"] },
+        { "required": ["all"] },
+        { "required": ["any"] }
+      ]
     },
     "expression": {
       "type": "object",

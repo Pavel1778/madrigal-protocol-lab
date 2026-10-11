@@ -40,10 +40,14 @@ def normalize(
     capture_id: str | None = None,
     ignore_checksums: bool = True,
 ) -> NormalizedCapture:
-    """Read ``path`` and return its sessions and reassembled streams."""
+    """Read ``path`` and return its sessions and reassembled streams.
+
+    When ``ignore_checksums`` is false the per-packet TCP checksum is verified
+    and a mismatch becomes a ``checksum_offload`` diagnostic on the stream.
+    """
 
     diagnostics: list[Diagnostic] = []
-    packets = list(read_capture(path, diagnostics))
+    packets = list(read_capture(path, diagnostics, verify_checksums=not ignore_checksums))
     logger.info("read %d packet(s) from %s", len(packets), path)
     result = normalize_packets(
         packets,

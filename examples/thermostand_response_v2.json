@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "rule_id": "thermostand_response",
+  "rule_version": 2,
+  "name": "thermostand_response_v2",
+  "scope": {"direction": "B_to_A"},
+  "framing": {
+    "type": "length_prefixed",
+    "length_offset": 2,
+    "length_size": 2,
+    "byte_order": "big",
+    "length_covers": "payload",
+    "length_bias": 4
+  },
+  "fields": [
+    {"name": "magic", "offset": 0, "type": "uint16", "byte_order": "big", "expected": [42588]},
+    {"name": "body_length", "offset": 2, "type": "uint16", "byte_order": "big"},
+    {"name": "message_counter", "offset": 4, "type": "uint16", "byte_order": "big"},
+    {"name": "message_type", "offset": 6, "type": "enum", "length": 2, "byte_order": "big",
+     "enum": {"config": 272, "config_ack": 288, "values": 304, "unsupported": 382}},
+    {"name": "status", "offset": 8, "type": "enum", "length": 1,
+     "enum": {"ok": 0, "unsupported_command": 1, "malformed_body": 2,
+              "value_out_of_range": 3, "measurement_disabled": 4}},
+
+    {"name": "enabled", "offset": 9, "type": "uint8", "hypothesis": true,
+     "condition": {"all": [{"field": "message_type", "op": "in", "value": ["config", "config_ack"]}, {"field": "status", "op": "eq", "value": "ok"}]}},
+    {"name": "period_ms", "offset": 10, "type": "uint16", "byte_order": "big", "hypothesis": true,
+     "condition": {"all": [{"field": "message_type", "op": "in", "value": ["config", "config_ack"]}, {"field": "status", "op": "eq", "value": "ok"}]}},
+    {"name": "threshold_raw", "offset": 12, "type": "int16", "byte_order": "big", "hypothesis": true,
+     "condition": {"all": [{"field": "message_type", "op": "in", "value": ["config", "config_ack"]}, {"field": "status", "op": "eq", "value": "ok"}]}},
+    {"name": "label_length", "offset": 14, "type": "uint8",
+     "condition": {"all": [{"field": "message_type", "op": "in", "value": ["config", "config_ack"]}, {"field": "status", "op": "eq", "value": "ok"}]}},
+    {"name": "label", "offset": 15, "type": "string", "encoding": "utf-8", "count_field": "label_length", "hypothesis": true,
+     "condition": {"all": [{"field": "message_type", "op": "in", "value": ["config", "config_ack"]}, {"field": "status", "op": "eq", "value": "ok"}]}},
+
+    {"name": "measurement_count", "offset": 9, "type": "uint8",
+     "condition": {"all": [
+       {"field": "message_type", "op": "eq", "value": "values"},
+       {"field": "status", "op": "eq", "value": "ok"}
+     ]}},
+    {"name": "device_time_ms", "offset": 10, "type": "array", "element_type": "uint32",
+     "element_stride": 7, "byte_order": "big", "count_field": "measurement_count", "hypothesis": true,
+     "condition": {"all": [
+       {"field": "message_type", "op": "eq", "value": "values"},
+       {"field": "status", "op": "eq", "value": "ok"}
+     ]}},
+    {"name": "temperature_raw", "offset": 14, "type": "array", "element_type": "int16",
+     "element_stride": 7, "byte_order": "big", "count_field": "measurement_count", "hypothesis": true,
+     "condition": {"all": [
+       {"field": "message_type", "op": "eq", "value": "values"},
+       {"field": "status", "op": "eq", "value": "ok"}
+     ]}},
+    {"name": "alarm", "offset": 16, "type": "array", "element_type": "uint8",
+     "element_stride": 7, "count_field": "measurement_count", "hypothesis": true,
+     "condition": {"all": [
+       {"field": "message_type", "op": "eq", "value": "values"},
+       {"field": "status", "op": "eq", "value": "ok"}
+     ]}}
+  ]
+}
