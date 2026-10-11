@@ -1,0 +1,1032 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="792pt" height="288pt" viewBox="0 0 792 288" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-11T16:02:35.212604</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 288 
+L 792 288 
+L 792 0 
+L 0 0 
+z
+" style="fill: #fafafa"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 27.2352 93.777049 
+L 97.0848 93.777049 
+Q 99.1392 93.777049 99.1392 86.789508 
+L 99.1392 39.623607 
+Q 99.1392 32.636066 97.0848 32.636066 
+L 27.2352 32.636066 
+Q 25.1808 32.636066 25.1808 39.623607 
+L 25.1808 86.789508 
+Q 25.1808 93.777049 27.2352 93.777049 
+z
+" clip-path="url(#p8ca99bf7c0)" style="fill: #efefef; stroke: #c7311c; stroke-width: 1.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 104.2752 93.777049 
+L 148.4448 93.777049 
+Q 150.4992 93.777049 150.4992 86.789508 
+L 150.4992 39.623607 
+Q 150.4992 32.636066 148.4448 32.636066 
+L 104.2752 32.636066 
+Q 102.2208 32.636066 102.2208 39.623607 
+L 102.2208 86.789508 
+Q 102.2208 93.777049 104.2752 93.777049 
+z
+" clip-path="url(#p8ca99bf7c0)" style="fill: #efefef; stroke: #c7311c; stroke-width: 1.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 155.6352 93.777049 
+L 456.6048 93.777049 
+Q 458.6592 93.777049 458.6592 86.789508 
+L 458.6592 39.623607 
+Q 458.6592 32.636066 456.6048 32.636066 
+L 155.6352 32.636066 
+Q 153.5808 32.636066 153.5808 39.623607 
+L 153.5808 86.789508 
+Q 153.5808 93.777049 155.6352 93.777049 
+z
+" clip-path="url(#p8ca99bf7c0)" style="fill: #efefef; stroke: #c7311c; stroke-width: 1.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="text_1">
+    <!-- Пакет 1 -->
+    <g style="fill: #1a1a1a" transform="translate(40.02 67.406557) scale(0.12 -0.12)">
+     <defs>
+      <path id="Tektur-Medium-33f" d="M 358 0 
+L 358 4480 
+L 3802 4480 
+L 3802 0 
+L 3059 0 
+L 3059 3827 
+L 1101 3827 
+L 1101 0 
+L 358 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-350" d="M 294 640 
+L 294 2048 
+L 2739 2112 
+L 2739 2944 
+L 422 2944 
+L 422 3584 
+L 2842 3584 
+L 3482 2944 
+L 3482 0 
+L 934 0 
+L 294 640 
+z
+M 1037 1510 
+L 1037 627 
+L 2739 627 
+L 2739 1638 
+L 1037 1510 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-35a" d="M 358 0 
+L 358 3584 
+L 1101 3584 
+L 1101 2182 
+L 2144 2182 
+L 3021 3584 
+L 3866 3584 
+L 2790 1933 
+L 3917 0 
+L 3078 0 
+L 2214 1542 
+L 1101 1542 
+L 1101 0 
+L 358 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-355" d="M 320 627 
+L 320 2957 
+L 947 3584 
+L 3456 3584 
+L 3456 1587 
+L 1062 1587 
+L 1062 640 
+L 3328 640 
+L 3328 0 
+L 947 0 
+L 320 627 
+z
+M 1062 2061 
+L 2784 2125 
+L 2784 2970 
+L 1062 2970 
+L 1062 2061 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-362" d="M 2163 0 
+L 2163 2931 
+L 3456 2931 
+L 3456 3584 
+L 128 3584 
+L 128 2931 
+L 1421 2931 
+L 1421 0 
+L 2163 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-1" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-243" d="M 288 -26 
+L 288 595 
+L 1056 627 
+L 1056 3674 
+L 339 3616 
+L 339 4224 
+L 1798 4480 
+L 1798 627 
+L 2464 595 
+L 2464 -26 
+L 1376 26 
+L 288 -26 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#Tektur-Medium-33f"/>
+     <use xlink:href="#Tektur-Medium-350" transform="translate(65 0)"/>
+     <use xlink:href="#Tektur-Medium-35a" transform="translate(125 0)"/>
+     <use xlink:href="#Tektur-Medium-355" transform="translate(185 0)"/>
+     <use xlink:href="#Tektur-Medium-362" transform="translate(244 0)"/>
+     <use xlink:href="#Tektur-Medium-1" transform="translate(300 0)"/>
+     <use xlink:href="#Tektur-Medium-243" transform="translate(326 0)"/>
+    </g>
+   </g>
+   <g id="text_2">
+    <!-- Пакет 2 -->
+    <g style="fill: #1a1a1a" transform="translate(102.9 67.406557) scale(0.12 -0.12)">
+     <defs>
+      <path id="Tektur-Medium-244" d="M 3808 653 
+L 3808 0 
+L 352 0 
+L 352 2304 
+L 3066 2624 
+L 3066 3827 
+L 403 3827 
+L 403 4480 
+L 3206 4480 
+L 3808 3878 
+L 3808 2086 
+L 1094 1766 
+L 1094 653 
+L 3808 653 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#Tektur-Medium-33f"/>
+     <use xlink:href="#Tektur-Medium-350" transform="translate(65 0)"/>
+     <use xlink:href="#Tektur-Medium-35a" transform="translate(125 0)"/>
+     <use xlink:href="#Tektur-Medium-355" transform="translate(185 0)"/>
+     <use xlink:href="#Tektur-Medium-362" transform="translate(244 0)"/>
+     <use xlink:href="#Tektur-Medium-1" transform="translate(300 0)"/>
+     <use xlink:href="#Tektur-Medium-244" transform="translate(326 0)"/>
+    </g>
+   </g>
+   <g id="text_3">
+    <!-- Пакет 3 -->
+    <g style="fill: #1a1a1a" transform="translate(282.875625 67.406557) scale(0.12 -0.12)">
+     <defs>
+      <path id="Tektur-Medium-245" d="M 3110 0 
+L 192 0 
+L 192 640 
+L 2944 640 
+L 2944 1984 
+L 576 1984 
+L 576 2611 
+L 2816 2611 
+L 2816 3840 
+L 256 3840 
+L 256 4480 
+L 2982 4480 
+L 3571 3891 
+L 3571 2630 
+L 3194 2342 
+L 3699 1946 
+L 3699 589 
+L 3110 0 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#Tektur-Medium-33f"/>
+     <use xlink:href="#Tektur-Medium-350" transform="translate(65 0)"/>
+     <use xlink:href="#Tektur-Medium-35a" transform="translate(125 0)"/>
+     <use xlink:href="#Tektur-Medium-355" transform="translate(185 0)"/>
+     <use xlink:href="#Tektur-Medium-362" transform="translate(244 0)"/>
+     <use xlink:href="#Tektur-Medium-1" transform="translate(300 0)"/>
+     <use xlink:href="#Tektur-Medium-245" transform="translate(326 0)"/>
+    </g>
+   </g>
+   <g id="patch_5">
+    <path d="M 467.339037 63.206557 
+Q 621.985653 63.206557 775.067022 63.206557 
+" style="fill: none; stroke: #c9c9c9; stroke-width: 1.4; stroke-linecap: round"/>
+    <path d="M 771.067022 61.206557 
+L 775.067022 63.206557 
+L 771.067022 65.206557 
+z
+" style="fill: #c9c9c9; stroke: #c9c9c9; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="text_4">
+    <!-- дальше -->
+    <g style="fill: #4a4a4a" transform="translate(602.109781 53.709016) scale(0.1 -0.1)">
+     <defs>
+      <path id="Montserrat-Regular-39b" d="M 653 314 
+L 198 397 
+Q 397 390 525 540 
+Q 653 691 723 953 
+Q 794 1216 826 1552 
+Q 858 1888 877 2240 
+L 922 3360 
+L 3405 3360 
+L 3405 218 
+L 2950 218 
+L 2950 2963 
+L 1331 2963 
+L 1293 2214 
+Q 1280 1875 1251 1548 
+Q 1222 1222 1155 950 
+Q 1088 678 966 508 
+Q 845 339 653 314 
+z
+M 58 -813 
+L 58 397 
+L 3930 397 
+L 3930 -813 
+L 3501 -813 
+L 3501 0 
+L 486 0 
+L 486 -813 
+L 58 -813 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-392" d="M 2733 0 
+L 2733 742 
+L 2714 864 
+L 2714 2106 
+Q 2714 2534 2474 2764 
+Q 2234 2995 1760 2995 
+Q 1434 2995 1139 2886 
+Q 845 2778 640 2598 
+L 436 2938 
+Q 692 3155 1050 3273 
+Q 1408 3392 1805 3392 
+Q 2458 3392 2813 3069 
+Q 3168 2746 3168 2086 
+L 3168 0 
+L 2733 0 
+z
+M 1575 -32 
+Q 1197 -32 918 93 
+Q 640 218 493 438 
+Q 346 659 346 947 
+Q 346 1210 471 1424 
+Q 596 1638 880 1769 
+Q 1165 1901 1645 1901 
+L 2804 1901 
+L 2804 1562 
+L 1658 1562 
+Q 1172 1562 983 1389 
+Q 794 1216 794 960 
+Q 794 672 1018 499 
+Q 1242 326 1645 326 
+Q 2029 326 2307 502 
+Q 2586 678 2714 1011 
+L 2816 698 
+Q 2688 365 2371 166 
+Q 2055 -32 1575 -32 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-3a7" d="M 358 -38 
+Q 282 -38 202 -25 
+Q 122 -13 32 6 
+L 64 397 
+Q 109 390 150 380 
+Q 192 371 224 371 
+Q 429 371 553 524 
+Q 678 678 742 934 
+Q 806 1190 832 1513 
+Q 858 1837 877 2163 
+L 934 3360 
+L 3398 3360 
+L 3398 0 
+L 2944 0 
+L 2944 3098 
+L 3059 2963 
+L 1229 2963 
+L 1338 3104 
+L 1286 2131 
+Q 1267 1696 1219 1299 
+Q 1171 902 1072 601 
+Q 973 301 800 131 
+Q 627 -38 358 -38 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-3b8" d="M 2003 -6 
+L 646 0 
+L 646 3360 
+L 1101 3360 
+L 1101 2189 
+L 2093 2176 
+Q 2726 2170 3056 1894 
+Q 3386 1619 3386 1101 
+Q 3386 563 3030 275 
+Q 2675 -13 2003 -6 
+z
+M 1978 339 
+Q 2445 333 2685 528 
+Q 2925 723 2925 1101 
+Q 2925 1478 2688 1654 
+Q 2451 1830 1978 1837 
+L 1101 1850 
+L 1101 352 
+L 1978 339 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-3b5" d="M 646 0 
+L 646 3360 
+L 1101 3360 
+L 1101 275 
+L 986 397 
+L 2854 397 
+L 2752 275 
+L 2752 3360 
+L 3206 3360 
+L 3206 275 
+L 3085 397 
+L 4960 397 
+L 4838 275 
+L 4838 3360 
+L 5293 3360 
+L 5293 0 
+L 646 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-39c" d="M 2087 -32 
+Q 1562 -32 1165 189 
+Q 768 410 544 797 
+Q 320 1184 320 1683 
+Q 320 2182 534 2566 
+Q 749 2950 1123 3171 
+Q 1498 3392 1965 3392 
+Q 2439 3392 2807 3177 
+Q 3175 2963 3386 2576 
+Q 3597 2189 3597 1683 
+Q 3597 1651 3594 1616 
+Q 3591 1581 3591 1542 
+L 666 1542 
+L 666 1882 
+L 3348 1882 
+L 3168 1747 
+Q 3168 2112 3011 2397 
+Q 2855 2682 2586 2842 
+Q 2317 3002 1965 3002 
+Q 1620 3002 1344 2842 
+Q 1069 2682 915 2394 
+Q 762 2106 762 1734 
+L 762 1664 
+Q 762 1280 931 989 
+Q 1101 698 1405 534 
+Q 1709 371 2100 371 
+Q 2407 371 2672 480 
+Q 2938 589 3130 813 
+L 3386 518 
+Q 3162 250 2826 109 
+Q 2490 -32 2087 -32 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#Montserrat-Regular-39b"/>
+     <use xlink:href="#Montserrat-Regular-392" transform="translate(65.09375 0)"/>
+     <use xlink:href="#Montserrat-Regular-3a7" transform="translate(123.390625 0)"/>
+     <use xlink:href="#Montserrat-Regular-3b8" transform="translate(186.59375 0)"/>
+     <use xlink:href="#Montserrat-Regular-3b5" transform="translate(242.890625 0)"/>
+     <use xlink:href="#Montserrat-Regular-39c" transform="translate(335.6875 0)"/>
+    </g>
+   </g>
+   <g id="patch_6">
+    <path d="M 145.014853 126.094426 
+Q 87.842319 126.094426 30.669786 126.094426 
+" style="fill: none; stroke: #2e7d32; stroke-width: 2.2; stroke-linecap: round"/>
+    <path d="M 141.014853 124.094426 
+L 145.014853 126.094426 
+L 141.014853 128.094426 
+" style="fill: none; stroke: #2e7d32; stroke-width: 2.2; stroke-linecap: round"/>
+    <path d="M 34.669786 128.094426 
+L 30.669786 126.094426 
+L 34.669786 124.094426 
+" style="fill: none; stroke: #2e7d32; stroke-width: 2.2; stroke-linecap: round"/>
+   </g>
+   <g id="text_5">
+    <!-- Сообщение A -->
+    <g style="fill: #2e7d32" transform="translate(47.89125 108.519344) scale(0.12 -0.12)">
+     <defs>
+      <path id="Tektur-Medium-341" d="M 352 602 
+L 352 3878 
+L 954 4480 
+L 3283 4480 
+L 3283 3802 
+L 1107 3802 
+L 1107 678 
+L 3347 678 
+L 3347 0 
+L 954 0 
+L 352 602 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-35e" d="M 320 627 
+L 320 2957 
+L 947 3584 
+L 2893 3584 
+L 3520 2957 
+L 3520 627 
+L 2893 0 
+L 947 0 
+L 320 627 
+z
+M 1062 627 
+L 2778 627 
+L 2778 2957 
+L 1062 2957 
+L 1062 627 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-351" d="M 1101 640 
+L 2906 640 
+L 2906 2624 
+L 1101 2624 
+L 1101 640 
+z
+M 998 0 
+L 358 640 
+L 358 3853 
+L 986 4480 
+L 3533 4480 
+L 3533 3853 
+L 1101 3853 
+L 1101 3226 
+L 3123 3226 
+L 3648 2701 
+L 3648 640 
+L 3008 0 
+L 998 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-369" d="M 3251 3584 
+L 3251 653 
+L 4659 653 
+L 4659 3584 
+L 5402 3584 
+L 5402 653 
+L 5824 653 
+L 5824 -896 
+L 5158 -896 
+L 5158 0 
+L 358 0 
+L 358 3584 
+L 1101 3584 
+L 1101 653 
+L 2509 653 
+L 2509 3584 
+L 3251 3584 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-35d" d="M 358 0 
+L 358 3584 
+L 1101 3584 
+L 1101 2118 
+L 2880 2118 
+L 2880 3584 
+L 3622 3584 
+L 3622 0 
+L 2880 0 
+L 2880 1472 
+L 1101 1472 
+L 1101 0 
+L 358 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-358" d="M 3814 0 
+L 3078 0 
+L 3078 2746 
+L 1216 0 
+L 358 0 
+L 358 3584 
+L 1094 3584 
+L 1094 826 
+L 2957 3584 
+L 3814 3584 
+L 3814 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-2" d="M 109 0 
+L 1216 4480 
+L 2957 4480 
+L 4064 0 
+L 3290 0 
+L 3034 1088 
+L 1139 1088 
+L 883 0 
+L 109 0 
+z
+M 1267 1677 
+L 2906 1677 
+L 2381 3866 
+L 1792 3866 
+L 1267 1677 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#Tektur-Medium-341"/>
+     <use xlink:href="#Tektur-Medium-35e" transform="translate(55.203125 0)"/>
+     <use xlink:href="#Tektur-Medium-35e" transform="translate(115.203125 0)"/>
+     <use xlink:href="#Tektur-Medium-351" transform="translate(175.203125 0)"/>
+     <use xlink:href="#Tektur-Medium-369" transform="translate(237.203125 0)"/>
+     <use xlink:href="#Tektur-Medium-355" transform="translate(329.203125 0)"/>
+     <use xlink:href="#Tektur-Medium-35d" transform="translate(388.203125 0)"/>
+     <use xlink:href="#Tektur-Medium-358" transform="translate(450.40625 0)"/>
+     <use xlink:href="#Tektur-Medium-355" transform="translate(515.609375 0)"/>
+     <use xlink:href="#Tektur-Medium-1" transform="translate(574.609375 0)"/>
+     <use xlink:href="#Tektur-Medium-2" transform="translate(600.609375 0)"/>
+    </g>
+   </g>
+   <g id="patch_7">
+    <path d="M 453.170229 126.094426 
+Q 306.117979 126.094426 159.06573 126.094426 
+" style="fill: none; stroke: #8a6d00; stroke-width: 2.2; stroke-linecap: round"/>
+    <path d="M 449.170229 124.094426 
+L 453.170229 126.094426 
+L 449.170229 128.094426 
+" style="fill: none; stroke: #8a6d00; stroke-width: 2.2; stroke-linecap: round"/>
+    <path d="M 163.06573 128.094426 
+L 159.06573 126.094426 
+L 163.06573 124.094426 
+" style="fill: none; stroke: #8a6d00; stroke-width: 2.2; stroke-linecap: round"/>
+   </g>
+   <g id="text_6">
+    <!-- Сообщение B -->
+    <g style="fill: #8a6d00" transform="translate(266.219063 108.519344) scale(0.12 -0.12)">
+     <defs>
+      <path id="Tektur-Medium-4" d="M 1101 2618 
+L 3014 2618 
+L 3014 3853 
+L 1101 3853 
+L 1101 2618 
+z
+M 1101 627 
+L 3136 627 
+L 3136 2029 
+L 1101 2029 
+L 1101 627 
+z
+M 3763 3891 
+L 3763 2682 
+L 3437 2394 
+L 3891 1997 
+L 3891 589 
+L 3302 0 
+L 358 0 
+L 358 4480 
+L 3174 4480 
+L 3763 3891 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#Tektur-Medium-341"/>
+     <use xlink:href="#Tektur-Medium-35e" transform="translate(55.203125 0)"/>
+     <use xlink:href="#Tektur-Medium-35e" transform="translate(115.203125 0)"/>
+     <use xlink:href="#Tektur-Medium-351" transform="translate(175.203125 0)"/>
+     <use xlink:href="#Tektur-Medium-369" transform="translate(237.203125 0)"/>
+     <use xlink:href="#Tektur-Medium-355" transform="translate(329.203125 0)"/>
+     <use xlink:href="#Tektur-Medium-35d" transform="translate(388.203125 0)"/>
+     <use xlink:href="#Tektur-Medium-358" transform="translate(450.40625 0)"/>
+     <use xlink:href="#Tektur-Medium-355" transform="translate(515.609375 0)"/>
+     <use xlink:href="#Tektur-Medium-1" transform="translate(574.609375 0)"/>
+     <use xlink:href="#Tektur-Medium-4" transform="translate(600.609375 0)"/>
+    </g>
+   </g>
+   <g id="text_7">
+    <!-- граница пакета -->
+    <g style="fill: #c62828" transform="translate(60.155781 149.749508) scale(0.1 -0.1)">
+     <defs>
+      <path id="Montserrat-Regular-395" d="M 646 0 
+L 646 3360 
+L 3027 3360 
+L 3027 2963 
+L 986 2963 
+L 1101 3078 
+L 1101 0 
+L 646 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-3ac" d="M 2381 -32 
+Q 1946 -32 1594 169 
+Q 1242 371 1034 752 
+Q 826 1133 826 1683 
+Q 826 2234 1030 2614 
+Q 1235 2995 1587 3193 
+Q 1939 3392 2381 3392 
+Q 2861 3392 3242 3177 
+Q 3623 2963 3840 2576 
+Q 4058 2189 4058 1683 
+Q 4058 1171 3840 787 
+Q 3623 403 3242 185 
+Q 2861 -32 2381 -32 
+z
+M 647 -1242 
+L 647 3360 
+L 1082 3360 
+L 1082 2349 
+L 1037 1677 
+L 1101 998 
+L 1101 -1242 
+L 647 -1242 
+z
+M 2349 371 
+Q 2707 371 2989 534 
+Q 3271 698 3437 995 
+Q 3603 1293 3603 1683 
+Q 3603 2074 3437 2368 
+Q 3271 2662 2989 2828 
+Q 2707 2995 2349 2995 
+Q 1991 2995 1706 2828 
+Q 1421 2662 1258 2368 
+Q 1095 2074 1095 1683 
+Q 1095 1293 1258 995 
+Q 1421 698 1706 534 
+Q 1991 371 2349 371 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-3a9" d="M 646 0 
+L 646 3360 
+L 1101 3360 
+L 1101 1875 
+L 3219 1875 
+L 3219 3360 
+L 3674 3360 
+L 3674 0 
+L 3219 0 
+L 3219 1485 
+L 1101 1485 
+L 1101 0 
+L 646 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-3a1" d="M 646 0 
+L 646 3360 
+L 1101 3360 
+L 1101 691 
+L 3347 3360 
+L 3750 3360 
+L 3750 0 
+L 3296 0 
+L 3296 2675 
+L 1056 0 
+L 646 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-3b4" d="M 646 0 
+L 646 3360 
+L 1101 3360 
+L 1101 397 
+L 3155 397 
+L 3155 3360 
+L 3610 3360 
+L 3610 0 
+L 646 0 
+z
+M 3725 -813 
+L 3725 38 
+L 3840 0 
+L 3155 0 
+L 3155 397 
+L 4154 397 
+L 4154 -813 
+L 3725 -813 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-482" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-3ab" d="M 646 0 
+L 646 3360 
+L 3667 3360 
+L 3667 0 
+L 3213 0 
+L 3213 3085 
+L 3328 2963 
+L 986 2963 
+L 1101 3085 
+L 1101 0 
+L 646 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-3a5" d="M 3110 0 
+L 1728 1664 
+L 2106 1888 
+L 3648 0 
+L 3110 0 
+z
+M 646 0 
+L 646 3360 
+L 1101 3360 
+L 1101 0 
+L 646 0 
+z
+M 960 1498 
+L 960 1888 
+L 2042 1888 
+L 2042 1498 
+L 960 1498 
+z
+M 2144 1632 
+L 1722 1696 
+L 3059 3360 
+L 3552 3360 
+L 2144 1632 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-3ae" d="M 1286 0 
+L 1286 3085 
+L 1402 2963 
+L 13 2963 
+L 13 3360 
+L 3014 3360 
+L 3014 2963 
+L 1626 2963 
+L 1741 3085 
+L 1741 0 
+L 1286 0 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#Montserrat-Regular-395"/>
+     <use xlink:href="#Montserrat-Regular-3ac" transform="translate(47.5 0)"/>
+     <use xlink:href="#Montserrat-Regular-392" transform="translate(115.796875 0)"/>
+     <use xlink:href="#Montserrat-Regular-3a9" transform="translate(174.09375 0)"/>
+     <use xlink:href="#Montserrat-Regular-3a1" transform="translate(241.59375 0)"/>
+     <use xlink:href="#Montserrat-Regular-3b4" transform="translate(310.390625 0)"/>
+     <use xlink:href="#Montserrat-Regular-392" transform="translate(378.796875 0)"/>
+     <use xlink:href="#Montserrat-Regular-482" transform="translate(437.09375 0)"/>
+     <use xlink:href="#Montserrat-Regular-3ab" transform="translate(463.296875 0)"/>
+     <use xlink:href="#Montserrat-Regular-392" transform="translate(530.703125 0)"/>
+     <use xlink:href="#Montserrat-Regular-3a5" transform="translate(589 0)"/>
+     <use xlink:href="#Montserrat-Regular-39c" transform="translate(645.390625 0)"/>
+     <use xlink:href="#Montserrat-Regular-3ae" transform="translate(704.890625 0)"/>
+     <use xlink:href="#Montserrat-Regular-392" transform="translate(752.1875 0)"/>
+    </g>
+   </g>
+   <g id="patch_8">
+    <path d="M 100.68 141.563487 
+Q 100.68 135.702416 100.68 129.841345 
+" style="fill: none; stroke-dasharray: 1.6,2.64; stroke-dashoffset: 0; stroke: #c62828; stroke-width: 1.6; stroke-linecap: round"/>
+   </g>
+   <g id="text_8">
+    <!-- Границы пакета и границы сообщения — разные вещи -->
+    <g style="fill: #1a1a1a" transform="translate(198.898594 201.219836) scale(0.15 -0.15)">
+     <defs>
+      <path id="Tektur-Medium-333" d="M 358 0 
+L 358 4480 
+L 3200 4480 
+L 3200 3814 
+L 1101 3814 
+L 1101 0 
+L 358 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-360" d="M 358 -896 
+L 358 3584 
+L 2995 3584 
+L 3648 2931 
+L 3648 653 
+L 2995 0 
+L 1101 0 
+L 1101 -896 
+L 358 -896 
+z
+M 2906 2944 
+L 1101 2944 
+L 1101 640 
+L 2906 640 
+L 2906 2944 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-366" d="M 3610 3584 
+L 3610 653 
+L 4058 653 
+L 4058 -896 
+L 3392 -896 
+L 3392 0 
+L 358 0 
+L 358 3584 
+L 1101 3584 
+L 1101 653 
+L 2867 653 
+L 2867 3584 
+L 3610 3584 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-36b" d="M 358 0 
+L 358 3584 
+L 1101 3584 
+L 1101 2714 
+L 3021 2714 
+L 3648 2086 
+L 3648 627 
+L 3021 0 
+L 358 0 
+z
+M 1101 627 
+L 2906 627 
+L 2906 2086 
+L 1101 2086 
+L 1101 627 
+z
+M 4326 0 
+L 4326 3584 
+L 5069 3584 
+L 5069 0 
+L 4326 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-35f" d="M 384 0 
+L 384 3584 
+L 3635 3584 
+L 3635 0 
+L 2893 0 
+L 2893 2931 
+L 1126 2931 
+L 1126 0 
+L 384 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-353" d="M 358 0 
+L 358 3584 
+L 2880 3584 
+L 2880 2918 
+L 1101 2918 
+L 1101 0 
+L 358 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-361" d="M 320 627 
+L 320 2957 
+L 947 3584 
+L 3277 3584 
+L 3277 2918 
+L 1062 2918 
+L 1062 666 
+L 3277 666 
+L 3277 0 
+L 947 0 
+L 320 627 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-36f" d="M 1126 1702 
+L 2778 1702 
+L 2778 2957 
+L 1126 2957 
+L 1126 1702 
+z
+M 384 1587 
+L 384 3021 
+L 947 3584 
+L 3520 3584 
+L 3520 0 
+L 2778 0 
+L 2778 1088 
+L 1427 1088 
+L 902 0 
+L 90 0 
+L 755 1216 
+L 384 1587 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-22c" d="M 256 1722 
+L 256 2374 
+L 3584 2374 
+L 3584 1722 
+L 256 1722 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-357" d="M 3456 538 
+L 2918 0 
+L 218 0 
+L 218 627 
+L 2701 627 
+L 2701 1536 
+L 525 1536 
+L 525 2112 
+L 2573 2112 
+L 2573 2957 
+L 282 2957 
+L 282 3584 
+L 2790 3584 
+L 3328 3046 
+L 3328 2163 
+L 2950 1875 
+L 3456 1478 
+L 3456 538 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-352" d="M 358 3584 
+L 358 0 
+L 3098 0 
+L 3622 525 
+L 3622 1485 
+L 3130 1875 
+L 3494 2150 
+L 3494 3059 
+L 2970 3584 
+L 358 3584 
+z
+M 1094 2112 
+L 1094 2982 
+L 2765 2982 
+L 2765 2112 
+L 1094 2112 
+z
+M 1094 602 
+L 1094 1536 
+L 2880 1536 
+L 2880 602 
+L 1094 602 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#Tektur-Medium-333"/>
+     <use xlink:href="#Tektur-Medium-360" transform="translate(51 0)"/>
+     <use xlink:href="#Tektur-Medium-350" transform="translate(113 0)"/>
+     <use xlink:href="#Tektur-Medium-35d" transform="translate(173 0)"/>
+     <use xlink:href="#Tektur-Medium-358" transform="translate(235.203125 0)"/>
+     <use xlink:href="#Tektur-Medium-366" transform="translate(300.40625 0)"/>
+     <use xlink:href="#Tektur-Medium-36b" transform="translate(364.8125 0)"/>
+     <use xlink:href="#Tektur-Medium-1" transform="translate(449.609375 0)"/>
+     <use xlink:href="#Tektur-Medium-35f" transform="translate(475.609375 0)"/>
+     <use xlink:href="#Tektur-Medium-350" transform="translate(538.40625 0)"/>
+     <use xlink:href="#Tektur-Medium-35a" transform="translate(598.40625 0)"/>
+     <use xlink:href="#Tektur-Medium-355" transform="translate(658.40625 0)"/>
+     <use xlink:href="#Tektur-Medium-362" transform="translate(717.40625 0)"/>
+     <use xlink:href="#Tektur-Medium-350" transform="translate(773.40625 0)"/>
+     <use xlink:href="#Tektur-Medium-1" transform="translate(833.40625 0)"/>
+     <use xlink:href="#Tektur-Medium-358" transform="translate(859.40625 0)"/>
+     <use xlink:href="#Tektur-Medium-1" transform="translate(924.609375 0)"/>
+     <use xlink:href="#Tektur-Medium-353" transform="translate(950.609375 0)"/>
+     <use xlink:href="#Tektur-Medium-360" transform="translate(997.609375 0)"/>
+     <use xlink:href="#Tektur-Medium-350" transform="translate(1059.609375 0)"/>
+     <use xlink:href="#Tektur-Medium-35d" transform="translate(1119.609375 0)"/>
+     <use xlink:href="#Tektur-Medium-358" transform="translate(1181.8125 0)"/>
+     <use xlink:href="#Tektur-Medium-366" transform="translate(1247.015625 0)"/>
+     <use xlink:href="#Tektur-Medium-36b" transform="translate(1311.421875 0)"/>
+     <use xlink:href="#Tektur-Medium-1" transform="translate(1396.21875 0)"/>
+     <use xlink:href="#Tektur-Medium-361" transform="translate(1422.21875 0)"/>
+     <use xlink:href="#Tektur-Medium-35e" transform="translate(1476.21875 0)"/>
+     <use xlink:href="#Tektur-Medium-35e" transform="translate(1536.21875 0)"/>
+     <use xlink:href="#Tektur-Medium-351" transform="translate(1596.21875 0)"/>
+     <use xlink:href="#Tektur-Medium-369" transform="translate(1658.21875 0)"/>
+     <use xlink:href="#Tektur-Medium-355" transform="translate(1750.21875 0)"/>
+     <use xlink:href="#Tektur-Medium-35d" transform="translate(1809.21875 0)"/>
+     <use xlink:href="#Tektur-Medium-358" transform="translate(1871.421875 0)"/>
+     <use xlink:href="#Tektur-Medium-36f" transform="translate(1936.625 0)"/>
+     <use xlink:href="#Tektur-Medium-1" transform="translate(1997.21875 0)"/>
+     <use xlink:href="#Tektur-Medium-22c" transform="translate(2023.21875 0)"/>
+     <use xlink:href="#Tektur-Medium-1" transform="translate(2083.21875 0)"/>
+     <use xlink:href="#Tektur-Medium-360" transform="translate(2109.21875 0)"/>
+     <use xlink:href="#Tektur-Medium-350" transform="translate(2171.21875 0)"/>
+     <use xlink:href="#Tektur-Medium-357" transform="translate(2231.21875 0)"/>
+     <use xlink:href="#Tektur-Medium-35d" transform="translate(2290.015625 0)"/>
+     <use xlink:href="#Tektur-Medium-36b" transform="translate(2352.21875 0)"/>
+     <use xlink:href="#Tektur-Medium-355" transform="translate(2437.015625 0)"/>
+     <use xlink:href="#Tektur-Medium-1" transform="translate(2496.015625 0)"/>
+     <use xlink:href="#Tektur-Medium-352" transform="translate(2522.015625 0)"/>
+     <use xlink:href="#Tektur-Medium-355" transform="translate(2583.015625 0)"/>
+     <use xlink:href="#Tektur-Medium-369" transform="translate(2642.015625 0)"/>
+     <use xlink:href="#Tektur-Medium-358" transform="translate(2734.015625 0)"/>
+    </g>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p8ca99bf7c0">
+   <rect x="10.8" y="10.8" width="770.4" height="266.4"/>
+  </clipPath>
+ </defs>
+</svg>
