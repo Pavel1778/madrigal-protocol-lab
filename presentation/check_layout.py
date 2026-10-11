@@ -19,9 +19,10 @@ import pypdfium2 as pdfium
 RENDER_W = 1600
 # The brand rule is a full-height bar on the left edge; ignore its columns.
 RULE_COLS = 14
-# The CSS slide is 552px tall and reserves 68px for the footer band plus 22px
-# of padding, i.e. the last 90/552 of the page is not for body content.
-BAND_FRACTION = 90.0 / 552.0
+# The CSS slide is 552px tall and reserves 68px at the bottom for the footer
+# plus its 22px of padding, i.e. the last 68/552 of the page is not for body
+# content. The footer text itself sits higher, so this keeps a safety gap.
+BAND_FRACTION = 68.0 / 552.0
 EDGE_TOL = 4
 # The organizer asks for at least 60 render px of clear margin at every edge.
 MIN_MARGIN = 60

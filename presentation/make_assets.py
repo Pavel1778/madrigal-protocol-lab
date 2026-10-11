@@ -51,17 +51,21 @@ MEMBER_QR = {
 
 # name -> (source, box). Boxes are (left, top, right, bottom) in the source.
 CROPS = {
-    # slide 2: square head for the 60px corner avatar
+    # slide 2: square head for the corner avatar
     "team-avatar-square.png": ("team-avatar.png", None),
-    # slide 7: centre area only, 60% wide x 70% tall, so the hex bytes scale up
-    "screenshot-provenance.png": ("09_provenance.png", (384, 30, 1536, 786)),
-    # slide 8: rule editor (left/centre) and the validation panel (right)
-    "screenshot-rule.png": ("07_rule_editor.png", (317, 30, 942, 1080)),
-    "screenshot-validation.png": ("07_rule_editor.png", (1436, 30, 1920, 1080)),
+    # slide 7: the hex dump only, trimmed to the byte rows. The window is
+    # 1920x1080 but the hex panel ends at y=400; cropping the dead space below
+    # roughly doubles the byte size on the slide.
+    "screenshot-provenance.png": ("09_provenance.png", (315, 52, 735, 260)),
+    # slide 8: the rule JSON, cropped to the editor and cut above the Messages
+    # and Counterexamples tabs so the JSON renders large.
+    "screenshot-rule.png": ("07_rule_editor.png", (720, 44, 1460, 300)),
+    # slide 8: the validation result panel, right tab only
+    "screenshot-validation.png": ("05_validation.png", (1424, 44, 1920, 300)),
     # slide 9: the counterexample list, right tab only
-    "screenshot-counterexamples.png": ("05_validation.png", (1436, 30, 1920, 1080)),
-    # slide 15: the whole window, top part including the hex panel
-    "screenshot-main.png": ("01_main.png", (0, 30, 1920, 790)),
+    "screenshot-counterexamples.png": ("05_validation.png", (1424, 44, 1920, 1080)),
+    # slide 15: the three key zones of the full window (sessions | hex | rule)
+    "screenshot-main.png": ("01_main.png", (300, 44, 1920, 460)),
 }
 
 

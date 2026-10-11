@@ -126,7 +126,7 @@ def _style_axes(ax: plt.Axes) -> None:
 
 
 def precision_v1_v2() -> None:
-    fig, ax = plt.subplots(figsize=(6.4, 4.2), dpi=150)
+    fig, ax = plt.subplots(figsize=(6.4, 5.4), dpi=150)
     labels = ["v1", "v2"]
     values = [0.428571, 1.0]
     counts = ["60 matched / 80 mismatched", "140 matched / 0 mismatched"]
@@ -135,7 +135,7 @@ def precision_v1_v2() -> None:
     for bar, value, count in zip(bars, values, counts):
         center = bar.get_x() + bar.get_width() / 2
         ax.text(center, value + 0.05, f"{value:.2f}", ha="center", va="bottom",
-                fontsize=20, fontfamily="Tektur", color=TEXT)
+                fontsize=30, fontfamily="Tektur", color=TEXT)
         ax.text(center, 0.03, count, ha="center", va="bottom", fontsize=10,
                 fontfamily="Montserrat", color=BACKGROUND if value > 0.9 else TEXT,
                 rotation=90, zorder=5)
@@ -150,7 +150,7 @@ def precision_v1_v2() -> None:
         arrowprops=dict(arrowstyle="->", color=GOOD, linewidth=1.4),
         zorder=6,
     )
-    ax.set_ylim(0, 1.18)
+    ax.set_ylim(0, 1.22)
     ax.set_ylabel("Precision", fontfamily="Montserrat", fontsize=13)
     ax.set_title("Precision: 0.43 → 1.00", fontfamily="Tektur", fontsize=17,
                  color=TEXT, pad=14)
@@ -185,8 +185,9 @@ def framing_payload() -> None:
 
 def coverage_donut() -> None:
     fig, ax = plt.subplots(figsize=(6.0, 4.6), dpi=150)
-    # Rule v2 over corpus_capture_01: 140 matched, 140 not applicable, 0 others.
-    values = [140, 140, 0, 0, 0]
+    # Rule v2 over the organizer set (tests/corpus/real/): 45 requests and
+    # 45 responses, every one matched, 0 others. See docs/METRICS.md.
+    values = [45, 45, 0, 0, 0]
     labels = ["matched", "not applicable", "mismatched", "incomplete", "uncovered"]
     colors = [MATCHED, UNCOVERED, MISMATCHED, INCOMPLETE, AMBIGUOUS]
     present = [
@@ -199,14 +200,14 @@ def coverage_donut() -> None:
         sizes, colors=[p[2] for p in present], startangle=90,
         counterclock=False, wedgeprops=dict(width=0.34, edgecolor=BACKGROUND, linewidth=2),
     )
-    ax.text(0, 0.12, "280", ha="center", va="center", fontsize=30,
+    ax.text(0, 0.12, "90", ha="center", va="center", fontsize=34,
             fontfamily="Tektur", color=TEXT)
-    ax.text(0, -0.18, "messages", ha="center", va="center", fontsize=12,
-            fontfamily="Montserrat", color=SECONDARY)
+    ax.text(0, -0.20, "45 запросов + 45 ответов", ha="center", va="center",
+            fontsize=12, fontfamily="Montserrat", color=SECONDARY)
     ax.legend(wedges, [f"{p[1]}  {p[0]}" for p in present], loc="center left",
               bbox_to_anchor=(1.0, 0.5), frameon=False, fontsize=12,
               prop={"family": "Montserrat", "size": 12}, labelcolor=TEXT)
-    ax.set_title("Coverage of corpus_capture_01 (rule v2)", fontfamily="Tektur",
+    ax.set_title("Набор организаторов, правило v2", fontfamily="Tektur",
                  fontsize=15, color=TEXT, pad=10)
     fig.tight_layout()
     fig.savefig(OUT / f"coverage_donut{SUFFIX}.svg")
@@ -360,20 +361,22 @@ def length_offset() -> None:
 
 
 def memory_sweep() -> None:
-    fig, ax = plt.subplots(figsize=(6.8, 4.2), dpi=150)
+    fig, ax = plt.subplots(figsize=(6.8, 5.4), dpi=150)
     sizes = [9.57, 47.84, 90.88]
     regular = [58, 186, 336]
     streaming = [54, 167, 293]
-    ax.plot(sizes, regular, "-o", color=ACCENT, markersize=7, linewidth=2,
+    ax.plot(sizes, regular, "-o", color=ACCENT, markersize=13, linewidth=3,
             label="regular")
-    ax.plot(sizes, streaming, "-s", color=HIGHLIGHT, markersize=7, linewidth=2,
+    ax.plot(sizes, streaming, "-s", color=HIGHLIGHT, markersize=13, linewidth=3,
             label="streaming")
-    ax.set_xlabel("Вход, МиБ", fontfamily="Montserrat", fontsize=12)
-    ax.set_ylabel("Пиковая память, МиБ", fontfamily="Montserrat", fontsize=12)
+    ax.set_xlabel("Вход, МиБ", fontfamily="Montserrat", fontsize=16)
+    ax.set_ylabel("Пиковая память, МиБ", fontfamily="Montserrat", fontsize=16)
+    ax.tick_params(labelsize=14)
     ax.set_title("Свип памяти: streaming ниже regular", fontfamily="Tektur",
-                 fontsize=15, color=TEXT, pad=14)
+                 fontsize=18, color=TEXT, pad=14)
     ax.grid(color=GRID, linewidth=0.8, zorder=0)
-    legend = ax.legend(frameon=False, fontsize=12, labelcolor=TEXT)
+    legend = ax.legend(frameon=False, fontsize=15, labelcolor=TEXT,
+                       loc="upper left")
     for text in legend.get_texts():
         text.set_fontfamily("Montserrat")
     _style_axes(ax)
