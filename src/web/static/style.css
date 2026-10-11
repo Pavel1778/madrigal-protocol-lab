@@ -228,6 +228,8 @@ tr:last-child td { border-bottom: none; }
 .field-value { color: var(--accent-hi); font-family: var(--mono); margin-left: 6px; }
 .bytes { word-break: break-all; color: var(--text-muted); }
 
+.counters { margin: 0 0 8px; }
+
 @media (max-width: 760px) {
   .topbar { flex-wrap: wrap; }
   .legend { display: none; }

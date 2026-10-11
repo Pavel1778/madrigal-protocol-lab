@@ -157,13 +157,15 @@ def create_app(
         if row is None:
             return _not_found(templates, f"no session {session!r} in this capture")
         resolved = _resolve_direction(row, direction or None)
+        messages = engine.message_rows(session, resolved)
         return templates.TemplateResponse(
             request,
             "_messages.html",
             {
                 "session": row,
                 "direction": resolved,
-                "messages": engine.message_rows(session, resolved),
+                "messages": messages,
+                "counters": _status_counters(messages),
                 "has_rule": engine.has_rule,
             },
         )
@@ -257,6 +259,14 @@ def _not_found(templates: Jinja2Templates, message: str) -> HTMLResponse:
         templates.get_template("error.html").render(message=message),
         status_code=404,
     )
+
+
+def _status_counters(messages: list) -> dict[str, int]:
+    """Count the messages by status for the summary line above the table."""
+    counters: dict[str, int] = {}
+    for message in messages:
+        counters[message.status] = counters.get(message.status, 0) + 1
+    return counters
 
 
 def _session_context(request: Request, engine: WebEngine) -> dict:

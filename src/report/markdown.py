@@ -71,6 +71,53 @@ def _counterexample_lines(item: dict[str, Any]) -> list[str]:
     return out
 
 
+def _rule_application_lines(app: dict[str, Any]) -> list[str]:
+    """The counters and the top counterexamples for the applied rule."""
+
+    if not app:
+        return ["No rule was applied.", ""]
+
+    out: list[str] = []
+    rule_id = app.get("rule_id", "?")
+    version = app.get("rule_version")
+    suffix = f" (version {version})" if version is not None else ""
+    out.append(f"- Rule: {rule_id}{suffix}")
+    counters = [
+        ("matched", app.get("matched")),
+        ("mismatched", app.get("mismatched")),
+        ("incomplete", app.get("incomplete")),
+        ("ambiguous", app.get("ambiguous")),
+        ("uncovered", app.get("uncovered")),
+        ("not_applicable", app.get("not_applicable")),
+        ("unknown", app.get("unknown")),
+    ]
+    for name, value in counters:
+        if value is not None:
+            out.append(f"- {name}: {value}")
+    out.append("")
+
+    counterexamples = app.get("counterexamples") or []
+    if counterexamples:
+        out += [
+            "The first counterexamples, tied to their bytes:",
+            "",
+        ]
+        for item in counterexamples:
+            where = item.get("offset")
+            length = item.get("length")
+            session = item.get("session_id")
+            direction = item.get("direction")
+            locator = f"offset {where}, length {length}"
+            if session:
+                locator = f"{session}/{direction or '?'} {locator}"
+            bytes_hex = item.get("bytes_hex")
+            tail = f" `{bytes_hex}`" if bytes_hex else ""
+            detail = item.get("detail") or item.get("status") or ""
+            out.append(f"- {locator}: {detail}{tail}")
+        out.append("")
+    return out
+
+
 def _version_lines(item: dict[str, Any]) -> str:
     rule_id = item.get("rule_id", "?")
     version = item.get("version", "?")
@@ -91,6 +138,9 @@ def render_markdown(investigation: dict[str, Any], out_path: Path) -> None:
     lines += ["## Scope", ""]
     lines += _scope_lines(model["scope"])
     lines.append("")
+
+    lines += ["## Rule application", ""]
+    lines += _rule_application_lines(model["rule_application"])
 
     lines += ["## Hypotheses", ""]
     if model["hypotheses"]:
