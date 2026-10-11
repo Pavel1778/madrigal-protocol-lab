@@ -49,7 +49,7 @@ No numeric claim. Four modules (`src/capture`, `src/protocol`, `src/hypothesis`,
 | --- | --- |
 | six per-message statuses | `src/hypothesis/result.py`: matched, mismatched, incomplete, ambiguous, uncovered, not_applicable |
 | counterexample byte: `s2` / `A_to_B`, offset 0, bytes `02 00 00 03 13 00 55` | `verify` output, `contradictions[0]` |
-| all 80 v1 mismatches sat on offset 0 in `s2` and `s3` | the same `verify` output: 60 `value 2 not in expected [1]`, 20 `value 3 not in expected [1]` |
+| 80 v1 mismatches sit on offset 0 in `s2` and `s3` | the same `verify` output: 60 `value 2 not in expected [1]`, 20 `value 3 not in expected [1]` |
 | meaning outside the proposed set is never proposed | `src/hypothesis/alternatives.py` |
 
 ## Результаты

@@ -20,6 +20,7 @@ from the repository's own code. Every number is from `docs/METRICS.md`.
 | `assets/` | 6 branded SVG visualisations (`build_visualizations.py`) |
 | `icons/` | Lucide line icons used by the deck (`fetch_icons.py`) |
 | `public/` | assets the deck serves: fonts, logo, QR codes, member photos |
+| `public/screencast-poster.png` | the frame slide 16 shows (baked from `screencast.mp4`, sharpest of six sampled frames) |
 | `defense_script.md` | the 8-minute speaker script, one section per slide |
 | `VIDEO.md` | shot list for the reserve screen recording |
 | `export_pdf.sh` | exports `slides.pdf` with a retry for the Slidev race |
@@ -79,9 +80,19 @@ python -m presentation.fetch_icons
 - Fonts (Tektur, Montserrat) are bundled: `public/fonts/` for Slidev,
   `assets/fonts/` for the visualisation script.
 - `node_modules/`, `dist/` and `.vite-cache/` are ignored by git.
+- Every generated artifact is reproducible: the charts are written without a
+  date stamp and with sequential ids (`build_visualizations.py`), and the PPTX
+  package pins its zip timestamps to 1980-01-01 (`_freeze_zip` in
+  `scripts/build_pptx.py`). A rebuild of unchanged input is byte-identical, so
+  the `checksums.txt` entries stay valid. Rebuild `presentation_html.zip` from a
+  clean `dist/` — Vite caches content-hashed copies of the charts.
 - The deck uses the Madrigal palette, defined once as CSS custom properties in
-  `style.css`. Dark theme: background `#131516`, surface `#1D1D1D`, body text
-  `#EDEDED`, secondary `#B8B8B8`, accent `#D0603A` (4.7:1 on the background,
-  AA). Light theme (`html.light`): background `#FAFAFA`, surface `#FFFFFF`, text
-  `#16181A`, secondary `#4A4A4A`, accent `#B7301A` (5.8:1, AA). Rounded corners
-  12 px. Slide transition is `slide-left`; build-ins are `v-click`.
+  `style.css`. Dark theme: background `#0E1011`, surface `#1F2124`, body text
+  `#F4F1EC`, secondary `#A8A29E`, accent `#D0603A`. Light theme (`html.light`):
+  background `#FAF9F7`, surface `#FFFFFF`, text `#1C1917`, secondary `#57534E`,
+  accent `#C2410C`. Rounded corners 12 px. Slide transition is `slide-left`;
+  build-ins are `v-click`.
+- Slide 16 shows `public/screencast-poster.png` — a still baked from
+  `screencast.mp4` (the sharpest of six sampled frames) with a play glyph drawn
+  over it in CSS; the frame stays an image so the build does not depend on a
+  video codec.
