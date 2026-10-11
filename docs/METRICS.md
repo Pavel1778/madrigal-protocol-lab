@@ -29,7 +29,7 @@ bytes, 90 framed messages (45 requests, 45 responses).
 | Request messages | 45, all `matched`, 100 % byte coverage |
 | Response messages | 45, all `matched`, 100 % byte coverage |
 | Precision (matched / framed) | 1.00 |
-| Counterexamples, rule v1 | 6 (5 mismatched, 10 incomplete over the corpus) |
+| Counterexamples, rule v1 | 6 on the configuration capture (2 mismatched, 4 incomplete); 15 over the four research captures (5 mismatched, 10 incomplete) |
 | Counterexamples, rule v2 | 0 |
 | Journal correlation | 14 of 14 requests correlated on the configuration capture |
 | Diagnostic captures | 8, each reports its condition (gap, ambiguity, checksum_offload) |
