@@ -47,3 +47,6 @@ presentation/video.mp4
 # Sample dataset archives downloaded through a browser with "(N)" suffixes.
 # The dataset itself is committed under tests/corpus/real/; keep the duplicates out.
 sample_protocol.tar*
+
+# Slidev pptx export leaves per-click frames behind
+presentation/slides-*_[0-9]*.png

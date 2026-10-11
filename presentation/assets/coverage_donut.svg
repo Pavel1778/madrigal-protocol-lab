@@ -6,7 +6,7 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-10-11T16:02:34.515676</dc:date>
+    <dc:date>2026-10-11T17:45:07.782231</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -30,82 +30,58 @@ z
   </g>
   <g id="axes_1">
    <g id="patch_2">
-    <path d="M 154.224 291.94 
-C 184.404666 291.94 213.380083 279.937989 234.721036 258.597036 
-C 256.061989 237.256083 268.064 208.280666 268.064 178.1 
-C 268.064 147.919334 256.061989 118.943917 234.721036 97.602964 
-C 213.380083 76.262011 184.404666 64.26 154.224 64.26 
-L 154.224 102.9656 
-C 174.143239 102.9656 193.267014 110.886927 207.352044 124.971956 
-C 221.437073 139.056986 229.3584 158.180761 229.3584 178.1 
-C 229.3584 198.019239 221.437073 217.143014 207.352044 231.228044 
-C 193.267014 245.313073 174.143239 253.2344 154.224 253.2344 
+    <path d="M 157.11525 291.94 
+C 187.295916 291.94 216.271333 279.937989 237.612286 258.597036 
+C 258.953239 237.256083 270.95525 208.280666 270.95525 178.1 
+C 270.95525 147.919334 258.953239 118.943917 237.612286 97.602964 
+C 216.271333 76.262011 187.295916 64.26 157.11525 64.26 
+L 157.11525 102.9656 
+C 177.034489 102.9656 196.158264 110.886927 210.243294 124.971956 
+C 224.328323 139.056986 232.24965 158.180761 232.24965 178.1 
+C 232.24965 198.019239 224.328323 217.143014 210.243294 231.228044 
+C 196.158264 245.313073 177.034489 253.2344 157.11525 253.2344 
 z
 " style="fill: #2e7d5b; stroke: #131516; stroke-width: 2; stroke-linejoin: miter"/>
    </g>
    <g id="patch_3">
-    <path d="M 154.224 64.26 
-C 124.043334 64.26 95.067917 76.262011 73.726964 97.602964 
-C 52.386011 118.943917 40.384 147.919334 40.384 178.1 
-C 40.384 208.280666 52.386011 237.256083 73.726964 258.597036 
-C 95.067917 279.937989 124.043334 291.94 154.224 291.94 
-L 154.224 253.2344 
-C 134.304761 253.2344 115.180986 245.313073 101.095956 231.228044 
-C 87.010927 217.143014 79.0896 198.019239 79.0896 178.1 
-C 79.0896 158.180761 87.010927 139.056986 101.095956 124.971956 
-C 115.180986 110.886927 134.304761 102.9656 154.224 102.9656 
+    <path d="M 157.11525 64.26 
+C 126.934584 64.26 97.959167 76.262011 76.618214 97.602964 
+C 55.277261 118.943917 43.27525 147.919334 43.27525 178.1 
+C 43.27525 208.280666 55.277261 237.256083 76.618214 258.597036 
+C 97.959167 279.937989 126.934584 291.94 157.11525 291.94 
+L 157.11525 253.2344 
+C 137.196011 253.2344 118.072236 245.313073 103.987206 231.228044 
+C 89.902177 217.143014 81.98085 198.019239 81.98085 178.1 
+C 81.98085 158.180761 89.902177 139.056986 103.987206 124.971956 
+C 118.072236 110.886927 137.196011 102.9656 157.11525 102.9656 
 z
 " style="fill: #3a3a3a; stroke: #131516; stroke-width: 2; stroke-linejoin: miter"/>
    </g>
    <g id="matplotlib.axis_1"/>
    <g id="matplotlib.axis_2"/>
    <g id="text_1">
-    <!-- 280 -->
-    <g style="fill: #ededed" transform="translate(124.734937 174.9392) scale(0.3 -0.3)">
+    <!-- 90 -->
+    <g style="fill: #ededed" transform="translate(135.01525 176.3392) scale(0.34 -0.34)">
      <defs>
-      <path id="Tektur-Medium-244" d="M 3808 653 
-L 3808 0 
-L 352 0 
-L 352 2304 
-L 3066 2624 
-L 3066 3827 
-L 403 3827 
-L 403 4480 
-L 3206 4480 
-L 3808 3878 
-L 3808 2086 
-L 1094 1766 
-L 1094 653 
-L 3808 653 
+      <path id="Tektur-Medium-24b" d="M 3219 4480 
+L 3808 3891 
+L 3808 589 
+L 3219 0 
+L 602 0 
+L 602 653 
+L 3066 653 
+L 3066 1651 
+L 806 1651 
+L 352 2106 
+L 352 3891 
+L 941 4480 
+L 3219 4480 
 z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-24a" d="M 1178 2618 
-L 3085 2618 
-L 3085 3853 
-L 1178 3853 
-L 1178 2618 
-z
-M 1062 627 
-L 3219 627 
-L 3219 2029 
-L 1062 2029 
-L 1062 627 
-z
-M 883 0 
-L 282 602 
-L 282 1933 
-L 800 2342 
-L 410 2643 
-L 410 3878 
-L 1011 4480 
-L 3251 4480 
-L 3853 3878 
-L 3853 2643 
-L 3462 2342 
-L 3981 1933 
-L 3981 602 
-L 3379 0 
-L 883 0 
+M 3066 3840 
+L 1094 3840 
+L 1094 2240 
+L 3066 2240 
+L 3066 3840 
 z
 " transform="scale(0.015625)"/>
       <path id="Tektur-Medium-242" d="M 352 602 
@@ -126,16 +102,657 @@ L 1094 3814
 z
 " transform="scale(0.015625)"/>
      </defs>
-     <use xlink:href="#Tektur-Medium-244"/>
-     <use xlink:href="#Tektur-Medium-24a" transform="translate(65 0)"/>
-     <use xlink:href="#Tektur-Medium-242" transform="translate(131.59375 0)"/>
+     <use xlink:href="#Tektur-Medium-24b"/>
+     <use xlink:href="#Tektur-Medium-242" transform="translate(65 0)"/>
     </g>
    </g>
    <g id="text_2">
-    <!-- messages -->
-    <g style="fill: #b8b8b8" transform="translate(124.176187 202.8932) scale(0.12 -0.12)">
+    <!-- 45 запросов + 45 ответов -->
+    <g style="fill: #b8b8b8" transform="translate(79.305563 205.17) scale(0.12 -0.12)">
      <defs>
-      <path id="Montserrat-Regular-23f" d="M 634 0 
+      <path id="Montserrat-Regular-440" d="M 256 1178 
+L 256 1510 
+L 2630 4480 
+L 3142 4480 
+L 787 1510 
+L 538 1587 
+L 4141 1587 
+L 4141 1178 
+L 256 1178 
+z
+M 2784 0 
+L 2784 1178 
+L 2797 1587 
+L 2797 2624 
+L 3245 2624 
+L 3245 0 
+L 2784 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-441" d="M 1747 -38 
+Q 1267 -38 832 118 
+Q 397 275 141 538 
+L 365 902 
+Q 576 678 944 531 
+Q 1312 384 1741 384 
+Q 2310 384 2608 637 
+Q 2906 890 2906 1299 
+Q 2906 1587 2768 1795 
+Q 2630 2003 2304 2118 
+Q 1978 2234 1408 2234 
+L 454 2234 
+L 685 4480 
+L 3136 4480 
+L 3136 4070 
+L 870 4070 
+L 1107 4294 
+L 909 2413 
+L 672 2643 
+L 1510 2643 
+Q 2189 2643 2598 2476 
+Q 3008 2310 3190 2012 
+Q 3373 1715 3373 1318 
+Q 3373 941 3193 630 
+Q 3014 320 2656 141 
+Q 2298 -38 1747 -38 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-482" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-3a0" d="M 1549 -38 
+Q 1184 -38 825 64 
+Q 467 166 192 378 
+L 339 717 
+Q 582 538 902 445 
+Q 1222 352 1536 352 
+Q 1850 358 2080 441 
+Q 2310 525 2438 672 
+Q 2566 819 2566 1005 
+Q 2566 1274 2323 1424 
+Q 2080 1574 1658 1574 
+L 986 1574 
+L 986 1907 
+L 1626 1907 
+Q 1875 1907 2067 1971 
+Q 2259 2035 2364 2156 
+Q 2470 2278 2470 2445 
+Q 2470 2624 2345 2752 
+Q 2221 2880 2003 2944 
+Q 1786 3008 1510 3008 
+Q 1261 3002 992 2934 
+Q 723 2867 461 2733 
+L 333 3085 
+Q 627 3238 918 3318 
+Q 1210 3398 1504 3398 
+Q 1907 3411 2230 3302 
+Q 2554 3194 2746 2992 
+Q 2938 2790 2938 2509 
+Q 2938 2259 2784 2073 
+Q 2630 1888 2374 1785 
+Q 2118 1683 1792 1683 
+L 1811 1805 
+Q 2387 1805 2710 1581 
+Q 3034 1357 3034 973 
+Q 3034 672 2835 445 
+Q 2637 218 2301 90 
+Q 1965 -38 1549 -38 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-392" d="M 2733 0 
+L 2733 742 
+L 2714 864 
+L 2714 2106 
+Q 2714 2534 2474 2764 
+Q 2234 2995 1760 2995 
+Q 1434 2995 1139 2886 
+Q 845 2778 640 2598 
+L 436 2938 
+Q 692 3155 1050 3273 
+Q 1408 3392 1805 3392 
+Q 2458 3392 2813 3069 
+Q 3168 2746 3168 2086 
+L 3168 0 
+L 2733 0 
+z
+M 1575 -32 
+Q 1197 -32 918 93 
+Q 640 218 493 438 
+Q 346 659 346 947 
+Q 346 1210 471 1424 
+Q 596 1638 880 1769 
+Q 1165 1901 1645 1901 
+L 2804 1901 
+L 2804 1562 
+L 1658 1562 
+Q 1172 1562 983 1389 
+Q 794 1216 794 960 
+Q 794 672 1018 499 
+Q 1242 326 1645 326 
+Q 2029 326 2307 502 
+Q 2586 678 2714 1011 
+L 2816 698 
+Q 2688 365 2371 166 
+Q 2055 -32 1575 -32 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-3ab" d="M 646 0 
+L 646 3360 
+L 3667 3360 
+L 3667 0 
+L 3213 0 
+L 3213 3085 
+L 3328 2963 
+L 986 2963 
+L 1101 3085 
+L 1101 0 
+L 646 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-3ac" d="M 2381 -32 
+Q 1946 -32 1594 169 
+Q 1242 371 1034 752 
+Q 826 1133 826 1683 
+Q 826 2234 1030 2614 
+Q 1235 2995 1587 3193 
+Q 1939 3392 2381 3392 
+Q 2861 3392 3242 3177 
+Q 3623 2963 3840 2576 
+Q 4058 2189 4058 1683 
+Q 4058 1171 3840 787 
+Q 3623 403 3242 185 
+Q 2861 -32 2381 -32 
+z
+M 647 -1242 
+L 647 3360 
+L 1082 3360 
+L 1082 2349 
+L 1037 1677 
+L 1101 998 
+L 1101 -1242 
+L 647 -1242 
+z
+M 2349 371 
+Q 2707 371 2989 534 
+Q 3271 698 3437 995 
+Q 3603 1293 3603 1683 
+Q 3603 2074 3437 2368 
+Q 3271 2662 2989 2828 
+Q 2707 2995 2349 2995 
+Q 1991 2995 1706 2828 
+Q 1421 2662 1258 2368 
+Q 1095 2074 1095 1683 
+Q 1095 1293 1258 995 
+Q 1421 698 1706 534 
+Q 1991 371 2349 371 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-3aa" d="M 2029 -32 
+Q 1543 -32 1155 189 
+Q 768 410 544 797 
+Q 320 1184 320 1683 
+Q 320 2189 544 2573 
+Q 768 2957 1152 3174 
+Q 1536 3392 2029 3392 
+Q 2528 3392 2915 3174 
+Q 3303 2957 3523 2573 
+Q 3744 2189 3744 1683 
+Q 3744 1184 3523 797 
+Q 3303 410 2912 189 
+Q 2522 -32 2029 -32 
+z
+M 2029 371 
+Q 2394 371 2675 534 
+Q 2957 698 3120 995 
+Q 3284 1293 3284 1683 
+Q 3284 2080 3120 2374 
+Q 2957 2669 2675 2832 
+Q 2394 2995 2036 2995 
+Q 1677 2995 1395 2832 
+Q 1114 2669 947 2374 
+Q 781 2080 781 1683 
+Q 781 1293 947 995 
+Q 1114 698 1395 534 
+Q 1677 371 2029 371 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-3ad" d="M 2055 -32 
+Q 1556 -32 1162 189 
+Q 768 410 544 797 
+Q 320 1184 320 1683 
+Q 320 2189 544 2573 
+Q 768 2957 1162 3174 
+Q 1556 3392 2055 3392 
+Q 2484 3392 2829 3225 
+Q 3175 3059 3373 2726 
+L 3034 2496 
+Q 2861 2752 2605 2873 
+Q 2349 2995 2048 2995 
+Q 1690 2995 1402 2832 
+Q 1114 2669 947 2374 
+Q 781 2080 781 1683 
+Q 781 1286 947 992 
+Q 1114 698 1402 534 
+Q 1690 371 2048 371 
+Q 2349 371 2605 492 
+Q 2861 614 3034 864 
+L 3373 634 
+Q 3175 307 2829 137 
+Q 2484 -32 2055 -32 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-394" d="M 646 0 
+L 646 3360 
+L 2131 3360 
+Q 2701 3360 3030 3142 
+Q 3360 2925 3360 2502 
+Q 3360 2093 3046 1872 
+Q 2733 1651 2221 1651 
+L 2310 1786 
+Q 2912 1786 3193 1562 
+Q 3475 1338 3475 915 
+Q 3475 480 3158 240 
+Q 2842 0 2176 0 
+L 646 0 
+z
+M 1088 358 
+L 2157 358 
+Q 2586 358 2806 496 
+Q 3027 634 3027 941 
+Q 3027 1248 2828 1389 
+Q 2630 1530 2202 1530 
+L 1088 1530 
+L 1088 358 
+z
+M 1088 1869 
+L 2099 1869 
+Q 2490 1869 2698 2016 
+Q 2906 2163 2906 2445 
+Q 2906 2726 2698 2867 
+Q 2490 3008 2099 3008 
+L 1088 3008 
+L 1088 1869 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-4f1" d="M 1638 883 
+L 1638 3597 
+L 2042 3597 
+L 2042 883 
+L 1638 883 
+z
+M 448 2048 
+L 448 2426 
+L 3232 2426 
+L 3232 2048 
+L 448 2048 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-3ae" d="M 1286 0 
+L 1286 3085 
+L 1402 2963 
+L 13 2963 
+L 13 3360 
+L 3014 3360 
+L 3014 2963 
+L 1626 2963 
+L 1741 3085 
+L 1741 0 
+L 1286 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Montserrat-Regular-39c" d="M 2087 -32 
+Q 1562 -32 1165 189 
+Q 768 410 544 797 
+Q 320 1184 320 1683 
+Q 320 2182 534 2566 
+Q 749 2950 1123 3171 
+Q 1498 3392 1965 3392 
+Q 2439 3392 2807 3177 
+Q 3175 2963 3386 2576 
+Q 3597 2189 3597 1683 
+Q 3597 1651 3594 1616 
+Q 3591 1581 3591 1542 
+L 666 1542 
+L 666 1882 
+L 3348 1882 
+L 3168 1747 
+Q 3168 2112 3011 2397 
+Q 2855 2682 2586 2842 
+Q 2317 3002 1965 3002 
+Q 1620 3002 1344 2842 
+Q 1069 2682 915 2394 
+Q 762 2106 762 1734 
+L 762 1664 
+Q 762 1280 931 989 
+Q 1101 698 1405 534 
+Q 1709 371 2100 371 
+Q 2407 371 2672 480 
+Q 2938 589 3130 813 
+L 3386 518 
+Q 3162 250 2826 109 
+Q 2490 -32 2087 -32 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#Montserrat-Regular-440"/>
+     <use xlink:href="#Montserrat-Regular-441" transform="translate(65.890625 0)"/>
+     <use xlink:href="#Montserrat-Regular-482" transform="translate(122.484375 0)"/>
+     <use xlink:href="#Montserrat-Regular-3a0" transform="translate(148.6875 0)"/>
+     <use xlink:href="#Montserrat-Regular-392" transform="translate(202.09375 0)"/>
+     <use xlink:href="#Montserrat-Regular-3ab" transform="translate(260.390625 0)"/>
+     <use xlink:href="#Montserrat-Regular-3ac" transform="translate(327.796875 0)"/>
+     <use xlink:href="#Montserrat-Regular-3aa" transform="translate(396.390625 0)"/>
+     <use xlink:href="#Montserrat-Regular-3ad" transform="translate(459.984375 0)"/>
+     <use xlink:href="#Montserrat-Regular-3aa" transform="translate(515.375 0)"/>
+     <use xlink:href="#Montserrat-Regular-394" transform="translate(578.96875 0)"/>
+     <use xlink:href="#Montserrat-Regular-482" transform="translate(639.765625 0)"/>
+     <use xlink:href="#Montserrat-Regular-4f1" transform="translate(665.96875 0)"/>
+     <use xlink:href="#Montserrat-Regular-482" transform="translate(723.46875 0)"/>
+     <use xlink:href="#Montserrat-Regular-440" transform="translate(749.671875 0)"/>
+     <use xlink:href="#Montserrat-Regular-441" transform="translate(815.5625 0)"/>
+     <use xlink:href="#Montserrat-Regular-482" transform="translate(872.15625 0)"/>
+     <use xlink:href="#Montserrat-Regular-3aa" transform="translate(898.359375 0)"/>
+     <use xlink:href="#Montserrat-Regular-3ae" transform="translate(959.953125 0)"/>
+     <use xlink:href="#Montserrat-Regular-394" transform="translate(1007.25 0)"/>
+     <use xlink:href="#Montserrat-Regular-39c" transform="translate(1068.046875 0)"/>
+     <use xlink:href="#Montserrat-Regular-3ae" transform="translate(1127.546875 0)"/>
+     <use xlink:href="#Montserrat-Regular-3aa" transform="translate(1172.4375 0)"/>
+     <use xlink:href="#Montserrat-Regular-394" transform="translate(1236.03125 0)"/>
+    </g>
+   </g>
+   <g id="text_3">
+    <!-- Набор организаторов, правило v2 -->
+    <g style="fill: #ededed" transform="translate(26.285953 25.8) scale(0.15 -0.15)">
+     <defs>
+      <path id="Tektur-Medium-33d" d="M 358 0 
+L 358 4480 
+L 1101 4480 
+L 1101 2637 
+L 3162 2637 
+L 3162 4480 
+L 3904 4480 
+L 3904 0 
+L 3162 0 
+L 3162 1971 
+L 1101 1971 
+L 1101 0 
+L 358 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-350" d="M 294 640 
+L 294 2048 
+L 2739 2112 
+L 2739 2944 
+L 422 2944 
+L 422 3584 
+L 2842 3584 
+L 3482 2944 
+L 3482 0 
+L 934 0 
+L 294 640 
+z
+M 1037 1510 
+L 1037 627 
+L 2739 627 
+L 2739 1638 
+L 1037 1510 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-351" d="M 1101 640 
+L 2906 640 
+L 2906 2624 
+L 1101 2624 
+L 1101 640 
+z
+M 998 0 
+L 358 640 
+L 358 3853 
+L 986 4480 
+L 3533 4480 
+L 3533 3853 
+L 1101 3853 
+L 1101 3226 
+L 3123 3226 
+L 3648 2701 
+L 3648 640 
+L 3008 0 
+L 998 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-35e" d="M 320 627 
+L 320 2957 
+L 947 3584 
+L 2893 3584 
+L 3520 2957 
+L 3520 627 
+L 2893 0 
+L 947 0 
+L 320 627 
+z
+M 1062 627 
+L 2778 627 
+L 2778 2957 
+L 1062 2957 
+L 1062 627 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-360" d="M 358 -896 
+L 358 3584 
+L 2995 3584 
+L 3648 2931 
+L 3648 653 
+L 2995 0 
+L 1101 0 
+L 1101 -896 
+L 358 -896 
+z
+M 2906 2944 
+L 1101 2944 
+L 1101 640 
+L 2906 640 
+L 2906 2944 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-1" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-353" d="M 358 0 
+L 358 3584 
+L 2880 3584 
+L 2880 2918 
+L 1101 2918 
+L 1101 0 
+L 358 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-35d" d="M 358 0 
+L 358 3584 
+L 1101 3584 
+L 1101 2118 
+L 2880 2118 
+L 2880 3584 
+L 3622 3584 
+L 3622 0 
+L 2880 0 
+L 2880 1472 
+L 1101 1472 
+L 1101 0 
+L 358 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-358" d="M 3814 0 
+L 3078 0 
+L 3078 2746 
+L 1216 0 
+L 358 0 
+L 358 3584 
+L 1094 3584 
+L 1094 826 
+L 2957 3584 
+L 3814 3584 
+L 3814 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-357" d="M 3456 538 
+L 2918 0 
+L 218 0 
+L 218 627 
+L 2701 627 
+L 2701 1536 
+L 525 1536 
+L 525 2112 
+L 2573 2112 
+L 2573 2957 
+L 282 2957 
+L 282 3584 
+L 2790 3584 
+L 3328 3046 
+L 3328 2163 
+L 2950 1875 
+L 3456 1478 
+L 3456 538 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-362" d="M 2163 0 
+L 2163 2931 
+L 3456 2931 
+L 3456 3584 
+L 128 3584 
+L 128 2931 
+L 1421 2931 
+L 1421 0 
+L 2163 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-352" d="M 358 3584 
+L 358 0 
+L 3098 0 
+L 3622 525 
+L 3622 1485 
+L 3130 1875 
+L 3494 2150 
+L 3494 3059 
+L 2970 3584 
+L 358 3584 
+z
+M 1094 2112 
+L 1094 2982 
+L 2765 2982 
+L 2765 2112 
+L 1094 2112 
+z
+M 1094 602 
+L 1094 1536 
+L 2880 1536 
+L 2880 602 
+L 1094 602 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-20b" d="M 525 0 
+L 525 768 
+L 1261 768 
+L 1261 0 
+L 704 -896 
+L 179 -896 
+L 736 0 
+L 525 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-35f" d="M 384 0 
+L 384 3584 
+L 3635 3584 
+L 3635 0 
+L 2893 0 
+L 2893 2931 
+L 1126 2931 
+L 1126 0 
+L 384 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-35b" d="M 3610 3584 
+L 3610 0 
+L 2867 0 
+L 2867 2963 
+L 1664 2963 
+L 1152 0 
+L 96 0 
+L 96 666 
+L 531 666 
+L 1037 3584 
+L 3610 3584 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-32" d="M 1005 0 
+L 64 3584 
+L 819 3584 
+L 1549 640 
+L 2170 640 
+L 2899 3584 
+L 3648 3584 
+L 2707 0 
+L 1005 0 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tektur-Medium-244" d="M 3808 653 
+L 3808 0 
+L 352 0 
+L 352 2304 
+L 3066 2624 
+L 3066 3827 
+L 403 3827 
+L 403 4480 
+L 3206 4480 
+L 3808 3878 
+L 3808 2086 
+L 1094 1766 
+L 1094 653 
+L 3808 653 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#Tektur-Medium-33d"/>
+     <use xlink:href="#Tektur-Medium-350" transform="translate(66.59375 0)"/>
+     <use xlink:href="#Tektur-Medium-351" transform="translate(126.59375 0)"/>
+     <use xlink:href="#Tektur-Medium-35e" transform="translate(188.59375 0)"/>
+     <use xlink:href="#Tektur-Medium-360" transform="translate(248.59375 0)"/>
+     <use xlink:href="#Tektur-Medium-1" transform="translate(310.59375 0)"/>
+     <use xlink:href="#Tektur-Medium-35e" transform="translate(336.59375 0)"/>
+     <use xlink:href="#Tektur-Medium-360" transform="translate(396.59375 0)"/>
+     <use xlink:href="#Tektur-Medium-353" transform="translate(458.59375 0)"/>
+     <use xlink:href="#Tektur-Medium-350" transform="translate(505.59375 0)"/>
+     <use xlink:href="#Tektur-Medium-35d" transform="translate(565.59375 0)"/>
+     <use xlink:href="#Tektur-Medium-358" transform="translate(627.796875 0)"/>
+     <use xlink:href="#Tektur-Medium-357" transform="translate(693 0)"/>
+     <use xlink:href="#Tektur-Medium-350" transform="translate(751.796875 0)"/>
+     <use xlink:href="#Tektur-Medium-362" transform="translate(811.796875 0)"/>
+     <use xlink:href="#Tektur-Medium-35e" transform="translate(867.796875 0)"/>
+     <use xlink:href="#Tektur-Medium-360" transform="translate(927.796875 0)"/>
+     <use xlink:href="#Tektur-Medium-35e" transform="translate(989.796875 0)"/>
+     <use xlink:href="#Tektur-Medium-352" transform="translate(1049.796875 0)"/>
+     <use xlink:href="#Tektur-Medium-20b" transform="translate(1110.796875 0)"/>
+     <use xlink:href="#Tektur-Medium-1" transform="translate(1136.390625 0)"/>
+     <use xlink:href="#Tektur-Medium-35f" transform="translate(1162.390625 0)"/>
+     <use xlink:href="#Tektur-Medium-360" transform="translate(1225.1875 0)"/>
+     <use xlink:href="#Tektur-Medium-350" transform="translate(1287.1875 0)"/>
+     <use xlink:href="#Tektur-Medium-352" transform="translate(1347.1875 0)"/>
+     <use xlink:href="#Tektur-Medium-358" transform="translate(1408.1875 0)"/>
+     <use xlink:href="#Tektur-Medium-35b" transform="translate(1473.390625 0)"/>
+     <use xlink:href="#Tektur-Medium-35e" transform="translate(1535.390625 0)"/>
+     <use xlink:href="#Tektur-Medium-1" transform="translate(1595.390625 0)"/>
+     <use xlink:href="#Tektur-Medium-32" transform="translate(1621.390625 0)"/>
+     <use xlink:href="#Tektur-Medium-244" transform="translate(1679.390625 0)"/>
+    </g>
+   </g>
+   <g id="legend_1">
+    <g id="patch_4">
+     <path d="M 310.21525 172.088 
+L 334.21525 172.088 
+L 334.21525 163.688 
+L 310.21525 163.688 
+z
+" style="fill: #2e7d5b; stroke: #131516; stroke-width: 2; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_4">
+     <!-- matched  45 -->
+     <g style="fill: #ededed" transform="translate(343.81525 172.088) scale(0.12 -0.12)">
+      <defs>
+       <path id="Montserrat-Regular-23f" d="M 634 0 
 L 634 3360 
 L 1069 3360 
 L 1069 2451 
@@ -170,77 +787,7 @@ L 1088 0
 L 634 0 
 z
 " transform="scale(0.015625)"/>
-      <path id="Montserrat-Regular-1c6" d="M 2061 -32 
-Q 1536 -32 1139 189 
-Q 742 410 518 797 
-Q 294 1184 294 1683 
-Q 294 2182 508 2566 
-Q 723 2950 1097 3171 
-Q 1472 3392 1939 3392 
-Q 2413 3392 2781 3177 
-Q 3149 2963 3360 2576 
-Q 3571 2189 3571 1683 
-Q 3571 1651 3568 1616 
-Q 3565 1581 3565 1542 
-L 640 1542 
-L 640 1882 
-L 3322 1882 
-L 3142 1747 
-Q 3142 2112 2985 2397 
-Q 2829 2682 2560 2842 
-Q 2291 3002 1939 3002 
-Q 1594 3002 1318 2842 
-Q 1043 2682 889 2394 
-Q 736 2106 736 1734 
-L 736 1664 
-Q 736 1280 905 989 
-Q 1075 698 1379 534 
-Q 1683 371 2074 371 
-Q 2381 371 2646 480 
-Q 2912 589 3104 813 
-L 3360 518 
-Q 3136 250 2800 109 
-Q 2464 -32 2061 -32 
-z
-" transform="scale(0.015625)"/>
-      <path id="Montserrat-Regular-294" d="M 1536 -32 
-Q 1120 -32 749 86 
-Q 378 205 166 384 
-L 371 742 
-Q 576 589 896 477 
-Q 1216 365 1568 365 
-Q 2048 365 2259 515 
-Q 2470 666 2470 915 
-Q 2470 1101 2352 1206 
-Q 2234 1312 2042 1366 
-Q 1850 1421 1613 1459 
-Q 1376 1498 1142 1549 
-Q 909 1600 717 1699 
-Q 525 1798 406 1971 
-Q 288 2144 288 2432 
-Q 288 2707 441 2924 
-Q 595 3142 892 3267 
-Q 1190 3392 1619 3392 
-Q 1946 3392 2272 3305 
-Q 2598 3219 2810 3078 
-L 2611 2714 
-Q 2387 2867 2131 2934 
-Q 1875 3002 1619 3002 
-Q 1165 3002 950 2845 
-Q 736 2688 736 2445 
-Q 736 2253 854 2144 
-Q 973 2035 1168 1974 
-Q 1363 1914 1596 1875 
-Q 1830 1837 2064 1782 
-Q 2298 1728 2493 1635 
-Q 2688 1542 2806 1372 
-Q 2925 1203 2925 928 
-Q 2925 634 2761 419 
-Q 2598 205 2288 86 
-Q 1978 -32 1536 -32 
-z
-" transform="scale(0.015625)"/>
-      <path id="Montserrat-Regular-17d" d="M 2739 0 
+       <path id="Montserrat-Regular-17d" d="M 2739 0 
 L 2739 742 
 L 2720 864 
 L 2720 2106 
@@ -277,373 +824,6 @@ Q 2694 365 2377 166
 Q 2061 -32 1581 -32 
 z
 " transform="scale(0.015625)"/>
-      <path id="Montserrat-Regular-1ec" d="M 2067 -1274 
-Q 1606 -1274 1184 -1139 
-Q 762 -1005 499 -755 
-L 730 -410 
-Q 966 -621 1315 -745 
-Q 1664 -870 2054 -870 
-Q 2694 -870 2995 -572 
-Q 3296 -275 3296 352 
-L 3296 1190 
-L 3360 1766 
-L 3315 2342 
-L 3315 3360 
-L 3750 3360 
-L 3750 410 
-Q 3750 -461 3324 -867 
-Q 2899 -1274 2067 -1274 
-z
-M 1984 128 
-Q 1504 128 1120 336 
-Q 736 544 515 915 
-Q 294 1286 294 1766 
-Q 294 2246 515 2614 
-Q 736 2982 1120 3187 
-Q 1504 3392 1984 3392 
-Q 2432 3392 2790 3206 
-Q 3149 3021 3360 2656 
-Q 3571 2291 3571 1766 
-Q 3571 1242 3360 877 
-Q 3149 512 2790 320 
-Q 2432 128 1984 128 
-z
-M 2029 531 
-Q 2400 531 2688 688 
-Q 2976 845 3142 1123 
-Q 3309 1402 3309 1766 
-Q 3309 2131 3142 2406 
-Q 2976 2682 2688 2838 
-Q 2400 2995 2029 2995 
-Q 1664 2995 1373 2838 
-Q 1082 2682 918 2406 
-Q 755 2131 755 1766 
-Q 755 1402 918 1123 
-Q 1082 845 1373 688 
-Q 1664 531 2029 531 
-z
-" transform="scale(0.015625)"/>
-     </defs>
-     <use xlink:href="#Montserrat-Regular-23f"/>
-     <use xlink:href="#Montserrat-Regular-1c6" transform="translate(106.09375 0)"/>
-     <use xlink:href="#Montserrat-Regular-294" transform="translate(166.5 0)"/>
-     <use xlink:href="#Montserrat-Regular-294" transform="translate(215.296875 0)"/>
-     <use xlink:href="#Montserrat-Regular-17d" transform="translate(264.09375 0)"/>
-     <use xlink:href="#Montserrat-Regular-1ec" transform="translate(323.09375 0)"/>
-     <use xlink:href="#Montserrat-Regular-1c6" transform="translate(391.59375 0)"/>
-     <use xlink:href="#Montserrat-Regular-294" transform="translate(452 0)"/>
-    </g>
-   </g>
-   <g id="text_3">
-    <!-- Coverage of corpus_capture_01 (rule v2) -->
-    <g style="fill: #ededed" transform="translate(3.533766 25.8) scale(0.15 -0.15)">
-     <defs>
-      <path id="Tektur-Medium-5" d="M 352 602 
-L 352 3878 
-L 954 4480 
-L 3283 4480 
-L 3283 3802 
-L 1107 3802 
-L 1107 678 
-L 3347 678 
-L 3347 0 
-L 954 0 
-L 352 602 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-2b" d="M 320 627 
-L 320 2957 
-L 947 3584 
-L 2893 3584 
-L 3520 2957 
-L 3520 627 
-L 2893 0 
-L 947 0 
-L 320 627 
-z
-M 1062 627 
-L 2778 627 
-L 2778 2957 
-L 1062 2957 
-L 1062 627 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-32" d="M 1005 0 
-L 64 3584 
-L 819 3584 
-L 1549 640 
-L 2170 640 
-L 2899 3584 
-L 3648 3584 
-L 2707 0 
-L 1005 0 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-21" d="M 320 627 
-L 320 2957 
-L 947 3584 
-L 3456 3584 
-L 3456 1587 
-L 1062 1587 
-L 1062 640 
-L 3328 640 
-L 3328 0 
-L 947 0 
-L 320 627 
-z
-M 1062 2061 
-L 2784 2125 
-L 2784 2970 
-L 1062 2970 
-L 1062 2061 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-2e" d="M 358 0 
-L 358 2944 
-L 998 3584 
-L 2880 3584 
-L 2880 2918 
-L 1101 2918 
-L 1101 0 
-L 358 0 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-1d" d="M 294 640 
-L 294 2048 
-L 2739 2112 
-L 2739 2944 
-L 422 2944 
-L 422 3584 
-L 2842 3584 
-L 3482 2944 
-L 3482 0 
-L 934 0 
-L 294 640 
-z
-M 1037 1510 
-L 1037 627 
-L 2739 627 
-L 2739 1638 
-L 1037 1510 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-23" d="M 538 -896 
-L 538 -256 
-L 2803 -256 
-L 2803 512 
-L 947 512 
-L 320 1139 
-L 320 2957 
-L 998 3584 
-L 3546 3584 
-L 3546 -205 
-L 2854 -896 
-L 538 -896 
-z
-M 1062 2944 
-L 1062 1139 
-L 2803 1139 
-L 2803 2944 
-L 1062 2944 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-1" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-22" d="M 358 0 
-L 358 3853 
-L 986 4480 
-L 2547 4480 
-L 2547 3827 
-L 1101 3827 
-L 1101 2752 
-L 2547 2752 
-L 2547 2112 
-L 1101 2112 
-L 1101 0 
-L 358 0 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-1f" d="M 320 627 
-L 320 2957 
-L 947 3584 
-L 3277 3584 
-L 3277 2918 
-L 1062 2918 
-L 1062 666 
-L 3277 666 
-L 3277 0 
-L 947 0 
-L 320 627 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-2c" d="M 358 -896 
-L 358 3584 
-L 2995 3584 
-L 3648 2931 
-L 3648 653 
-L 2995 0 
-L 1101 0 
-L 1101 -896 
-L 358 -896 
-z
-M 2906 2944 
-L 1101 2944 
-L 1101 640 
-L 2906 640 
-L 2906 2944 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-31" d="M 3610 3584 
-L 3610 0 
-L 998 0 
-L 358 640 
-L 358 3584 
-L 1101 3584 
-L 1101 653 
-L 2867 653 
-L 2867 3584 
-L 3610 3584 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-2f" d="M 320 0 
-L 320 627 
-L 2752 627 
-L 2752 1549 
-L 320 1549 
-L 320 2957 
-L 947 3584 
-L 3494 3584 
-L 3494 2957 
-L 1062 2957 
-L 1062 2086 
-L 3494 2086 
-L 3494 608 
-L 2886 0 
-L 320 0 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-229" d="M 294 -666 
-L 294 0 
-L 3622 0 
-L 3622 -666 
-L 294 -666 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-30" d="M 358 4160 
-L 1101 4480 
-L 1101 3456 
-L 2624 3456 
-L 2624 2816 
-L 1101 2816 
-L 1101 640 
-L 2624 640 
-L 2624 0 
-L 998 0 
-L 358 640 
-L 358 4160 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-243" d="M 288 -26 
-L 288 595 
-L 1056 627 
-L 1056 3674 
-L 339 3616 
-L 339 4224 
-L 1798 4480 
-L 1798 627 
-L 2464 595 
-L 2464 -26 
-L 1376 26 
-L 288 -26 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-21f" d="M 358 -294 
-L 358 4198 
-L 960 4800 
-L 2061 4800 
-L 2061 4166 
-L 1101 4166 
-L 1101 -262 
-L 2061 -262 
-L 2061 -896 
-L 960 -896 
-L 358 -294 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-28" d="M 358 0 
-L 358 4480 
-L 1101 4480 
-L 1101 0 
-L 358 0 
-z
-" transform="scale(0.015625)"/>
-      <path id="Tektur-Medium-220" d="M 1830 4198 
-L 1830 -294 
-L 1229 -896 
-L 128 -896 
-L 128 -262 
-L 1088 -262 
-L 1088 4166 
-L 128 4166 
-L 128 4800 
-L 1229 4800 
-L 1830 4198 
-z
-" transform="scale(0.015625)"/>
-     </defs>
-     <use xlink:href="#Tektur-Medium-5"/>
-     <use xlink:href="#Tektur-Medium-2b" transform="translate(55.203125 0)"/>
-     <use xlink:href="#Tektur-Medium-32" transform="translate(115.203125 0)"/>
-     <use xlink:href="#Tektur-Medium-21" transform="translate(173.203125 0)"/>
-     <use xlink:href="#Tektur-Medium-2e" transform="translate(232.203125 0)"/>
-     <use xlink:href="#Tektur-Medium-1d" transform="translate(279.203125 0)"/>
-     <use xlink:href="#Tektur-Medium-23" transform="translate(339.203125 0)"/>
-     <use xlink:href="#Tektur-Medium-21" transform="translate(400.203125 0)"/>
-     <use xlink:href="#Tektur-Medium-1" transform="translate(459.203125 0)"/>
-     <use xlink:href="#Tektur-Medium-2b" transform="translate(485.203125 0)"/>
-     <use xlink:href="#Tektur-Medium-22" transform="translate(545.203125 0)"/>
-     <use xlink:href="#Tektur-Medium-1" transform="translate(587 0)"/>
-     <use xlink:href="#Tektur-Medium-1f" transform="translate(613 0)"/>
-     <use xlink:href="#Tektur-Medium-2b" transform="translate(667 0)"/>
-     <use xlink:href="#Tektur-Medium-2e" transform="translate(727 0)"/>
-     <use xlink:href="#Tektur-Medium-2c" transform="translate(774 0)"/>
-     <use xlink:href="#Tektur-Medium-31" transform="translate(836 0)"/>
-     <use xlink:href="#Tektur-Medium-2f" transform="translate(898 0)"/>
-     <use xlink:href="#Tektur-Medium-229" transform="translate(957.59375 0)"/>
-     <use xlink:href="#Tektur-Medium-1f" transform="translate(1018.796875 0)"/>
-     <use xlink:href="#Tektur-Medium-1d" transform="translate(1072.796875 0)"/>
-     <use xlink:href="#Tektur-Medium-2c" transform="translate(1132.796875 0)"/>
-     <use xlink:href="#Tektur-Medium-30" transform="translate(1194.796875 0)"/>
-     <use xlink:href="#Tektur-Medium-31" transform="translate(1237.796875 0)"/>
-     <use xlink:href="#Tektur-Medium-2e" transform="translate(1299.796875 0)"/>
-     <use xlink:href="#Tektur-Medium-21" transform="translate(1346.796875 0)"/>
-     <use xlink:href="#Tektur-Medium-229" transform="translate(1405.796875 0)"/>
-     <use xlink:href="#Tektur-Medium-242" transform="translate(1467 0)"/>
-     <use xlink:href="#Tektur-Medium-243" transform="translate(1532 0)"/>
-     <use xlink:href="#Tektur-Medium-1" transform="translate(1575 0)"/>
-     <use xlink:href="#Tektur-Medium-21f" transform="translate(1601 0)"/>
-     <use xlink:href="#Tektur-Medium-2e" transform="translate(1635.203125 0)"/>
-     <use xlink:href="#Tektur-Medium-31" transform="translate(1682.203125 0)"/>
-     <use xlink:href="#Tektur-Medium-28" transform="translate(1744.203125 0)"/>
-     <use xlink:href="#Tektur-Medium-21" transform="translate(1767 0)"/>
-     <use xlink:href="#Tektur-Medium-1" transform="translate(1826 0)"/>
-     <use xlink:href="#Tektur-Medium-32" transform="translate(1852 0)"/>
-     <use xlink:href="#Tektur-Medium-244" transform="translate(1910 0)"/>
-     <use xlink:href="#Tektur-Medium-220" transform="translate(1975 0)"/>
-    </g>
-   </g>
-   <g id="legend_1">
-    <g id="patch_4">
-     <path d="M 307.324 172.088 
-L 331.324 172.088 
-L 331.324 163.688 
-L 307.324 163.688 
-z
-" style="fill: #2e7d5b; stroke: #131516; stroke-width: 2; stroke-linejoin: miter"/>
-    </g>
-    <g id="text_4">
-     <!-- matched  140 -->
-     <g style="fill: #ededed" transform="translate(340.924 172.088) scale(0.12 -0.12)">
-      <defs>
        <path id="Montserrat-Regular-2a2" d="M 1696 -32 
 Q 1222 -32 966 224 
 Q 710 480 710 947 
@@ -711,6 +891,39 @@ L 1088 0
 L 634 0 
 z
 " transform="scale(0.015625)"/>
+       <path id="Montserrat-Regular-1c6" d="M 2061 -32 
+Q 1536 -32 1139 189 
+Q 742 410 518 797 
+Q 294 1184 294 1683 
+Q 294 2182 508 2566 
+Q 723 2950 1097 3171 
+Q 1472 3392 1939 3392 
+Q 2413 3392 2781 3177 
+Q 3149 2963 3360 2576 
+Q 3571 2189 3571 1683 
+Q 3571 1651 3568 1616 
+Q 3565 1581 3565 1542 
+L 640 1542 
+L 640 1882 
+L 3322 1882 
+L 3142 1747 
+Q 3142 2112 2985 2397 
+Q 2829 2682 2560 2842 
+Q 2291 3002 1939 3002 
+Q 1594 3002 1318 2842 
+Q 1043 2682 889 2394 
+Q 736 2106 736 1734 
+L 736 1664 
+Q 736 1280 905 989 
+Q 1075 698 1379 534 
+Q 1683 371 2074 371 
+Q 2381 371 2646 480 
+Q 2912 589 3104 813 
+L 3360 518 
+Q 3136 250 2800 109 
+Q 2464 -32 2061 -32 
+z
+" transform="scale(0.015625)"/>
        <path id="Montserrat-Regular-1b7" d="M 1971 -32 
 Q 1491 -32 1110 185 
 Q 730 403 512 790 
@@ -749,65 +962,6 @@ L 3706 0
 L 3270 0 
 z
 " transform="scale(0.015625)"/>
-       <path id="Montserrat-Regular-482" transform="scale(0.015625)"/>
-       <path id="Montserrat-Regular-43d" d="M 1114 0 
-L 1114 4288 
-L 1318 4070 
-L 58 4070 
-L 58 4480 
-L 1574 4480 
-L 1574 0 
-L 1114 0 
-z
-" transform="scale(0.015625)"/>
-       <path id="Montserrat-Regular-440" d="M 256 1178 
-L 256 1510 
-L 2630 4480 
-L 3142 4480 
-L 787 1510 
-L 538 1587 
-L 4141 1587 
-L 4141 1178 
-L 256 1178 
-z
-M 2784 0 
-L 2784 1178 
-L 2797 1587 
-L 2797 2624 
-L 3245 2624 
-L 3245 0 
-L 2784 0 
-z
-" transform="scale(0.015625)"/>
-       <path id="Montserrat-Regular-43c" d="M 2118 -38 
-Q 1600 -38 1197 234 
-Q 794 506 563 1014 
-Q 333 1523 333 2240 
-Q 333 2957 563 3465 
-Q 794 3974 1197 4246 
-Q 1600 4518 2118 4518 
-Q 2637 4518 3040 4246 
-Q 3443 3974 3676 3465 
-Q 3910 2957 3910 2240 
-Q 3910 1523 3676 1014 
-Q 3443 506 3040 234 
-Q 2637 -38 2118 -38 
-z
-M 2118 384 
-Q 2515 384 2809 598 
-Q 3104 813 3270 1225 
-Q 3437 1638 3437 2240 
-Q 3437 2842 3270 3254 
-Q 3104 3667 2809 3881 
-Q 2515 4096 2118 4096 
-Q 1734 4096 1433 3881 
-Q 1133 3667 966 3254 
-Q 800 2842 800 2240 
-Q 800 1638 966 1225 
-Q 1133 813 1433 598 
-Q 1734 384 2118 384 
-z
-" transform="scale(0.015625)"/>
       </defs>
       <use xlink:href="#Montserrat-Regular-23f"/>
       <use xlink:href="#Montserrat-Regular-17d" transform="translate(106.09375 0)"/>
@@ -818,22 +972,21 @@ z
       <use xlink:href="#Montserrat-Regular-1b7" transform="translate(387.28125 0)"/>
       <use xlink:href="#Montserrat-Regular-482" transform="translate(455.078125 0)"/>
       <use xlink:href="#Montserrat-Regular-482" transform="translate(481.28125 0)"/>
-      <use xlink:href="#Montserrat-Regular-43d" transform="translate(507.484375 0)"/>
-      <use xlink:href="#Montserrat-Regular-440" transform="translate(543.578125 0)"/>
-      <use xlink:href="#Montserrat-Regular-43c" transform="translate(609.671875 0)"/>
+      <use xlink:href="#Montserrat-Regular-440" transform="translate(507.484375 0)"/>
+      <use xlink:href="#Montserrat-Regular-441" transform="translate(573.375 0)"/>
      </g>
     </g>
     <g id="patch_5">
-     <path d="M 307.324 192.716 
-L 331.324 192.716 
-L 331.324 184.316 
-L 307.324 184.316 
+     <path d="M 310.21525 192.716 
+L 334.21525 192.716 
+L 334.21525 184.316 
+L 310.21525 184.316 
 z
 " style="fill: #3a3a3a; stroke: #131516; stroke-width: 2; stroke-linejoin: miter"/>
     </g>
     <g id="text_5">
-     <!-- not applicable  140 -->
-     <g style="fill: #ededed" transform="translate(340.924 192.716) scale(0.12 -0.12)">
+     <!-- not applicable  45 -->
+     <g style="fill: #ededed" transform="translate(343.81525 192.716) scale(0.12 -0.12)">
       <defs>
        <path id="Montserrat-Regular-245" d="M 634 0 
 L 634 3360 
@@ -1003,9 +1156,8 @@ z
       <use xlink:href="#Montserrat-Regular-1c6" transform="translate(655.5 0)"/>
       <use xlink:href="#Montserrat-Regular-482" transform="translate(715.90625 0)"/>
       <use xlink:href="#Montserrat-Regular-482" transform="translate(742.109375 0)"/>
-      <use xlink:href="#Montserrat-Regular-43d" transform="translate(768.3125 0)"/>
-      <use xlink:href="#Montserrat-Regular-440" transform="translate(804.40625 0)"/>
-      <use xlink:href="#Montserrat-Regular-43c" transform="translate(870.5 0)"/>
+      <use xlink:href="#Montserrat-Regular-440" transform="translate(768.3125 0)"/>
+      <use xlink:href="#Montserrat-Regular-441" transform="translate(834.203125 0)"/>
      </g>
     </g>
    </g>
