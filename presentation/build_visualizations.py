@@ -27,33 +27,83 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 OUT = REPO_ROOT / "presentation" / "assets"
 FONTS = REPO_ROOT / "assets" / "fonts"
 
-BACKGROUND = "#131516"
-PANEL = "#1D1D1D"
-TEXT = "#E0E0E0"
-SECONDARY = "#9F9F9F"
-ACCENT = "#6D071F"
-HIGHLIGHT = "#A2391D"
-GRID = "#2A2C2E"
+# Two schemes are built from the same code: the dark deck (slides.md) and the
+# light fallback (slides-light.md) for a washed-out projector. The light charts
+# keep the same geometry but use dark outlines so they read on a pale page.
+DARK = {
+    "BACKGROUND": "#131516",
+    "PANEL": "#1D1D1D",
+    "TEXT": "#EDEDED",
+    "SECONDARY": "#B8B8B8",
+    "ACCENT": "#6D071F",
+    "HIGHLIGHT": "#A2391D",
+    "GRID": "#2A2C2E",
+    "MATCHED": "#2E7D5B",
+    "MISMATCHED": "#8E2A2A",
+    "GOOD": "#2E7D32",
+    "BAD": "#8B1A1A",
+    "INCOMPLETE": "#6B6B6B",
+    "AMBIGUOUS": "#B8860B",
+    "UNCOVERED": "#3A3A3A",
+}
+LIGHT = {
+    "BACKGROUND": "#FAFAFA",
+    "PANEL": "#EFEFEF",
+    "TEXT": "#1A1A1A",
+    "SECONDARY": "#4A4A4A",
+    "ACCENT": "#B7301A",
+    "HIGHLIGHT": "#C7311C",
+    "GRID": "#C9C9C9",
+    "MATCHED": "#2E7D32",
+    "MISMATCHED": "#C62828",
+    "GOOD": "#2E7D32",
+    "BAD": "#B03A2E",
+    "INCOMPLETE": "#8A8A8A",
+    "AMBIGUOUS": "#8A6D00",
+    "UNCOVERED": "#BDBDBD",
+}
 
-MATCHED = "#2E7D5B"
-MISMATCHED = "#8E2A2A"
-INCOMPLETE = "#6B6B6B"
-AMBIGUOUS = "#B8860B"
-UNCOVERED = "#3A3A3A"
+# Module-level names the drawing functions read; ``_apply`` rebinds them.
+BACKGROUND = DARK["BACKGROUND"]
+PANEL = DARK["PANEL"]
+TEXT = DARK["TEXT"]
+SECONDARY = DARK["SECONDARY"]
+ACCENT = DARK["ACCENT"]
+HIGHLIGHT = DARK["HIGHLIGHT"]
+GRID = DARK["GRID"]
+MATCHED = DARK["MATCHED"]
+MISMATCHED = DARK["MISMATCHED"]
+GOOD = DARK["GOOD"]
+BAD = DARK["BAD"]
+INCOMPLETE = DARK["INCOMPLETE"]
+AMBIGUOUS = DARK["AMBIGUOUS"]
+UNCOVERED = DARK["UNCOVERED"]
 
-matplotlib.rcParams.update(
-    {
-        "svg.fonttype": "path",  # text -> paths: no font dependency in <img>
-        "figure.facecolor": BACKGROUND,
-        "axes.facecolor": BACKGROUND,
-        "savefig.facecolor": BACKGROUND,
-        "text.color": TEXT,
-        "axes.labelcolor": TEXT,
-        "xtick.color": SECONDARY,
-        "ytick.color": SECONDARY,
-        "axes.edgecolor": GRID,
-    }
-)
+#: Suffix appended to every file name for the active scheme ("" or "-light").
+SUFFIX = ""
+
+
+def _apply(scheme: str) -> None:
+    """Point the module-level palette at a scheme and update matplotlib."""
+    global BACKGROUND, PANEL, TEXT, SECONDARY, ACCENT, HIGHLIGHT, GRID
+    global MATCHED, MISMATCHED, GOOD, BAD, INCOMPLETE, AMBIGUOUS, UNCOVERED, SUFFIX
+    palette = LIGHT if scheme == "light" else DARK
+    for name, value in palette.items():
+        globals()[name] = value
+    SUFFIX = "-light" if scheme == "light" else ""
+    matplotlib.rcParams.update(
+        {
+            "svg.fonttype": "path",  # text -> paths: no font dependency in <img>
+            "figure.facecolor": BACKGROUND,
+            "axes.facecolor": BACKGROUND,
+            "savefig.facecolor": BACKGROUND,
+            "text.color": TEXT,
+            "axes.labelcolor": TEXT,
+            "xtick.color": SECONDARY,
+            "ytick.color": SECONDARY,
+            "axes.edgecolor": GRID,
+        }
+    )
 
 
 def _register_fonts() -> None:
@@ -76,12 +126,27 @@ def precision_v1_v2() -> None:
     fig, ax = plt.subplots(figsize=(6.4, 4.2), dpi=150)
     labels = ["v1", "v2"]
     values = [0.428571, 1.0]
-    colors = [ACCENT, HIGHLIGHT]
+    counts = ["60 matched / 80 mismatched", "140 matched / 0 mismatched"]
+    colors = [BAD, GOOD]
     bars = ax.bar(labels, values, width=0.5, color=colors, zorder=3)
-    for bar, value in zip(bars, values):
-        ax.text(bar.get_x() + bar.get_width() / 2, value + 0.03, f"{value:.2f}",
-                ha="center", va="bottom", fontsize=20, fontfamily="Tektur", color=TEXT)
-    ax.plot(labels, values, "o", color=TEXT, markersize=7, zorder=4)
+    for bar, value, count in zip(bars, values, counts):
+        center = bar.get_x() + bar.get_width() / 2
+        ax.text(center, value + 0.05, f"{value:.2f}", ha="center", va="bottom",
+                fontsize=20, fontfamily="Tektur", color=TEXT)
+        ax.text(center, 0.03, count, ha="center", va="bottom", fontsize=10,
+                fontfamily="Montserrat", color=BACKGROUND if value > 0.9 else TEXT,
+                rotation=90, zorder=5)
+    # Maximum precision: a dashed guide at 1.00 the reader can compare against.
+    ax.axhline(1.0, color=SECONDARY, linestyle="--", linewidth=1.2, zorder=2)
+    ax.text(1.42, 1.0, "max 1.00", ha="right", va="bottom", fontsize=10,
+            fontfamily="Montserrat", color=SECONDARY)
+    ax.annotate(
+        "+80 контрпримеров\nустранено",
+        xy=(1, 1.0), xytext=(0.42, 0.62),
+        fontsize=11, fontfamily="Montserrat", color=GOOD, ha="center",
+        arrowprops=dict(arrowstyle="->", color=GOOD, linewidth=1.4),
+        zorder=6,
+    )
     ax.set_ylim(0, 1.18)
     ax.set_ylabel("Precision", fontfamily="Montserrat", fontsize=13)
     ax.set_title("Precision: 0.43 → 1.00", fontfamily="Tektur", fontsize=17,
@@ -89,7 +154,7 @@ def precision_v1_v2() -> None:
     ax.grid(axis="y", color=GRID, linewidth=0.8, zorder=0)
     _style_axes(ax)
     fig.tight_layout()
-    fig.savefig(OUT / "precision_v1_v2.svg")
+    fig.savefig(OUT / f"precision_v1_v2{SUFFIX}.svg")
     plt.close(fig)
 
 
@@ -111,7 +176,7 @@ def framing_payload() -> None:
     ax.grid(axis="x", color=GRID, linewidth=0.8, zorder=0)
     _style_axes(ax)
     fig.tight_layout()
-    fig.savefig(OUT / "framing_payload.svg")
+    fig.savefig(OUT / f"framing_payload{SUFFIX}.svg")
     plt.close(fig)
 
 
@@ -141,7 +206,7 @@ def coverage_donut() -> None:
     ax.set_title("Coverage of corpus_capture_01 (rule v2)", fontfamily="Tektur",
                  fontsize=15, color=TEXT, pad=10)
     fig.tight_layout()
-    fig.savefig(OUT / "coverage_donut.svg")
+    fig.savefig(OUT / f"coverage_donut{SUFFIX}.svg")
     plt.close(fig)
 
 
@@ -163,14 +228,14 @@ def research_timeline() -> None:
     ax.set_ylim(-0.7, 0.7)
     ax.axis("off")
     fig.tight_layout()
-    fig.savefig(OUT / "research_timeline.svg")
+    fig.savefig(OUT / f"research_timeline{SUFFIX}.svg")
     plt.close(fig)
 
 
 def architecture() -> None:
-    fig, ax = plt.subplots(figsize=(9.6, 4.4), dpi=150)
+    fig, ax = plt.subplots(figsize=(9.6, 3.4), dpi=150)
     ax.set_xlim(0, 10)
-    ax.set_ylim(0, 5)
+    ax.set_ylim(1.3, 3.8)
     ax.axis("off")
     modules = [
         (0.4, "capture", "pcap/pcapng → сессии\nreassembly, provenance"),
@@ -192,10 +257,8 @@ def architecture() -> None:
             color=SECONDARY)
     ax.text(6.65, 2.8, "JSON", ha="center", fontsize=9, fontfamily="Montserrat",
             color=SECONDARY)
-    ax.text(5.0, 0.7, "Контракты зафиксированы JSON Schema (draft 2020-12)",
-            ha="center", fontsize=11, fontfamily="Montserrat", color=SECONDARY)
     fig.tight_layout()
-    fig.savefig(OUT / "architecture.svg")
+    fig.savefig(OUT / f"architecture{SUFFIX}.svg")
     plt.close(fig)
 
 
@@ -218,22 +281,41 @@ def memory_sweep() -> None:
         text.set_fontfamily("Montserrat")
     _style_axes(ax)
     fig.tight_layout()
-    fig.savefig(OUT / "memory_sweep.svg")
+    fig.savefig(OUT / f"memory_sweep{SUFFIX}.svg")
     plt.close(fig)
 
 
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     _register_fonts()
-    precision_v1_v2()
-    framing_payload()
-    coverage_donut()
-    research_timeline()
-    architecture()
-    memory_sweep()
+    for scheme in ("dark", "light"):
+        _apply(scheme)
+        precision_v1_v2()
+        framing_payload()
+        coverage_donut()
+        research_timeline()
+        architecture()
+        memory_sweep()
+    _render_pngs()
     for name in sorted(p.name for p in OUT.glob("*.svg")):
         print("presentation/assets/" + name)
     return 0
+
+
+def _render_pngs() -> None:
+    """Rasterise every SVG to a sibling PNG for the editable PPTX.
+
+    The PPTX embeds pictures rather than SVG, so the light charts need a PNG
+    twin; cairosvg keeps the geometry identical to the SVG the browser shows.
+    """
+    try:
+        import cairosvg
+    except ImportError:  # pragma: no cover - optional build dependency
+        print("cairosvg is missing; skipping PNG rendering")
+        return
+    for svg in sorted(OUT.glob("*.svg")):
+        cairosvg.svg2png(url=str(svg), write_to=str(svg.with_suffix(".png")),
+                         output_width=1400)
 
 
 if __name__ == "__main__":
