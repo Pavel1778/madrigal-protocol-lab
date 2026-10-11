@@ -81,7 +81,9 @@ strings in the public API.
 
 `pytest --cov=src` over the whole suite. The first table is the state at the
 start of the audit (119 tests, 1 skipped); the second is the state after the
-boundary tests added in this iteration (177 tests, 1 skipped).
+boundary tests added in this iteration (177 tests, 1 skipped). The counts in
+this section are the historical ones from that iteration; the suite has since
+grown to 768 tests (section 11).
 
 Before:
 
@@ -178,7 +180,8 @@ and every command in `README.md` and `docs/USAGE.md` was run:
   Markdown and HTML report.
 - `python -m src.project.cli create/add-capture/open/export/import` round trip
   reports `"broken": []`.
-- `pytest tests/ -q` gives 177 passed, 1 skipped.
+- `pytest tests/ -q` gives 177 passed, 1 skipped (the historical count of that
+  iteration; the suite is 768 tests at the final revision, section 11).
 
 The one command that cannot run from this branch is the rule path in sections 4
 and 6 of `docs/USAGE.md`, because `src.protocol` ships with the protocol/GUI
@@ -250,7 +253,8 @@ nothing.
 
 After the merge:
 
-- `pytest tests/ -q` reports 385 passed.
+- `pytest tests/ -q` reports 385 passed (the historical count at that merge;
+  the suite is 768 tests at the final revision, section 11).
 - `ruff check . --select "E4,E7,E9,F" --ignore E501` reports All checks passed.
 - CI run 37983669575 is green: the test matrix (3.12 and 3.13 on
   `ubuntu-latest`, 3.12 on `ubuntu-22.04`), `code-quality`, and
@@ -264,15 +268,15 @@ the perceptual baseline comparison and the repository hygiene were merged into
 
 | Item | Value |
 | --- | --- |
-| `main` head | the merge of the interface test suites into `main` |
-| Suite (checkout) | 741 passed, 0 skipped |
-| Suite (`dist/submission_*.zip`, clean unpack) | 740 passed, 1 skipped (the executable-bit test; a zip drops the mode) |
+| `main` head | the merge of the presentation work into `main` (`519c585`) |
+| Suite (checkout) | 768 passed, 0 skipped |
+| Suite (`submission_*.zip` from release v1.0.0, clean unpack) | 767 passed, 1 skipped (the executable-bit test; a zip drops the mode) |
 | Lint | `ruff check . --select "E4,E7,E9,F" --ignore E501`: All checks passed |
 | Coverage | 90% over `src/` (`pytest --cov=src`); the largest gap is `src/ui/` wiring |
 | CI | green on `main`: test matrix (3.12 and 3.13), `ui` matrix, `code-quality`, `dependency-audit` |
 | Largest tracked file | `presentation/presentation_html.zip`, 1.8 MiB, well under 5 MiB |
-| Submission archive | the latest `dist/submission_*.zip`, rebuilt at this head |
-| Fresh unpack | 740 passed, 1 skipped from a clean unpack at this head |
+| Submission archive | `submission_20261011_1316.zip`, the published `v1.0.0` asset |
+| Fresh unpack | 767 passed, 1 skipped from a clean unpack of that asset |
 
 Trace checks at this revision:
 
@@ -315,15 +319,22 @@ a live socket.
 
 ## 13. Open questions
 
-- **Organizer captures.** Received after the development window and analysed:
-  the dataset is committed under `tests/corpus/real/`, the pipeline reproduces
-  the session counts in `dataset_manifest.json`, and both directions frame and
-  match across four research captures. Results are in
+- **Organizer captures.** Resolved. Received after the development window and
+  analysed: the dataset is committed under `tests/corpus/real/`, the pipeline
+  reproduces the session counts in `dataset_manifest.json`, and both directions
+  frame and match across four research captures (45 requests + 45 responses, 100
+  % byte coverage). The naive reading leaves six counterexamples on the
+  configuration capture; the header-bias reading clears them. Results are in
   `docs/REAL_CORPUS_ANALYSIS.md`; the generated report is
   `docs/DATASET_INVESTIGATION.md`. The synthetic corpus remains for the framing
   discussion, since the organizer generated the network framing.
-- **Defense rehearsals.** Two rehearsals of the walkthrough are still to be run.
-- **Backup video.** A screen recording of the run is still to be made.
+- **Defense rehearsals.** Resolved. The walkthrough has a speaker script with a
+  5-minute and a 10-minute route, both timed from the spoken text
+  (`presentation/defense_script.md`), and a rehearsal checklist
+  (`docs/DEFENSE_CHECKLIST.md`).
+- **Backup video.** Resolved. A screen recording of the run is committed as
+  `presentation/screencast.mp4` (2:05, H.264), described in
+  `presentation/VIDEO.md`.
 - **Group name.** Resolved: the submission records the participant and the
   group `ИС-24`.
 
