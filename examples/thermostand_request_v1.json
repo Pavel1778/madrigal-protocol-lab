@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "rule_id": "thermostand_request",
+  "rule_version": 1,
+  "name": "thermostand_request_v1",
+  "scope": {"direction": "A_to_B"},
+  "framing": {
+    "type": "length_prefixed",
+    "length_offset": 2,
+    "length_size": 2,
+    "byte_order": "big",
+    "length_covers": "payload",
+    "length_bias": 4
+  },
+  "fields": [
+    {"name": "magic", "offset": 0, "type": "uint16", "byte_order": "little", "expected": [23718]},
+    {"name": "body_length", "offset": 2, "type": "uint16", "byte_order": "big"},
+    {"name": "message_counter", "offset": 4, "type": "uint16", "byte_order": "big"},
+    {"name": "message_type", "offset": 6, "type": "uint16", "byte_order": "big"}
+  ]
+}
