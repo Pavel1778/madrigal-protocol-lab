@@ -9,19 +9,25 @@ from the repository's own code. Every number is from `docs/METRICS.md`.
 
 | Path | What it is |
 | --- | --- |
-| `slides.md` | the deck source (22 slides, Madrigal theme, `v-click` build-ins) |
+| `slides.md` | the deck source (19 slides, Madrigal theme, `v-click` build-ins) |
 | `style.css` | the Madrigal theme: palette, Tektur + Montserrat, layout |
-| `slides.pdf` | the printed export, 22 pages (archive copy for submission) |
+| `slides-light.md` | the light variant, derived from `slides.md` by `build_light.py` |
+| `slides.pdf` | the printed export, 19 pages (archive copy for submission) |
+| `slides-light.pdf` | the same deck exported for a washed-out projector |
 | `slides.pptx` | the editable PPTX: native text, entrance animations, transitions |
 | `scripts/build_pptx.py` | builds `slides.pptx` from code (python-pptx), not a picture dump |
 | `screenshots/` | 11 real GUI captures at 1920×1080 (`generate_screenshots.py`) |
 | `assets/` | 6 branded SVG visualisations (`build_visualizations.py`) |
 | `icons/` | Lucide line icons used by the deck (`fetch_icons.py`) |
-| `public/` | assets the deck serves: fonts, logo, QR code |
+| `public/` | assets the deck serves: fonts, logo, QR codes, member photos |
 | `defense_script.md` | the 8-minute speaker script, one section per slide |
 | `VIDEO.md` | shot list for the reserve screen recording |
 | `export_pdf.sh` | exports `slides.pdf` with a retry for the Slidev race |
 | `bundle_html.py` | packs the built `dist/` into `presentation_html.zip` |
+
+The two member photos on slide 2 come from `1.jpg` and `2.jpg` at the repository
+root; `presentation/make_assets.py` crops them to the round `public/avatar_*_round.png`
+the slide uses. Replace either JPEG and re-run `make_assets.py` to update a face.
 
 ## Build (one command)
 
@@ -61,6 +67,9 @@ QT_QPA_PLATFORM=offscreen python -m presentation.generate_screenshots
 # six branded SVG visualisations
 python -m presentation.build_visualizations
 
+# panel crops, QR codes and the round member photos
+python -m presentation.make_assets
+
 # icons (after npm pack lucide-static)
 python -m presentation.fetch_icons
 ```
@@ -70,8 +79,9 @@ python -m presentation.fetch_icons
 - Fonts (Tektur, Montserrat) are bundled: `public/fonts/` for Slidev,
   `assets/fonts/` for the visualisation script.
 - `node_modules/`, `dist/` and `.vite-cache/` are ignored by git.
-- The deck uses the Madrigal palette. Brand fills stay `#131516` / `#6D071F` /
-  `#410913 → #A2391D`; the page background is `#0E1011` and body text is
-  `#F0F0F0`, so every label passes WCAG AA. The accent orange used for links and
-  inline code is `#E0603A` (the dark `#A2391D` is decoration only). Rounded
-  corners 4–5 px. Slide transition is `slide-left`; build-ins are `v-click`.
+- The deck uses the Madrigal palette, defined once as CSS custom properties in
+  `style.css`. Dark theme: background `#131516`, surface `#1D1D1D`, body text
+  `#EDEDED`, secondary `#B8B8B8`, accent `#D0603A` (4.7:1 on the background,
+  AA). Light theme (`html.light`): background `#FAFAFA`, surface `#FFFFFF`, text
+  `#16181A`, secondary `#4A4A4A`, accent `#B7301A` (5.8:1, AA). Rounded corners
+  12 px. Slide transition is `slide-left`; build-ins are `v-click`.

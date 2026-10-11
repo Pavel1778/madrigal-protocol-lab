@@ -22,7 +22,10 @@ from pptx.util import Inches, Pt
 
 PRES = Path(__file__).resolve().parent
 OUT = PRES / "team-slide.pptx"
-AVATAR = PRES / "public" / "team-avatar-round.png"
+AVATARS = {
+    "Сабадаш Павел": PRES / "public" / "avatar_pavel_round.png",
+    "Предков Никита": PRES / "public" / "avatar_nikita_round.png",
+}
 
 SLIDE_W = Inches(13.333)
 SLIDE_H = Inches(7.5)
@@ -94,8 +97,9 @@ def _slide(prs, palette, title):
     for i, (name, role, handle, qr) in enumerate(MEMBERS):
         y = top + i * Inches(1.9)
         _rect(slide, Inches(0.9), y, Inches(11.5), Inches(1.6), palette["surface"])
-        if AVATAR.is_file():
-            slide.shapes.add_picture(str(AVATAR), Inches(1.2), y + Inches(0.15),
+        avatar = AVATARS.get(name)
+        if avatar is not None and avatar.is_file():
+            slide.shapes.add_picture(str(avatar), Inches(1.2), y + Inches(0.15),
                                      height=Inches(1.3))
         tx = Inches(2.9)
         _, t1 = _text(slide, tx, y + Inches(0.18), Inches(7.0), Inches(0.6))

@@ -217,16 +217,16 @@ html.light {
   border-radius: var(--radius); padding: 24px 26px;
 }
 .member__photo {
-  width: 140px; height: 140px; border-radius: 50%; flex: none;
+  width: 180px; height: 180px; border-radius: 50%; flex: none;
   border: 3px solid var(--accent); box-sizing: border-box;
 }
 .member__info { flex: 1 1 auto; min-width: 0; }
-.member__name { font-family: 'Tektur', sans-serif; font-size: 30px; font-weight: 600; }
+.member__name { font-family: 'Tektur', sans-serif; font-size: 28px; font-weight: 700; }
 .member__role { font-size: 20px; color: var(--secondary); margin-top: 4px; }
 .member__contact { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
 .member__handle { font-family: 'JetBrains Mono', monospace; font-size: 19px; color: var(--accent); }
 .member__qr {
-  width: 72px; height: 72px; flex: none;
+  width: 80px; height: 80px; flex: none;
   background: #FFFFFF; border-radius: 8px; padding: 4px;
 }
 
@@ -248,10 +248,11 @@ html.light {
 .moment__sub { font-size: 21px; color: var(--secondary); max-width: 50ch; }
 .moment__figure { margin-top: 10px; }
 .moment__figure img { width: 100%; height: 120px; object-fit: contain; }
-.steps { display: flex; gap: 12px; margin-top: 4px; }
+.steps { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
 .steps span {
-  font-family: 'JetBrains Mono', monospace; font-size: 16px; color: var(--secondary);
-  border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px;
+  font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--secondary);
+  border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px;
+  white-space: nowrap;
 }
 .steps span.on { color: #FFFFFF; background: var(--accent); border-color: var(--accent); }
 
