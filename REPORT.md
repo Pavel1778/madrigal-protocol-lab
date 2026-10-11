@@ -37,6 +37,22 @@ The whole investigation is reproducible with
 `python -m scripts.run_reference_investigation`, which regenerates
 `docs/REFERENCE_INVESTIGATION.md` from the captures.
 
+### 1.1 The supplied captures
+
+The organizer's own capture set is committed under `tests/corpus/real/` and
+studied with the same pipeline: three research captures, one additional capture
+and eight defect captures, plus an action journal. This is a second protocol,
+independent of the corpus above: a two-byte magic `0xa65c`, a two-byte body
+length that counts the four-byte header, a message counter and a message type.
+
+`python -m scripts.investigate_dataset` writes
+`docs/DATASET_INVESTIGATION.md` from those files. Both directions frame cleanly
+on all four research captures; the first reading of the length field (payload
+only) produces six counterexamples that the header-bias reading clears. Each
+defect capture reports the diagnostic it was built for, and the decoded requests
+correlate with the journal. The rules live in `examples/thermostand_request_v1.json`,
+`examples/thermostand_request_v2.json` and `examples/thermostand_response_v2.json`.
+
 ## 2. Methodology
 
 The work followed one loop, repeated until the rule stopped changing:
