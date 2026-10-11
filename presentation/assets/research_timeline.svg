@@ -6,7 +6,7 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-10-10T08:00:45.690830</dc:date>
+    <dc:date>2026-10-11T06:21:55.515069</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -36,11 +36,11 @@ L 279.522581 122.4
 L 382.877419 122.4 
 L 486.232258 122.4 
 L 589.587097 122.4 
-" clip-path="url(#p82e6e72126)" style="fill: none; stroke: #2a2c2e; stroke-width: 3; stroke-linecap: square"/>
+" clip-path="url(#pe6ed48ba6e)" style="fill: none; stroke: #2a2c2e; stroke-width: 3; stroke-linecap: square"/>
    </g>
    <g id="PathCollection_1">
     <defs>
-     <path id="m9b697bead1" d="M 0 11.401754 
+     <path id="mf38dd0798b" d="M 0 11.401754 
 C 3.023781 11.401754 5.924122 10.200393 8.062258 8.062258 
 C 10.200393 5.924122 11.401754 3.023781 11.401754 0 
 C 11.401754 -3.023781 10.200393 -5.924122 8.062258 -8.062258 
@@ -52,18 +52,18 @@ C -5.924122 10.200393 -3.023781 11.401754 0 11.401754
 z
 " style="stroke: #a2391d; stroke-width: 2.5"/>
     </defs>
-    <g clip-path="url(#p82e6e72126)">
-     <use xlink:href="#m9b697bead1" x="72.812903" y="122.4" style="fill: #1d1d1d; stroke: #a2391d; stroke-width: 2.5"/>
-     <use xlink:href="#m9b697bead1" x="176.167742" y="122.4" style="fill: #1d1d1d; stroke: #a2391d; stroke-width: 2.5"/>
-     <use xlink:href="#m9b697bead1" x="279.522581" y="122.4" style="fill: #1d1d1d; stroke: #a2391d; stroke-width: 2.5"/>
-     <use xlink:href="#m9b697bead1" x="382.877419" y="122.4" style="fill: #1d1d1d; stroke: #a2391d; stroke-width: 2.5"/>
-     <use xlink:href="#m9b697bead1" x="486.232258" y="122.4" style="fill: #1d1d1d; stroke: #a2391d; stroke-width: 2.5"/>
-     <use xlink:href="#m9b697bead1" x="589.587097" y="122.4" style="fill: #1d1d1d; stroke: #a2391d; stroke-width: 2.5"/>
+    <g clip-path="url(#pe6ed48ba6e)">
+     <use xlink:href="#mf38dd0798b" x="72.812903" y="122.4" style="fill: #1d1d1d; stroke: #a2391d; stroke-width: 2.5"/>
+     <use xlink:href="#mf38dd0798b" x="176.167742" y="122.4" style="fill: #1d1d1d; stroke: #a2391d; stroke-width: 2.5"/>
+     <use xlink:href="#mf38dd0798b" x="279.522581" y="122.4" style="fill: #1d1d1d; stroke: #a2391d; stroke-width: 2.5"/>
+     <use xlink:href="#mf38dd0798b" x="382.877419" y="122.4" style="fill: #1d1d1d; stroke: #a2391d; stroke-width: 2.5"/>
+     <use xlink:href="#mf38dd0798b" x="486.232258" y="122.4" style="fill: #1d1d1d; stroke: #a2391d; stroke-width: 2.5"/>
+     <use xlink:href="#mf38dd0798b" x="589.587097" y="122.4" style="fill: #1d1d1d; stroke: #a2391d; stroke-width: 2.5"/>
     </g>
    </g>
    <g id="text_1">
     <!-- 1 -->
-    <g style="fill: #e0e0e0" transform="translate(70.017903 126.95) scale(0.13 -0.13)">
+    <g style="fill: #ededed" transform="translate(70.017903 126.95) scale(0.13 -0.13)">
      <defs>
       <path id="Tektur-Medium-243" d="M 288 -26 
 L 288 595 
@@ -85,7 +85,7 @@ z
    </g>
    <g id="text_2">
     <!-- наблюдение -->
-    <g style="fill: #9f9f9f" transform="translate(32.865091 81.125143) scale(0.12 -0.12)">
+    <g style="fill: #b8b8b8" transform="translate(32.865091 81.125143) scale(0.12 -0.12)">
      <defs>
       <path id="Montserrat-Regular-3a9" d="M 646 0 
 L 646 3360 
@@ -340,7 +340,7 @@ z
    </g>
    <g id="text_3">
     <!-- 2 -->
-    <g style="fill: #e0e0e0" transform="translate(171.942742 126.95) scale(0.13 -0.13)">
+    <g style="fill: #ededed" transform="translate(171.942742 126.95) scale(0.13 -0.13)">
      <defs>
       <path id="Tektur-Medium-244" d="M 3808 653 
 L 3808 0 
@@ -364,7 +364,7 @@ z
    </g>
    <g id="text_4">
     <!-- гипотеза -->
-    <g style="fill: #9f9f9f" transform="translate(148.346492 178.656) scale(0.12 -0.12)">
+    <g style="fill: #b8b8b8" transform="translate(148.346492 178.656) scale(0.12 -0.12)">
      <defs>
       <path id="Montserrat-Regular-395" d="M 646 0 
 L 646 3360 
@@ -483,7 +483,7 @@ z
    </g>
    <g id="text_5">
     <!-- 3 -->
-    <g style="fill: #e0e0e0" transform="translate(275.531174 126.95) scale(0.13 -0.13)">
+    <g style="fill: #ededed" transform="translate(275.531174 126.95) scale(0.13 -0.13)">
      <defs>
       <path id="Tektur-Medium-245" d="M 3110 0 
 L 192 0 
@@ -511,7 +511,7 @@ z
    </g>
    <g id="text_6">
     <!-- проверка -->
-    <g style="fill: #9f9f9f" transform="translate(249.152268 81.125143) scale(0.12 -0.12)">
+    <g style="fill: #b8b8b8" transform="translate(249.152268 81.125143) scale(0.12 -0.12)">
      <defs>
       <path id="Montserrat-Regular-3ac" d="M 2381 -32 
 Q 1946 -32 1594 169 
@@ -622,7 +622,7 @@ z
    </g>
    <g id="text_7">
     <!-- 4 -->
-    <g style="fill: #e0e0e0" transform="translate(378.717419 126.95) scale(0.13 -0.13)">
+    <g style="fill: #ededed" transform="translate(378.717419 126.95) scale(0.13 -0.13)">
      <defs>
       <path id="Tektur-Medium-246" d="M 256 1152 
 L 454 4480 
@@ -643,7 +643,7 @@ z
    </g>
    <g id="text_8">
     <!-- контрпример -->
-    <g style="fill: #9f9f9f" transform="translate(339.823669 178.656) scale(0.12 -0.12)">
+    <g style="fill: #b8b8b8" transform="translate(339.823669 178.656) scale(0.12 -0.12)">
      <defs>
       <path id="Montserrat-Regular-3a8" d="M 646 0 
 L 646 3360 
@@ -680,7 +680,7 @@ z
    </g>
    <g id="text_9">
     <!-- 5 -->
-    <g style="fill: #e0e0e0" transform="translate(482.007258 126.95) scale(0.13 -0.13)">
+    <g style="fill: #ededed" transform="translate(482.007258 126.95) scale(0.13 -0.13)">
      <defs>
       <path id="Tektur-Medium-247" d="M 3808 3827 
 L 1094 3827 
@@ -704,7 +704,7 @@ z
    </g>
    <g id="text_10">
     <!-- уточнение -->
-    <g style="fill: #9f9f9f" transform="translate(453.137571 81.125143) scale(0.12 -0.12)">
+    <g style="fill: #b8b8b8" transform="translate(453.137571 81.125143) scale(0.12 -0.12)">
      <defs>
       <path id="Montserrat-Regular-3af" d="M 704 -1274 
 Q 467 -1274 253 -1197 
@@ -765,7 +765,7 @@ z
    </g>
    <g id="text_11">
     <!-- 6 -->
-    <g style="fill: #e0e0e0" transform="translate(585.362097 126.95) scale(0.13 -0.13)">
+    <g style="fill: #ededed" transform="translate(585.362097 126.95) scale(0.13 -0.13)">
      <defs>
       <path id="Tektur-Medium-248" d="M 941 0 
 L 352 589 
@@ -794,7 +794,7 @@ z
    </g>
    <g id="text_12">
     <!-- повторная -->
-    <g style="fill: #9f9f9f" transform="translate(556.271159 178.656) scale(0.12 -0.12)">
+    <g style="fill: #b8b8b8" transform="translate(556.271159 178.656) scale(0.12 -0.12)">
      <defs>
       <path id="Montserrat-Regular-3c5" d="M 2816 0 
 L 2816 1210 
@@ -837,7 +837,7 @@ z
      <use xlink:href="#Montserrat-Regular-3c5" transform="translate(494.671875 0)"/>
     </g>
     <!-- проверка -->
-    <g style="fill: #9f9f9f" transform="translate(559.216784 193.284) scale(0.12 -0.12)">
+    <g style="fill: #b8b8b8" transform="translate(559.216784 193.284) scale(0.12 -0.12)">
      <use xlink:href="#Montserrat-Regular-3ab"/>
      <use xlink:href="#Montserrat-Regular-3ac" transform="translate(67.40625 0)"/>
      <use xlink:href="#Montserrat-Regular-3aa" transform="translate(136 0)"/>
@@ -851,7 +851,7 @@ z
   </g>
  </g>
  <defs>
-  <clipPath id="p82e6e72126">
+  <clipPath id="pe6ed48ba6e">
    <rect x="10.8" y="10.8" width="640.8" height="223.2"/>
   </clipPath>
  </defs>

@@ -6,7 +6,7 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-10-10T08:00:45.658093</dc:date>
+    <dc:date>2026-10-11T06:21:55.480176</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -61,7 +61,7 @@ z
    <g id="matplotlib.axis_2"/>
    <g id="text_1">
     <!-- 280 -->
-    <g style="fill: #e0e0e0" transform="translate(124.734937 174.9392) scale(0.3 -0.3)">
+    <g style="fill: #ededed" transform="translate(124.734937 174.9392) scale(0.3 -0.3)">
      <defs>
       <path id="Tektur-Medium-244" d="M 3808 653 
 L 3808 0 
@@ -133,7 +133,7 @@ z
    </g>
    <g id="text_2">
     <!-- messages -->
-    <g style="fill: #9f9f9f" transform="translate(124.176187 202.8932) scale(0.12 -0.12)">
+    <g style="fill: #b8b8b8" transform="translate(124.176187 202.8932) scale(0.12 -0.12)">
      <defs>
       <path id="Montserrat-Regular-23f" d="M 634 0 
 L 634 3360 
@@ -336,7 +336,7 @@ z
    </g>
    <g id="text_3">
     <!-- Coverage of corpus_capture_01 (rule v2) -->
-    <g style="fill: #e0e0e0" transform="translate(3.533766 25.8) scale(0.15 -0.15)">
+    <g style="fill: #ededed" transform="translate(3.533766 25.8) scale(0.15 -0.15)">
      <defs>
       <path id="Tektur-Medium-5" d="M 352 602 
 L 352 3878 
@@ -642,7 +642,7 @@ z
     </g>
     <g id="text_4">
      <!-- matched  140 -->
-     <g style="fill: #e0e0e0" transform="translate(340.924 172.088) scale(0.12 -0.12)">
+     <g style="fill: #ededed" transform="translate(340.924 172.088) scale(0.12 -0.12)">
       <defs>
        <path id="Montserrat-Regular-2a2" d="M 1696 -32 
 Q 1222 -32 966 224 
@@ -833,7 +833,7 @@ z
     </g>
     <g id="text_5">
      <!-- not applicable  140 -->
-     <g style="fill: #e0e0e0" transform="translate(340.924 192.716) scale(0.12 -0.12)">
+     <g style="fill: #ededed" transform="translate(340.924 192.716) scale(0.12 -0.12)">
       <defs>
        <path id="Montserrat-Regular-245" d="M 634 0 
 L 634 3360 
