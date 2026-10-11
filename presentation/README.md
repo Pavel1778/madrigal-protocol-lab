@@ -17,7 +17,7 @@ from the repository's own code. Every number is from `docs/METRICS.md`.
 | `slides.pptx` | the editable PPTX: native text, entrance animations, transitions |
 | `scripts/build_pptx.py` | builds `slides.pptx` from code (python-pptx), not a picture dump |
 | `screenshots/` | 11 real GUI captures at 1920×1080 (`generate_screenshots.py`) |
-| `assets/` | 6 branded SVG visualisations (`build_visualizations.py`) |
+| `assets/` | 8 branded SVG visualisations, dark and light (`build_visualizations.py`) |
 | `icons/` | Lucide line icons used by the deck (`fetch_icons.py`) |
 | `public/` | assets the deck serves: fonts, logo, QR codes, member photos |
 | `public/screencast-poster.png` | the frame slide 16 shows (baked from `screencast.mp4`, sharpest of six sampled frames) |
@@ -65,7 +65,7 @@ Install once, from the repository root and from `presentation/`:
 # real GUI screenshots (1920x1080)
 QT_QPA_PLATFORM=offscreen python -m presentation.generate_screenshots
 
-# six branded SVG visualisations
+# eight branded SVG visualisations
 python -m presentation.build_visualizations
 
 # panel crops, QR codes and the round member photos
