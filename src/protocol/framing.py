@@ -104,7 +104,11 @@ class FramingStrategy:
 
     For ``length_prefixed`` the meaning of the length value is fixed by
     ``length_covers``; when the field is absent it defaults to ``payload``
-    (see the ``LENGTH_COVERS_*`` constants). The deprecated boolean
+    (see the ``LENGTH_COVERS_*`` constants). ``length_bias`` is added to the
+    message length after ``length_covers`` is applied; it is zero for a header
+    where the length field is the last field, and it covers a fixed-size part
+    of the header that lies between the length field and the payload (for
+    example a magic, a counter and a type). The deprecated boolean
     ``length_includes_payload`` is still accepted for backward compatibility:
     ``true`` maps to ``entire_message`` and ``false`` maps to ``payload``.
     """
@@ -114,6 +118,7 @@ class FramingStrategy:
     length_size: int = 2
     byte_order: str = "big"
     length_covers: str = LENGTH_COVERS_DEFAULT
+    length_bias: int = 0
     size: int = 0
     start_bytes: bytes = b""
     end_bytes: bytes = b""
@@ -148,6 +153,7 @@ class FramingStrategy:
             length_size=int(spec.get("length_size", 2)),
             byte_order=str(spec.get("byte_order", "big")),
             length_covers=covers,
+            length_bias=int(spec.get("length_bias", 0)),
             size=int(spec.get("size", 0)),
             start_bytes=_as_bytes(start),
             end_bytes=_as_bytes(end),
@@ -235,6 +241,7 @@ def _length_prefixed(data: bytes, strategy: FramingStrategy) -> list[Message]:
             length = prefix + declared
         else:  # LENGTH_COVERS_ENTIRE
             length = declared
+        length += strategy.length_bias
         if length < header_end:
             # A length that cannot even hold its own header cannot be advanced
             # over without risking a non-progressing loop.
