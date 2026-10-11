@@ -18,6 +18,8 @@ Run from the repository root:
 
 from __future__ import annotations
 
+import shutil
+import subprocess
 from pathlib import Path
 
 import numpy as np
@@ -27,6 +29,7 @@ from PIL import Image, ImageDraw
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PUBLIC = REPO_ROOT / "presentation" / "public"
 SHOTS = REPO_ROOT / "presentation" / "screenshots"
+SCREENCAST = REPO_ROOT / "presentation" / "screencast.mp4"
 
 # Panel seams in the 1920x1080 captures. The GUI splits at 300 / 720 / 420 px
 # (``main_window`` ``setSizes``); the matching bands in the pixels are 285-317
@@ -58,17 +61,17 @@ MEMBER_QR = {
 
 # name -> (source, box). Boxes are (left, top, right, bottom) in the source.
 CROPS = {
-    # slide 7: the hex dump only, trimmed to the byte rows. The window is
-    # 1920x1080 but the hex panel ends at y=400; cropping the dead space below
-    # roughly doubles the byte size on the slide.
-    "screenshot-provenance.png": ("09_provenance.png", (315, 52, 735, 260)),
+    # slide 7: the hex dump only, trimmed to six byte rows so the bytes read
+    # from the back of the room. The window is 1920x1080 but the hex panel ends
+    # at y=400; cropping the dead space below roughly triples the byte size.
+    "screenshot-provenance.png": ("09_provenance.png", (317, 98, 735, 268)),
     # slide 8: the rule JSON, cropped to the editor and cut above the Messages
     # and Counterexamples tabs so the JSON renders large.
     "screenshot-rule.png": ("07_rule_editor.png", (720, 44, 1460, 300)),
     # slide 8: the validation result panel, right tab only
-    "screenshot-validation.png": ("05_validation.png", (1424, 44, 1920, 300)),
-    # slide 9: the counterexample list, right tab only
-    "screenshot-counterexamples.png": ("05_validation.png", (1424, 44, 1920, 1080)),
+    "screenshot-validation.png": ("05_validation.png", (1436, 44, 1920, 300)),
+    # slide 9: six counterexample rows, right tab only, no empty tail
+    "screenshot-counterexamples.png": ("05_validation.png", (1436, 96, 1920, 300)),
     # slide 15: the three key zones of the full window (sessions | hex | rule)
     "screenshot-main.png": ("01_main.png", (300, 44, 1920, 460)),
 }
@@ -110,6 +113,33 @@ def _crop(src: Path, dst: Path, box) -> None:
     print(f"presentation/public/{dst.name}  <- {src.name}{box}")
 
 
+def _poster(src: Path, dst: Path) -> None:
+    """Frame the recording into a slide poster (play glyph drawn in CSS).
+
+    The frame is chosen by sharpness so the poster shows the settled UI rather
+    than a mid-scroll moment.
+    """
+    if shutil.which("ffmpeg") is None:
+        print("ffmpeg missing — keeping existing poster")
+        return
+    best: tuple[float, int, Image.Image] | None = None
+    for t in (5, 20, 40, 60, 90, 120):
+        tmp = dst.with_suffix(".frame.png")
+        subprocess.run(
+            ["ffmpeg", "-v", "error", "-ss", str(t), "-i", str(src),
+             "-frames:v", "1", str(tmp), "-y"], check=True)
+        frame = Image.open(tmp).convert("RGB")
+        tmp.unlink()
+        grey = np.asarray(frame.convert("L"), dtype=float)
+        lap = np.abs(np.diff(grey, axis=1)).var() + np.abs(np.diff(grey, axis=0)).var()
+        if best is None or lap > best[0]:
+            best = (lap, t, frame)
+    assert best is not None
+    _, at, frame = best
+    frame.resize((1600, 900), Image.LANCZOS).save(dst)
+    print(f"presentation/public/{dst.name}  <- {src.name} (sharpest frame @{at}s)")
+
+
 def _detect_seams(path: Path) -> list[int]:
     """Report near-uniform column runs — the panel seams — for verification."""
     grey = np.asarray(Image.open(path).convert("L")).astype(float)
@@ -140,6 +170,9 @@ def main() -> int:
         _circular(REPO_ROOT / src_name, PUBLIC / dst_name, size=360)
     for name, url in TELEGRAM.items():
         _qr(url, PUBLIC / name)
+
+    if SCREENCAST.is_file():
+        _poster(SCREENCAST, PUBLIC / "screencast-poster.png")
 
     for dst_name, (src_name, box) in CROPS.items():
         src = (PUBLIC / src_name) if (PUBLIC / src_name).is_file() else (SHOTS / src_name)

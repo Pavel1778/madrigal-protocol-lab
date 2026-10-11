@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import ast
 import re
+import zipfile
 from pathlib import Path
 
 PRES = Path(__file__).resolve().parents[2] / "presentation"
@@ -169,3 +170,29 @@ def test_team_slide_uses_two_distinct_member_photos() -> None:
 
     pavel, nikita = ((PRES / "public" / r.lstrip("/")).read_bytes() for r in refs)
     assert pavel != nikita, "the member photos are byte-identical"
+
+
+def test_chart_assets_carry_no_build_timestamp() -> None:
+    """A rebuild must be a no-op: no wall-clock stamp in the sixteen charts.
+
+    ``build_visualizations`` writes the SVGs with ``metadata={"Date": None}`` and
+    renumbers the hashed ids, so a chart that did not change is byte-identical.
+    A stray date would rewrite every file and churn the bundle and the PDFs.
+    """
+    charts = sorted((PRES / "assets").glob("*.svg"))
+    assert len(charts) == 16, f"expected sixteen charts, found {len(charts)}"
+    stamped = [p.name for p in charts if b"<dc:date>" in p.read_bytes()]
+    assert not stamped, f"charts carry a build date: {stamped}"
+
+
+def test_pptx_parts_have_fixed_timestamps() -> None:
+    """The PPTX packages must not churn in git on every rebuild.
+
+    python-pptx stamps every part with the wall clock; ``freeze_zip`` pins them
+    to 1980-01-01 so two builds of the same deck are byte-identical.
+    """
+    for name in ("slides.pptx", "team-slide.pptx"):
+        pptx = PRES / name
+        assert pptx.is_file(), f"presentation/{name} is not built"
+        stamps = {item.date_time for item in zipfile.ZipFile(pptx).infolist()}
+        assert stamps == {(1980, 1, 1, 0, 0, 0)}, f"{name} parts carry build times: {stamps}"

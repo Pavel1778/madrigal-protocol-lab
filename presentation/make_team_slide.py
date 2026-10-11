@@ -20,6 +20,8 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 
+from presentation.reproducible import freeze_zip
+
 PRES = Path(__file__).resolve().parent
 OUT = PRES / "team-slide.pptx"
 AVATARS = {
@@ -126,6 +128,7 @@ def main() -> int:
     for title, palette in PALETTES.items():
         _slide(prs, palette, f"Нас двое — {title.lower()} тема")
     prs.save(str(OUT))
+    freeze_zip(OUT)
     print(f"wrote {OUT} ({len(prs.slides)} slides)")
     return 0
 
