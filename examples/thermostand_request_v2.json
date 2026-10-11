@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "rule_id": "thermostand_request",
+  "rule_version": 2,
+  "name": "thermostand_request_v2",
+  "scope": {"direction": "A_to_B"},
+  "framing": {
+    "type": "length_prefixed",
+    "length_offset": 2,
+    "length_size": 2,
+    "byte_order": "big",
+    "length_covers": "payload",
+    "length_bias": 4
+  },
+  "fields": [
+    {"name": "magic", "offset": 0, "type": "uint16", "byte_order": "big", "expected": [42588]},
+    {"name": "body_length", "offset": 2, "type": "uint16", "byte_order": "big"},
+    {"name": "message_counter", "offset": 4, "type": "uint16", "byte_order": "big"},
+    {"name": "message_type", "offset": 6, "type": "enum", "length": 2, "byte_order": "big",
+     "enum": {"read_config": 16, "set_config": 32, "read_values": 48, "unsupported_command": 126}},
+
+    {"name": "enabled", "offset": 8, "type": "uint8", "hypothesis": true,
+     "condition": {"field": "message_type", "op": "eq", "value": "set_config"}},
+    {"name": "period_ms", "offset": 9, "type": "uint16", "byte_order": "big", "hypothesis": true,
+     "condition": {"field": "message_type", "op": "eq", "value": "set_config"}},
+    {"name": "threshold_raw", "offset": 11, "type": "int16", "byte_order": "big", "hypothesis": true,
+     "condition": {"field": "message_type", "op": "eq", "value": "set_config"}},
+    {"name": "label_length", "offset": 13, "type": "uint8",
+     "condition": {"field": "message_type", "op": "eq", "value": "set_config"}},
+    {"name": "label", "offset": 14, "type": "string", "encoding": "utf-8", "count_field": "label_length", "hypothesis": true,
+     "condition": {"field": "message_type", "op": "eq", "value": "set_config"}},
+
+    {"name": "requested_count", "offset": 8, "type": "uint8", "hypothesis": true,
+     "condition": {"field": "message_type", "op": "eq", "value": "read_values"}}
+  ]
+}
