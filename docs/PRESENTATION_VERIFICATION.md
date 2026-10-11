@@ -103,7 +103,7 @@ Slide 19 is a closing slide, not a "Вопросы" slide. It carries the one-li
 conclusion «Инструмент превращает байты в проверяемое знание», two QR codes
 (repository and release) with captions, and the contact line
 `github.com/Pavel1778/madrigal-protocol-lab · @Pasha1778`. It carries no
-technical metric — no 768, no 90 %, no test count, no coverage figure, no release
+technical metric — no 781, no 90 %, no test count, no coverage figure, no release
 asset count — and the word «Вопросы» appears nowhere in the deck.
 
 ## PPTX
