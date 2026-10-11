@@ -222,15 +222,15 @@ def _decode_field(
 ) -> FieldResult:
     """Decode one field. ``context`` holds already-decoded values by name."""
     context = context if context is not None else {}
-    condition = field.condition if field.type == "conditional" else None
-    spec = field.inner if condition is not None else field
+    condition = field.condition
+    spec = field.inner if field.type == "conditional" else field
 
     if condition is not None and not _evaluate_condition(condition, context):
         return FieldResult(
             message_offset=message.offset,
             message_length=message.length,
             field_name=field.name,
-            field_type="conditional",
+            field_type=spec.type,
             field_offset=field.offset,
             field_length=0,
             value=None,
@@ -245,10 +245,17 @@ def _decode_field(
     if spec.type == "string" and spec.terminated:
         length = _terminated_length(data, start, message.end)
         end = start + length
+    elif spec.type == "string" and spec.count_field is not None:
+        count = _context_int(context, spec.count_field)
+        end = start + count if count is not None else message.end
     elif spec.type == "array" and spec.count_field is not None:
         count = _context_int(context, spec.count_field)
         elem = FIELD_TYPES.get(spec.element_type or "", spec.element_length if spec.element_type == "bytes" else None)
-        length = (count * elem) if (count is not None and elem is not None) else None
+        if count is not None and elem is not None:
+            stride = spec.element_stride or elem
+            length = (count - 1) * stride + elem if count else 0
+        else:
+            length = None
         end = start + length if length is not None else message.end
     elif spec.type == "computed":
         end = start + spec.size
@@ -315,6 +322,14 @@ def _context_int(context: dict, name: str) -> int | None:
 
 
 def _evaluate_condition(condition: dict, context: dict):
+    if not isinstance(condition, dict):
+        return False
+    if "all" in condition:
+        parts = condition["all"]
+        return bool(parts) and all(_evaluate_condition(p, context) for p in parts)
+    if "any" in condition:
+        parts = condition["any"]
+        return any(_evaluate_condition(p, context) for p in parts)
     name = condition.get("field")
     op = condition.get("op")
     left = context.get(name)
@@ -323,6 +338,8 @@ def _evaluate_condition(condition: dict, context: dict):
         return left == right
     if op == "ne":
         return left != right
+    if op == "in":
+        return isinstance(right, (list, tuple, set)) and left in right
     if op == "bit_set":
         return isinstance(left, int) and (left & int(right or 0)) != 0
     if op == "bit_clear":
@@ -431,9 +448,10 @@ def _decode_value(field: FieldSpec, data: bytes, start: int, end: int, context: 
         elem_size = field.element_length if field.element_type == "bytes" else FIELD_TYPES.get(field.element_type or "")
         if not elem_size:
             return []
+        stride = field.element_stride or elem_size
         values = []
         for i in range(count):
-            chunk = data[start + i * elem_size : start + (i + 1) * elem_size]
+            chunk = data[start + i * stride : start + i * stride + elem_size]
             if len(chunk) < elem_size:
                 break
             if field.element_type == "bytes":

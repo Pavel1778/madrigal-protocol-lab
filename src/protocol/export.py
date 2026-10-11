@@ -265,12 +265,18 @@ def _field_size(field):
     if ftype in sizes:
         return sizes[ftype]
     if ftype == "enum":
-        return 1
+        return int(field.get("length", 1))
     if ftype == "bitmask":
         width = int(field.get("bit_offset", 0)) + int(field.get("bit_length", 1))
         return (width + 7) // 8
     if ftype == "conditional":
         return _field_size(field.get("field", {}))
+    if ftype == "array":
+        count = int(field.get("count", 0))
+        elem = (int(field.get("element_length", 1)) if field.get("element_type") == "bytes"
+                else _field_size({"type": field.get("element_type", "uint8")}))
+        stride = int(field.get("element_stride", elem) or elem)
+        return (count - 1) * stride + elem if count else 0
     return int(field.get("length", 0))
 
 
@@ -294,11 +300,14 @@ def parse_message(data, offset, length):
         if spec.get("type") == "string" and spec.get("terminated"):
             stop = data.find(b"\\x00", start, end)
             stop = end if stop == -1 else stop + 1
+        elif spec.get("type") == "string" and spec.get("count_field"):
+            stop = start + (_as_int(context.get(spec["count_field"])) or 0)
         elif spec.get("type") == "array" and spec.get("count_field"):
             count = _as_int(context.get(spec["count_field"])) or 0
             elem = (int(spec.get("element_length", 1)) if spec.get("element_type") == "bytes"
                     else _field_size({"type": spec.get("element_type", "uint8")}))
-            stop = start + count * elem
+            stride = int(spec.get("element_stride", elem) or elem)
+            stop = start + ((count - 1) * stride + elem if count else 0)
         else:
             stop = start + _field_size(spec)
         if stop > end:
@@ -315,7 +324,7 @@ def parse_message(data, offset, length):
             values[field["name"]] = chunk.hex()
             statuses[field["name"]] = "matched"
         elif ftype == "enum":
-            raw = _decode_number(chunk, "uint8", order)
+            raw = int.from_bytes(chunk, order)
             name = next((k for k, v in (spec.get("enum") or {}).items() if v == raw), raw)
             values[field["name"]] = name
             statuses[field["name"]] = "matched"
@@ -357,9 +366,10 @@ def _decode_array(data, start, spec, context, order):
     count = int(count or 0)
     etype = spec.get("element_type", "uint8")
     size = int(spec.get("element_length", 1)) if etype == "bytes" else _field_size({"type": etype})
+    stride = int(spec.get("element_stride", size) or size)
     out = []
     for i in range(count):
-        chunk = data[start + i * size:start + (i + 1) * size]
+        chunk = data[start + i * stride:start + i * stride + size]
         if len(chunk) < size:
             break
         out.append(chunk.hex() if etype == "bytes" else _decode_number(chunk, etype, order))
