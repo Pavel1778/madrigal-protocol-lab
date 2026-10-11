@@ -11,6 +11,7 @@ const isClosing = computed(() => page.value === total.value)
 
 <template>
   <footer v-if="!isCover && !isClosing" class="deck-footer">
-    <span>Команда HTTP 418 · UMIRHack 2026 · {{ page }} / {{ total }}</span>
+    <span>Команда HTTP 418 · кейс #02 · Мадригал</span>
+    <span class="deck-footer__page">{{ page }} / {{ total }}</span>
   </footer>
 </template>
