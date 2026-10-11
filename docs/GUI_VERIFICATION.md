@@ -205,6 +205,26 @@ are read in full and the provenance line is not clipped. Three tests cover the
 behaviour: the column fits every summary, the column keeps its floor on a
 narrow panel, and the status line reserves room and tooltips its text.
 
+## Interface language and theme names
+
+The Russian/English switch was exercised after the live pass. Two items were
+found and closed:
+
+- The Settings dialog listed the themes by their English names (`Dark`,
+  `Light`) in the Russian catalogue, so the labels did not switch with the
+  language. The theme names are now translated; fixed in `5680af1`
+  (`fix(ui): translate the settings theme names and finish the catalogue`).
+- The catalogue had captions that were reachable from the interface but not
+  translated. The catalogue is now complete for the menu, tab and group-box
+  captions, pinned by `tests/ui/test_i18n.py::test_catalogue_covers_the_navigable_captions`
+  and `::test_catalogue_has_no_unfinished_translations`.
+
+The right-hand tab widget switches with the language: on a switch to Russian the
+first tab reads `Интерпретация` and switches back on return
+(`tests/ui/test_i18n.py::test_window_retranslates_to_russian`,
+`::test_window_language_switch_is_reversible`), and an open capture is kept
+across the switch (`::test_switching_language_keeps_open_capture`).
+
 ## Second pass on a real X display
 
 The pass above ran `QT_QPA_PLATFORM=offscreen`, which exercises the widgets but
