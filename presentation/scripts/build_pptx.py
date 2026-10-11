@@ -1,8 +1,10 @@
 """Build the defence deck as a real, editable PPTX from our own code.
 
 Mirrors ``slides.md`` (19 slides, 16:9). Every slide is drawn with python-pptx
-directly — no PowerPoint template — with native editable text, the deck palette,
-click-triggered fade entrances and fade/push transitions.
+directly — no PowerPoint template — with native editable text, the deck palette
+and brand fonts, click-triggered fade/wipe entrances and native slide
+transitions. The build fails loudly if the number of slides it emits is not the
+number the deck promises.
 
     python -m presentation.scripts.build_pptx
 
@@ -25,31 +27,35 @@ ROOT = Path(__file__).resolve().parents[2]
 PRES = ROOT / "presentation"
 OUT = PRES / "slides.pptx"
 
-# --- palette (mirrors presentation/style.css) --------------------------------
-BG = RGBColor(0x0E, 0x10, 0x11)
-SURFACE = RGBColor(0x17, 0x18, 0x1A)
-TEXT = RGBColor(0xE8, 0xE6, 0xE3)
-SECONDARY = RGBColor(0xA8, 0xA2, 0x9E)
-ACCENT = RGBColor(0xD0, 0x60, 0x3A)
+# --- palette (mirrors presentation/style.css, brand book) --------------------
+BG = RGBColor(0x13, 0x15, 0x16)
+SURFACE = RGBColor(0x1D, 0x1D, 0x1D)
+SURFACE_HI = RGBColor(0x26, 0x26, 0x2A)
+TEXT = RGBColor(0xED, 0xED, 0xED)
+SECONDARY = RGBColor(0xB8, 0xB8, 0xB8)
+ACCENT = RGBColor(0xA2, 0x39, 0x1D)
+ACCENT_DEEP = RGBColor(0x61, 0x0D, 0x1C)
+MATCHED = RGBColor(0x2E, 0x7D, 0x5B)
+MISMATCHED = RGBColor(0x8E, 0x2A, 0x2A)
 WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 
-F_HEAD = "Inter"
-F_BODY = "Inter"
+F_HEAD = "Montserrat"
+F_BODY = "Montserrat"
 F_MONO = "JetBrains Mono"
 
-MARGIN = Inches(0.75)
+MARGIN = Inches(0.9)
 FOOTER_H = Inches(0.45)
 SLIDE_W = Inches(13.333)
 SLIDE_H = Inches(7.5)
-BODY_TOP = Inches(1.75)
+BODY_TOP = Inches(1.85)
 GITHUB = "https://github.com/Pavel1778/madrigal-protocol-lab"
 RELEASE = "https://github.com/Pavel1778/madrigal-protocol-lab/releases/tag/v1.0.0"
-TELEGRAM = "https://t.me/Pasha1778"
 TOTAL = 19
 
 _TOKEN = re.compile(r"(\*\*[^*]+\*\*|`[^`]+`)")
 
 
+# --- primitives --------------------------------------------------------------
 def add_runs(paragraph, text, size, color, bold=False, font=F_BODY):
     """Write text into a paragraph, honouring **bold** and `code` spans."""
     for part in _TOKEN.split(text):
@@ -71,6 +77,7 @@ def add_runs(paragraph, text, size, color, bold=False, font=F_BODY):
             run.text = part
             run.font.bold = bold
             run.font.color.rgb = color
+    return paragraph
 
 
 def textbox(slide, x, y, w, h, anchor=MSO_ANCHOR.TOP):
@@ -85,56 +92,91 @@ def solid(shape, color):
     shape.fill.solid()
     shape.fill.fore_color.rgb = color
     shape.line.fill.background()
+    shape.shadow.inherit = False
 
 
-def rect(slide, x, y, w, h, color, shape=MSO_SHAPE.RECTANGLE):
+def rect(slide, x, y, w, h, color, shape=MSO_SHAPE.RECTANGLE, line=None):
     s = slide.shapes.add_shape(shape, x, y, w, h)
     solid(s, color)
+    if line is not None:
+        s.line.color.rgb = line
+        s.line.width = Pt(1)
     return s
+
+
+def gradient_bar(slide, x, y, w, h):
+    """A left-to-right brand gradient rectangle, used for the accent rule."""
+    shape = rect(slide, x, y, w, h, ACCENT_DEEP)
+    fill = shape.fill._xPr.find(
+        "{http://schemas.openxmlformats.org/drawingml/2006/main}solidFill"
+    )
+    gs = etree.SubElement(
+        shape.fill._xPr,
+        "{http://schemas.openxmlformats.org/drawingml/2006/main}gradFill",
+    )
+    gs.set("rotWithShape", "1")
+    gsl = etree.SubElement(
+        gs, "{http://schemas.openxmlformats.org/drawingml/2006/main}gsLst"
+    )
+    for pos, color in ((0, "410913"), (50000, "610D1C"), (100000, "A2391D")):
+        gsx = etree.SubElement(
+            gsl, "{http://schemas.openxmlformats.org/drawingml/2006/main}gs"
+        )
+        gsx.set("pos", str(pos))
+        etree.SubElement(
+            gsx, "{http://schemas.openxmlformats.org/drawingml/2006/main}srgbClr"
+        ).set("val", color)
+    lin = etree.SubElement(
+        gs, "{http://schemas.openxmlformats.org/drawingml/2006/main}lin"
+    )
+    lin.set("ang", "2700000")
+    if fill is not None:
+        shape.fill._xPr.remove(fill)
+    return shape
 
 
 def bg(slide):
     rect(slide, 0, 0, SLIDE_W, SLIDE_H, BG)
-    rect(slide, 0, 0, Inches(0.05), SLIDE_H, ACCENT)
+    gradient_bar(slide, 0, 0, Inches(0.08), SLIDE_H)
 
 
 def footer(slide, page):
     tb, tf = textbox(slide, MARGIN, SLIDE_H - FOOTER_H, SLIDE_W - 2 * MARGIN,
                      Inches(0.3))
-    p = tf.paragraphs[0]
-    add_runs(p, "Команда HTTP 418 · кейс #02 · Мадригал", 9, SECONDARY)
+    add_runs(tf.paragraphs[0], "Команда HTTP 418 · кейс #02 · Мадригал", 10,
+             SECONDARY)
     tb2, tf2 = textbox(slide, MARGIN, SLIDE_H - FOOTER_H, SLIDE_W - 2 * MARGIN,
                        Inches(0.3))
     p2 = tf2.paragraphs[0]
     p2.alignment = PP_ALIGN.RIGHT
-    add_runs(p2, f"{page} / {TOTAL}", 9, SECONDARY)
+    add_runs(p2, f"{page} / {TOTAL}", 10, SECONDARY)
 
 
-def heading(slide, text, size=30):
+def heading(slide, text, size=32):
     tb, tf = textbox(slide, MARGIN, Inches(0.5), SLIDE_W - 2 * MARGIN,
-                     Inches(1.05))
+                     Inches(1.15))
     add_runs(tf.paragraphs[0], text, size, TEXT, bold=True, font=F_HEAD)
     return tb
 
 
-def caption(slide, text, y=Inches(6.55)):
+def caption(slide, text, y=Inches(6.6)):
     tb, tf = textbox(slide, MARGIN, y, SLIDE_W - 2 * MARGIN, Inches(0.4))
-    add_runs(tf.paragraphs[0], text, 11, SECONDARY)
+    add_runs(tf.paragraphs[0], text, 12, SECONDARY)
     return tb
 
 
-def bullets(slide, items, x, y, w, h, size=17):
+def bullets(slide, items, x, y, w, h, size=17, gap=Pt(10)):
     tb, tf = textbox(slide, x, y, w, h)
     first = True
     for it in items:
         p = tf.paragraphs[0] if first else tf.add_paragraph()
         first = False
-        p.space_after = Pt(10)
+        p.space_after = gap
         add_runs(p, "•  " + it, size, TEXT)
     return tb
 
 
-def bullets_each(slide, items, x, y, w, line_h=Inches(0.75), size=17):
+def bullets_each(slide, items, x, y, w, line_h=Inches(0.8), size=17):
     """One textbox per bullet, so each can build in on its own click."""
     ids = []
     for i, it in enumerate(items):
@@ -162,6 +204,19 @@ def picture(slide, rel, x, y, w, h=None):
     if h is not None:
         pic.height = h
     return pic
+
+
+def panel(slide, x, y, w, h, accent=False):
+    box = rect(slide, x, y, w, h, SURFACE, line=None)
+    if accent:
+        rect(slide, x, y, Inches(0.05), h, ACCENT)
+    return box
+
+
+def lead(slide, x, y, w, text):
+    tb, tf = textbox(slide, x, y, w, Inches(0.35))
+    add_runs(tf.paragraphs[0], text.upper(), 12, ACCENT, bold=True)
+    return tb
 
 
 # --- animations / transitions ------------------------------------------------
@@ -263,166 +318,285 @@ def build_slide(prs, spec):
     kind = spec["kind"]
     steps: list[tuple[int, str]] = []
 
-    if kind == "title":
-        pic = picture(slide, "public/team-avatar.png", MARGIN, Inches(2.45),
-                      Inches(2.4), Inches(2.4))
-        tx, tf = textbox(slide, MARGIN + Inches(2.9), Inches(2.6),
-                         SLIDE_W - MARGIN - Inches(2.9), Inches(1.3))
-        add_runs(tf.paragraphs[0], spec["title"], 40, TEXT, font=F_HEAD)
-        steps.append((tx.shape_id, "fade"))
-        tx2, tf2 = textbox(slide, MARGIN + Inches(2.9), Inches(3.9),
-                           SLIDE_W - MARGIN - Inches(2.9), Inches(0.6))
-        add_runs(tf2.paragraphs[0], spec["line"], 16, SECONDARY)
+    if kind == "cover":
+        logo = picture(slide, "public/logo.png", MARGIN, Inches(1.15),
+                       Inches(0.9), Inches(0.9))
+        tb, tf = textbox(slide, MARGIN + Inches(1.1), Inches(1.32),
+                         Inches(8.0), Inches(0.5))
+        add_runs(tf.paragraphs[0], "MADRIGAL-PROTOCOL-LAB", 14, SECONDARY,
+                 font=F_MONO)
+        tb, tf = textbox(slide, MARGIN, Inches(2.35), SLIDE_W - 2 * MARGIN,
+                         Inches(1.5))
+        add_runs(tf.paragraphs[0], spec["title"], 56, TEXT, bold=True,
+                 font=F_HEAD)
+        steps.append((tb.shape_id, "fade"))
+        tb, tf = textbox(slide, MARGIN, Inches(3.7), Inches(9.5), Inches(1.0))
+        add_runs(tf.paragraphs[0], spec["sub"], 22, TEXT)
+        rect(slide, MARGIN, Inches(4.75), Inches(2.4), Inches(0.07), ACCENT)
+        tb, tf = textbox(slide, MARGIN, Inches(5.05), SLIDE_W - 2 * MARGIN,
+                         Inches(0.5))
+        add_runs(tf.paragraphs[0], spec["meta"], 15, SECONDARY, font=F_MONO)
+        _ = logo
 
-    elif kind == "two_col":
+    elif kind == "team":
         heading(slide, spec["title"])
-        x2 = MARGIN + Inches(6.1)
-        w2 = SLIDE_W - x2 - MARGIN
-        if spec.get("left_image"):
-            pic = fit_picture(slide, spec["left_image"], MARGIN, BODY_TOP,
-                              Inches(5.6), Inches(4.3))
-            steps.append((pic.shape_id, "fade"))
-        elif spec.get("build_left"):
-            for spid in bullets_each(slide, spec.get("left", []), MARGIN,
-                                     BODY_TOP, Inches(5.6)):
-                steps.append((spid, "fade"))
-        else:
-            tb = bullets(slide, spec.get("left", []), MARGIN, BODY_TOP,
-                         Inches(5.6), Inches(4.3), size=17)
-            if spec.get("animate"):
+        col_w = (SLIDE_W - 2 * MARGIN - Inches(0.5)) / 2
+        for i, (name, role, handle, qr) in enumerate(spec["members"]):
+            x = MARGIN + i * (col_w + Inches(0.5))
+            panel(slide, x, BODY_TOP, col_w, Inches(2.6))
+            steps.append((slide.shapes[-1].shape_id, "fade"))
+            picture(slide, "public/team-avatar-round.png", x + Inches(0.3),
+                    BODY_TOP + Inches(0.4), Inches(1.8), Inches(1.8))
+            tx = x + Inches(2.35)
+            _, tf = textbox(slide, tx, BODY_TOP + Inches(0.45),
+                            col_w - Inches(3.6), Inches(0.6))
+            add_runs(tf.paragraphs[0], name, 24, TEXT, bold=True, font=F_HEAD)
+            _, tf = textbox(slide, tx, BODY_TOP + Inches(1.05),
+                            col_w - Inches(3.6), Inches(0.5))
+            add_runs(tf.paragraphs[0], role, 14, SECONDARY)
+            _, tf = textbox(slide, tx, BODY_TOP + Inches(1.55),
+                            col_w - Inches(3.6), Inches(0.4))
+            add_runs(tf.paragraphs[0], handle, 14, ACCENT, font=F_MONO)
+            picture(slide, f"public/{qr}", x + col_w - Inches(1.5),
+                    BODY_TOP + Inches(0.55), Inches(1.2), Inches(1.2))
+        caption(slide, "UMIRHack 2026 · кейс #02 · Мадригал")
+
+    elif kind == "arch":
+        heading(slide, spec["title"])
+        box_w = Inches(3.5)
+        arrow_w = Inches(0.7)
+        total = 3 * box_w + 2 * arrow_w
+        x = MARGIN + (SLIDE_W - 2 * MARGIN - total) / 2
+        y = BODY_TOP + Inches(0.3)
+        for i, (name, desc) in enumerate(spec["modules"]):
+            panel(slide, x, y, box_w, Inches(2.2), accent=True)
+            steps.append((slide.shapes[-1].shape_id, "fade"))
+            _, tf = textbox(slide, x + Inches(0.25), y + Inches(0.35),
+                            box_w - Inches(0.5), Inches(0.6))
+            add_runs(tf.paragraphs[0], name, 20, TEXT, bold=True, font=F_HEAD)
+            _, tf = textbox(slide, x + Inches(0.25), y + Inches(1.05),
+                            box_w - Inches(0.5), Inches(0.9))
+            for j, line in enumerate(desc.split("\n")):
+                add_runs(tf.paragraphs[0] if j == 0 else tf.add_paragraph(),
+                         line, 14, SECONDARY)
+            x += box_w
+            if i < len(spec["modules"]) - 1:
+                tb, tf = textbox(slide, x, y + Inches(0.85), arrow_w,
+                                 Inches(0.6), anchor=MSO_ANCHOR.MIDDLE)
+                tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+                add_runs(tf.paragraphs[0], "JSON →", 12, ACCENT, font=F_MONO)
                 steps.append((tb.shape_id, "fade"))
-        if spec.get("right_image"):
-            pic = fit_picture(slide, spec["right_image"], x2, BODY_TOP, w2,
-                              Inches(4.3))
-            if spec.get("animate"):
-                steps.append((pic.shape_id, "fade"))
-        elif spec.get("build_right"):
-            for spid in bullets_each(slide, spec.get("right", []), x2,
-                                     BODY_TOP, w2):
-                steps.append((spid, "fade"))
-        elif spec.get("right"):
-            tb = bullets(slide, spec["right"], x2, BODY_TOP, w2, Inches(4.3),
-                         size=17)
-            if spec.get("animate"):
-                steps.append((tb.shape_id, "fade"))
+                x += arrow_w
         if spec.get("caption"):
             caption(slide, spec["caption"])
 
     elif kind == "statement":
-        tb, tf = textbox(slide, MARGIN, Inches(2.5),
-                         SLIDE_W - 2 * MARGIN, Inches(1.8))
-        add_runs(tf.paragraphs[0], spec["title"], 46, TEXT, font=F_HEAD)
+        tb, tf = textbox(slide, MARGIN, Inches(0.85), SLIDE_W - 2 * MARGIN,
+                         Inches(0.4))
+        add_runs(tf.paragraphs[0], "ПОСТАНОВКА ЗАДАЧИ", 13, ACCENT, bold=True)
+        tb, tf = textbox(slide, MARGIN, Inches(1.35), SLIDE_W - 2 * MARGIN,
+                         Inches(1.3))
+        add_runs(tf.paragraphs[0], spec["title"], 44, TEXT, bold=True,
+                 font=F_HEAD)
         steps.append((tb.shape_id, "fade"))
-        tb2, tf2 = textbox(slide, MARGIN, Inches(4.3),
-                           SLIDE_W - 2 * MARGIN, Inches(0.8))
-        add_runs(tf2.paragraphs[0], spec["sub"], 20, SECONDARY)
+        tb, tf = textbox(slide, MARGIN, Inches(2.65), Inches(10.5), Inches(0.7))
+        add_runs(tf.paragraphs[0], spec["sub"], 20, SECONDARY)
+        pic = fit_picture(slide, spec["image"], MARGIN, Inches(3.5),
+                          SLIDE_W - 2 * MARGIN, Inches(2.6))
+        steps.append((pic.shape_id, "fade"))
+
+    elif kind == "given":
+        heading(slide, spec["title"])
+        col_w = (SLIDE_W - 2 * MARGIN - Inches(0.5)) / 2
+        for i, (title, items) in enumerate(spec["columns"]):
+            x = MARGIN + i * (col_w + Inches(0.5))
+            panel(slide, x, BODY_TOP, col_w, Inches(3.6), accent=True)
+            lead(slide, x + Inches(0.35), BODY_TOP + Inches(0.3),
+                 col_w - Inches(0.7), title)
+            for spid in bullets_each(slide, items, x + Inches(0.35),
+                                     BODY_TOP + Inches(0.85), col_w - Inches(0.7),
+                                     line_h=Inches(0.9), size=17):
+                steps.append((spid, "fade"))
 
     elif kind == "moment":
-        rect(slide, MARGIN, Inches(2.4), Inches(0.06), Inches(2.4), ACCENT)
-        tb, tf = textbox(slide, MARGIN + Inches(0.4), Inches(2.5),
-                         SLIDE_W - MARGIN - Inches(0.4), Inches(1.5))
-        add_runs(tf.paragraphs[0], spec["title"], 34, TEXT, font=F_HEAD)
+        tb, tf = textbox(slide, MARGIN, Inches(0.85), SLIDE_W - 2 * MARGIN,
+                         Inches(0.4))
+        add_runs(tf.paragraphs[0], "ХОД РАБОТЫ", 13, ACCENT, bold=True)
+        tb, tf = textbox(slide, MARGIN, Inches(1.3), SLIDE_W - 2 * MARGIN,
+                         Inches(1.1))
+        add_runs(tf.paragraphs[0], spec["title"], 34, TEXT, bold=True,
+                 font=F_HEAD)
         steps.append((tb.shape_id, "fade"))
-        tb2, tf2 = textbox(slide, MARGIN + Inches(0.4), Inches(3.9),
-                           SLIDE_W - MARGIN - Inches(0.4), Inches(0.9))
-        add_runs(tf2.paragraphs[0], spec["sub"], 18, SECONDARY)
+        tb, tf = textbox(slide, MARGIN, Inches(2.35), Inches(10.5), Inches(0.5))
+        add_runs(tf.paragraphs[0], spec["sub"], 17, SECONDARY)
+        pic = fit_picture(slide, spec["image"], MARGIN, Inches(3.0),
+                          SLIDE_W - 2 * MARGIN, Inches(2.2))
+        steps.append((pic.shape_id, "fade"))
+        chips = spec.get("chips", [])
+        for i, chip in enumerate(chips):
+            x = MARGIN + i * Inches(1.9)
+            box = rect(slide, x, Inches(5.5), Inches(1.7), Inches(0.42), ACCENT,
+                       shape=MSO_SHAPE.ROUNDED_RECTANGLE)
+            _, tf = textbox(slide, x, Inches(5.55), Inches(1.7), Inches(0.35))
+            p = tf.paragraphs[0]
+            p.alignment = PP_ALIGN.CENTER
+            add_runs(p, chip, 12, WHITE, font=F_MONO)
+            _ = box
 
     elif kind == "diagram":
         heading(slide, spec["title"])
         pic = fit_picture(slide, spec["image"], MARGIN, BODY_TOP,
-                          SLIDE_W - 2 * MARGIN, Inches(4.5))
+                          SLIDE_W - 2 * MARGIN, Inches(3.9))
         steps.append((pic.shape_id, "wipe"))
+        caption(slide, spec["caption"])
 
-    elif kind == "figure_full":
+    elif kind == "shot_side":
         heading(slide, spec["title"])
-        fit_picture(slide, spec["image"], MARGIN, BODY_TOP,
-                    SLIDE_W - 2 * MARGIN, Inches(4.3))
+        left_w = Inches(7.4)
+        right_x = MARGIN + left_w + Inches(0.5)
+        right_w = SLIDE_W - right_x - MARGIN
+        pic = fit_picture(slide, spec["image"], MARGIN, BODY_TOP, left_w,
+                          Inches(4.2))
+        steps.append((pic.shape_id, "fade"))
+        for i, block in enumerate(spec["blocks"]):
+            y = BODY_TOP + i * Inches(1.5)
+            panel(slide, right_x, y, right_w, Inches(1.35),
+                  accent=block.get("accent", False))
+            steps.append((slide.shapes[-1].shape_id, "fade"))
+            if block.get("lead"):
+                lead(slide, right_x + Inches(0.25), y + Inches(0.18),
+                     right_w - Inches(0.5), block["lead"])
+            _, tf = textbox(slide, right_x + Inches(0.25),
+                            y + (Inches(0.55) if block.get("lead") else Inches(0.25)),
+                            right_w - Inches(0.5), Inches(0.9))
+            add_runs(tf.paragraphs[0], block["text"], 14, TEXT)
         if spec.get("caption"):
             caption(slide, spec["caption"])
 
-    elif kind == "figure_pair":
+    elif kind == "pair":
         heading(slide, spec["title"])
-        gap = Inches(0.4)
+        gap = Inches(0.5)
         cw = (SLIDE_W - 2 * MARGIN - gap) / 2
         for i, img in enumerate(spec["images"]):
             pic = fit_picture(slide, img, MARGIN + i * (cw + gap), BODY_TOP,
-                              cw, Inches(4.2))
+                              cw, Inches(3.9))
             steps.append((pic.shape_id, "fade"))
-        if spec.get("caption"):
-            caption(slide, spec["caption"])
-
-    elif kind == "byte":
-        heading(slide, spec["title"])
-        x2 = MARGIN + Inches(6.6)
-        w2 = SLIDE_W - x2 - MARGIN
-        fit_picture(slide, spec["image"], MARGIN, BODY_TOP, Inches(5.8),
-                    Inches(4.2))
-        card = rect(slide, x2, BODY_TOP + Inches(0.4), w2, Inches(2.0), SURFACE)
-        steps.append((card.shape_id, "fade"))
-        tb, tf = textbox(slide, x2 + Inches(0.25), BODY_TOP + Inches(0.6),
-                         w2 - Inches(0.5), Inches(1.6))
-        add_runs(tf.paragraphs[0], spec["bytes"], 22, ACCENT, font=F_MONO)
-        add_runs(tf.add_paragraph(), spec["note"], 14, SECONDARY)
         if spec.get("caption"):
             caption(slide, spec["caption"])
 
     elif kind == "divider":
-        tb, tf = textbox(slide, MARGIN, Inches(2.5), SLIDE_W - 2 * MARGIN,
-                         Inches(1.1))
-        add_runs(tf.paragraphs[0], spec["index"], 60, ACCENT, font=F_MONO)
+        tb, tf = textbox(slide, MARGIN, Inches(2.2), SLIDE_W - 2 * MARGIN,
+                         Inches(1.4))
+        add_runs(tf.paragraphs[0], spec["index"], 72, ACCENT, bold=True,
+                 font=F_HEAD)
         steps.append((tb.shape_id, "fade"))
-        tb2, tf2 = textbox(slide, MARGIN, Inches(3.6), SLIDE_W - 2 * MARGIN,
-                           Inches(1.0))
-        add_runs(tf2.paragraphs[0], spec["title"], 40, TEXT, font=F_HEAD)
-        rect(slide, MARGIN, Inches(4.7), Inches(3.2), Inches(0.07), ACCENT)
+        tb, tf = textbox(slide, MARGIN, Inches(3.5), SLIDE_W - 2 * MARGIN,
+                         Inches(1.0))
+        add_runs(tf.paragraphs[0], spec["title"], 40, TEXT, bold=True,
+                 font=F_HEAD)
+        gradient_bar(slide, MARGIN, Inches(4.6), Inches(3.4), Inches(0.09))
+        tb, tf = textbox(slide, MARGIN, Inches(4.9), SLIDE_W - 2 * MARGIN,
+                         Inches(0.5))
+        add_runs(tf.paragraphs[0], spec["note"], 16, SECONDARY)
 
     elif kind == "metric":
-        tb, tf = textbox(slide, MARGIN, Inches(1.6), SLIDE_W - 2 * MARGIN,
+        tb, tf = textbox(slide, MARGIN, Inches(1.5), SLIDE_W - 2 * MARGIN,
                          Inches(0.8))
         add_runs(tf.paragraphs[0], spec["title"], 26, SECONDARY, bold=True,
                  font=F_HEAD)
-        tb2, tf2 = textbox(slide, MARGIN, Inches(2.5), SLIDE_W - 2 * MARGIN,
-                           Inches(2.2))
-        add_runs(tf2.paragraphs[0], spec["big"], 96, ACCENT, bold=True,
+        tb, tf = textbox(slide, MARGIN, Inches(2.5), Inches(5.6), Inches(2.0))
+        add_runs(tf.paragraphs[0], spec["big"], 88, ACCENT, bold=True,
                  font=F_HEAD)
-        steps.append((tb2.shape_id, "fade"))
-        tb3, tf3 = textbox(slide, MARGIN, Inches(4.9), Inches(10.5), Inches(1.0))
-        add_runs(tf3.paragraphs[0], spec["note"], 18, TEXT)
+        steps.append((tb.shape_id, "fade"))
+        tb, tf = textbox(slide, MARGIN, Inches(4.6), Inches(5.6), Inches(1.2))
+        add_runs(tf.paragraphs[0], spec["note"], 16, TEXT)
+        if spec.get("image"):
+            pic = fit_picture(slide, spec["image"], Inches(7.0), Inches(2.4),
+                              SLIDE_W - Inches(7.0) - MARGIN, Inches(3.6))
+            steps.append((pic.shape_id, "wipe"))
+
+    elif kind == "bars":
+        tb, tf = textbox(slide, MARGIN, Inches(1.5), SLIDE_W - 2 * MARGIN,
+                         Inches(0.8))
+        add_runs(tf.paragraphs[0], spec["title"], 26, SECONDARY, bold=True,
+                 font=F_HEAD)
+        tb, tf = textbox(slide, MARGIN, Inches(2.5), Inches(4.4), Inches(1.6))
+        add_runs(tf.paragraphs[0], spec["big"], 88, ACCENT, bold=True,
+                 font=F_HEAD)
+        steps.append((tb.shape_id, "fade"))
+        tb, tf = textbox(slide, MARGIN, Inches(4.2), Inches(4.4), Inches(1.6))
+        add_runs(tf.paragraphs[0], spec["note"], 16, TEXT)
+        steps.append((tb.shape_id, "fade"))
+
+        bx = Inches(7.0)
+        bw = SLIDE_W - bx - MARGIN
+        for i, (label, value, ratio, color) in enumerate(spec["bars"]):
+            y = Inches(2.8) + i * Inches(1.1)
+            tb, tf = textbox(slide, bx, y, Inches(0.6), Inches(0.4))
+            add_runs(tf.paragraphs[0], label, 16, SECONDARY, font=F_MONO)
+            track = rect(slide, bx + Inches(0.7), y + Inches(0.05),
+                         bw - Inches(1.9), Inches(0.32), SURFACE_HI)
+            fill = rect(slide, bx + Inches(0.7), y + Inches(0.05),
+                        (bw - Inches(1.9)) * ratio, Inches(0.32), color)
+            tb, tf = textbox(slide, bx + bw - Inches(1.1), y, Inches(1.1),
+                             Inches(0.4), anchor=MSO_ANCHOR.MIDDLE)
+            tf.paragraphs[0].alignment = PP_ALIGN.RIGHT
+            add_runs(tf.paragraphs[0], value, 18, TEXT, bold=True, font=F_HEAD)
+            steps.append((track.shape_id, "fade"))
+            steps.append((fill.shape_id, "fade"))
+            steps.append((tb.shape_id, "fade"))
+
+    elif kind == "live":
+        heading(slide, spec["title"])
+        pic = fit_picture(slide, spec["image"], MARGIN, BODY_TOP,
+                          SLIDE_W - 2 * MARGIN, Inches(4.0))
+        steps.append((pic.shape_id, "fade"))
+        caption(slide, spec["caption"])
 
     elif kind == "video":
         heading(slide, spec["title"])
-        fit_picture(slide, spec["poster"], MARGIN, BODY_TOP,
-                    SLIDE_W - 2 * MARGIN, Inches(4.3))
-        if spec.get("caption"):
-            caption(slide, spec["caption"])
+        pic = fit_picture(slide, spec["poster"], MARGIN, BODY_TOP,
+                          SLIDE_W - 2 * MARGIN, Inches(4.0))
+        steps.append((pic.shape_id, "fade"))
+        caption(slide, spec["caption"])
+
+    elif kind == "limits":
+        heading(slide, spec["title"])
+        col_w = (SLIDE_W - 2 * MARGIN - Inches(0.5)) / 2
+        for i, items in enumerate(spec["columns"]):
+            x = MARGIN + i * (col_w + Inches(0.5))
+            for spid in bullets_each(slide, items, x, BODY_TOP + Inches(0.2),
+                                     col_w, line_h=Inches(1.0), size=17):
+                steps.append((spid, "fade"))
 
     elif kind == "closing":
-        tb, tf = textbox(slide, Inches(1.0), Inches(1.5),
-                         SLIDE_W - Inches(2.0), Inches(1.6))
+        tb, tf = textbox(slide, Inches(1.0), Inches(1.4), SLIDE_W - Inches(2.0),
+                         Inches(1.4))
         p = tf.paragraphs[0]
         p.alignment = PP_ALIGN.CENTER
-        add_runs(p, spec["title"], 36, TEXT, bold=True, font=F_HEAD)
+        add_runs(p, spec["title"], 34, TEXT, bold=True, font=F_HEAD)
         steps.append((tb.shape_id, "fade"))
-        gap = Inches(1.4)
-        qw = Inches(1.6)
-        total = 2 * qw + gap
+        qw = Inches(1.5)
+        gap = Inches(0.9)
+        n = len(spec["qrs"])
+        total = n * qw + (n - 1) * gap
         x0 = (SLIDE_W - total) / 2
-        for i, (rel, label, url) in enumerate(spec["qrs"]):
+        for i, (rel, label, _url) in enumerate(spec["qrs"]):
             x = x0 + i * (qw + gap)
-            pic = picture(slide, rel, x, Inches(3.5), qw, qw)
+            pic = picture(slide, rel, x, Inches(3.1), qw, qw)
             steps.append((pic.shape_id, "fade"))
-            tb2, tf2 = textbox(slide, x - Inches(0.4), Inches(5.2),
-                               qw + Inches(0.8), Inches(0.35))
-            p2 = tf2.paragraphs[0]
+            _, tf = textbox(slide, x - Inches(0.3), Inches(4.75),
+                            qw + Inches(0.6), Inches(0.35))
+            p2 = tf.paragraphs[0]
             p2.alignment = PP_ALIGN.CENTER
             add_runs(p2, label, 11, SECONDARY)
-        tb3, tf3 = textbox(slide, Inches(1.0), Inches(5.9),
-                           SLIDE_W - Inches(2.0), Inches(0.5))
-        p3 = tf3.paragraphs[0]
+        tb, tf = textbox(slide, Inches(1.0), Inches(5.5), SLIDE_W - Inches(2.0),
+                         Inches(0.5))
+        p3 = tf.paragraphs[0]
         p3.alignment = PP_ALIGN.CENTER
         run = p3.add_run()
-        run.text = "github.com/Pavel1778/madrigal-protocol-lab · @Pasha1778"
-        run.font.size = Pt(13)
+        run.text = "github.com/Pavel1778/madrigal-protocol-lab"
+        run.font.size = Pt(14)
         run.font.name = F_MONO
         run.font.color.rgb = SECONDARY
         run.hyperlink.address = GITHUB
@@ -436,75 +610,95 @@ def build_slide(prs, spec):
 # --- content (mirrors slides.md, 19 slides) ---------------------------------
 def deck() -> list[dict]:
     return [
-        dict(kind="title", page=1, title="Лаборатория протоколов",
-             line="Команда HTTP 418 · UMIRHack 2026 · кейс #02 · Мадригал",
-             notes="Восстановление недокументированного протокола поверх TCP."),
-        dict(kind="two_col", page=2, title="Нас двое",
-             left=["**Сабадаш Павел** — архитектура, захват, интерфейс · @Pasha1778",
-                   "**Предков Никита** — правила, тесты · @petruan"],
-             right_image="public/team-avatar.png", animate=True,
-             notes="Команда HTTP 418."),
-        dict(kind="statement", page=3, title="TCP разрезает сообщения посередине",
-             sub="Границы пакета и границы сообщения — разные вещи"),
-        dict(kind="two_col", page=4, title="Дано и требуется",
-             left=["Захваты pcap/pcapng и журнал действий устройства",
-                   "Спецификации протокола нет"],
-             right=["Проверяемая интерпретация структуры сообщений",
-                    "Видно, где чтение верно, а где перестаёт работать"],
-             build_left=True, build_right=True),
+        dict(kind="cover", page=1, title="Лаборатория протоколов",
+             sub="Восстановление недокументированного бинарного протокола поверх TCP",
+             meta="UMIRHack 2026 · кейс #02 · Мадригал · команда HTTP 418",
+             notes="Приветствие, 20 секунд."),
+        dict(kind="team", page=2, title="Нас двое",
+             members=[("Сабадаш Павел", "Архитектура · захват · интерфейс",
+                       "@Pasha1778", "qr_telegram_pasha.png"),
+                      ("Предков Никита", "Правила · тесты · ревью", "@petruan",
+                       "qr_telegram_nikita.png")],
+             notes="Два человека, разделение ролей, QR на контакт у каждого."),
+        dict(kind="statement", page=3,
+             title="TCP разрезает сообщения посередине",
+             sub="Границы пакета и границы сообщения — разные вещи",
+             image="assets/tcp_framing.png"),
+        dict(kind="given", page=4, title="Дано и требуется",
+             columns=[("Дано", ["Захваты pcap/pcapng и журнал действий устройства",
+                                "Спецификации протокола нет"]),
+                      ("Требуется", ["Проверяемая интерпретация структуры сообщений",
+                                     "Видно, где чтение верно, а где перестаёт работать"])]),
         dict(kind="moment", page=5,
-             title="Первые дни мы не понимали, где у протокола длина",
-             sub="Смещение поля длины оказалось на четыре байта позже, чем мы считали"),
-        dict(kind="diagram", page=6,
+             title="Смещение поля длины оказалось на четыре байта позже, чем мы считали",
+             sub="Одно правило, два чтения: поле длины остаётся на offset 2",
+             image="assets/length_offset.png",
+             chips=["наблюдение", "гипотеза", "проверка", "контрпример", "уточнение"]),
+        dict(kind="arch", page=6,
              title="Три модуля связаны форматами, а не вызовами",
-             image="assets/architecture.png",
-             caption="capture → protocol → hypothesis → ui; контракты зафиксированы JSON Schema"),
-        dict(kind="figure_full", page=7, title="Каждый байт знает свой пакет",
-             image="screenshots/09_provenance.png",
-             caption="Клик по байту: packet 3 · seq 1001 · ts 1700000000.004"),
-        dict(kind="figure_pair", page=8,
-             title="Правило проверяется на всём корпусе сразу",
-             images=["screenshots/07_rule_editor.png",
-                     "screenshots/05_validation.png"],
+             modules=[("capture", "pcap/pcapng → сессии\nreassembly, provenance"),
+                      ("protocol + hypothesis", "правила, фрейминг\nконтрпримеры, версии"),
+                      ("ui", "окно PySide6\nисследование и просмотр")],
+             caption="Контракты между модулями зафиксированы схемами JSON; порядок вызовов не важен"),
+        dict(kind="shot_side", page=7, title="Каждый байт знает свой пакет",
+             image="public/screenshot-provenance.png",
+             blocks=[dict(lead="Происхождение",
+                          text="Клик по байту связывает его с пакетом, номером последовательности и временем."),
+                     dict(accent=True, lead="",
+                          text="packet 3 · seq 1001 · ts 1700000000.004, сессия s1")]),
+        dict(kind="pair", page=8, title="Правило проверяется на всём корпусе сразу",
+             images=["public/screenshot-rule.png",
+                     "public/screenshot-validation.png"],
              caption="Одно правило описывает весь поток; сообщения не перечисляют вручную"),
-        dict(kind="byte", page=9, title="Контрпример важнее метрики",
-             image="screenshots/05_validation.png", bytes="02 00 00 03 13 00 55",
-             note="Команда 2 не входила в ожидаемый набор [1]",
-             caption="Один такой байт превратил 80 контрпримеров в ноль"),
-        dict(kind="divider", page=10, index="01", title="Что получилось"),
-        dict(kind="metric", page=11, title="Точность правила: 0.43 → 1.00",
+        dict(kind="shot_side", page=9, title="Контрпример важнее метрики",
+             image="public/screenshot-counterexamples.png",
+             blocks=[dict(accent=True, lead="",
+                          text="02 00 00 03 13 00 55  —  команда 2 вне ожидаемого набора [1]"),
+                     dict(lead="Один байт — 80 контрпримеров",
+                          text="Все 80 несоответствий v1 сидели на offset 0 в сессиях s2 и s3.")]),
+        dict(kind="divider", page=10, index="01", title="Что получилось",
+             note="Точность, покрытие корпуса организаторов, ресурсы"),
+        dict(kind="bars", page=11, title="Уточнили правило: 60/140 → 140/140",
              big="1.00",
-             note="Было 60 matched и 80 mismatched. Стало 140 matched и ноль контрпримеров"),
+             note="Было 60 matched из 140 и 80 контрпримеров. Стало 140 matched из 140 и ноль контрпримеров",
+             bars=[("v1", "0.43", 0.43, MISMATCHED),
+                   ("v2", "1.00", 1.0, MATCHED)]),
         dict(kind="metric", page=12, title="Набор организаторов разобран целиком",
-             big="90",
+             big="90", image="assets/coverage_donut.png",
              note="45 запросов и 45 ответов, все matched, покрытие байтов 100 %"),
         dict(kind="metric", page=13, title="95 МиБ разбираются за 12 секунд",
-             big="12 с",
-             note="250 000 пакетов, 1000 сессий, 4 vCPU. Пик памяти 350 МиБ"),
-        dict(kind="divider", page=14, index="02", title="Демонстрация"),
-        dict(kind="figure_full", page=15, title="Живое окно",
-             image="screenshots/01_main.png",
+             big="12 с", image="assets/memory_sweep.png",
+             note="Условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ"),
+        dict(kind="divider", page=14, index="02", title="Демонстрация",
+             note="Живое окно и запись прогона"),
+        dict(kind="live", page=15, title="Живое окно",
+             image="public/screenshot-main.png",
              caption="Сессии, байты, интерпретация, происхождение и диагностика в одном окне"),
         dict(kind="video", page=16,
              title="Запись прогона на случай, если экран не поднимется",
-             poster="screenshots/02_sessions.png",
+             poster="public/screenshot-main.png",
              caption="Четыре минуты: шесть сцен референсного исследования"),
-        dict(kind="divider", page=17, index="03", title="Границы и итог"),
-        dict(kind="two_col", page=18, title="Что мы не утверждаем",
-             left=["Смысл байта флагов не установлен: в корпусе он постоянен",
-                   "Поле значения остаётся гипотезой, а не фактом"],
-             right=["Альтернативные чтения берутся из заданного набора",
-                    "Интерпретация верна для проверенных захватов и молчит вне них"],
-             build_left=True, build_right=True),
+        dict(kind="divider", page=17, index="03", title="Границы и итог",
+             note="Что мы не утверждаем и что осталось за рамками"),
+        dict(kind="limits", page=18, title="Что мы не утверждаем",
+             columns=[["Смысл байта флагов не установлен: в корпусе он постоянен",
+                       "Поле значения остаётся гипотезой, а не фактом"],
+                      ["Альтернативные чтения берутся из заданного набора",
+                       "Интерпретация верна для проверенных захватов и молчит вне них"]]),
         dict(kind="closing", page=19,
              title="Инструмент превращает байты в проверяемое знание",
              qrs=[("public/qr_repo.png", "Репозиторий", GITHUB),
-                  ("public/qr_release.png", "Релиз v1.0.0", RELEASE)],
-             notes="QR ведут на репозиторий и на релиз v1.0.0."),
+                  ("public/qr_release.png", "Релиз v1.0.0", RELEASE),
+                  ("public/qr_telegram_pasha.png", "@Pasha1778", "https://t.me/Pasha1778"),
+                  ("public/qr_telegram_nikita.png", "@petruan", "https://t.me/petruan")],
+             notes="QR ведут на репозиторий, релиз и контакты."),
     ]
 
 
 def main() -> None:
+    specs = deck()
+    if len(specs) != TOTAL:
+        raise SystemExit(f"deck() has {len(specs)} slides, expected {TOTAL}")
     prs = Presentation()
     prs.slide_width = SLIDE_W
     prs.slide_height = SLIDE_H

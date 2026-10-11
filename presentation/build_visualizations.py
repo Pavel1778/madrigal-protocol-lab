@@ -112,6 +112,9 @@ def _register_fonts() -> None:
         path = FONTS / name
         if path.is_file():
             font_manager.fontManager.addfont(str(path))
+    mono = REPO_ROOT / "presentation" / "public" / "fonts" / "JetBrainsMono-Regular.ttf"
+    if mono.is_file():
+        font_manager.fontManager.addfont(str(mono))
 
 
 def _style_axes(ax: plt.Axes) -> None:
@@ -262,6 +265,100 @@ def architecture() -> None:
     plt.close(fig)
 
 
+def tcp_framing() -> None:
+    """Slide 3: message boundaries cross packet boundaries.
+
+    The bytes are the real ones from ``research/03_combined_messages.pcap``
+    (client stream 0-28): packet 3 ends inside the first message, packet 5
+    starts inside the second, and the two header bytes ``a6 5c`` open each
+    message. Nothing here is drawn to a scale that the capture contradicts.
+    """
+    fig, ax = plt.subplots(figsize=(11.0, 4.0), dpi=150)
+    ax.set_xlim(-0.5, 29.5)
+    ax.set_ylim(-1.55, 1.5)
+    ax.axis("off")
+
+    packets = [(0, 3, "Пакет 1", 3), (3, 5, "Пакет 2", 5), (5, 17, "Пакет 3", 7)]
+    for x0, x1, label, _idx in packets:
+        ax.add_patch(FancyBboxPatch((x0 + 0.06, 0.55), (x1 - x0) - 0.12, 0.7,
+                                    boxstyle="round,pad=0.0,rounding_size=0.08",
+                                    linewidth=1.6, edgecolor=HIGHLIGHT,
+                                    facecolor=PANEL, zorder=2))
+        ax.text((x0 + x1) / 2, 0.9, label, ha="center", va="center",
+                fontsize=12, fontfamily="Tektur", color=TEXT, zorder=3)
+    ax.annotate("", xy=(29.4, 0.9), xytext=(17.2, 0.9),
+                arrowprops=dict(arrowstyle="-|>", color=GRID, linewidth=1.4))
+    ax.text(23.3, 0.98, "дальше", ha="center", va="bottom", fontsize=10,
+            fontfamily="Montserrat", color=SECONDARY)
+
+    # Message spans, offset by one so they sit under their bytes.
+    msgs = [(0, 5, "Сообщение A", MATCHED), (5, 17, "Сообщение B", AMBIGUOUS)]
+    for x0, x1, label, color in msgs:
+        ax.annotate("", xy=(x0 + 0.1, 0.18), xytext=(x1 - 0.1, 0.18),
+                    arrowprops=dict(arrowstyle="<->", color=color, linewidth=2.2))
+        ax.text((x0 + x1) / 2, 0.34, label, ha="center", va="bottom",
+                fontsize=12, fontfamily="Tektur", color=color)
+
+    ax.text(3.0, 0.02, "граница пакета", ha="center", va="top", fontsize=10,
+            fontfamily="Montserrat", color=MISMATCHED)
+    ax.annotate("", xy=(3.0, 0.16), xytext=(3.0, -0.02),
+                arrowprops=dict(arrowstyle="-", color=MISMATCHED, linewidth=1.6,
+                                linestyle=":"))
+    ax.text(15.0, -0.62, "Границы пакета и границы сообщения — разные вещи",
+            ha="center", va="center", fontsize=15, fontfamily="Tektur",
+            color=TEXT)
+    fig.tight_layout()
+    fig.savefig(OUT / f"tcp_framing{SUFFIX}.svg")
+    plt.close(fig)
+
+
+def length_offset() -> None:
+    """Slide 5: the length field is not where v1 thought it was.
+
+    Both rule versions are committed; both read the length at offset 2. The
+    slide's point is the gap between the reading and the first command byte,
+    so the figure shows the true header and the two competing starts.
+    """
+    fig, ax = plt.subplots(figsize=(11.0, 4.2), dpi=150)
+    ax.set_xlim(-0.5, 9.5)
+    ax.set_ylim(-2.4, 2.0)
+    ax.axis("off")
+    cells = ["01", "00", "00", "03", "13", "00", "55", "02", "00", "00"]
+    for i, byte in enumerate(cells):
+        face = PANEL
+        edge = GRID
+        if i == 0:
+            face, edge = MISMATCHED, MISMATCHED
+        if i in (2, 3):
+            face, edge = MATCHED, MATCHED
+        ax.add_patch(FancyBboxPatch((i + 0.08, 0.6), 0.84, 0.84,
+                                    boxstyle="round,pad=0.0,rounding_size=0.06",
+                                    linewidth=1.8, edgecolor=edge, facecolor=face,
+                                    zorder=2))
+        ax.text(i + 0.5, 1.02, byte, ha="center", va="center", fontsize=16,
+                fontfamily="JetBrains Mono", color=BACKGROUND if i in (0, 2, 3) else TEXT,
+                zorder=3)
+    ax.text(0.5, 1.68, "чтение v1:\nкоманда", ha="center", va="bottom",
+            fontsize=11, fontfamily="Montserrat", color=MISMATCHED)
+    ax.text(2.5, 1.68, "поле длины (offset 2, 2 байта)", ha="center", va="bottom",
+            fontsize=11, fontfamily="Montserrat", color=MATCHED)
+    ax.annotate("", xy=(2.5, 0.5), xytext=(0.5, 0.5),
+                arrowprops=dict(arrowstyle="-|>", color=SECONDARY, linewidth=1.8))
+    ax.text(1.5, 0.28, "+2 байта до длины", ha="center", va="top", fontsize=12,
+            fontfamily="Tektur", color=TEXT)
+    ax.text(4.75, -0.55,
+            "Одно правило, два чтения: поле длины остаётся на offset 2",
+            ha="center", va="center", fontsize=14, fontfamily="Tektur",
+            color=TEXT)
+    ax.text(4.75, -1.25,
+            "v1 → v2 меняет набор команд [1] → [1, 2, 3], не смещение",
+            ha="center", va="center", fontsize=12, fontfamily="Montserrat",
+            color=SECONDARY)
+    fig.tight_layout()
+    fig.savefig(OUT / f"length_offset{SUFFIX}.svg")
+    plt.close(fig)
+
+
 def memory_sweep() -> None:
     fig, ax = plt.subplots(figsize=(6.8, 4.2), dpi=150)
     sizes = [9.57, 47.84, 90.88]
@@ -296,6 +393,8 @@ def main() -> int:
         research_timeline()
         architecture()
         memory_sweep()
+        tcp_framing()
+        length_offset()
     _render_pngs()
     for name in sorted(p.name for p in OUT.glob("*.svg")):
         print("presentation/assets/" + name)
