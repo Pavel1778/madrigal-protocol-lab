@@ -25,7 +25,7 @@ Those 183-test rows are from the capture, project and report revision. The suite
 has since grown with the protocol and window modules; the authoritative counts
 for the submitted revision are in "Submission revision" below.
 
-## Submission revision (768 tests)
+## Submission revision (781 tests)
 
 The submission revision is checked from a clean unpack, so the archived tree
 and not the working copy is what runs. The skip below is the archive's only
@@ -34,14 +34,17 @@ that reads a script's executable bit is skipped rather than failed.
 
 | Source | Python | Suite | Lint |
 | --- | --- | --- | --- |
-| Git checkout at this head | 3.13.5 | 768 passed, 0 skipped | All checks passed |
+| Git checkout at this head, `pip install -e ".[dev,web]"` (CI path) | 3.13.5 | 781 passed, 0 skipped | All checks passed |
+| Git checkout at this head, `pip install -e ".[dev]"` (README path) | 3.13.5 | 757 passed, 1 skipped (the web extra is absent) | All checks passed |
 | `submission_*.zip` from release v1.0.0, clean unpack | 3.13.5 | 767 passed, 1 skipped | All checks passed |
 
-No other test skipped on either: the corpus, the reference export and the
-`examples/` rules are inside the archive. The archive rows were measured on the
-published `v1.0.0` asset (`submission_20261011_1316.zip`, 474 entries), which is
-the exact file a reviewer downloads; the checkout row is the same suite at
-`main`.
+The two checkout rows differ only by the `web` extra: without it the 24 tests in
+`tests/web` skip in one module. The full suite that CI runs installs
+`.[dev,web]` and reports 781. No other test skips on either row: the corpus, the
+reference export and the `examples/` rules are inside the archive. The archive
+rows were measured on the published `v1.0.0` asset
+(`submission_20261011_1316.zip`, 474 entries), which is the exact file a
+reviewer downloads; the checkout rows are the same suite at `main` (`4d94720`).
 
 ## Docker
 

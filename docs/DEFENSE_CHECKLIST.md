@@ -8,7 +8,8 @@ file that proves it, so a tick is a measurement, not a memory. Figures are from
 
 - [ ] `main = origin/main`, дерево чистое.
       `git fetch --all --prune && git status -sb && git log --oneline -1 origin/main`
-- [ ] Тесты зелёные: `pytest tests/ -q` → **768 passed** (≈ 8 min).
+- [ ] Тесты зелёные: `pytest tests/ -q` → **781 passed** с `pip install -e ".[dev,web]"`;
+      без `[web]` — **757 passed, 1 skipped** (≈ 8 min).
 - [ ] Линт чистый: `ruff check . --select "E4,E7,E9,F" --ignore E501` → All checks passed.
 - [ ] Дека: `presentation/slides.pdf` и `presentation/slides-light.pdf` — по **19 страниц**;
       `presentation/slides.pptx` — 19 слайдов.
@@ -58,5 +59,5 @@ git fetch --all --prune && git status -sb \
   && gh release view v1.0.0 --json isDraft,assets
 ```
 
-Expected: a clean tree at `origin/main`, 768 passed, lint clean, 19 pages, a
-published release with 11 assets.
+Expected: a clean tree at `origin/main`, 781 passed (757 + 1 skipped on the
+`[dev]` path), lint clean, 19 pages, a published release with 11 assets.

@@ -26,13 +26,15 @@ message is classified. Rule v2 transfers to `corpus_capture_02` with 40 matched
 and 0 counterexamples, and fails openly on `synthetic_live`. See `REPORT.md`
 sections 7-8, `tests/integration/test_reference_report.py`.
 
-## 4. Why 768 tests, and not more?
+## 4. Why 781 tests, and not more?
 
 The suite covers every module and every status the engine can emit, including
 the boundary and defect fixtures; coverage is 90 % over `src/`, and the
-remaining lines are error branches that need a real I/O failure. More tests
-would not raise the claim, which is "confirmed in scope", not "proven". See
-`docs/AUDIT.md` sections 4 and 11.
+remaining lines are error branches that need a real I/O failure. The full suite
+is 781 with the web extra installed (`pip install -e ".[dev,web]"`, the CI
+path); without it the 24 web tests skip and the count is 757 + 1 skipped. More
+tests would not raise the claim, which is "confirmed in scope", not "proven".
+See `docs/AUDIT.md` sections 4 and 11.
 
 ## 5. What happens on a conflicting overlap?
 

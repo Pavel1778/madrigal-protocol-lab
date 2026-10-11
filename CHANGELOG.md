@@ -126,6 +126,9 @@ is the merge of PR #14 (`f637644`); the entries below are the work that followed
   `presentation/screencast.mp4` (PR #21, PR #23).
 - `docs/DEFENSE_CHECKLIST.md` and `docs/FAQ_FOR_JUDGES.md` for the defense
   (PR #26).
+- `docs/DEMO_CHEATSHEET.md` (a print-and-keep one-pager for the demo) and
+  `presentation/Q_and_A.md` (fifteen defense questions in short form), linked
+  from the README document list.
 
 ### Changed
 
@@ -138,8 +141,8 @@ is the merge of PR #14 (`f637644`); the entries below are the work that followed
   revision, and the deck and verification documents resynced to the 19-slide
   deck (PR #16, PR #18, PR #25, PR #26).
 - The README, the audit, the portability report and the presentation
-  verification now quote 768 tests and the published `v1.0.0` archive
-  (PR #26).
+  verification now quote 781 tests (757 + 1 skipped on the README `[dev]` path)
+  and the published `v1.0.0` archive (767 + 1 skipped).
 
 ### Fixed
 
@@ -148,6 +151,12 @@ is the merge of PR #14 (`f637644`); the entries below are the work that followed
 - The deck overflow and the reserve-clip length were corrected (PR #16, PR #23).
 - The stale "organizer captures not available" limit was replaced with the
   received-and-analysed state (PR #20, PR #26).
+- The presentation documents no longer describe a twenty-two-slide deck:
+  `presentation/README.md` and `presentation/CHANGELOG.md` say nineteen, and
+  `presentation/slide_verification.md` is marked as keeping the old numbering
+  with a note pointing to `docs/PRESENTATION_VERIFICATION.md`.
+- `docs/DEFENSE_FAQ.md` no longer pins an old `main` head; the re-check is
+  recorded against the current one.
 
 ### Removed
 

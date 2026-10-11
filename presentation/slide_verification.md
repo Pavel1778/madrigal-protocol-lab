@@ -3,9 +3,16 @@
 Every numeric claim on the deck is checked against the code that produced it, so
 a reviewer can move from a sentence on a slide to the evidence behind it. The
 deck is `presentation/slides.md`; the rendered pages are `presentation/slides.pdf`
-(twenty-two pages). Where a slide quotes a number, the number is stated here with
+(nineteen pages). Where a slide quotes a number, the number is stated here with
 the command that reproduces it. Everything below comes from `docs/METRICS.md`
 and `docs/AUDIT.md`.
+
+> **Slide numbers.** The headings below were written against the pre-merge
+> twenty-two-slide deck and keep its numbering. The deck is now nineteen slides;
+> the current slide→topic map is the table in `presentation/defense_script.md`,
+> and the authoritative per-slide verification is
+> `docs/PRESENTATION_VERIFICATION.md`. Read a heading here as the topic it names,
+> not as its position in today's deck.
 
 ## Подход
 
@@ -100,7 +107,8 @@ JSON Schema draft 2020-12 (`docs/schemas/`).
 | layout: command code, flags, length (uint16, BE), payload | `examples/corpus_rule_v1.json`, `examples/corpus_rule_v2.json` |
 | rule transfers to the second capture and not to a foreign one | `docs/METRICS.md` |
 
-## Slide 22 — Вопросы
+## Final slide — Итог и ссылки
 
-No numeric claim. Links: `REPORT.md`, `docs/REFERENCE_INVESTIGATION.md`,
-`docs/demo.md`.
+The deck does not end on a «Вопросы» slide. The final slide carries the
+conclusion and two QR codes (repository and release), no numeric claim. Links:
+`REPORT.md`, `docs/REFERENCE_INVESTIGATION.md`, `docs/demo.md`.
