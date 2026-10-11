@@ -356,20 +356,26 @@ class MainWindow(QtWidgets.QMainWindow):
     def _relabel_tabs(self) -> None:
         """Translate the right-hand tab captions in place.
 
-        The full caption is also set as the tab tooltip, so an elided caption in
-        a narrow dock is still readable on hover.
+        The captions are kept short so they fit the narrow dock without eliding;
+        the full name is set as the tab tooltip, so nothing is lost on hover.
         """
-        for index, label in enumerate(
-            (
-                self.tr("Interpretation"),
-                self.tr("Compare"),
-                self.tr("Hypotheses"),
-                self.tr("Report"),
-                self.tr("Version diff"),
-            )
-        ):
+        captions = (
+            self.tr("Interpretation"),
+            self.tr("Compare"),
+            self.tr("Hypotheses"),
+            self.tr("Report"),
+            self.tr("Version diff"),
+        )
+        tooltips = (
+            self.tr("Interpretation tab"),
+            self.tr("Compare tab"),
+            self.tr("Hypotheses tab"),
+            self.tr("Report tab"),
+            self.tr("Version diff tab"),
+        )
+        for index, (label, tip) in enumerate(zip(captions, tooltips)):
             self.right_tabs.setTabText(index, label)
-            self.right_tabs.setTabToolTip(index, label)
+            self.right_tabs.setTabToolTip(index, tip)
 
     def _build_status(self) -> None:
         bar = self.statusBar()
