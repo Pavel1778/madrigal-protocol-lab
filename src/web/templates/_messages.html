@@ -1,3 +1,13 @@
+{% if counters %}
+<p class="muted counters">
+  {{ counters.get("matched", 0) }} matched,
+  {{ counters.get("mismatched", 0) }} mismatched,
+  {{ counters.get("incomplete", 0) }} incomplete,
+  {{ counters.get("ambiguous", 0) }} ambiguous,
+  {{ counters.get("uncovered", 0) }} uncovered,
+  {{ counters.get("not_applicable", 0) }} not applicable
+</p>
+{% endif %}
 <table class="messages">
   <thead>
     <tr>
