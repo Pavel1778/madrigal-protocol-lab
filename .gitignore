@@ -43,3 +43,6 @@ presentation/video.mp4
 
 # Snapshot test artefacts (CI uploads them; never committed)
 .snapshot-actual/
+
+# Slidev pptx export leaves per-click frames behind
+presentation/slides-*_[0-9]*.png
