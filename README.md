@@ -134,6 +134,19 @@ python -m scripts.generate_corpus
 
 Команда пишет корпус в `tests/corpus/` и фикстуры в `tests/fixtures/`.
 
+### Набор организаторов
+
+Помимо синтетического корпуса в репозитории лежит набор захватов, полученный
+от организаторов, — `tests/corpus/real/`. Это независимый протокол «термостенд»
+(`0xa65c`, длина с учётом заголовка): три исследовательских записи, одна
+дополнительная, восемь диагностических и журнал действий `action_journal.csv`.
+Разбор и метрики — в `docs/REAL_CORPUS_ANALYSIS.md`, воспроизведение:
+
+```
+python -m scripts.investigate_dataset
+python -m pytest tests/hypothesis/test_real_corpus.py -q
+```
+
 ## Пример запуска
 
 ### Командная строка

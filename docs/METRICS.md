@@ -17,6 +17,23 @@ Counts from reading each capture with the capture engine
 | corpus_capture_defects.pcapng | 1.7 KiB | 18 | 1 | retransmission, out-of-order, gap, conflicting overlap |
 | synthetic_live.pcapng | 2.5 KiB | 27 | 1 | real TCP stack, different layout; applicability boundary |
 
+## Real corpus
+
+Source: `docs/REAL_CORPUS_ANALYSIS.md`, from the organizer dataset in
+`tests/corpus/real/`. Four research captures, five TCP sessions, 1793 stream
+bytes, 90 framed messages (45 requests, 45 responses).
+
+| Metric | Value |
+| --- | --- |
+| Sessions | 5 (matches `dataset_manifest.json`) |
+| Request messages | 45, all `matched`, 100 % byte coverage |
+| Response messages | 45, all `matched`, 100 % byte coverage |
+| Precision (matched / framed) | 1.00 |
+| Counterexamples, rule v1 | 6 (5 mismatched, 10 incomplete over the corpus) |
+| Counterexamples, rule v2 | 0 |
+| Journal correlation | 14 of 14 requests correlated on the configuration capture |
+| Diagnostic captures | 8, each reports its condition (gap, ambiguity, checksum_offload) |
+
 ## Command surface
 
 | Stage | Command | Values |

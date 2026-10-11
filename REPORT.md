@@ -286,6 +286,31 @@ were found this way and fixed. The record is in `docs/GUI_VERIFICATION.md`, and
 the automated form of the same scenario is `tests/ui/test_e2e.py` (fourteen
 tests over the real bytes and the real engine).
 
+## 13.1 Real corpus validation
+
+The organizer dataset was received after the window and analysed with the same
+pipeline. It is a second, independent protocol (`0xa65c` magic, a two-byte length
+that counts the four-byte header) across four research captures and eight
+single-condition diagnostic captures.
+
+| Check | Result |
+| --- | --- |
+| Sessions vs `dataset_manifest.json` | 2, 1, 1, 1 — reproduced exactly |
+| Request messages | 45, all `matched`, 100 % byte coverage |
+| Response messages | 45, all `matched`, 100 % byte coverage |
+| Rule v1 (payload-only length) | 6 counterexamples (5 mismatched, 10 incomplete) |
+| Rule v2 (`length_bias: 4`) | 0 counterexamples |
+| Journal correlation | 14 of 14 requests correlated on the configuration capture |
+| Diagnostics | each capture reports its condition: `gap`, `ambiguity`, `checksum_offload` |
+
+Every field of the thermal-stand message was identified and cross-checked against
+the journal: magic, counter, type, status, the configuration block, and the
+measurement array. What did not carry over unchanged is the framing convention:
+the naive reading framed four bytes short, which is exactly the counterexample
+the loop is meant to expose. The full record is in
+`docs/REAL_CORPUS_ANALYSIS.md`; the generated per-capture numbers are in
+`docs/DATASET_INVESTIGATION.md`.
+
 ## 14. Artifacts
 
 | artifact | role |
