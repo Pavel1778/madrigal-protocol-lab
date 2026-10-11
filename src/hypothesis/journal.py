@@ -13,8 +13,11 @@ when the evidence is absent.
 
 from __future__ import annotations
 
+import csv
 import datetime as _dt
+import json
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from ..protocol.engine import MessageResult
 
@@ -204,8 +207,12 @@ def parse_journal(text: str) -> list[JournalEntry]:
 def load_journal(path: str) -> list[JournalEntry]:
     """Load and parse a journal file.
 
+    A ``.csv`` file is read as the organizer table (``start_utc`` plus
+    ``action`` and JSON ``parameters``); any other file is read as the
+    pipe-delimited text journal.
+
     Args:
-        path: Path to the journal text file.
+        path: Path to the journal text or CSV file.
 
     Returns:
         The parsed entries in file order.
@@ -214,8 +221,59 @@ def load_journal(path: str) -> list[JournalEntry]:
         JournalError: If a data line cannot be parsed.
         OSError: If the file cannot be read.
     """
+    if Path(path).suffix.lower() == ".csv":
+        with open(path, "r", encoding="utf-8", newline="") as handle:
+            return parse_journal_csv(handle.read())
     with open(path, "r", encoding="utf-8") as handle:
         return parse_journal(handle.read())
+
+
+def parse_journal_csv(text: str) -> list[JournalEntry]:
+    """Parse the organizer action table.
+
+    Each row has ``capture, session, action_id, start_utc, end_utc, action,
+    parameters, observed_result``. The ``start_utc`` time becomes the entry
+    timestamp and the JSON ``parameters`` object becomes the entry params, so
+    a decoded field named like a parameter (``period_ms``, ``threshold_raw``)
+    can be compared with the value the client sent. The ``parameters`` and
+    ``observed_result`` cells carry JSON, so any comma inside them is quoted
+    by the CSV writer and is read back as one cell.
+    """
+    reader = csv.DictReader(text.splitlines())
+    if reader.fieldnames is None or "start_utc" not in reader.fieldnames:
+        raise JournalError("journal CSV is missing the 'start_utc' column")
+    entries: list[JournalEntry] = []
+    for row in reader:
+        if not any((value or "").strip() for value in row.values()):
+            continue
+        raw_start = (row.get("start_utc") or "").strip()
+        if not raw_start:
+            raise JournalError("journal CSV row has no 'start_utc'")
+        params: dict = {}
+        raw_params = (row.get("parameters") or "").strip()
+        if raw_params:
+            try:
+                parsed = json.loads(raw_params)
+            except ValueError as exc:
+                raise JournalError(f"journal CSV parameters are not JSON: {raw_params!r}") from exc
+            if isinstance(parsed, dict):
+                params.update(parsed)
+        action = (row.get("action") or "").strip()
+        if action:
+            params["action"] = action
+        for key in ("session", "action_id", "capture"):
+            value = (row.get(key) or "").strip()
+            if value:
+                params[key] = value
+        entries.append(
+            JournalEntry(
+                timestamp=parse_timestamp(raw_start),
+                action=action,
+                params=params,
+                raw=",".join((row.get(name) or "") for name in reader.fieldnames),
+            )
+        )
+    return entries
 
 
 def _coerce(value: str):
