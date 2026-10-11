@@ -45,7 +45,27 @@ CONDITIONAL_FIELD_TYPES = {"conditional"}
 
 ALL_FIELD_TYPES = DATA_FIELD_TYPES | CHECK_FIELD_TYPES | CONDITIONAL_FIELD_TYPES
 
-CONDITION_OPS = ("eq", "ne", "bit_set", "bit_clear", "gt", "lt")
+CONDITION_OPS = ("eq", "ne", "in", "bit_set", "bit_clear", "gt", "lt")
+CONDITION_GROUPS = ("all", "any")
+
+
+def _validate_condition(name: str, condition: object) -> None:
+    """Check a condition tree against the supported operators."""
+    if not isinstance(condition, dict):
+        raise RuleError(f"field {name!r} of type conditional needs a 'condition' object")
+    for group in CONDITION_GROUPS:
+        if group in condition:
+            parts = condition[group]
+            if not isinstance(parts, list) or not parts:
+                raise RuleError(f"field {name!r} condition {group!r} needs a non-empty list")
+            for part in parts:
+                _validate_condition(name, part)
+            return
+    op = condition.get("op")
+    if op not in CONDITION_OPS:
+        raise RuleError(f"field {name!r} condition has unsupported op {op!r}")
+    if "field" not in condition:
+        raise RuleError(f"field {name!r} condition needs a 'field' reference")
 
 
 class RuleError(ValueError):
@@ -82,6 +102,7 @@ class FieldSpec:
     # array
     element_type: str | None = None
     element_length: int | None = None
+    element_stride: int | None = None
     count: int | None = None
     count_field: str | None = None
     # checksum / computed
@@ -129,14 +150,18 @@ class FieldSpec:
                 raise RuleError(f"field {name!r} of type bytes needs a non-negative length")
             length = int(length)
         if ftype == "string":
-            if length is None and not raw.get("terminated"):
+            if length is None and not raw.get("terminated") and raw.get("count_field") is None:
                 raise RuleError(
-                    f"field {name!r} of type string needs 'length' or 'terminated'"
+                    f"field {name!r} of type string needs 'length', 'terminated' or 'count_field'"
                 )
             if length is not None:
                 length = int(length)
         if ftype == "enum" and not isinstance(enum, dict):
             raise RuleError(f"field {name!r} of type enum needs an enum mapping")
+        if ftype == "enum" and length is not None:
+            length = int(length)
+            if length <= 0:
+                raise RuleError(f"field {name!r} enum has a non-positive length")
 
         bit_length = raw.get("bit_length")
         if ftype == "bitmask":
@@ -150,6 +175,7 @@ class FieldSpec:
         count = raw.get("count")
         count_field = raw.get("count_field")
         element_length = raw.get("element_length")
+        element_stride = raw.get("element_stride")
         if ftype == "array":
             if element_type not in FIELD_TYPES and element_type != "bytes":
                 raise RuleError(
@@ -165,6 +191,15 @@ class FieldSpec:
                 count = int(count)
                 if count < 0:
                     raise RuleError(f"field {name!r} array has a negative count")
+            if element_stride is not None:
+                element_stride = int(element_stride)
+                if element_stride <= 0:
+                    raise RuleError(f"field {name!r} array has a non-positive element_stride")
+                base = element_length if element_type == "bytes" else FIELD_TYPES[element_type]
+                if element_stride < base:
+                    raise RuleError(
+                        f"field {name!r} array element_stride is smaller than the element"
+                    )
 
         if ftype == "padding":
             if length is None or int(length) < 0:
@@ -198,14 +233,7 @@ class FieldSpec:
         condition = None
         if ftype == "conditional":
             condition = raw.get("condition")
-            if not isinstance(condition, dict):
-                raise RuleError(f"field {name!r} of type conditional needs a 'condition' object")
-            op = condition.get("op")
-            if op not in CONDITION_OPS:
-                raise RuleError(f"field {name!r} condition has unsupported op {op!r}")
-            if "field" not in condition:
-                raise RuleError(f"field {name!r} condition needs a 'field' reference")
-            condition = dict(condition)
+            _validate_condition(name, condition)
             inner_raw = raw.get("field")
             if not isinstance(inner_raw, dict):
                 raise RuleError(f"field {name!r} of type conditional needs a nested 'field'")
@@ -214,6 +242,9 @@ class FieldSpec:
                 raise RuleError(f"field {name!r} conditional inner field needs a name")
             offset = offset if "offset" in raw else inner.offset
             length = None
+        elif raw.get("condition") is not None:
+            condition = raw.get("condition")
+            _validate_condition(name, condition)
 
         expected = raw.get("expected")
         if expected is not None and not isinstance(expected, list):
@@ -234,6 +265,7 @@ class FieldSpec:
             terminated=bool(raw.get("terminated", False)),
             element_type=str(element_type) if element_type else None,
             element_length=int(element_length) if element_length is not None else None,
+            element_stride=int(element_stride) if element_stride is not None else None,
             count=int(count) if count is not None else None,
             count_field=str(count_field) if count_field else None,
             algorithm=str(algorithm) if algorithm else None,
@@ -249,7 +281,7 @@ class FieldSpec:
         if ftype in FIELD_TYPES:
             return FIELD_TYPES[ftype]
         if ftype == "enum":
-            return 1
+            return length if length is not None else 1
         if ftype in ("bytes", "string", "checksum", "padding", "computed"):
             return length
         return None
@@ -261,6 +293,8 @@ class FieldSpec:
             out["byte_order"] = self.byte_order
         if self.type in ("bytes", "string", "checksum", "padding") and self.length is not None:
             out["length"] = self.length
+        if self.type == "enum" and self.length is not None:
+            out["length"] = self.length
         if self.enum:
             out["enum"] = dict(self.enum)
         if self.type == "bitmask":
@@ -270,10 +304,14 @@ class FieldSpec:
             out["encoding"] = self.encoding
             if self.terminated:
                 out["terminated"] = True
+            if self.count_field is not None:
+                out["count_field"] = self.count_field
         if self.type == "array":
             out["element_type"] = self.element_type
             if self.element_length is not None:
                 out["element_length"] = self.element_length
+            if self.element_stride is not None:
+                out["element_stride"] = self.element_stride
             if self.count is not None:
                 out["count"] = self.count
             if self.count_field is not None:
@@ -289,6 +327,8 @@ class FieldSpec:
         if self.type == "conditional":
             out["condition"] = dict(self.condition or {})
             out["field"] = self.inner.to_dict() if self.inner else {}
+        elif self.condition is not None:
+            out["condition"] = dict(self.condition)
         if self.hypothesis:
             out["hypothesis"] = True
         if self.expected is not None:
@@ -312,7 +352,8 @@ class FieldSpec:
             elem = self._size_of(self.element_type or "", self.element_length)
             if self.count is None or elem is None:
                 raise RuleError(f"field {self.name!r} array has no fixed size")
-            return self.count * elem
+            stride = self.element_stride or elem
+            return (self.count - 1) * stride + elem if self.count else 0
         if self.type == "conditional":
             if self.inner is None:
                 raise RuleError(f"field {self.name!r} conditional has no inner field")
