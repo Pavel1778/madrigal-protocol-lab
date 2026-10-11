@@ -46,6 +46,10 @@
           "deprecated": true,
           "description": "Deprecated in favour of length_covers. true maps to entire_message, false maps to payload."
         },
+        "length_bias": {
+          "type": "integer",
+          "description": "Added to the message length after length_covers is applied. Zero when the length field is the last header field; it accounts for a fixed-size header part that lies between the length field and the payload (for example magic, counter and type)."
+        },
         "size": { "type": "integer", "minimum": 0 },
         "start_bytes": {},
         "end_bytes": {},

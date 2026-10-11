@@ -175,6 +175,7 @@ def _frame_length_prefixed(data, framing):
     size = int(framing.get("length_size", 1))
     order = framing.get("byte_order", "big")
     covers = framing.get("length_covers", "payload")
+    bias = int(framing.get("length_bias", 0))
     out = []
     i = 0
     while i < len(data):
@@ -188,6 +189,7 @@ def _frame_length_prefixed(data, framing):
             total = offset_at + value
         else:
             total = offset_at + size + value
+        total += bias
         total = max(total, offset_at + size)
         length = min(total, len(data) - i)
         out.append((i, length))
