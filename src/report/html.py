@@ -157,10 +157,67 @@ def _counterexample_html(item: dict[str, Any]) -> str:
     return f"<section>{''.join(parts)}</section>"
 
 
+def _rule_application_html(app: dict[str, Any]) -> str:
+    if not app:
+        return '<p class="muted">No rule was applied.</p>'
+
+    rule_id = _esc(app.get("rule_id", "?"))
+    version = app.get("rule_version")
+    suffix = f" (version {_esc(version)})" if version is not None else ""
+    parts = [f"<p><strong>Rule:</strong> {rule_id}{suffix}</p>"]
+
+    order = (
+        "matched",
+        "mismatched",
+        "incomplete",
+        "ambiguous",
+        "uncovered",
+        "not_applicable",
+        "unknown",
+    )
+    cells = []
+    for name in order:
+        value = app.get(name)
+        if value is None:
+            continue
+        cls = _STATUS_CLASS.get(name, "status-unknown")
+        cells.append(
+            f'<span class="status {cls}">{_esc(name)}: {_esc(value)}</span>'
+        )
+    if cells:
+        parts.append('<p class="counters">' + " ".join(cells) + "</p>")
+
+    counterexamples = app.get("counterexamples") or []
+    if counterexamples:
+        rows = []
+        for item in counterexamples:
+            locator = f"{item.get('session_id', '?')}/{item.get('direction', '?')}"
+            offset = item.get("offset")
+            length = item.get("length")
+            bytes_hex = item.get("bytes_hex") or ""
+            detail = item.get("detail") or item.get("status") or ""
+            rows.append(
+                "<tr>"
+                f"<td>{_esc(locator)}</td>"
+                f"<td>{_esc(offset)}</td>"
+                f"<td>{_esc(length)}</td>"
+                f"<td>{_esc(detail)}</td>"
+                f"<td><code>{_esc(bytes_hex)}</code></td>"
+                "</tr>"
+            )
+        parts.append(
+            "<table><thead><tr><th>session</th><th>offset</th><th>length</th>"
+            f"<th>reason</th><th>bytes</th></tr></thead><tbody>{''.join(rows)}</tbody></table>"
+        )
+    return f"<section>{''.join(parts)}</section>"
+
+
 def render_html(investigation: dict[str, Any], out_path: Path) -> None:
     """Write ``investigation`` as a self-contained HTML page to ``out_path``."""
 
     model = normalize(investigation)
+
+    rule_application_html = _rule_application_html(model["rule_application"])
 
     hypothesis_html = (
         "".join(_hypothesis_html(item) for item in model["hypotheses"])
@@ -219,6 +276,9 @@ def render_html(investigation: dict[str, Any], out_path: Path) -> None:
 
 <h2>Scope</h2>
 {_scope_html(model["scope"])}
+
+<h2>Rule application</h2>
+{rule_application_html}
 
 <h2>Hypotheses</h2>
 {hypothesis_html}
