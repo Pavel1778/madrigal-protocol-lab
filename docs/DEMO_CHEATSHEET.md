@@ -37,12 +37,13 @@ python -m src.ui.main_window \
 
 Say: «Открываем реальный набор организаторов. Две сессии, правило
 `thermostand_request v2` даёт 14 запросов `matched` и 14 ответов
-`not_applicable` — правило описывает только направление запросов. Клик по байту
-— видно пакет-источник. Это provenance.»
+`not_applicable` — по обеим сессиям (9 + 5); правило описывает только
+направление запросов. Клик по байту — видно пакет-источник. Это provenance.»
 
-(Verified: the rule report on this capture is `matched=14, mismatched=0,
-not_applicable=14`. The full organizer set across all four captures is 45
-requests + 45 responses, all matched.)
+(Verified: across both sessions the rule report on this capture is `matched=14,
+mismatched=0, not_applicable=14` (9 + 5). The `apply` CLI defaults to the first
+session, so a single run prints `matched=9`. The full organizer set across all
+four captures is 45 requests + 45 responses, all matched.)
 
 ### A2. Full pipeline in one command (30 s)
 
