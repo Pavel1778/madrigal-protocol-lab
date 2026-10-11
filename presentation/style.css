@@ -32,22 +32,24 @@
 }
 
 :root {
-  --bg: #131516;
-  --surface: #1D1D1D;
-  --surface-hi: #26262A;
-  --text: #EDEDED;
-  --secondary: #B8B8B8;
-  --line: #2E3033;
+  --bg: #0E1011;
+  --surface: #1F2124;
+  --surface-hi: #26282B;
+  --text: #F4F1EC;
+  --secondary: #A8A29E;
+  --tertiary: #7A7570;
+  --line: #26282B;
   --accent: #D0603A;
+  --accent-hover: #E87A52;
   --accent-deep: #610D1C;
   --highlight: #D0603A;
-  --accent-soft: rgba(162, 57, 29, 0.16);
-  --matched: #2E7D5B;
-  --mismatched: #8E2A2A;
-  --ambiguous: #B8860B;
-  --incomplete: #6B6B6B;
-  --uncovered: #4A4A4A;
-  --gradient: linear-gradient(135deg, #D0603A 0%, #E4835A 55%, #F4F1EC 100%);
+  --accent-soft: rgba(208, 96, 58, 0.16);
+  --matched: #16A34A;
+  --mismatched: #DC2626;
+  --ambiguous: #EA580C;
+  --incomplete: #71717A;
+  --uncovered: #A1A1AA;
+  --gradient: linear-gradient(135deg, #D0603A 0%, #E87A52 55%, #F4F1EC 100%);
   --footer-h: 46px;
   --pad-x: 80px;
   --pad-top: 52px;
@@ -55,22 +57,24 @@
 }
 
 html.light {
-  --bg: #FAFAFA;
+  --bg: #FAF9F7;
   --surface: #FFFFFF;
-  --surface-hi: #EFEFEF;
-  --text: #16181A;
-  --secondary: #4A4A4A;
-  --line: #D6D6D6;
-  --accent: #B7301A;
-  --accent-deep: #8E1B12;
-  --highlight: #B7301A;
-  --accent-soft: rgba(183, 48, 26, 0.10);
-  --matched: #2E7D32;
-  --mismatched: #C62828;
-  --ambiguous: #8A6D00;
-  --incomplete: #8A8A8A;
-  --uncovered: #BDBDBD;
-  --gradient: linear-gradient(135deg, #8E1B12 0%, #B7301A 55%, #C7311C 100%);
+  --surface-hi: #EFEDEA;
+  --text: #1C1917;
+  --secondary: #57534E;
+  --tertiary: #78716C;
+  --line: #E2DFDB;
+  --accent: #C2410C;
+  --accent-hover: #EA580C;
+  --accent-deep: #9A3412;
+  --highlight: #C2410C;
+  --accent-soft: rgba(194, 65, 12, 0.10);
+  --matched: #16A34A;
+  --mismatched: #DC2626;
+  --ambiguous: #EA580C;
+  --incomplete: #71717A;
+  --uncovered: #A1A1AA;
+  --gradient: linear-gradient(135deg, #9A3412 0%, #C2410C 55%, #EA580C 100%);
 }
 
 .slidev-layout {
@@ -79,7 +83,7 @@ html.light {
   color: var(--text);
   font-family: 'Montserrat', system-ui, sans-serif;
   font-size: 26px;
-  line-height: 1.42;
+  line-height: 1.5;
   padding: var(--pad-top) var(--pad-x) calc(22px + var(--footer-h));
   overflow: hidden;
 }
@@ -99,8 +103,8 @@ html.light {
   font-family: 'Tektur', system-ui, sans-serif;
   font-weight: 600;
   font-size: 48px;
-  line-height: 1.12;
-  letter-spacing: -0.005em;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
   margin: 0 0 22px;
   max-width: 820px;
   color: var(--text);
@@ -108,7 +112,9 @@ html.light {
 .slidev-layout h2 {
   font-family: 'Tektur', system-ui, sans-serif;
   font-weight: 500;
-  font-size: 34px;
+  font-size: 30px;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
   margin: 0 0 14px;
 }
 .slidev-layout p { margin: 12px 0; }
@@ -240,18 +246,18 @@ html.light {
 /* --- слайд 4: дано и требуется ------------------------------------------- */
 .given { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
 .given .panel { height: 100%; padding: 22px 26px; }
-.given li { font-size: 23px; }
+.given li { font-size: 24px; }
 
 /* --- слайд 5: ход работы ------------------------------------------------- */
-.moment { display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+.moment { display: flex; flex-direction: column; justify-content: flex-start; gap: 10px; }
 .moment h1 { font-size: 44px; max-width: 40ch; margin: 0; }
 .moment__sub { font-size: 21px; color: var(--secondary); max-width: 50ch; }
-.moment__figure { margin-top: 10px; }
-.moment__figure img { width: 100%; height: 120px; object-fit: contain; }
-.steps { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+.moment__figure { margin-top: 6px; }
+.moment__figure img { width: 100%; height: 112px; object-fit: contain; }
+.steps { display: flex; gap: 8px; margin-top: 2px; flex-wrap: wrap; }
 .steps span {
   font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--secondary);
-  border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px;
+  border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
   white-space: nowrap;
 }
 .steps span.on { color: #FFFFFF; background: var(--accent); border-color: var(--accent); }
@@ -283,18 +289,20 @@ html.light {
 }
 .shot__frame img { display: block; width: 100%; object-fit: cover; object-position: top left; }
 .shot--wide .shot__frame img { height: 330px; object-fit: cover; object-position: top; }
-.shot--side { display: grid; grid-template-columns: 1.4fr 1fr; gap: 28px; align-items: start; }
-.shot--side .shot__frame img { height: 185px; width: 100%; object-fit: cover; object-position: top left; }
+.shot--side { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+.shot--side .shot__frame img { display: block; width: 100%; height: auto; }
 .shot__side {
-  display: flex; flex-direction: column; justify-content: space-between;
-  gap: 14px; height: 185px;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  gap: 12px; min-height: 185px;
 }
-.shot__side .panel { padding: 11px 16px; }
-.shot__side .panel div { font-size: 22px; }
+.shot__col { display: flex; flex-direction: column; min-width: 0; }
+.shot__col .caption { margin-top: 10px; }
+.shot__side .panel { padding: 10px 16px; }
+.shot__side .panel div { font-size: 21px; }
 .shot__side .lead { font-size: 18px; margin-bottom: 4px; }
-.shot__side .byte-card { padding: 14px 18px; }
-.shot__side .byte-mono { font-size: 30px; }
-.shot__side .byte-note { font-size: 20px; margin-top: 8px; }
+.shot__side .byte-card { padding: 10px 16px; }
+.shot__side .byte-mono { font-size: 24px; }
+.shot__side .byte-note { font-size: 19px; margin-top: 6px; }
 .shot--side .caption { margin-top: 10px; }
 .byte-line {
   margin-top: 18px;
@@ -335,17 +343,18 @@ html.light {
 
 /* --- метрика ------------------------------------------------------------- */
 .metric { display: flex; flex-direction: column; justify-content: center; height: 100%; }
-.metric__grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center; }
+.metric__grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 48px; align-items: center; }
 .metric h1 { font-size: 46px; color: var(--text); font-weight: 600; margin-bottom: 6px; }
 .bignum {
   font-family: 'Tektur', sans-serif; font-weight: 600; font-size: 88px;
-  line-height: 1; letter-spacing: -0.02em; color: var(--highlight);
+  line-height: 1; letter-spacing: 0; color: var(--highlight);
 }
+.bignum--hero { font-size: 120px; }
 .metric__sub { font-size: 22px; color: var(--secondary); margin-bottom: 12px; max-width: 70ch; }
-.metric .caption { margin-top: 18px; }
 .metric__note { margin-top: 12px; font-size: 26px; color: var(--text); max-width: 40ch; }
-.metric__figure img { width: 100%; height: 240px; object-fit: contain; }
-.metric-row { display: flex; gap: 16px; margin-top: 22px; }
+.metric__figure img { width: 100%; height: 250px; object-fit: contain; }
+.metric .caption { margin-top: 12px; }
+.metric-row { display: flex; gap: 16px; margin-top: 14px; }
 .metric-row span {
   font-size: 20px; color: var(--secondary);
   border: 1px solid var(--line); border-radius: 999px; padding: 6px 16px;
@@ -368,6 +377,11 @@ html.light {
 .bars__value {
   font-family: 'Tektur', sans-serif; font-size: 26px; font-weight: 600; text-align: right;
 }
+.bars--lg { gap: 34px; }
+.bars--lg .bars__row { grid-template-columns: 72px 1fr 110px; gap: 20px; }
+.bars--lg .bars__track { height: 52px; }
+.bars--lg .bars__label { font-size: 28px; }
+.bars--lg .bars__value { font-size: 40px; }
 
 /* --- слайд 15: живое окно ------------------------------------------------ */
 .live { display: flex; flex-direction: column; }
@@ -380,11 +394,25 @@ html.light {
 .shot--half { height: 128px; }
 .shot--live { height: 250px; }
 
-/* --- слайд 16: видео ----------------------------------------------------- */
-.cast {
-  display: block; width: 100%; height: 230px; object-fit: contain;
-  border: 1px solid var(--line); border-radius: var(--radius); background: #000;
+/* --- слайд 16: запись прогона ------------------------------------------- */
+.recording { display: flex; flex-direction: column; gap: 12px; }
+.recording__frame {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 100%; max-width: 940px; margin: 0 auto; height: 264px;
+  background: #000; border: 1px solid var(--line); border-radius: var(--radius);
+  overflow: hidden;
 }
+.recording__frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.recording__play {
+  position: absolute; width: 104px; height: 104px; left: 50%; top: 50%;
+  transform: translate(-50%, -50%); pointer-events: none;
+}
+.recording__meta {
+  display: flex; justify-content: space-between; max-width: 1000px; margin: 0 auto;
+  width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 18px;
+  color: var(--secondary);
+}
+.recording .caption { margin-top: 0; }
 
 /* --- слайд 18: границы --------------------------------------------------- */
 .limits { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }

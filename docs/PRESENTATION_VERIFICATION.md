@@ -20,6 +20,10 @@ Reproduce any line below with the command in the same row.
 | page size | 735.12 x 414 pts, 16:9 | `pdfinfo presentation/slides.pdf` |
 | empty pages | 0 | render scan below |
 | overflow (content past 100 % of the frame) | 0 | render scan below |
+| word overlaps (dark and light) | 0 | `pdftotext -bbox` box intersection |
+| DejaVu / fallback glyphs in the PDF | 0 | `pdffonts presentation/slides.pdf` |
+| charts carrying a build timestamp | 0 of 16 | `pytest tests/project/test_presentation_sync.py` |
+| PPTX parts with a build timestamp | 0 (all pinned to 1980-01-01) | `pytest tests/project/test_presentation_sync.py` |
 
 The source and both PDFs agree on the set of slides, and the team slide is page
 2 in all three. The light PDF is derived from the source by
@@ -43,7 +47,7 @@ Per-page headings, from `pdftotext -layout presentation/slides.pdf`:
     13 95 МиБ разбираются за 12 секунд
     14 02 Демонстрация
     15 Живое окно
-    16 Резерв: 2 минуты записи прогона
+    16 Резерв: запись прогона
     17 03 Границы и итог
     18 Что мы не утверждаем
     19 Инструмент превращает байты в проверяемое знание
@@ -63,11 +67,19 @@ problems across 19 pages in each theme:
 The overflow scan masks the footer band and the accent rule, then measures the
 remaining ink bounding box:
 
-    worst content bottom (dark)  = 0.877 of page height (slide 9)
-    worst content bottom (light) = 0.877 of page height (slide 9)
+    worst content bottom (dark)  = 0.861 of page height (slide 16)
+    worst content bottom (light) = 0.861 of page height (slide 16)
 
-Slide 9 fills closest to the footer but stays inside the reserved band. No text
+Slide 16 fills closest to the footer but stays inside the reserved band. No text
 or figure crosses the 100 % frame.
+
+Two further scans, both clean on the dark and the light export:
+
+- Word overlap: `pdftotext -bbox` boxes are compared pairwise; no two words
+  intersect by more than 20 % of the smaller box (0 hits across 19 pages).
+- Fonts: `pdffonts` lists only JetBrainsMono-Regular, Montserrat-Regular,
+  Montserrat-SemiBold and Tektur-SemiBold. No DejaVu, so no glyph fell back to a
+  system font.
 
 ## The nine organizer requirements
 
@@ -101,7 +113,7 @@ Nine of nine present.
 Every image reference resolves. `grep -oE 'src="[^"]+"'` over `slides.md` yields
 the chart SVGs under `/assets/`, the `/public/screenshot-*.png` crops,
 `/avatar_pavel_round.png`, `/avatar_nikita_round.png`, the four
-`/qr_*.png` codes and `/screencast.mp4`; each is present under
+`/qr_*.png` codes and `/screencast-poster.png`; each is present under
 `presentation/assets` or `presentation/public`.
 
 ## Final slide
@@ -118,7 +130,7 @@ asset count — and the word «Вопросы» appears nowhere in the deck.
 | fact | value | command |
 | --- | --- | --- |
 | slides | 19, 16:9 (13.333 x 7.5 in) | `python -m presentation.scripts.build_pptx` |
-| entrance animations | 53, click-triggered | XML scan of `slides.pptx` |
+| entrance animations | 52, click-triggered (50 fade, 2 wipe) | XML scan of `slides.pptx` |
 | chart build-ins | 2 wipe (donut and memory-sweep figures) | XML scan of `slides.pptx` |
 | transitions | 19 (fade; push on the three section dividers) | XML scan of `slides.pptx` |
 | text | native editable runs, deck palette | python-pptx |
@@ -138,10 +150,12 @@ section dividers). The XML of all 44 parts parses without error.
 
 The raw take ran 166 s (2:46) with solid black at both ends; it was trimmed to
 the first and last frame with content and `blackdetect` now reports no black
-segment. The clip is embedded on slide 16 as a `<video>` element in the Slidev
-builds. `presentation/public/screencast.mp4` is a symlink to the committed
-`presentation/screencast.mp4`, so the player resolves it without a second
-committed copy; the editable PPTX shows the poster frame.
+segment. Slide 16 shows `public/screencast-poster.png`, baked from the sharpest
+of six sampled frames (5, 20, 40, 60, 90, 120 s) with a play glyph on top, so
+the frame is an image in every build and no codec is needed to render it. The
+clip itself stays a committed asset: `presentation/public/screencast.mp4` is a
+symlink to `presentation/screencast.mp4`, played from the file system if the
+live window does not come up.
 
 ## Demo driver
 

@@ -12,6 +12,7 @@ Run from the repository root:
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import matplotlib
@@ -94,6 +95,7 @@ def _apply(scheme: str) -> None:
     matplotlib.rcParams.update(
         {
             "svg.fonttype": "path",  # text -> paths: no font dependency in <img>
+            "svg.hashsalt": "madrigal-protocol-lab",  # stable clipPath ids
             "figure.facecolor": BACKGROUND,
             "axes.facecolor": BACKGROUND,
             "savefig.facecolor": BACKGROUND,
@@ -115,6 +117,25 @@ def _register_fonts() -> None:
     mono = REPO_ROOT / "presentation" / "public" / "fonts" / "JetBrainsMono-Regular.ttf"
     if mono.is_file():
         font_manager.fontManager.addfont(str(mono))
+
+
+def _save(fig: plt.Figure, name: str) -> None:
+    """Write one chart to ``OUT`` as byte-stable SVG.
+
+    Matplotlib stamps the file with the build time and hashes every clip and
+    marker id, so a plain rebuild rewrites all sixteen charts even when nothing
+    moved. Dropping the date and renumbering the ids by first use keeps a
+    rebuild a no-op in git.
+    """
+    path = OUT / f"{name}{SUFFIX}.svg"
+    fig.savefig(path, metadata={"Date": None})
+    text = path.read_text(encoding="utf-8")
+    ids: dict[str, str] = {}
+    for match in re.findall(r'[#"]([pm][0-9a-f]{6,})["#)]', text):
+        ids.setdefault(match, f"x{len(ids):08d}")
+    for old, new in ids.items():
+        text = text.replace(old, new)
+    path.write_text(text, encoding="utf-8")
 
 
 def _style_axes(ax: plt.Axes) -> None:
@@ -157,7 +178,7 @@ def precision_v1_v2() -> None:
     ax.grid(axis="y", color=GRID, linewidth=0.8, zorder=0)
     _style_axes(ax)
     fig.tight_layout()
-    fig.savefig(OUT / f"precision_v1_v2{SUFFIX}.svg")
+    _save(fig, "precision_v1_v2")
     plt.close(fig)
 
 
@@ -179,7 +200,7 @@ def framing_payload() -> None:
     ax.grid(axis="x", color=GRID, linewidth=0.8, zorder=0)
     _style_axes(ax)
     fig.tight_layout()
-    fig.savefig(OUT / f"framing_payload{SUFFIX}.svg")
+    _save(fig, "framing_payload")
     plt.close(fig)
 
 
@@ -210,7 +231,7 @@ def coverage_donut() -> None:
     ax.set_title("Набор организаторов, правило v2", fontfamily="Tektur",
                  fontsize=15, color=TEXT, pad=10)
     fig.tight_layout()
-    fig.savefig(OUT / f"coverage_donut{SUFFIX}.svg")
+    _save(fig, "coverage_donut")
     plt.close(fig)
 
 
@@ -232,7 +253,7 @@ def research_timeline() -> None:
     ax.set_ylim(-0.7, 0.7)
     ax.axis("off")
     fig.tight_layout()
-    fig.savefig(OUT / f"research_timeline{SUFFIX}.svg")
+    _save(fig, "research_timeline")
     plt.close(fig)
 
 
@@ -262,7 +283,7 @@ def architecture() -> None:
     ax.text(6.65, 2.8, "JSON", ha="center", fontsize=9, fontfamily="Montserrat",
             color=SECONDARY)
     fig.tight_layout()
-    fig.savefig(OUT / f"architecture{SUFFIX}.svg")
+    _save(fig, "architecture")
     plt.close(fig)
 
 
@@ -309,7 +330,7 @@ def tcp_framing() -> None:
             ha="center", va="center", fontsize=15, fontfamily="Tektur",
             color=TEXT)
     fig.tight_layout()
-    fig.savefig(OUT / f"tcp_framing{SUFFIX}.svg")
+    _save(fig, "tcp_framing")
     plt.close(fig)
 
 
@@ -356,7 +377,7 @@ def length_offset() -> None:
             ha="center", va="center", fontsize=12, fontfamily="Montserrat",
             color=SECONDARY)
     fig.tight_layout()
-    fig.savefig(OUT / f"length_offset{SUFFIX}.svg")
+    _save(fig, "length_offset")
     plt.close(fig)
 
 
@@ -381,7 +402,7 @@ def memory_sweep() -> None:
         text.set_fontfamily("Montserrat")
     _style_axes(ax)
     fig.tight_layout()
-    fig.savefig(OUT / f"memory_sweep{SUFFIX}.svg")
+    _save(fig, "memory_sweep")
     plt.close(fig)
 
 
