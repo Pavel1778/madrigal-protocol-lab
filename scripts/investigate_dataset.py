@@ -271,6 +271,18 @@ def build_report() -> str:
         "performs and confirms the decoded parameters against the recorded "
         "values, so a field name is not merely a plausible label.",
         "",
+        "## 5. Where the set comes from",
+        "",
+        "The composition and the data origin are recorded by the organizer in "
+        "`tests/corpus/real/dataset_manifest.json`: the expected session and "
+        "action counts per research capture, and the statement that the "
+        "application bytes come from a real client/simulator TCP socket exchange "
+        "while the Ethernet/IP/TCP framing, segmentation and clock are "
+        "generated. The pipeline reproduces the recorded session counts (2, 1, "
+        "1, 1) exactly, and the eight diagnostic captures each carry one "
+        "capture or integrity condition. The full analysis is in "
+        "`docs/REAL_CORPUS_ANALYSIS.md`.",
+        "",
     ]
     return "\n".join(sections)
 
