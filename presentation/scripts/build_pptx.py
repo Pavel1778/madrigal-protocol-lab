@@ -140,11 +140,24 @@ def bg(slide):
     gradient_bar(slide, 0, 0, Inches(0.08), SLIDE_H)
 
 
+SECTIONS = ((1, "Постановка и метод"), (10, "Результаты"),
+            (14, "Демонстрация"), (17, "Границы и итог"))
+
+
 def footer(slide, page):
     tb, tf = textbox(slide, MARGIN, SLIDE_H - FOOTER_H, SLIDE_W - 2 * MARGIN,
                      Inches(0.3))
     add_runs(tf.paragraphs[0], "Команда HTTP 418 · кейс #02 · Мадригал", 10,
              SECONDARY)
+    section = SECTIONS[0][1]
+    for start, label in SECTIONS:
+        if page >= start:
+            section = label
+    tb1, tf1 = textbox(slide, MARGIN, SLIDE_H - FOOTER_H, SLIDE_W - 2 * MARGIN,
+                       Inches(0.3))
+    p1 = tf1.paragraphs[0]
+    p1.alignment = PP_ALIGN.CENTER
+    add_runs(p1, section, 10, SECONDARY)
     tb2, tf2 = textbox(slide, MARGIN, SLIDE_H - FOOTER_H, SLIDE_W - 2 * MARGIN,
                        Inches(0.3))
     p2 = tf2.paragraphs[0]
@@ -341,11 +354,11 @@ def build_slide(prs, spec):
     elif kind == "team":
         heading(slide, spec["title"])
         col_w = (SLIDE_W - 2 * MARGIN - Inches(0.5)) / 2
-        for i, (name, role, handle, qr) in enumerate(spec["members"]):
+        for i, (name, role, handle, qr, avatar) in enumerate(spec["members"]):
             x = MARGIN + i * (col_w + Inches(0.5))
             panel(slide, x, BODY_TOP, col_w, Inches(2.6))
             steps.append((slide.shapes[-1].shape_id, "fade"))
-            picture(slide, "public/team-avatar-round.png", x + Inches(0.3),
+            picture(slide, f"public/{avatar}", x + Inches(0.3),
                     BODY_TOP + Inches(0.4), Inches(1.8), Inches(1.8))
             tx = x + Inches(2.35)
             _, tf = textbox(slide, tx, BODY_TOP + Inches(0.45),
@@ -359,7 +372,6 @@ def build_slide(prs, spec):
             add_runs(tf.paragraphs[0], handle, 14, ACCENT, font=F_MONO)
             picture(slide, f"public/{qr}", x + col_w - Inches(1.5),
                     BODY_TOP + Inches(0.55), Inches(1.2), Inches(1.2))
-        caption(slide, "UMIRHack 2026 · кейс #02 · Мадригал")
 
     elif kind == "arch":
         heading(slide, spec["title"])
@@ -433,11 +445,13 @@ def build_slide(prs, spec):
                           SLIDE_W - 2 * MARGIN, Inches(2.2))
         steps.append((pic.shape_id, "fade"))
         chips = spec.get("chips", [])
+        gap = Inches(0.15)
+        cw = (SLIDE_W - 2 * MARGIN - gap * (len(chips) - 1)) / max(len(chips), 1)
         for i, chip in enumerate(chips):
-            x = MARGIN + i * Inches(1.9)
-            box = rect(slide, x, Inches(5.5), Inches(1.7), Inches(0.42), ACCENT,
+            x = MARGIN + i * (cw + gap)
+            box = rect(slide, x, Inches(5.5), cw, Inches(0.42), ACCENT,
                        shape=MSO_SHAPE.ROUNDED_RECTANGLE)
-            _, tf = textbox(slide, x, Inches(5.55), Inches(1.7), Inches(0.35))
+            _, tf = textbox(slide, x, Inches(5.55), cw, Inches(0.35))
             p = tf.paragraphs[0]
             p.alignment = PP_ALIGN.CENTER
             add_runs(p, chip, 12, WHITE, font=F_MONO)
@@ -452,11 +466,17 @@ def build_slide(prs, spec):
 
     elif kind == "shot_side":
         heading(slide, spec["title"])
+        if spec.get("kicker"):
+            tb, tf = textbox(slide, MARGIN, BODY_TOP - Inches(0.55),
+                             SLIDE_W - 2 * MARGIN, Inches(0.35))
+            add_runs(tf.paragraphs[0], spec["kicker"].upper(), 12, ACCENT,
+                     bold=True)
+            steps.append((tb.shape_id, "fade"))
         left_w = Inches(7.4)
         right_x = MARGIN + left_w + Inches(0.5)
         right_w = SLIDE_W - right_x - MARGIN
         pic = fit_picture(slide, spec["image"], MARGIN, BODY_TOP, left_w,
-                          Inches(4.2))
+                          Inches(3.9))
         steps.append((pic.shape_id, "fade"))
         for i, block in enumerate(spec["blocks"]):
             y = BODY_TOP + i * Inches(1.5)
@@ -504,6 +524,10 @@ def build_slide(prs, spec):
                          Inches(0.8))
         add_runs(tf.paragraphs[0], spec["title"], 26, SECONDARY, bold=True,
                  font=F_HEAD)
+        if spec.get("sub"):
+            tb, tf = textbox(slide, MARGIN, Inches(2.05),
+                             SLIDE_W - 2 * MARGIN, Inches(0.5))
+            add_runs(tf.paragraphs[0], spec["sub"], 14, SECONDARY)
         tb, tf = textbox(slide, MARGIN, Inches(2.5), Inches(5.6), Inches(2.0))
         add_runs(tf.paragraphs[0], spec["big"], 88, ACCENT, bold=True,
                  font=F_HEAD)
@@ -514,12 +538,31 @@ def build_slide(prs, spec):
             pic = fit_picture(slide, spec["image"], Inches(7.0), Inches(2.4),
                               SLIDE_W - Inches(7.0) - MARGIN, Inches(3.6))
             steps.append((pic.shape_id, "wipe"))
+        if spec.get("chips"):
+            cx = MARGIN
+            for chip in spec["chips"]:
+                cw = Inches(0.22) + Inches(0.085) * len(chip)
+                box = rect(slide, cx, Inches(5.85), cw, Inches(0.4),
+                           SURFACE_HI, shape=MSO_SHAPE.ROUNDED_RECTANGLE,
+                           line=SURFACE_HI)
+                _, tf = textbox(slide, cx, Inches(5.9), cw, Inches(0.32))
+                p = tf.paragraphs[0]
+                p.alignment = PP_ALIGN.CENTER
+                add_runs(p, chip, 11, TEXT)
+                steps.append((box.shape_id, "fade"))
+                cx += cw + Inches(0.25)
+        if spec.get("caption"):
+            caption(slide, spec["caption"])
 
     elif kind == "bars":
         tb, tf = textbox(slide, MARGIN, Inches(1.5), SLIDE_W - 2 * MARGIN,
                          Inches(0.8))
         add_runs(tf.paragraphs[0], spec["title"], 26, SECONDARY, bold=True,
                  font=F_HEAD)
+        if spec.get("sub"):
+            tb, tf = textbox(slide, MARGIN, Inches(2.05),
+                             SLIDE_W - 2 * MARGIN, Inches(0.5))
+            add_runs(tf.paragraphs[0], spec["sub"], 14, SECONDARY)
         tb, tf = textbox(slide, MARGIN, Inches(2.5), Inches(4.4), Inches(1.6))
         add_runs(tf.paragraphs[0], spec["big"], 88, ACCENT, bold=True,
                  font=F_HEAD)
@@ -601,7 +644,8 @@ def build_slide(prs, spec):
         run.font.color.rgb = SECONDARY
         run.hyperlink.address = GITHUB
 
-    footer(slide, spec["page"])
+    if spec["kind"] not in ("cover", "closing"):
+        footer(slide, spec["page"])
     if spec.get("notes"):
         slide.notes_slide.notes_text_frame.text = spec["notes"]
     return slide, steps
@@ -616,16 +660,17 @@ def deck() -> list[dict]:
              notes="Приветствие, 20 секунд."),
         dict(kind="team", page=2, title="Нас двое",
              members=[("Сабадаш Павел", "Архитектура · захват · интерфейс",
-                       "@Pasha1778", "qr_telegram_pasha.png"),
+                       "@Pasha1778", "qr_telegram_pasha.png",
+                       "avatar_pavel_round.png"),
                       ("Предков Никита", "Правила · тесты · ревью", "@petruan",
-                       "qr_telegram_nikita.png")],
+                       "qr_telegram_nikita.png", "avatar_nikita_round.png")],
              notes="Два человека, разделение ролей, QR на контакт у каждого."),
         dict(kind="statement", page=3,
              title="TCP разрезает сообщения посередине",
              sub="Границы пакета и границы сообщения — разные вещи",
              image="assets/tcp_framing.png"),
         dict(kind="given", page=4, title="Дано и требуется",
-             columns=[("Дано", ["Захваты pcap/pcapng и журнал действий устройства",
+             columns=[("Дано", ["Захваты `pcap`/`pcapng` и журнал действий устройства",
                                 "Спецификации протокола нет"]),
                       ("Требуется", ["Проверяемая интерпретация структуры сообщений",
                                      "Видно, где чтение верно, а где перестаёт работать"])]),
@@ -633,51 +678,55 @@ def deck() -> list[dict]:
              title="Смещение поля длины оказалось на четыре байта позже, чем мы считали",
              sub="Одно правило, два чтения: поле длины остаётся на offset 2",
              image="assets/length_offset.png",
-             chips=["наблюдение", "гипотеза", "проверка", "контрпример", "уточнение"]),
+             chips=["наблюдение", "гипотеза", "проверка", "контрпример", "уточнение",
+                    "повторная проверка"]),
         dict(kind="arch", page=6,
              title="Три модуля связаны форматами, а не вызовами",
              modules=[("capture", "pcap/pcapng → сессии\nreassembly, provenance"),
                       ("protocol + hypothesis", "правила, фрейминг\nконтрпримеры, версии"),
                       ("ui", "окно PySide6\nисследование и просмотр")],
              caption="Контракты между модулями зафиксированы схемами JSON; порядок вызовов не важен"),
-        dict(kind="shot_side", page=7, title="Каждый байт знает свой пакет",
+        dict(kind="shot_side", page=7, title="От интерпретации можно вернуться к исходным данным",
              image="public/screenshot-provenance.png",
-             blocks=[dict(lead="Происхождение",
-                          text="Клик по байту связывает его с пакетом, номером последовательности и временем."),
-                     dict(accent=True, lead="",
-                          text="packet 3 · seq 1001 · ts 1700000000.004, сессия s1")]),
+             blocks=[dict(accent=True, lead="",
+                          text="packet 3 · seq 1001 · ts 1700000000.004 · сессия s1")]),
         dict(kind="pair", page=8, title="Правило проверяется на всём корпусе сразу",
              images=["public/screenshot-rule.png",
-                     "public/screenshot-validation.png"],
-             caption="Одно правило описывает весь поток; сообщения не перечисляют вручную"),
+                     "public/screenshot-validation.png"]),
         dict(kind="shot_side", page=9, title="Контрпример важнее метрики",
+             kicker="4 независимых сессии + журнал действий устройства",
              image="public/screenshot-counterexamples.png",
              blocks=[dict(accent=True, lead="",
                           text="02 00 00 03 13 00 55  —  команда 2 вне ожидаемого набора [1]"),
                      dict(lead="Один байт — 80 контрпримеров",
-                          text="Все 80 несоответствий v1 сидели на offset 0 в сессиях s2 и s3.")]),
+                          text="Все 80 несоответствий v1 сидели на offset 0 в сессиях s2 и s3.")],
+             caption="Значение 2 повторяется в 4 независимых сессиях и связано с действием «изменить настройку» в журнале"),
         dict(kind="divider", page=10, index="01", title="Что получилось",
              note="Точность, покрытие корпуса организаторов, ресурсы"),
-        dict(kind="bars", page=11, title="Уточнили правило: 60/140 → 140/140",
+        dict(kind="bars", page=11, title="Уточнили правило: 60 из 140 → 140 из 140",
              big="1.00",
+             sub="На корпусе уточнения. Отдельно проверено на реальном датасете: 45 + 45, precision 1.00",
              note="Было 60 matched из 140 и 80 контрпримеров. Стало 140 matched из 140 и ноль контрпримеров",
              bars=[("v1", "0.43", 0.43, MISMATCHED),
                    ("v2", "1.00", 1.0, MATCHED)]),
         dict(kind="metric", page=12, title="Набор организаторов разобран целиком",
              big="90", image="assets/coverage_donut.png",
-             note="45 запросов и 45 ответов, все matched, покрытие байтов 100 %"),
+             note="45 запросов + 45 ответов. Все matched.",
+             caption="Данные не использовались при уточнении правила"),
         dict(kind="metric", page=13, title="95 МиБ разбираются за 12 секунд",
              big="12 с", image="assets/memory_sweep.png",
-             note="Условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ"),
+             note="Пик памяти 350 МиБ при бюджете 4 ГиБ",
+             chips=["12 с общее время", "350 МиБ пик памяти", "250k пакетов"],
+             caption="Условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ"),
         dict(kind="divider", page=14, index="02", title="Демонстрация",
              note="Живое окно и запись прогона"),
         dict(kind="live", page=15, title="Живое окно",
              image="public/screenshot-main.png",
              caption="Сессии, байты, интерпретация, происхождение и диагностика в одном окне"),
         dict(kind="video", page=16,
-             title="Запись прогона на случай, если экран не поднимется",
+             title="Резерв: 2 минуты записи прогона",
              poster="public/screenshot-main.png",
-             caption="Четыре минуты: шесть сцен референсного исследования"),
+             caption="Полный прогон референсного исследования, если экран не поднимется"),
         dict(kind="divider", page=17, index="03", title="Границы и итог",
              note="Что мы не утверждаем и что осталось за рамками"),
         dict(kind="limits", page=18, title="Что мы не утверждаем",

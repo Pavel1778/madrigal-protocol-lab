@@ -28,7 +28,7 @@ the repository at the final revision; re-run the command if the branch has moved
       (бюджет ≈ 3:57).
 - [ ] `presentation/defense_script.md`, 10-минутный маршрут прогнан с таймером
       (бюджет ≈ 5:44).
-- [ ] Резервное видео `presentation/screencast.mp4` (2:05, H.264) проигрывается
+- [ ] Резервное видео `presentation/screencast.mp4` (2:22, H.264) проигрывается
       без звука и без сети.
 - [ ] `docs/demo.md` и `docs/demo_cli.md` пройдены вслух, окно поднимается на
       эталонном экспорте.
