@@ -280,6 +280,7 @@ v2 на том же корпусе: 140 matched, 0 mismatched, точность 
 
 ## Документация
 
+- [docs/PROJECT_MAP.md](docs/PROJECT_MAP.md) — карта проекта: структура, модули, поток данных, решения.
 - [ARCHITECTURE.md](ARCHITECTURE.md) — подход, модули, форматы, зависимости.
 - [docs/CONTRACT.md](docs/CONTRACT.md) — JSON-контракты между стадиями.
 - [docs/INSTALL.md](docs/INSTALL.md) — установка из готовых сборок релиза.
