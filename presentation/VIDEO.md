@@ -115,5 +115,15 @@ seconds.
 
 The six scenes fit the first 3:45; the last thirty seconds are the close. The
 finished file is not committed, and is distinct from
-`presentation/screencast.mp4`, the shorter 1:25 clip embedded on the team slide;
-the two are separate takes.
+`presentation/screencast.mp4`, the committed 2:05 recording kept alongside the
+deck; the two are separate takes.
+
+`screencast.mp4` is H.264, 1920 by 1080, 15 fps, 125.2 s (2:05), about 1.0 MB.
+The raw take opened and closed on solid black, 2.2 s at the head and 22.0 s at
+the tail. It was trimmed to the first and last frame with content
+(`-ss 2.2 -to 143.933`, stream copy), keeping the frame size and rate;
+`blackdetect` reports no black segment in the committed file.
+
+Note: an earlier revision of this file quoted the clip as 1:25 and placed it on
+the team slide. That was wrong on both counts: the clip runs 2:05, and the team
+slide carries no video, only the avatar. The clip is a standalone fallback.
