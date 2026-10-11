@@ -36,7 +36,14 @@ def test_menu_titles_are_russian(ru):
 
 def test_tab_captions_are_russian(ru):
     tabs = [ru.right_tabs.tabText(i) for i in range(ru.right_tabs.count())]
-    assert tabs == ["Интерпретация", "Сравнение", "Гипотезы", "Отчёт", "Различие версий"]
+    assert tabs == ["Анализ", "Сравн.", "Гип.", "Отчёт", "Диф."]
+
+
+def test_short_tab_captions_keep_full_tooltips(ru):
+    # The captions are shortened so they fit the narrow dock; the full name is
+    # kept in the tooltip so nothing is lost on hover.
+    full = [ru.right_tabs.tabToolTip(i) for i in range(ru.right_tabs.count())]
+    assert full == ["Интерпретация", "Сравнение", "Гипотезы", "Отчёт", "Различие версий"]
 
 
 def test_group_boxes_are_russian(ru):

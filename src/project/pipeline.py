@@ -79,11 +79,16 @@ def _write_normalized(
     return len(capture.sessions)
 
 
-def _apply_rule(normalized: Path, rule_path: Path, out_path: Path) -> dict[str, Any]:
+def _apply_rule(
+    normalized: Path, rule_path: Path, out_path: Path
+) -> tuple[dict[str, Any], list[Any]]:
     """Apply a rule to a normalized capture, writing the result JSON.
 
     The protocol engine is imported lazily so this package does not depend on
     it at import time; the pipeline reports a clear error if it is absent.
+
+    Returns the contract result together with the raw ``MessageResult`` objects,
+    which carry the session, direction and bytes the report needs.
     """
 
     try:
@@ -106,7 +111,7 @@ def _apply_rule(normalized: Path, rule_path: Path, out_path: Path) -> dict[str, 
         messages.extend(apply_rule(stream, rule, session_id, direction))
     result = build_result(rule, capture.capture_hash, messages)
     write_result(result, str(out_path))
-    return result.to_dict()
+    return result.to_dict(), messages
 
 
 def build_investigation(
@@ -114,6 +119,7 @@ def build_investigation(
     *,
     capture_id: str,
     source_file: str,
+    messages: list[Any] | None = None,
 ) -> dict[str, Any]:
     """Derive an investigation dictionary from a contract result.
 
@@ -121,10 +127,17 @@ def build_investigation(
     reported as holding in the tested scope, and any message the rule could not
     confirm becomes a counterexample or an open question rather than being
     dropped. See ``src/report/model.py`` for the shape.
+
+    ``messages`` is the list of ``MessageResult`` objects behind ``result``.
+    When given, the counterexamples carry the session, direction and bytes of
+    each message; when omitted, the contract result's own message dicts are
+    used, which hold fewer fields.
     """
 
+    if messages is None:
+        messages = result.get("messages") or []
+
     summary = result.get("summary") or {}
-    messages = result.get("messages") or []
     matched = int(summary.get("matched", 0))
     mismatched = int(summary.get("mismatched", 0))
     incomplete = int(summary.get("incomplete", 0))
@@ -148,6 +161,9 @@ def build_investigation(
             "rule_id": rule_id,
             "rule_version": rule_version,
         },
+        "rule_application": _rule_application(
+            summary, counterexamples, rule_id, rule_version
+        ),
         "hypotheses": [
             {
                 "id": "h1",
@@ -188,8 +204,16 @@ def _hypothesis_status(
     return "hypothesis"
 
 
+def _message_field(message: Any, name: str) -> Any:
+    """Read a field from a ``MessageResult`` or from a plain message dict."""
+
+    if isinstance(message, dict):
+        return message.get(name)
+    return getattr(message, name, None)
+
+
 def _counterexamples(
-    messages: list[dict[str, Any]],
+    messages: list[Any],
     rule_id: Any,
     rule_version: Any,
     capture_id: str,
@@ -199,7 +223,8 @@ def _counterexamples(
     contradictory_statuses = {"mismatched", "ambiguous", "incomplete"}
     counterexamples: list[dict[str, Any]] = []
     for message in messages:
-        message_status = message.get("status")
+        raw_status = _message_field(message, "status")
+        message_status = getattr(raw_status, "value", raw_status)
         if message_status not in contradictory_statuses:
             continue
         entry: dict[str, Any] = {
@@ -207,19 +232,58 @@ def _counterexamples(
             "rule_id": rule_id,
             "rule_version": rule_version,
             "capture_id": capture_id,
-            "offset": message.get("offset"),
-            "length": message.get("length"),
+            "offset": _message_field(message, "offset"),
+            "length": _message_field(message, "length"),
+            "status": message_status,
             "detail": f"message classified {message_status}",
         }
-        if message.get("session_id"):
-            entry["session_id"] = message["session_id"]
-        if message.get("direction"):
-            entry["direction"] = message["direction"]
-        provenance = message.get("provenance_range") or {}
-        if provenance.get("packets"):
+        session_id = _message_field(message, "session_id")
+        direction = _message_field(message, "direction")
+        bytes_hex = _message_field(message, "bytes_hex")
+        reason = _message_field(message, "reason")
+        if session_id:
+            entry["session_id"] = session_id
+        if direction:
+            entry["direction"] = direction
+        if bytes_hex:
+            entry["bytes_hex"] = bytes_hex
+        if reason:
+            entry["detail"] = f"{entry['detail']}: {reason}"
+        provenance = _message_field(message, "provenance_range") or {}
+        if isinstance(provenance, dict) and provenance.get("packets"):
             entry["packets"] = provenance["packets"]
         counterexamples.append(entry)
     return counterexamples
+
+
+def _rule_application(
+    summary: dict[str, Any],
+    counterexamples: list[dict[str, Any]],
+    rule_id: Any,
+    rule_version: Any,
+) -> dict[str, Any]:
+    """The counters and the leading counterexamples for the applied rule."""
+
+    application: dict[str, Any] = {
+        "rule_id": rule_id,
+        "rule_version": rule_version,
+    }
+    application.update(
+        {
+            name: int(summary.get(name, 0))
+            for name in (
+                "matched",
+                "mismatched",
+                "incomplete",
+                "ambiguous",
+                "uncovered",
+                "not_applicable",
+                "unknown",
+            )
+        }
+    )
+    application["counterexamples"] = counterexamples[:5]
+    return application
 
 
 def _open_questions(
@@ -362,10 +426,13 @@ def _apply_or_skip_rule(
     if rule_path is None:
         return _capture_only_investigation(capture_id, relative_capture, sessions)
     result_path = project.path("results", RESULT_NAME)
-    result = _apply_rule(normalized, Path(rule_path), result_path)
+    result, messages = _apply_rule(normalized, Path(rule_path), result_path)
     outcome.result = result_path
     return build_investigation(
-        result, capture_id=capture_id, source_file=relative_capture
+        result,
+        capture_id=capture_id,
+        source_file=relative_capture,
+        messages=messages,
     )
 
 

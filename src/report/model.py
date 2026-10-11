@@ -7,6 +7,11 @@ is::
     {
       "title": "...",                      # optional
       "scope": { ... },                    # rule applicability, free-form
+      "rule_application": {                # counters over the applied rule
+        "rule_id": "r1", "rule_version": 2,
+        "matched": 205, "mismatched": 12, "unknown": 23, "uncovered": 0,
+        "counterexamples": [ ... ]         # up to five, each tied to bytes
+      },
       "hypotheses": [
         {"id": "h1", "statement": "...", "status": "hypothesis",
          "rule_id": "r1", "rule_version": 2, "evidence": "...",
@@ -67,6 +72,7 @@ def normalize(investigation: dict[str, Any]) -> dict[str, Any]:
     model: dict[str, Any] = {
         "title": str(investigation.get("title") or "Protocol investigation report"),
         "scope": investigation.get("scope") or {},
+        "rule_application": investigation.get("rule_application") or {},
         "hypotheses": list(investigation.get("hypotheses") or []),
         "counterexamples": list(investigation.get("counterexamples") or []),
         "rule_versions": list(investigation.get("rule_versions") or []),

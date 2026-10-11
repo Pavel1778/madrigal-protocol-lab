@@ -9,6 +9,7 @@ summarised here as plain data, so the widgets stay free of engine types.
 from __future__ import annotations
 
 import json
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -29,6 +30,52 @@ AMBIGUOUS = "ambiguous"
 UNCOVERED = "uncovered"
 NOT_APPLICABLE = "not_applicable"
 HYPOTHESIS = "hypothesis"
+
+# PCAP magic numbers: little/big endian, microsecond/nanosecond, plus the
+# byte-swapped forms a pcap written on another endianness carries. The first
+# four bytes are compared, so pcapng (0a0d0d0a) is included here.
+_PCAP_MAGIC = {
+    b"\xd4\xc3\xb2\xa1",
+    b"\xa1\xb2\xc3\xd4",
+    b"\x4d\x3c\xb2\xa1",
+    b"\xa1\xb2\x3c\x4d",
+    b"\x0a\x0d\x0d\x0a",
+}
+
+
+class CaptureModelError(ValueError):
+    """Raised when a file is neither normalized JSON nor a PCAP/PCAPNG."""
+
+
+def _looks_like_json(head: bytes) -> bool:
+    """True when the first non-space byte opens a JSON object."""
+    stripped = head.lstrip(b"\xef\xbb\xbf \t\r\n")
+    return stripped[:1] == b"{"
+
+
+def _capture_from_pcap(path: Path) -> Capture:
+    """Normalize a raw pcap/pcapng and return its contract mapping.
+
+    The pipeline reads the packets and reassembles the streams; the export
+    writes the same normalized JSON the capture CLI produces, which is then
+    parsed back into a :class:`Capture`. A temporary file keeps the pipeline's
+    own export path without writing into the caller's directory.
+    """
+    from ..capture.export import export_capture
+    from ..capture.pipeline import normalize
+
+    capture = normalize(path)
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp) / "capture.normalized.json"
+        export_capture(
+            capture.sessions,
+            out,
+            source_file=str(capture.source_file),
+            capture_id=capture.capture_id,
+            streams=capture.streams,
+        )
+        raw = json.loads(out.read_text(encoding="utf-8"))
+    return capture_from_dict(raw)
 
 
 @dataclass
@@ -107,11 +154,35 @@ class CaptureModel:
 
     @classmethod
     def from_file(cls, path: str | Path) -> "CaptureModel":
-        """Load a capture model from a normalized capture JSON file."""
+        """Load a capture model from normalized JSON or a raw pcap/pcapng.
+
+        The format is decided from the file contents, not the name: a JSON
+        object is read as the normalized contract, while a pcap or pcapng
+        capture is normalized through the capture pipeline first. Anything
+        else raises :class:`CaptureModelError` with a message that names the
+        two accepted forms, so the window reports the problem instead of a
+        decode error.
+        """
         path = Path(path)
-        with open(path, "r", encoding="utf-8") as handle:
-            raw = json.load(handle)
-        return cls(capture_from_dict(raw), path=path)
+        try:
+            head = path.read_bytes()[:8]
+        except OSError as exc:
+            raise CaptureModelError(f"cannot read {path}: {exc}") from exc
+
+        if head[:4] in _PCAP_MAGIC:
+            return cls(_capture_from_pcap(path), path=path)
+        if _looks_like_json(head):
+            try:
+                with open(path, "r", encoding="utf-8") as handle:
+                    raw = json.load(handle)
+            except (OSError, json.JSONDecodeError) as exc:
+                raise CaptureModelError(f"{path} is not a valid normalized capture: {exc}") from exc
+            return cls(capture_from_dict(raw), path=path)
+        raise CaptureModelError(
+            f"{path} is neither a normalized capture JSON nor a PCAP/PCAPNG file. "
+            "Open the normalized JSON, or normalize the capture first:\n"
+            "  python -m src.capture.cli --pcap <file> --out <normalized.json>"
+        )
 
     @property
     def capture_id(self) -> str:

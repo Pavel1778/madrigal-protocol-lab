@@ -41,6 +41,28 @@ INVESTIGATION = {
             "detail": "value out of the assumed range",
         }
     ],
+    "rule_application": {
+        "rule_id": "r1",
+        "rule_version": 2,
+        "matched": 205,
+        "mismatched": 12,
+        "incomplete": 0,
+        "ambiguous": 1,
+        "uncovered": 0,
+        "not_applicable": 0,
+        "unknown": 0,
+        "counterexamples": [
+            {
+                "session_id": "s2",
+                "direction": "A_to_B",
+                "offset": 128,
+                "length": 4,
+                "status": "mismatched",
+                "detail": "message classified mismatched: value out of range",
+                "bytes_hex": "ffff0001",
+            }
+        ],
+    },
     "rule_versions": [
         {"rule_id": "r1", "version": 1, "created_at": "2026-10-09T00:00:00Z"},
         {"rule_id": "r1", "version": 2, "note": "add the value range"},
@@ -55,6 +77,7 @@ def test_markdown_has_every_section(tmp_path: Path) -> None:
     text = out.read_text(encoding="utf-8")
     for heading in (
         "Scope",
+        "Rule application",
         "Hypotheses",
         "Counterexamples",
         "Rule versions",
@@ -64,6 +87,17 @@ def test_markdown_has_every_section(tmp_path: Path) -> None:
     assert "h1" in text and "c1" in text
     assert "r1 version 2" in text
     assert "is byte 3 a flag or a reserved byte" in text
+
+
+def test_markdown_rule_application_lists_counters_and_bytes(tmp_path: Path) -> None:
+    out = tmp_path / "report.md"
+    render_markdown(INVESTIGATION, out)
+    text = out.read_text(encoding="utf-8")
+    assert "- Rule: r1 (version 2)" in text
+    assert "- matched: 205" in text
+    assert "- mismatched: 12" in text
+    assert "s2/A_to_B offset 128, length 4" in text
+    assert "`ffff0001`" in text
 
 
 def test_markdown_carries_the_counterexample_bytes(tmp_path: Path) -> None:
@@ -88,10 +122,21 @@ def test_html_is_self_contained_and_has_sections(tmp_path: Path) -> None:
     text = out.read_text(encoding="utf-8")
     assert "<!DOCTYPE html>" in text
     assert "<h2>Hypotheses</h2>" in text
+    assert "<h2>Rule application</h2>" in text
     assert "ffff0001" in text
     # No external requests: the styling is inline and there are no links out.
     assert "<link" not in text
     assert "http://" not in text and "https://" not in text
+
+
+def test_html_rule_application_lists_counters_and_bytes(tmp_path: Path) -> None:
+    out = tmp_path / "report.html"
+    render_html(INVESTIGATION, out)
+    text = out.read_text(encoding="utf-8")
+    assert "<strong>Rule:</strong> r1 (version 2)" in text
+    assert "matched: 205" in text
+    assert "s2/A_to_B" in text
+    assert "<code>ffff0001</code>" in text
 
 
 def test_html_escapes_untrusted_text(tmp_path: Path) -> None:

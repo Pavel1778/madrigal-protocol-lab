@@ -100,7 +100,7 @@ def test_window_retranslates_to_russian(english_window):
     assert window.windowTitle() == "Лаборатория протоколов Мадригал"
     assert window._menus["file"].title() == "&Файл"
     assert window._actions["quit"].text() == "Вы&ход"
-    assert window.right_tabs.tabText(0) == "Интерпретация"
+    assert window.right_tabs.tabText(0) == "Анализ"
     assert window._bytes_box.title() == "Байты"
     assert window.validation_view.apply_button.text() == "Применить к текущему направлению"
 

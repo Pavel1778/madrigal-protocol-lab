@@ -45,7 +45,7 @@ madrigal-lab = "src.ui.main_window:main"
 include = ["src", "src.*"]
 
 [tool.setuptools.package-data]
-"src.web" = ["templates/*.html", "static/*.js", "static/*.css"]
+"src.web" = ["templates/*.html", "static/*.js", "static/*.css", "static/*.png"]
 "src.ui.locale" = ["*.qm", "*.ts"]
 
 [tool.pytest.ini_options]
