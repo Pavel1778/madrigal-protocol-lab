@@ -26,13 +26,13 @@ ROOT = Path(__file__).resolve().parents[2]
 PRES = ROOT / "presentation"
 OUT = PRES / "slides.pptx"
 
-# --- palette (task block 2) -------------------------------------------------
+# --- palette (matches presentation/style.css) --------------------------------
 BG = RGBColor(0x0E, 0x10, 0x11)
 PANEL = RGBColor(0x1A, 0x1C, 0x1E)
-TEXT = RGBColor(0xF0, 0xF0, 0xF0)
-SECONDARY = RGBColor(0xB0, 0xB0, 0xB0)
-CAPTION = RGBColor(0x9A, 0x9A, 0x9A)
-HIGHLIGHT = RGBColor(0xA2, 0x39, 0x1D)
+TEXT = RGBColor(0xED, 0xED, 0xED)
+SECONDARY = RGBColor(0xB8, 0xB8, 0xB8)
+CAPTION = RGBColor(0xA6, 0xA6, 0xA6)
+HIGHLIGHT = RGBColor(0xD0, 0x60, 0x3A)
 ACCENT_TEXT = RGBColor(0xE0, 0x60, 0x3A)
 WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 
@@ -252,15 +252,24 @@ def build_slide(prs, spec):
 
     elif kind == "two_col":
         heading(slide, spec["title"])
-        bullets(slide, spec["left"], MARGIN, BODY_TOP,
-                Inches(5.9), Inches(4.3), size=17)
         x2 = MARGIN + Inches(6.2)
         w2 = SLIDE_W - x2 - MARGIN
-        if spec.get("right_image"):
-            fit_picture(slide, spec["right_image"], x2, BODY_TOP, w2,
-                        Inches(4.5))
+        if spec.get("left_image"):
+            lw = spec.get("left_image_width", Inches(5.9))
+            pic = fit_picture(slide, spec["left_image"], MARGIN, BODY_TOP, lw,
+                              Inches(4.5))
+            tb = bullets(slide, spec.get("right", []), x2, BODY_TOP, w2,
+                         Inches(4.3), size=17)
+            if spec.get("animate"):
+                entrance += [pic.shape_id, tb.shape_id]
         else:
-            bullets(slide, spec["right"], x2, BODY_TOP, w2, Inches(4.3), size=17)
+            bullets(slide, spec["left"], MARGIN, BODY_TOP,
+                    Inches(5.9), Inches(4.3), size=17)
+            if spec.get("right_image"):
+                fit_picture(slide, spec["right_image"], x2, BODY_TOP, w2,
+                            Inches(4.5))
+            else:
+                bullets(slide, spec["right"], x2, BODY_TOP, w2, Inches(4.3), size=17)
         if spec.get("caption"):
             caption(slide, spec["caption"])
 
@@ -317,19 +326,47 @@ def build_slide(prs, spec):
         rect(slide, MARGIN, Inches(4.7), Inches(4.0), Inches(0.08), HIGHLIGHT)
 
     elif kind == "ending":
-        tb, tf = textbox(slide, MARGIN, Inches(3.0),
-                         SLIDE_W - 2 * MARGIN, Inches(1.2))
+        tb, tf = textbox(slide, MARGIN, Inches(1.5),
+                         SLIDE_W - 2 * MARGIN, Inches(1.0))
         add_runs(tf.paragraphs[0], spec["title"], 40, WHITE, font=F_HEAD)
-        tb2, tf2 = textbox(slide, MARGIN, Inches(4.2),
-                           SLIDE_W - 2 * MARGIN, Inches(0.8))
-        add_runs(tf2.paragraphs[0], spec["subtitle"], 18, SECONDARY)
-        tb3, tf3 = textbox(slide, MARGIN, Inches(5.0),
+        tb2, tf2 = textbox(slide, MARGIN, Inches(2.6),
                            SLIDE_W - 2 * MARGIN, Inches(0.6))
-        run = tf3.paragraphs[0].add_run()
-        run.text = GITHUB
-        run.font.size = Pt(14)
-        run.font.color.rgb = ACCENT_TEXT
-        hyperlink(run, GITHUB)
+        add_runs(tf2.paragraphs[0], spec["subtitle"], 18, SECONDARY)
+        kpis = spec.get("kpis") or []
+        if kpis:
+            gap = Inches(0.4)
+            kw = (SLIDE_W - 2 * MARGIN - 2 * gap) / 3
+            for i, (num, lab) in enumerate(kpis):
+                x = MARGIN + i * (kw + gap)
+                tb, tf = textbox(slide, x, Inches(3.3), kw, Inches(1.0))
+                p = tf.paragraphs[0]
+                p.alignment = PP_ALIGN.CENTER
+                add_runs(p, num, 30, WHITE, font=F_HEAD)
+                p2 = tf.add_paragraph()
+                p2.alignment = PP_ALIGN.CENTER
+                add_runs(p2, lab, 12, SECONDARY)
+        qrs = spec.get("qrs") or []
+        if qrs:
+            gap = Inches(1.2)
+            qw = Inches(1.6)
+            total = len(qrs) * qw + (len(qrs) - 1) * gap
+            x0 = (SLIDE_W - total) / 2
+            for i, (rel, label) in enumerate(qrs):
+                x = x0 + i * (qw + gap)
+                picture(slide, rel, x, Inches(4.6), qw, qw)
+                tb, tf = textbox(slide, x - Inches(0.4), Inches(6.3), qw + Inches(0.8),
+                                 Inches(0.35))
+                p = tf.paragraphs[0]
+                p.alignment = PP_ALIGN.CENTER
+                add_runs(p, label, 11, CAPTION)
+        else:
+            tb3, tf3 = textbox(slide, MARGIN, Inches(5.0),
+                               SLIDE_W - 2 * MARGIN, Inches(0.6))
+            run = tf3.paragraphs[0].add_run()
+            run.text = GITHUB
+            run.font.size = Pt(14)
+            run.font.color.rgb = ACCENT_TEXT
+            hyperlink(run, GITHUB)
 
     elif kind == "links":
         heading(slide, spec["title"])
@@ -378,7 +415,7 @@ def deck() -> list[dict]:
         dict(kind="image_full", page=5,
              title="Три модуля, связанные JSON-контрактами",
              image="assets/architecture.png",
-             caption="capture · protocol + hypothesis · ui. Контракты зафиксированы JSON Schema draft 2020-12."),
+             caption="Контракты зафиксированы JSON Schema (draft 2020-12) и не меняются молча."),
         dict(kind="divider", page=6, index="02", title="Реализация", notes="Раздел 02."),
         dict(kind="two_col", page=7,
              title="Захват потока: границы TCP ≠ границы сообщений",
@@ -416,7 +453,8 @@ def deck() -> list[dict]:
              caption="Наблюдение → гипотеза → проверка → контрпример → уточнение → повторная проверка."),
         dict(kind="two_col", page=13,
              title="Проверка и контрпримеры: точность 0.43 → 1.00",
-             left=["Чтение, объявленное правилом v1, даёт 0.43 (60 support, 80 contradict).",
+             left=["Чтение, объявленное правилом v1, даёт 0.43 (60 matched, 80 mismatched).",
+                   "Каждый mismatched-байт привязан к пакету-источнику и сохранён.",
                    "После уточнения v2: 140 matched, 0 контрпримеров.",
                    "matched 60 → 140, mismatched 80 → 0."],
              right_image="assets/precision_v1_v2.png",
@@ -446,10 +484,12 @@ def deck() -> list[dict]:
              caption="Источник: docs/METRICS.md, docs/AUDIT.md."),
         dict(kind="two_col", page=17,
              title="Расширения: веб-интерфейс на localhost поверх того же ядра",
-             left=["Ядро отделено от GUI контрактами JSON — веб тонкая обёртка, не дубль.",
-                   "Те же src.capture и src.protocol, своей логики нет.",
-                   "Ставится отдельно: pip install -e \".[web]\"."],
-             right_image="public/web.png",
+             left_image="public/web.png",
+             left_image_width=Inches(7.4),
+             animate=True,
+             right=["Ядро отделено от GUI контрактами JSON — веб тонкая обёртка, не дубль.",
+                    "Те же src.capture и src.protocol, своей логики нет.",
+                    "Ставится отдельно: pip install -e \".[web]\"."],
              caption="FastAPI + HTMX, 127.0.0.1, extra .[web]."),
         dict(kind="divider", page=18, index="04", title="Итог", notes="Раздел 04."),
         dict(kind="two_col", page=19, title="Ограничения: честный список",
@@ -472,7 +512,10 @@ def deck() -> list[dict]:
                    "Каждое утверждение подкреплено байтами, контрпримером или журналом."]),
         dict(kind="ending", page=22, title="Вопросы",
              subtitle="Команда HTTP 418 · UMIRHack 2026",
-             notes="QR ведёт на репозиторий; отчёт REPORT.md."),
+             kpis=[("741", "тест"), ("90%", "покрытие"), ("8", "артефактов в релизе")],
+             qrs=[("public/qr_repo.png", "Репозиторий"),
+                  ("public/qr_release.png", "Релиз v1.0.0")],
+             notes="QR ведёт на репозиторий и на релиз v1.0.0; отчёт REPORT.md."),
     ]
 
 
@@ -486,7 +529,7 @@ def main() -> None:
             add_entrance(slide, entrance)
         if spec["kind"] == "divider":
             add_transition(slide, "push")
-        elif spec["page"] in {4, 6, 11, 18}:
+        else:
             add_transition(slide, "fade")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     prs.save(str(OUT))

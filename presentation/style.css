@@ -27,13 +27,13 @@
   --bg: #0E1011;
   --panel: #1A1C1E;
   --panel-hi: #242628;
-  --text: #F0F0F0;
-  --secondary: #B0B0B0;
-  --caption: #9A9A9A;
+  --text: #EDEDED;
+  --secondary: #B8B8B8;
+  --caption: #A6A6A6;
   --line: #2E3134;
   /* Brand fills — decoration only, never text. */
   --accent: #6D071F;
-  --highlight: #A2391D;
+  --highlight: #D0603A;
   --brand-deep: #410913;
   --brand-mid: #610D1C;
   /* Readable accent for links, inline code, diff additions. */
@@ -47,6 +47,35 @@
   --not-applicable: #9E9E9E;
   --footer-h: 64px;
 }
+
+/* Light fallback for a washed-out projector (slides-light.md sets
+   colorSchema: light, which puts the `light` class on <html>). The dark block
+   above stays the source of truth for the dark deck; only the tokens change. */
+html.light {
+  --bg: #FAFAFA;
+  --panel: #EFEFEF;
+  --panel-hi: #E4E4E4;
+  --text: #1A1A1A;
+  --secondary: #4A4A4A;
+  --caption: #5A5A5A;
+  --line: #D6D6D6;
+  --accent: #B7301A;
+  --highlight: #C7311C;
+  --brand-deep: #8A2312;
+  --brand-mid: #A82A15;
+  --accent-text: #C7311C;
+  --matched: #2E7D32;
+  --mismatched: #C62828;
+  --ambiguous: #8A6D00;
+  --incomplete: #8A8A8A;
+  --uncovered: #9E9E9E;
+  --not-applicable: #757575;
+}
+html.light .slidev-layout h1,
+html.light .slidev-layout h2,
+html.light .slidev-layout h3,
+html.light .slidev-layout strong,
+html.light .slidev-layout .kpi { color: #111111; }
 
 .slidev-layout {
   position: relative;
@@ -306,7 +335,7 @@
 .web-shot {
   display: block;
   width: 100%;
-  max-height: 420px;
+  max-height: 520px;
   object-fit: cover;
   object-position: top;
   border: 1px solid var(--line);
@@ -315,8 +344,31 @@
 .slidev-layout .arch {
   display: block;
   width: 100%;
-  max-height: 280px;
+  max-height: 420px;
   margin: 8px auto 0;
+}
+/* Web slide: the screenshot keeps 60% and the three points take 40%. */
+.cols-60-40 {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 30px;
+  align-items: start;
+}
+/* Final slide: three KPI figures and two labelled QR codes. */
+.kpi-row { align-items: start; }
+.qr-row {
+  display: flex;
+  justify-content: center;
+  gap: 56px;
+}
+.qr-item { text-align: center; }
+.qr-item .caption { margin-top: 4px; }
+.slidev-layout .w-40 { width: 160px; }
+.slidev-layout .thanks {
+  margin-top: 22px;
+  font-family: 'Tektur', sans-serif;
+  font-size: 24px;
+  color: var(--secondary);
 }
 .slidev-layout p,
 .slidev-layout li { font-size: 22px; }
