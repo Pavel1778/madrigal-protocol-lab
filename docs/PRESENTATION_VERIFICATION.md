@@ -111,8 +111,8 @@ black segment. This supersedes the earlier note that the guide quoted 1:25: the
 clip is 2:05, and `presentation/VIDEO.md` describes it accordingly. The clip is
 not embedded in the deck; the team slide carries the avatar only.
 
-`presentation/video.mp4` is present locally (219 s, 3.7 MB) and gitignored as a
-large binary; it is rebuilt from `VIDEO.md`.
+`presentation/video.mp4` is a gitignored large binary produced by the recording
+run described in `VIDEO.md`; it is not tracked and not present in this tree.
 
 ## Demo driver
 
