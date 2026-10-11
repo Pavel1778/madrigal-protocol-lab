@@ -126,6 +126,9 @@ is the merge of PR #14 (`f637644`); the entries below are the work that followed
   `presentation/screencast.mp4` (PR #21, PR #23).
 - `docs/DEFENSE_CHECKLIST.md` and `docs/FAQ_FOR_JUDGES.md` for the defense
   (PR #26).
+- `docs/DEMO_CHEATSHEET.md` (a print-and-keep one-pager for the demo) and
+  `presentation/Q_and_A.md` (fifteen defense questions in short form), linked
+  from the README document list.
 
 ### Changed
 
@@ -153,4 +156,7 @@ is the merge of PR #14 (`f637644`); the entries below are the work that followed
 
 - The merged feature branches were cleaned up after the dataset work landed
   (PR #20).
+- The browser-downloaded `sample_protocol.tar*` archives left in the repository
+  root; the dataset itself is committed under `tests/corpus/real/`, and the
+  duplicates are ignored.
 

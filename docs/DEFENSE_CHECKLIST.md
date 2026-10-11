@@ -2,7 +2,7 @@
 
 A pre-flight list for the UMIRHack defense. Every item names the command or the
 file that proves it, so a tick is a measurement, not a memory. Figures are from
-`main = 519c585`; re-run the command if the branch has moved.
+the repository at the final revision; re-run the command if the branch has moved.
 
 ## За день до защиты
 
