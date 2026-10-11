@@ -262,7 +262,7 @@ v2 на том же корпусе: 140 matched, 0 mismatched, точность 
 
 ## Участники
 
-![Team](assets/team-avatar.png)
+<img src="presentation/public/avatar_pavel_round.png" alt="Сабадаш Павел" width="160"> <img src="presentation/public/avatar_nikita_round.png" alt="Предков Никита" width="160">
 
 - Сабадаш Павел — архитектура, capture, project, report, координация, backend, GUI — [@Pasha1778](https://t.me/Pasha1778)
 - Предков Никита — backend, правила, тесты — [@petruan](https://t.me/petruan)

@@ -15,7 +15,7 @@ Reproduce any line below with the command in the same row.
 | --- | --- | --- |
 | pages in the committed PDF (dark) | 19 | `pdfinfo presentation/slides.pdf` |
 | pages in the committed PDF (light) | 19 | `pdfinfo presentation/slides-light.pdf` |
-| slides in the source | 19 | `grep -c '^---$' presentation/slides.md` = 20, minus the frontmatter fence = 19 |
+| slides in the source | 19 | `grep -c '^---$' presentation/slides.md` = 38, two fences per slide (headmatter plus one frontmatter block) |
 | slides in the PPTX | 19 | `python -m presentation.scripts.build_pptx` |
 | page size | 735.12 x 414 pts, 16:9 | `pdfinfo presentation/slides.pdf` |
 | empty pages | 0 | render scan below |
@@ -32,18 +32,18 @@ Per-page headings, from `pdftotext -layout presentation/slides.pdf`:
     2  Нас двое
     3  TCP разрезает сообщения посередине
     4  Дано и требуется
-    5  Первые дни мы не понимали, где у протокола длина
+    5  Смещение поля длины оказалось на четыре байта позже, чем мы считали
     6  Три модуля связаны форматами, а не вызовами
-    7  Каждый байт знает свой пакет
+    7  От интерпретации можно вернуться к исходным данным
     8  Правило проверяется на всём корпусе сразу
     9  Контрпример важнее метрики
     10 01 Что получилось
-    11 Точность правила: 0.43 → 1.00
+    11 Уточнили правило: 60 из 140 → 140 из 140
     12 Набор организаторов разобран целиком
     13 95 МиБ разбираются за 12 секунд
     14 02 Демонстрация
     15 Живое окно
-    16 Запись прогона на случай, если экран не поднимется
+    16 Резерв: 2 минуты записи прогона
     17 03 Границы и итог
     18 Что мы не утверждаем
     19 Инструмент превращает байты в проверяемое знание
@@ -52,17 +52,22 @@ No page is blank; each carries a heading or a section number.
 
 ## Layout checks
 
-Two automated checks run over both PDFs. The first renders every page and looks
-for content that reaches the frame edge (no shape within 40 px of any edge); the
-second looks for a blank page. Both report zero problems across 19 pages in each
-theme. The overflow scan masks the footer band and the accent rule, then measures
-the remaining ink bounding box:
+`presentation/check_layout.py` renders every page of both PDFs and looks for
+content that reaches the frame edge (a clear margin of at least 60 px at every
+edge) and for content that reaches the reserved footer band. It reports zero
+problems across 19 pages in each theme:
 
-    worst content bottom (dark)  = 0.857 of page height
-    worst content bottom (light) = 0.857 of page height
+    python -m presentation.check_layout presentation/slides.pdf presentation/slides-light.pdf
+    layout ok: no edge or footer-band overflow
 
-The maximum is on slides 7, 15 and 16, where a full-width screenshot is capped at
-390 px so it clears the footer. No text or figure crosses the 100 % frame.
+The overflow scan masks the footer band and the accent rule, then measures the
+remaining ink bounding box:
+
+    worst content bottom (dark)  = 0.877 of page height (slide 9)
+    worst content bottom (light) = 0.877 of page height (slide 9)
+
+Slide 9 fills closest to the footer but stays inside the reserved band. No text
+or figure crosses the 100 % frame.
 
 ## The nine organizer requirements
 
@@ -80,22 +85,24 @@ The maximum is on slides 7, 15 and 16, where a full-width screenshot is capped a
 
 Nine of nine present.
 
-- Requirement 2: slide 2 shows `public/team-avatar.png` (640x640, real PNG)
-  beside both entries — «Сабадаш Павел» with the architecture, capture and
-  interface role, and «Предков Никита» with the rules and tests role.
+- Requirement 2: slide 2 shows the two real member photos — `1.jpg` and `2.jpg`
+  at the repository root, cropped by `presentation/make_assets.py` to
+  `public/avatar_pavel_round.png` and `public/avatar_nikita_round.png` (360x360,
+  real PNGs) — beside both entries: «Сабадаш Павел» with the architecture,
+  capture and interface role, and «Предков Никита» with the rules and tests role.
 - Requirement 3: the stack line «Python 3.12 · PySide6 · dpkt · pytest ·
   Docker» sits on the title slide; the architecture slide repeats the module
   breakdown.
 - Requirement 6: five GUI screenshots plus the committed screencast.
 - Requirement 7: `public/qr_repo.png` and `public/qr_release.png` are referenced
-  by the closing slide and decode with `zbarimg` to the repository and the
-  `v1.0.0` release.
+  by the closing slide and decode to the repository and the `v1.0.0` release;
+  the per-member Telegram codes decode to `@Pasha1778` and `@petruan`.
 
 Every image reference resolves. `grep -oE 'src="[^"]+"'` over `slides.md` yields
-`/assets/architecture.svg`, four `/screenshots/*.png` (one used twice),
-`/qr_repo.png`, `/qr_release.png`, `/team-avatar.png` (twice) and
-`/screencast.mp4`; each is present under `presentation/assets`,
-`presentation/screenshots` or `presentation/public`.
+the chart SVGs under `/assets/`, the `/public/screenshot-*.png` crops,
+`/avatar_pavel_round.png`, `/avatar_nikita_round.png`, the four
+`/qr_*.png` codes and `/screencast.mp4`; each is present under
+`presentation/assets` or `presentation/public`.
 
 ## Final slide
 
@@ -111,13 +118,13 @@ asset count — and the word «Вопросы» appears nowhere in the deck.
 | fact | value | command |
 | --- | --- | --- |
 | slides | 19, 16:9 (13.333 x 7.5 in) | `python -m presentation.scripts.build_pptx` |
-| entrance animations | 28, click-triggered | XML scan of `slides.pptx` |
-| chart build-ins | 1 wipe (architecture diagram) | XML scan of `slides.pptx` |
-| transitions | 19 (fade, push on dividers) | XML scan of `slides.pptx` |
+| entrance animations | 53, click-triggered | XML scan of `slides.pptx` |
+| chart build-ins | 2 wipe (donut and memory-sweep figures) | XML scan of `slides.pptx` |
+| transitions | 19 (fade; push on the three section dividers) | XML scan of `slides.pptx` |
 | text | native editable runs, deck palette | python-pptx |
 
 The deck is drawn directly with python-pptx — no PowerPoint template. Headings
-fade in, bullet lists build one item per click, the architecture diagram wipes in
+fade in, bullet lists build one item per click, the two chart figures wipe in
 left to right, and every slide carries a fade transition (push on the three
 section dividers). The XML of all 44 parts parses without error.
 
@@ -127,12 +134,14 @@ section dividers). The XML of all 44 parts parses without error.
 | --- | --- | --- |
 | committed file | `presentation/screencast.mp4` | `git ls-files presentation/screencast.mp4` |
 | codec, size | H.264, 1920x1080, 15 fps | `ffprobe presentation/screencast.mp4` |
-| duration | 125.2 s (2:05) | `ffprobe presentation/screencast.mp4` |
+| duration | 142.1 s (2:22) | `ffprobe presentation/screencast.mp4` |
 
 The raw take ran 166 s (2:46) with solid black at both ends; it was trimmed to
 the first and last frame with content and `blackdetect` now reports no black
-segment. The clip is not embedded in the deck; slide 16 embeds it in the light
-build as a poster plus video element.
+segment. The clip is embedded on slide 16 as a `<video>` element in the Slidev
+builds. `presentation/public/screencast.mp4` is a symlink to the committed
+`presentation/screencast.mp4`, so the player resolves it without a second
+committed copy; the editable PPTX shows the poster frame.
 
 ## Demo driver
 

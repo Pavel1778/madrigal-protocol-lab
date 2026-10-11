@@ -48,7 +48,7 @@ layout: default
 <div class="team">
 
 <div class="member" v-click>
-<img src="/team-avatar-round.png" alt="Сабадаш Павел" class="member__photo">
+<img src="/avatar_pavel_round.png" alt="Сабадаш Павел" class="member__photo">
 <div class="member__info">
 <div class="member__name">Сабадаш Павел</div>
 <div class="member__role">Архитектура · захват · интерфейс</div>
@@ -60,7 +60,7 @@ layout: default
 </div>
 
 <div class="member" v-click>
-<img src="/team-avatar-round.png" alt="Предков Никита" class="member__photo">
+<img src="/avatar_nikita_round.png" alt="Предков Никита" class="member__photo">
 <div class="member__info">
 <div class="member__name">Предков Никита</div>
 <div class="member__role">Правила · тесты · ревью</div>
@@ -139,6 +139,7 @@ layout: default
 <span class="on">проверка</span>
 <span class="on">контрпример</span>
 <span class="on">уточнение</span>
+<span class="on">повторная проверка</span>
 </div>
 
 </div>
@@ -181,7 +182,7 @@ layout: default
 # От интерпретации можно вернуться к исходным данным
 
 <div class="shot__frame" v-click>
-<img class="shot--full" src="/public/screenshot-provenance.png" alt="Байты сообщения и панель происхождения: пакет, последовательность, время">
+<img class="shot--full" src="/screenshot-provenance.png" alt="Байты сообщения и панель происхождения: пакет, последовательность, время">
 </div>
 
 <div class="byte-line" v-click>packet 3 · seq 1001 · ts 1700000000.004 · сессия <code>s1</code></div>
@@ -193,11 +194,11 @@ layout: default
 # Правило проверяется на всём корпусе сразу
 
 <div class="shot__frame" v-click>
-<img class="shot--half" src="/public/screenshot-rule.png" alt="Правило в редакторе: JSON крупным планом">
+<img class="shot--half" src="/screenshot-rule.png" alt="Правило в редакторе: JSON крупным планом">
 </div>
 
 <div class="shot__frame" v-click>
-<img class="shot--half" src="/public/screenshot-validation.png" alt="Результат применения правила к потоку">
+<img class="shot--half" src="/screenshot-validation.png" alt="Результат применения правила к потоку">
 </div>
 
 ---
@@ -211,7 +212,7 @@ layout: default
 <div class="shot shot--side">
 
 <div class="shot__frame" v-click>
-<img src="/public/screenshot-counterexamples.png" alt="Список контрпримеров, привязанных к байту">
+<img src="/screenshot-counterexamples.png" alt="Список контрпримеров, привязанных к байту">
 </div>
 
 <div class="shot__side">
@@ -365,7 +366,7 @@ layout: default
 # Живое окно
 
 <div class="live__frame" v-click>
-<img class="shot--live" src="/public/screenshot-main.png" alt="Главное окно: сессии, байты, интерпретация, диагностика">
+<img class="shot--live" src="/screenshot-main.png" alt="Главное окно: сессии, байты, интерпретация, диагностика">
 </div>
 
 <div class="caption" v-click>Сессии, байты, интерпретация, происхождение и диагностика в одном окне</div>

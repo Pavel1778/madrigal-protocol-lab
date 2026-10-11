@@ -333,7 +333,7 @@ a live socket.
   (`presentation/defense_script.md`), and a rehearsal checklist
   (`docs/DEFENSE_CHECKLIST.md`).
 - **Backup video.** Resolved. A screen recording of the run is committed as
-  `presentation/screencast.mp4` (2:05, H.264), described in
+  `presentation/screencast.mp4` (2:22, H.264), described in
   `presentation/VIDEO.md`.
 - **Group name.** Resolved: the submission records the participant and the
   group `ИС-24`.
