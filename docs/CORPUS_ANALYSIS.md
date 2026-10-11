@@ -68,9 +68,9 @@ ten; the two numbers differ only in what they count, not in the outcome.
 | 5 | 2 | uint16 BE | value | written value, present only on writes |
 
 The layout is identical in both directions on the wire; the direction only
-changes which `command` values are legal. Two of the byte meanings are
-hypotheses (`command`, `target`, `value`), marked as such in the rule, and the
-alternatives engine is run on all three.
+changes which `command` values are legal. Three of the byte meanings are
+hypotheses (`command`, `target`, `value`), marked `hypothesis: true` in the rule,
+and the alternatives engine is run on all three.
 
 ## 4. Rule v1 and the eighty counterexamples
 
