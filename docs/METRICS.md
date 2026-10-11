@@ -42,7 +42,7 @@ bytes, 90 framed messages (45 requests, 45 responses).
 | Project | `python -m src.project.cli pipeline --pcap <f> --project <d> --report <f>` | read, measure |
 | Project | `python -m src.project.cli create \| open \| add-capture \| export \| import` | read, write |
 | Protocol | `python -m src.protocol.cli apply --rule <f> --capture <f> --out <f>` | read, write |
-| Report | `pipeline --report <f> --html` (no standalone CLI) | write |
+| Report | `pipeline --report <f>` (Markdown and HTML; HTML off with `--no-html`; no standalone CLI) | write |
 
 ## Processing
 
