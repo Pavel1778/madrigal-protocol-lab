@@ -18,13 +18,14 @@ covers requirement R5 (reproducible transfer) at the level of the environment.
 | Ubuntu 22.04 (glibc 2.35) | 3.12 | `scripts/test_in_docker.sh ubuntu:22.04 3.12` | 183 passed, 1 skipped |
 | Ubuntu 24.04 (glibc 2.39) | 3.13 | `scripts/test_in_docker.sh ubuntu:24.04 3.13` | 183 passed, 1 skipped |
 | Debian 13 development host | 3.13 | `pytest tests/ -q` | 183 passed, 1 skipped |
+| Debian 13, participant machine | 3.12 | `pytest tests/ -q` | suite green (see "Submission revision") |
 | Fresh clone, new venv | 3.13 | `pip install -e ".[dev]"` + README/USAGE commands | all run |
 
-Those rows are from the capture, project and report revision. The suite has
-since grown with the protocol and window modules; the authoritative counts for
-the submitted revision are in "Submission archive check" below.
+Those 183-test rows are from the capture, project and report revision. The suite
+has since grown with the protocol and window modules; the authoritative counts
+for the submitted revision are in "Submission revision" below.
 
-## Submission revision (741 tests)
+## Submission revision (781 tests)
 
 The submission revision is checked from a clean unpack, so the archived tree
 and not the working copy is what runs. The skip below is the archive's only
@@ -33,11 +34,14 @@ that reads a script's executable bit is skipped rather than failed.
 
 | Source | Python | Suite | Lint |
 | --- | --- | --- | --- |
-| Git checkout at this head | 3.13.5 | 741 passed, 0 skipped | All checks passed |
-| `dist/submission_*.zip`, clean unpack | 3.13.5 | 740 passed, 1 skipped | All checks passed |
+| Git checkout at this head | 3.13.5 | 781 passed, 0 skipped | All checks passed |
+| `submission_*.zip` from release v1.0.0, clean unpack | 3.13.5 | 780 passed, 1 skipped | All checks passed |
 
 No other test skipped on either: the corpus, the reference export and the
-`examples/` rules are inside the archive.
+`examples/` rules are inside the archive. The archive rows were measured on the
+published `v1.0.0` asset (`submission_20261011_1316.zip`, 474 entries), which is
+the exact file a reviewer downloads; the checkout row is the same suite at
+`main`.
 
 ## Docker
 
@@ -82,13 +86,12 @@ from the repository, so a forgotten file cannot hide behind the working tree.
 
 | Field | Value |
 | --- | --- |
-| Date | 2026-10-10 20:43 UTC |
-| Host | Debian GNU/Linux 13 (trixie), kernel 6.8.0-1055-gke |
-| Architecture | x86_64, 4 CPUs, 15 GiB RAM |
+| Date | 2026-10-11 13:16 UTC |
+| Host | Debian GNU/Linux 13 (trixie), kernel 6.8.0-1055-gke, x86_64, 4 CPUs, 15 GiB RAM |
 | Python | 3.13.5 (the archive targets 3.12 or newer) |
-| Archive | `dist/submission_20261010_2038.zip`, 375 entries, 8.3 MiB |
+| Archive | `submission_20261011_1316.zip` (the published `v1.0.0` asset), 474 entries |
 | Install time | a fresh venv with `pip install -e ".[dev]"` |
-| Suite | 740 passed, 1 skipped (the executable-bit test; see above) |
+| Suite | 780 passed, 1 skipped (the executable-bit test; see above) |
 | Static check | `ruff check . --select "E4,E7,E9,F" --ignore E501`: All checks passed |
 | Pipeline | `src.project.cli pipeline` with the corpus rule: 3 sessions, `REPORT.md` and `REPORT.html` written |
 | Window | opened headless against the reference export and the corpus rule |

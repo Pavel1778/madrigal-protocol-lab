@@ -104,3 +104,53 @@ verification of the deck, the screencast and the demo driver.
 
 - `4c3b1a3` chore(repo): add git attributes, hook, message template and hygiene doc
 - `1c8621f` test(ui): add locale, snapshot and state-isolation suites
+
+## Unreleased
+
+Everything merged into `main` after the `v1.0.0` tag, by pull request. `v1.0.0`
+is the merge of PR #14 (`f637644`); the entries below are the work that followed.
+
+### Added
+
+- Interface test coverage and a CI matrix for it: locale, snapshot,
+  state-isolation and layout suites, and the `ui` job (PR #18).
+- A perceptual snapshot comparison for the interface, replacing the exact-pixel
+  baseline that broke on every font hinting change (PR #18).
+- The organizer capture set, committed under `tests/corpus/real/`, with the
+  thermal-stand rules in `examples/` and the CSV action journal (PR #20).
+- `scripts/investigate_dataset.py`, which regenerates
+  `docs/DATASET_INVESTIGATION.md` from the supplied captures (PR #20).
+- A fixed-header bias in length framing (`length_bias`), and a condition on any
+  field, which the thermal-stand protocol needed (PR #20).
+- A light theme for the deck and the site, and the reserve video
+  `presentation/screencast.mp4` (PR #21, PR #23).
+- `docs/DEFENSE_CHECKLIST.md` and `docs/FAQ_FOR_JUDGES.md` for the defense
+  (PR #26).
+
+### Changed
+
+- The deck was rebuilt as editable native PPTX text with click build-ins, then
+  reduced to nineteen slides with varied layouts and no overflow (PR #16,
+  PR #21, PR #25).
+- The defense script was split into a 5-minute and a 10-minute route with
+  timings derived from the spoken text (PR #24).
+- The test counts across the documentation were refreshed to the merged
+  revision, and the deck and verification documents resynced to the 19-slide
+  deck (PR #16, PR #18, PR #25, PR #26).
+- The README, the audit, the portability report and the presentation
+  verification now quote 781 tests and the published `v1.0.0` archive
+  (PR #26).
+
+### Fixed
+
+- The interface now fits small windows, and the Russian labels are complete,
+  including the Settings theme names (PR #17).
+- The deck overflow and the reserve-clip length were corrected (PR #16, PR #23).
+- The stale "organizer captures not available" limit was replaced with the
+  received-and-analysed state (PR #20, PR #26).
+
+### Removed
+
+- The merged feature branches were cleaned up after the dataset work landed
+  (PR #20).
+
