@@ -43,3 +43,7 @@ presentation/video.mp4
 
 # Snapshot test artefacts (CI uploads them; never committed)
 .snapshot-actual/
+
+# Sample dataset archives downloaded through a browser with "(N)" suffixes.
+# The dataset itself is committed under tests/corpus/real/; keep the duplicates out.
+sample_protocol.tar*
