@@ -77,7 +77,7 @@ investigation from the command line, used as the fallback, is in
 | Encrypted payloads | Out of scope; the bytes are reported as they appear. |
 | Checksum offloading | Off by default; reordering is treated as a diagnostic. |
 | Window project menu | Not present; the pipeline CLI drives project export and import. |
-| Organizer captures | Not available during the development window; the corpus is synthetic and reproducible from `scripts/generate_corpus`. |
+| Organizer captures | Received and analysed; committed under `tests/corpus/real/`. Results are in `docs/REAL_CORPUS_ANALYSIS.md`. |
 
 ## Contact
 
