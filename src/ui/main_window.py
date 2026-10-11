@@ -37,7 +37,7 @@ from .hex_view import (
 from .hypotheses_view import HypothesesView
 from .i18n import LanguageManager
 from .layout import FlowLayout
-from .model import CaptureModel, RuleModel, verify_rule_on_corpus
+from .model import CaptureModel, CaptureModelError, RuleModel, verify_rule_on_corpus
 from .session_tree import SessionTree
 from .settings import (
     APPLICATION,
@@ -356,20 +356,26 @@ class MainWindow(QtWidgets.QMainWindow):
     def _relabel_tabs(self) -> None:
         """Translate the right-hand tab captions in place.
 
-        The full caption is also set as the tab tooltip, so an elided caption in
-        a narrow dock is still readable on hover.
+        The captions are kept short so they fit the narrow dock without eliding;
+        the full name is set as the tab tooltip, so nothing is lost on hover.
         """
-        for index, label in enumerate(
-            (
-                self.tr("Interpretation"),
-                self.tr("Compare"),
-                self.tr("Hypotheses"),
-                self.tr("Report"),
-                self.tr("Version diff"),
-            )
-        ):
+        captions = (
+            self.tr("Interpretation"),
+            self.tr("Compare"),
+            self.tr("Hypotheses"),
+            self.tr("Report"),
+            self.tr("Version diff"),
+        )
+        tooltips = (
+            self.tr("Interpretation tab"),
+            self.tr("Compare tab"),
+            self.tr("Hypotheses tab"),
+            self.tr("Report tab"),
+            self.tr("Version diff tab"),
+        )
+        for index, (label, tip) in enumerate(zip(captions, tooltips)):
             self.right_tabs.setTabText(index, label)
-            self.right_tabs.setTabToolTip(index, label)
+            self.right_tabs.setTabToolTip(index, tip)
 
     def _build_status(self) -> None:
         bar = self.statusBar()
@@ -629,7 +635,12 @@ class MainWindow(QtWidgets.QMainWindow):
     # -- loading -----------------------------------------------------------
 
     def open_capture(self, path: str | Path) -> None:
-        """Load a normalized capture and select its first direction."""
+        """Load a normalized capture and select its first direction.
+
+        Raises :class:`CaptureModelError` when the file is neither normalized
+        JSON nor a pcap/pcapng; the callers decide how to report it, so the
+        window itself never blocks on a dialog.
+        """
         model = CaptureModel.from_file(path)
         self._capture = model
         self.session_tree.load(model)
@@ -673,11 +684,18 @@ class MainWindow(QtWidgets.QMainWindow):
     def open_capture_dialog(self) -> None:
         """Prompt for a normalized capture file and open it."""
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, self.tr("Open normalized capture"), self._start_dir(REPO_ROOT), "JSON (*.json)"
+            self, self.tr("Open normalized capture"), self._start_dir(REPO_ROOT), "Captures (*.json *.pcap *.pcapng)"
         )
         if path:
             self._remember_dir(path)
+            self._open_capture_reported(path)
+
+    def _open_capture_reported(self, path: str | Path) -> None:
+        """Open a capture from a dialog, reporting a bad file in a message box."""
+        try:
             self.open_capture(path)
+        except CaptureModelError as exc:
+            QtWidgets.QMessageBox.warning(self, self.tr("Cannot open capture"), str(exc))
 
     def load_rule(self, path: str | Path) -> None:
         """Load a rule file, keeping the previous rule and report for diffing."""
@@ -1095,9 +1113,19 @@ def main(argv: list[str] | None = None) -> int:
         prog="src.ui.main_window",
         description="Open the protocol laboratory window.",
     )
-    parser.add_argument("--capture", type=Path, help="normalized capture JSON to open")
+    parser.add_argument("--capture", type=Path, help="normalized capture JSON or raw PCAP/PCAPNG to open")
     parser.add_argument("--rule", type=Path, help="rule JSON or YAML to open")
     args, qt_argv = parser.parse_known_args(argv)
+
+    if args.capture is not None and not args.capture.is_file():
+        print(f"cannot open capture {args.capture}: file not found", file=sys.stderr)
+        return 2
+    if args.capture is not None:
+        try:
+            CaptureModel.from_file(args.capture)
+        except CaptureModelError as exc:
+            print(str(exc), file=sys.stderr)
+            return 2
 
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([sys.argv[0], *qt_argv])
     app.setApplicationName("Madrigal protocol laboratory")

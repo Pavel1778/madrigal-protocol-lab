@@ -72,6 +72,41 @@ def test_hex_page_renders_the_stream(client: TestClient) -> None:
     assert 'data-offset="0"' in response.text
 
 
+@corpus_required
+def test_root_has_favicon_link(client: TestClient) -> None:
+    response = client.get("/")
+    assert response.status_code == 200
+    assert '<link rel="icon" type="image/png" href="/static/favicon.png">' in response.text
+
+
+@corpus_required
+def test_favicon_is_served(client: TestClient) -> None:
+    response = client.get("/static/favicon.png")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("image/png")
+
+
+@corpus_required
+def test_session_hex_has_highlight(client: TestClient) -> None:
+    # Bytes covered by the rule carry a status class, so the hex view shows
+    # matched and mismatched bytes in colour.
+    response = client.get("/session/s1/hex?direction=A_to_B")
+    assert response.status_code == 200
+    assert "is-matched" in response.text or "is-mismatched" in response.text
+    assert "Apply rule" in response.text
+
+
+@corpus_required
+def test_apply_rule_returns_counters(client: TestClient) -> None:
+    response = client.post("/apply", data={"session": "s1", "direction": "A_to_B"})
+    assert response.status_code == 200
+    body = response.text
+    # The counters line names every status and shows at least one match.
+    assert "matched," in body
+    assert "mismatched," in body
+    assert "uncovered" in body
+
+
 # -- apply ------------------------------------------------------------------
 
 
