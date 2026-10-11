@@ -101,14 +101,15 @@ markup and the stylesheet match; no fix is needed.
 | --- | --- | --- |
 | committed file | `presentation/screencast.mp4` | `git ls-files presentation/screencast.mp4` |
 | codec, size | H.264, 1920x1080, 15 fps | `ffprobe presentation/screencast.mp4` |
-| duration | 166 s (2:46) | `ffprobe presentation/screencast.mp4` |
-| bytes | 1 164 093 | `ffprobe presentation/screencast.mp4` |
+| duration | 125.2 s (2:05) | `ffprobe presentation/screencast.mp4` |
+| bytes | 1 049 428 | `stat -c %s presentation/screencast.mp4` |
 
-The guide `presentation/VIDEO.md` line 118 describes the committed clip as «the
-shorter 1:25 clip». The committed file is 2:46, not 1:25; the 1:25 figure
-belongs to an intermediate take, not the file that ships. The description should
-be corrected to 2:46, or the clip trimmed to 1:25 if the shorter length is the
-intent. Video content was not modified here.
+The raw take ran 166 s (2:46) and carried solid black at both ends, 2.2 s at the
+head and 22.0 s at the tail. It was trimmed to the first and last frame with
+content (`-ss 2.2 -to 143.933`, stream copy) and `blackdetect` now reports no
+black segment. This supersedes the earlier note that the guide quoted 1:25: the
+clip is 2:05, and `presentation/VIDEO.md` describes it accordingly. The clip is
+not embedded in the deck; the team slide carries the avatar only.
 
 `presentation/video.mp4` is present locally (219 s, 3.7 MB) and gitignored as a
 large binary; it is rebuilt from `VIDEO.md`.
@@ -134,5 +135,6 @@ tool or model name appears in the file.
 
 1. Re-export `presentation/slides.pdf` so the team slide moves to page 2 and the
    PDF order matches `slides.md`.
-2. Correct the clip length in `presentation/VIDEO.md` line 118 (2:46, not 1:25)
-   or trim the clip, whichever the defense uses.
+
+Resolved: the clip length is fixed at 2:05, the black bands are trimmed, and
+`presentation/VIDEO.md` now describes the committed file.
