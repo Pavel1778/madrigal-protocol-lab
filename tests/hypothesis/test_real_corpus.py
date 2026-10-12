@@ -46,42 +46,42 @@ DIAGNOSTICS = {
 }
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def _normalized(path: str):
     return normalize(Path(path))
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def _payload(path: str) -> str:
     capture = normalize(Path(path))
-    handle = tempfile.NamedTemporaryFile(suffix=".normalized.json", delete=False)
-    handle.close()
+    with tempfile.NamedTemporaryFile(suffix=".normalized.json", delete=False) as handle:
+        tmp = Path(handle.name)
     export_capture(
         capture.sessions,
-        Path(handle.name),
+        tmp,
         source_file=str(path),
         capture_id=capture.capture_id,
         streams=capture.streams,
     )
-    return Path(handle.name).read_text(encoding="utf-8")
+    return tmp.read_text(encoding="utf-8")
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def _capture(path: str):
     capture = normalize(Path(path))
-    handle = tempfile.NamedTemporaryFile(suffix=".normalized.json", delete=False)
-    handle.close()
+    with tempfile.NamedTemporaryFile(suffix=".normalized.json", delete=False) as handle:
+        tmp = Path(handle.name)
     export_capture(
         capture.sessions,
-        Path(handle.name),
+        tmp,
         source_file=str(path),
         capture_id=capture.capture_id,
         streams=capture.streams,
     )
     try:
-        return load_capture(handle.name)
+        return load_capture(str(tmp))
     finally:
-        Path(handle.name).unlink(missing_ok=True)
+        tmp.unlink(missing_ok=True)
 
 
 def _messages(name: str, rule_name: str):

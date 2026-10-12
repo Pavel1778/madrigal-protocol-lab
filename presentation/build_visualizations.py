@@ -153,7 +153,7 @@ def precision_v1_v2() -> None:
     counts = ["60 matched / 80 mismatched", "140 matched / 0 mismatched"]
     colors = [BAD, GOOD]
     bars = ax.bar(labels, values, width=0.5, color=colors, zorder=3)
-    for bar, value, count in zip(bars, values, counts):
+    for bar, value, count in zip(bars, values, counts, strict=False):
         center = bar.get_x() + bar.get_width() / 2
         ax.text(center, value + 0.05, f"{value:.2f}", ha="center", va="bottom",
                 fontsize=30, fontfamily="Tektur", color=TEXT)
@@ -168,7 +168,7 @@ def precision_v1_v2() -> None:
         "+80 контрпримеров\nустранено",
         xy=(1, 1.0), xytext=(0.42, 0.62),
         fontsize=11, fontfamily="Montserrat", color=GOOD, ha="center",
-        arrowprops=dict(arrowstyle="->", color=GOOD, linewidth=1.4),
+        arrowprops={"arrowstyle": "->", "color": GOOD, "linewidth": 1.4},
         zorder=6,
     )
     ax.set_ylim(0, 1.22)
@@ -188,7 +188,7 @@ def framing_payload() -> None:
     values = [10, 0, 0]
     y = np.arange(len(labels))[::-1]
     ax.barh(y, values, height=0.5, color=[HIGHLIGHT, ACCENT, ACCENT], zorder=3)
-    for yi, value in zip(y, values):
+    for yi, value in zip(y, values, strict=False):
         ax.text(value + 0.15, yi, f"{value} / 10", va="center", fontsize=16,
                 fontfamily="Tektur", color=TEXT)
     ax.set_yticks(y)
@@ -213,13 +213,13 @@ def coverage_donut() -> None:
     colors = [MATCHED, UNCOVERED, MISMATCHED, INCOMPLETE, AMBIGUOUS]
     present = [
         (value, label, color)
-        for value, label, color in zip(values, labels, colors)
+        for value, label, color in zip(values, labels, colors, strict=False)
         if value > 0
     ]
     sizes = [p[0] for p in present]
     wedges, _ = ax.pie(
         sizes, colors=[p[2] for p in present], startangle=90,
-        counterclock=False, wedgeprops=dict(width=0.34, edgecolor=BACKGROUND, linewidth=2),
+        counterclock=False, wedgeprops={"width": 0.34, "edgecolor": BACKGROUND, "linewidth": 2},
     )
     ax.text(0, 0.12, "90", ha="center", va="center", fontsize=34,
             fontfamily="Tektur", color=TEXT)
@@ -309,7 +309,7 @@ def tcp_framing() -> None:
         ax.text((x0 + x1) / 2, 0.9, label, ha="center", va="center",
                 fontsize=12, fontfamily="Tektur", color=TEXT, zorder=3)
     ax.annotate("", xy=(29.4, 0.9), xytext=(17.2, 0.9),
-                arrowprops=dict(arrowstyle="-|>", color=GRID, linewidth=1.4))
+                arrowprops={"arrowstyle": "-|>", "color": GRID, "linewidth": 1.4})
     ax.text(23.3, 0.98, "дальше", ha="center", va="bottom", fontsize=10,
             fontfamily="Montserrat", color=SECONDARY)
 
@@ -317,15 +317,15 @@ def tcp_framing() -> None:
     msgs = [(0, 5, "Сообщение A", MATCHED), (5, 17, "Сообщение B", AMBIGUOUS)]
     for x0, x1, label, color in msgs:
         ax.annotate("", xy=(x0 + 0.1, 0.18), xytext=(x1 - 0.1, 0.18),
-                    arrowprops=dict(arrowstyle="<->", color=color, linewidth=2.2))
+                    arrowprops={"arrowstyle": "<->", "color": color, "linewidth": 2.2})
         ax.text((x0 + x1) / 2, 0.34, label, ha="center", va="bottom",
                 fontsize=12, fontfamily="Tektur", color=color)
 
     ax.text(3.0, 0.02, "граница пакета", ha="center", va="top", fontsize=10,
             fontfamily="Montserrat", color=MISMATCHED)
     ax.annotate("", xy=(3.0, 0.16), xytext=(3.0, -0.02),
-                arrowprops=dict(arrowstyle="-", color=MISMATCHED, linewidth=1.6,
-                                linestyle=":"))
+                arrowprops={"arrowstyle": "-", "color": MISMATCHED, "linewidth": 1.6,
+                                "linestyle": ":"})
     ax.text(15.0, -0.62, "Границы пакета и границы сообщения — разные вещи",
             ha="center", va="center", fontsize=15, fontfamily="Tektur",
             color=TEXT)
@@ -365,7 +365,7 @@ def length_offset() -> None:
     ax.text(2.5, 1.68, "поле длины (offset 2, 2 байта)", ha="center", va="bottom",
             fontsize=11, fontfamily="Montserrat", color=MATCHED)
     ax.annotate("", xy=(2.5, 0.5), xytext=(0.5, 0.5),
-                arrowprops=dict(arrowstyle="-|>", color=SECONDARY, linewidth=1.8))
+                arrowprops={"arrowstyle": "-|>", "color": SECONDARY, "linewidth": 1.8})
     ax.text(1.5, 0.28, "+2 байта до длины", ha="center", va="top", fontsize=12,
             fontfamily="Tektur", color=TEXT)
     ax.text(4.75, -0.55,

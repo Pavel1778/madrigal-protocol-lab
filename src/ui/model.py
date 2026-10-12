@@ -153,7 +153,7 @@ class CaptureModel:
         self._diagnostics: list[Diagnostic] = self._read_diagnostics()
 
     @classmethod
-    def from_file(cls, path: str | Path) -> "CaptureModel":
+    def from_file(cls, path: str | Path) -> CaptureModel:
         """Load a capture model from normalized JSON or a raw pcap/pcapng.
 
         The format is decided from the file contents, not the name: a JSON
@@ -173,7 +173,7 @@ class CaptureModel:
             return cls(_capture_from_pcap(path), path=path)
         if _looks_like_json(head):
             try:
-                with open(path, "r", encoding="utf-8") as handle:
+                with open(path, encoding="utf-8") as handle:
                     raw = json.load(handle)
             except (OSError, json.JSONDecodeError) as exc:
                 raise CaptureModelError(f"{path} is not a valid normalized capture: {exc}") from exc
@@ -319,7 +319,7 @@ class RuleModel:
         self.errors: str | None = None
 
     @classmethod
-    def from_file(cls, path: str | Path) -> "RuleModel":
+    def from_file(cls, path: str | Path) -> RuleModel:
         """Load a rule model from a JSON or YAML rule file."""
         path = Path(path)
         text = path.read_text(encoding="utf-8")

@@ -116,7 +116,7 @@ class MessageResult:
         """Decoded values keyed by field name."""
         return {f.field_name: _jsonable(f.value) for f in self.fields}
 
-    def counterexample(self) -> "Counterexample | None":
+    def counterexample(self) -> Counterexample | None:
         """Return a counterexample for this message, or ``None`` if matched."""
         if self.status in (Status.MATCHED, Status.UNCOVERED, Status.UNKNOWN, Status.NOT_APPLICABLE):
             return None
@@ -262,18 +262,18 @@ def _decode_field(
     else:
         end = start + spec.size
 
-    base = dict(
-        message_offset=message.offset,
-        message_length=message.length,
-        field_name=field.name,
-        field_type=field.type,
-        field_offset=spec.offset,
-        field_length=max(end - start, 0),
-        hypothesis=field.hypothesis,
-        session_id=session_id,
-        direction=direction,
-        provenance_range=_provenance_for(stream, min(start, len(data)), min(end, len(data))),
-    )
+    base = {
+        "message_offset": message.offset,
+        "message_length": message.length,
+        "field_name": field.name,
+        "field_type": field.type,
+        "field_offset": spec.offset,
+        "field_length": max(end - start, 0),
+        "hypothesis": field.hypothesis,
+        "session_id": session_id,
+        "direction": direction,
+        "provenance_range": _provenance_for(stream, min(start, len(data)), min(end, len(data))),
+    }
 
     if spec.type == "padding":
         return FieldResult(value=None, status=Status.UNCOVERED, reason="padding", **base)
@@ -435,10 +435,7 @@ def _decode_value(field: FieldSpec, data: bytes, start: int, end: int, context: 
         return (raw >> (field.bit_offset or 0)) & ((1 << (field.bit_length or 0)) - 1)
     if field.type == "string":
         raw = data[start:end]
-        if field.terminated:
-            raw = raw.split(b"\x00", 1)[0]
-        else:
-            raw = raw.rstrip(b"\x00")
+        raw = raw.split(b"\x00", 1)[0] if field.terminated else raw.rstrip(b"\x00")
         return raw.decode(field.encoding, errors="replace")
     if field.type == "array":
         count = field.count

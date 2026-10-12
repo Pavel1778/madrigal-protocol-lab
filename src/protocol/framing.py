@@ -126,7 +126,7 @@ class FramingStrategy:
     messages: list[Message] = field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, spec: dict) -> "FramingStrategy":
+    def from_dict(cls, spec: dict) -> FramingStrategy:
         """Build a strategy from a rule ``framing`` object.
 
         Args:
@@ -199,10 +199,7 @@ def frame_stream(stream: bytes | DirectionalStream, strategy: FramingStrategy) -
         ...      "length_covers": "entire_message"}))[0].length
         2
     """
-    if isinstance(stream, DirectionalStream):
-        data = stream.data
-    else:
-        data = bytes(stream)
+    data = stream.data if isinstance(stream, DirectionalStream) else bytes(stream)
     if strategy.type == "length_prefixed":
         return _length_prefixed(data, strategy)
     if strategy.type == "fixed_size":

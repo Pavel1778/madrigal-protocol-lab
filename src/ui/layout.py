@@ -42,7 +42,7 @@ class FlowLayout(QtWidgets.QLayout):
 
     # -- QLayout plumbing --------------------------------------------------
 
-    def addItem(self, item: QtWidgets.QLayoutItem) -> None:  # noqa: N802 - Qt name
+    def addItem(self, item: QtWidgets.QLayoutItem) -> None:
         """Append *item* to the flow order."""
         self._items.append(item)
 
@@ -50,40 +50,40 @@ class FlowLayout(QtWidgets.QLayout):
         """Return the number of items in the flow."""
         return len(self._items)
 
-    def itemAt(self, index: int) -> QtWidgets.QLayoutItem | None:  # noqa: N802 - Qt name
+    def itemAt(self, index: int) -> QtWidgets.QLayoutItem | None:
         """Return the item at *index*, or ``None`` when out of range."""
         if 0 <= index < len(self._items):
             return self._items[index]
         return None
 
-    def takeAt(self, index: int) -> QtWidgets.QLayoutItem | None:  # noqa: N802 - Qt name
+    def takeAt(self, index: int) -> QtWidgets.QLayoutItem | None:
         """Remove and return the item at *index*, or ``None`` when out of range."""
         if 0 <= index < len(self._items):
             return self._items.pop(index)
         return None
 
-    def expandingDirections(self) -> QtCore.Qt.Orientation:  # noqa: N802 - Qt name
+    def expandingDirections(self) -> QtCore.Qt.Orientation:
         """Return no expanding direction; the flow grows downward only."""
         return QtCore.Qt.Orientation(0)
 
-    def hasHeightForWidth(self) -> bool:  # noqa: N802 - Qt name
+    def hasHeightForWidth(self) -> bool:
         """Report that the height depends on the available width."""
         return True
 
-    def heightForWidth(self, width: int) -> int:  # noqa: N802 - Qt name
+    def heightForWidth(self, width: int) -> int:
         """Return the height the flow needs at *width*."""
         return self._do_layout(QtCore.QRect(0, 0, width, 0), test_only=True)
 
-    def setGeometry(self, rect: QtCore.QRect) -> None:  # noqa: N802 - Qt name
+    def setGeometry(self, rect: QtCore.QRect) -> None:
         """Arrange the items inside *rect*."""
         super().setGeometry(rect)
         self._do_layout(rect, test_only=False)
 
-    def sizeHint(self) -> QtCore.QSize:  # noqa: N802 - Qt name
+    def sizeHint(self) -> QtCore.QSize:
         """Return the preferred size, which is the minimum."""
         return self.minimumSize()
 
-    def minimumSize(self) -> QtCore.QSize:  # noqa: N802 - Qt name
+    def minimumSize(self) -> QtCore.QSize:
         """Return the size of a single line holding the widest item."""
         size = QtCore.QSize()
         for item in self._items:

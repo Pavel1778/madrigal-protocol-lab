@@ -60,10 +60,7 @@ def _crc8(data: bytes, polynomial: int = 0x07) -> int:
     for byte in data:
         crc ^= byte
         for _ in range(8):
-            if crc & 0x80:
-                crc = ((crc << 1) ^ polynomial) & 0xFF
-            else:
-                crc = (crc << 1) & 0xFF
+            crc = (crc << 1 ^ polynomial) & 255 if crc & 128 else crc << 1 & 255
     return crc
 
 
@@ -72,8 +69,5 @@ def _crc16(data: bytes, polynomial: int = 0x1021) -> int:
     for byte in data:
         crc ^= byte << 8
         for _ in range(8):
-            if crc & 0x8000:
-                crc = ((crc << 1) ^ polynomial) & 0xFFFF
-            else:
-                crc = (crc << 1) & 0xFFFF
+            crc = (crc << 1 ^ polynomial) & 65535 if crc & 32768 else crc << 1 & 65535
     return crc

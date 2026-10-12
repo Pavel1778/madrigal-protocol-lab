@@ -8,10 +8,9 @@ from src.hypothesis.journal import (
     parse_journal,
     parse_timestamp,
 )
-from src.protocol.engine import MessageResult
 from src.hypothesis.status import Status
+from src.protocol.engine import MessageResult
 from src.protocol.stream import DirectionalStream, Hole
-
 
 JOURNAL = """\
 # turns recorded during the session

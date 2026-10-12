@@ -14,14 +14,14 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-import pytest  # noqa: E402
+import pytest
 
 try:
-    from PySide6 import QtWidgets  # noqa: E402
+    from PySide6 import QtWidgets
 
-    from src.ui import theme  # noqa: E402
-    from src.ui.main_window import MainWindow  # noqa: E402
-    from src.ui.model import CaptureModel, CaptureModelError  # noqa: E402
+    from src.ui import theme
+    from src.ui.main_window import MainWindow
+    from src.ui.model import CaptureModel, CaptureModelError
 except ImportError as exc:  # pragma: no cover - depends on the runner
     pytest.skip(f"Qt runtime unavailable: {exc}", allow_module_level=True)
 
@@ -35,7 +35,7 @@ PCAPNG = REPO_ROOT / "tests" / "corpus" / "real" / "research" / "02_variations.p
 def app():
     try:
         application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
-    except Exception as exc:  # noqa: BLE001 - a missing Qt runtime is a skip
+    except Exception as exc:
         pytest.skip(f"Qt platform could not start: {exc}")
     theme.load_fonts(application)
     application.setStyleSheet(theme.build_stylesheet())

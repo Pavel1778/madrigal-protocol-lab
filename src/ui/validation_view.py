@@ -188,7 +188,7 @@ class ValidationView(QtWidgets.QWidget):
             return
         try:
             parse_rule(load_rule_text(text))
-        except Exception as exc:  # noqa: BLE001 - JSON and YAML raise different types
+        except Exception as exc:
             self.set_rule_status(self.tr("invalid rule: {0}").format(exc), error=True)
             self.ruleValidityChanged.emit(False, str(exc))
             return
@@ -216,7 +216,7 @@ class ValidationView(QtWidgets.QWidget):
             start -= 1
         return text[start:position]
 
-    def eventFilter(self, obj, event):  # noqa: N802 - Qt name
+    def eventFilter(self, obj, event):
         """Offer a field-type completion while the rule editor is typed into.
 
         The completer lives on the panel but the keystrokes go to the editor, so

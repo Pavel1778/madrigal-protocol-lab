@@ -55,7 +55,7 @@ def test_field_sizes():
 def test_round_trip_to_dict():
     rule = parse_rule(_sample_rule())
     again = parse_rule(rule.to_dict())
-    assert [f.equals(g) for f, g in zip(rule.fields, again.fields)] == [True, True, True, True]
+    assert [f.equals(g) for f, g in zip(rule.fields, again.fields, strict=False)] == [True, True, True, True]
 
 
 def test_bump_version():

@@ -93,7 +93,7 @@ def _write_artifact(name: str, actual: QtGui.QImage, metrics: dict[str, float]) 
         b = Image.open(BASELINE_DIR / name).convert("RGBA")
         if a.size == b.size:
             ImageChops.difference(a, b).save(diff_path)
-    except Exception:  # noqa: BLE001 - a missing Pillow only drops the diff image
+    except Exception:
         pass
     metrics_path = ARTIFACT_DIR / f"metrics_{name}.txt"
     metrics_path.write_text(

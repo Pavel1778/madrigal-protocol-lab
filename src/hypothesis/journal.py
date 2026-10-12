@@ -152,7 +152,7 @@ def parse_timestamp(text: str) -> float:
     except ValueError as exc:
         raise JournalError(f"unrecognised timestamp {text!r}") from exc
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=_dt.timezone.utc)
+        parsed = parsed.replace(tzinfo=_dt.UTC)
     return parsed.timestamp()
 
 
@@ -222,9 +222,9 @@ def load_journal(path: str) -> list[JournalEntry]:
         OSError: If the file cannot be read.
     """
     if Path(path).suffix.lower() == ".csv":
-        with open(path, "r", encoding="utf-8", newline="") as handle:
+        with open(path, encoding="utf-8", newline="") as handle:
             return parse_journal_csv(handle.read())
-    with open(path, "r", encoding="utf-8") as handle:
+    with open(path, encoding="utf-8") as handle:
         return parse_journal(handle.read())
 
 

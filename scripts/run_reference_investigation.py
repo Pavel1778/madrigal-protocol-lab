@@ -83,10 +83,11 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _load_capture_payload(capture_path: Path) -> dict:
-    from src.capture.export import export_capture
-    from src.capture.pipeline import normalize
     import json
     import tempfile
+
+    from src.capture.export import export_capture
+    from src.capture.pipeline import normalize
 
     capture = normalize(capture_path)
     with tempfile.TemporaryDirectory() as directory:
@@ -119,18 +120,18 @@ def _framing_section(payloads: dict) -> str:
     from src.protocol.stream import capture_from_dict
 
     lines = [
-        "The length field is at offset 2, two bytes, big-endian. What it counts "
+        ("The length field is at offset 2, two bytes, big-endian. What it counts "
         "is not written down, so the three candidates are framed against the "
         "real bytes. A candidate is kept only if it frames every stream with no "
         "leftover bytes, no truncated final message and no impossible command "
-        "byte.",
+        "byte."),
         "",
         "| capture | stream | bytes | "
         + " | ".join(FRAMING_CANDIDATES)
         + " |",
         "| --- | --- | --- | " + " | ".join("---" for _ in FRAMING_CANDIDATES) + " |",
     ]
-    verdicts: dict[str, int] = {name: 0 for name in FRAMING_CANDIDATES}
+    verdicts: dict[str, int] = dict.fromkeys(FRAMING_CANDIDATES, 0)
     total_streams = 0
     for name, payload in payloads.items():
         capture = capture_from_dict(payload)
@@ -169,10 +170,10 @@ def _framing_section(payloads: dict) -> str:
     if winner:
         lines += [
             "",
-            f"Only `{'`, `'.join(winner)}` frames all {total_streams} streams "
+            (f"Only `{'`, `'.join(winner)}` frames all {total_streams} streams "
             "with no leftover bytes and no truncated message. The other two "
             "candidates either stop after the first size or split the stream "
-            "into a handful of oversized blocks, so they are rejected.",
+            "into a handful of oversized blocks, so they are rejected."),
         ]
     else:
         lines += ["", "No candidate framed every stream; see the table."]
@@ -240,12 +241,12 @@ def _journal_section(payloads: dict, rule, journal_path: Path) -> str:
 
     entries = load_journal(str(journal_path))
     lines = [
-        f"Journal: {len(entries)} entries; the timestamp is the capture time of "
+        (f"Journal: {len(entries)} entries; the timestamp is the capture time of "
         "the request packet. Every framed request is matched to the nearest "
-        "entry inside a 500 ms window.",
+        "entry inside a 500 ms window."),
         "",
-        "| capture | direction | requests | correlated | unmatched requests | "
-        "unmatched entries | target=parameter | value=result |",
+        ("| capture | direction | requests | correlated | unmatched requests | "
+        "unmatched entries | target=parameter | value=result |"),
         "| --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for name, payload in payloads.items():
@@ -286,12 +287,12 @@ def _journal_section(payloads: dict, rule, journal_path: Path) -> str:
             )
     lines += [
         "",
-        "Every request lands on a journal entry at the same timestamp, and the "
+        ("Every request lands on a journal entry at the same timestamp, and the "
         "`target` field resolves to the parameter the journal names for every "
         "correlated request. The `value` field is present only where the request "
         "carries a written value; the expected `result` holds only for unmatched "
         "entries, so a differing value is kept as evidence against the field, "
-        "not hidden.",
+        "not hidden."),
     ]
     return "\n".join(lines)
 
@@ -312,9 +313,9 @@ def _alternatives_section(rule, payload: dict) -> str:
     if not report.fields:
         return "No field is marked as a hypothesis."
     lines = [
-        "Fields marked `hypothesis: true` are named on a guess. Each is scored "
+        ("Fields marked `hypothesis: true` are named on a guess. Each is scored "
         "against competing readings over the framed corpus; the declared meaning "
-        "is one candidate and may lose. Score is support / (support + contradict).",
+        "is one candidate and may lose. Score is support / (support + contradict)."),
         "",
     ]
     for field in report.fields:
@@ -357,9 +358,9 @@ def _version_section(report_v1, report_v2, revised: int, comparison) -> str:
         ("counterexample_density", m1.counterexample_density, m2.counterexample_density),
     )
     lines = [
-        f"Rule v{report_v1.rule_version} and rule v{revised} are different rules over the "
+        (f"Rule v{report_v1.rule_version} and rule v{revised} are different rules over the "
         "same bytes: nothing about the capture changed, only the description of "
-        "it. The counts below come from re-running both versions.",
+        "it. The counts below come from re-running both versions."),
         "",
         f"| metric | v{report_v1.rule_version} | v{revised} | delta |",
         "| --- | --- | --- | --- |",
@@ -373,9 +374,9 @@ def _version_section(report_v1, report_v2, revised: int, comparison) -> str:
         f"Introduced counterexamples: {len(comparison.introduced)}.",
         f"Coverage delta: {round(m2.coverage - m1.coverage, 6):+}.",
         "",
-        "A rule change never rewrites the bytes it was checked against. The v"
+        ("A rule change never rewrites the bytes it was checked against. The v"
         f"{report_v1.rule_version} result stays on disk with its own rule version; a reader "
-        "sees which version produced which verdict.",
+        "sees which version produced which verdict."),
     ]
     return "\n".join(lines)
 
@@ -389,10 +390,10 @@ def _boundary_section(rule, payload: dict, name: str) -> str:
     capture = capture_from_dict(payload)
     strategy = FramingStrategy.from_dict(rule.framing)
     lines = [
-        f"Rule v{rule.rule_version} applied to {name}, a capture produced by a real "
+        (f"Rule v{rule.rule_version} applied to {name}, a capture produced by a real "
         "TCP stack with a deliberately different layout (little-endian length, a "
         "transaction id byte, commands 0x21/0x22/0x23). The rule was never fitted "
-        "to this traffic.",
+        "to this traffic."),
         "",
     ]
     framed_ok = 0
@@ -422,10 +423,10 @@ def _boundary_section(rule, payload: dict, name: str) -> str:
         "Counts: " + ", ".join(f"{k}={v}" for k, v in report.counts().items()),
         f"Counterexamples: {len(report.contradictions)}.",
         "",
-        "The big-endian length and the different command set mean the rule does "
+        ("The big-endian length and the different command set mean the rule does "
         "not transfer: its matches here are coincidental, not evidence. This is "
         "the boundary of the rule's applicability, and it is stated rather than "
-        "hidden by re-tuning until something matches.",
+        "hidden by re-tuning until something matches."),
     ]
     return "\n".join(lines)
 
@@ -433,16 +434,16 @@ def _boundary_section(rule, payload: dict, name: str) -> str:
 def _limitations_section() -> str:
     return "\n".join(
         [
-            "- The rule describes the request direction only; responses are "
-            "framed but not interpreted field by field.",
-            "- Field meanings marked `hypothesis: true` (the enum `target`, the "
-            "payload `value`) remain assumptions. Matching is not proof.",
-            "- The framing question was settled against the corpus; a stream "
-            "whose length field counts something else would need a new rule.",
-            "- Ambiguity and gap diagnostics are surfaced, never zero-filled, so "
-            "a message over a gap is reported `incomplete` rather than guessed.",
-            "- The synthetic live capture shares no byte layout with the corpus, "
-            "so nothing here is claimed to generalise to it.",
+            ("- The rule describes the request direction only; responses are "
+            "framed but not interpreted field by field."),
+            ("- Field meanings marked `hypothesis: true` (the enum `target`, the "
+            "payload `value`) remain assumptions. Matching is not proof."),
+            ("- The framing question was settled against the corpus; a stream "
+            "whose length field counts something else would need a new rule."),
+            ("- Ambiguity and gap diagnostics are surfaced, never zero-filled, so "
+            "a message over a gap is reported `incomplete` rather than guessed."),
+            ("- The synthetic live capture shares no byte layout with the corpus, "
+            "so nothing here is claimed to generalise to it."),
         ]
     )
 
@@ -480,8 +481,8 @@ def main(argv=None) -> int:
         f"- Rule v{rule_v1.rule_version} scope: {rule_v1.direction or 'both directions'}.",
         f"- Messages framed: {report_v1.total}.",
         "- Counts: " + ", ".join(f"{k}={v}" for k, v in report_v1.counts().items()),
-        "- First bytes of the primary capture, as the observation the layout was "
-        "read from:",
+        ("- First bytes of the primary capture, as the observation the layout was "
+        "read from:"),
         "",
         "```",
     ]
@@ -550,8 +551,8 @@ def main(argv=None) -> int:
         sections.append(
             (
                 "Refined rule",
-                f"The refined rule is written to `{rule_v2_path.name}` so it can be "
-                "applied again by the CLI without re-deriving it.",
+                (f"The refined rule is written to `{rule_v2_path.name}` so it can be "
+                "applied again by the CLI without re-deriving it."),
             )
         )
 
@@ -594,10 +595,10 @@ def main(argv=None) -> int:
     )
 
     open_questions = [
-        "- Field meanings marked `hypothesis: true` remain assumptions; a rule "
-        "that matches is not proof.",
-        "- Behaviour outside the tested captures is unknown; the rule is only "
-        "confirmed within the tested domain.",
+        ("- Field meanings marked `hypothesis: true` remain assumptions; a rule "
+        "that matches is not proof."),
+        ("- Behaviour outside the tested captures is unknown; the rule is only "
+        "confirmed within the tested domain."),
     ]
     sections.append(("Open questions", "\n".join(open_questions)))
     sections.append(("Limitations", _limitations_section()))

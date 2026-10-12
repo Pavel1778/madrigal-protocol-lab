@@ -67,11 +67,11 @@ OUTDATED = current().status_outdated
 HYPOTHESIS = current().hypothesis
 
 __all__ = [
-    "APPLICATION",
     "ACCENT",
     "ACCENT_GRADIENT",
     "AMBIGUOUS",
     "AMBIGUOUS_TEXT",
+    "APPLICATION",
     "BACKGROUND",
     "BODY_FAMILY",
     "BORDER",
@@ -99,9 +99,9 @@ __all__ = [
     "TEXT",
     "TEXT_SECONDARY",
     "THEMES",
+    "UNCOVERED",
     "Theme",
     "ThemeManager",
-    "UNCOVERED",
     "apply_to_app",
     "body_font",
     "build_palette",

@@ -17,14 +17,14 @@ from __future__ import annotations
 import logging
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 from src.capture.parser import Packet
 
 logger = logging.getLogger(__name__)
 
 
-class Direction(str, Enum):
+class Direction(StrEnum):
     """The two directions of a session."""
 
     A_TO_B = "A_to_B"

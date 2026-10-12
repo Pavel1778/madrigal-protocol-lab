@@ -14,10 +14,10 @@ import pytest
 pytest.importorskip("fastapi", reason="web extra is not installed")
 pytest.importorskip("httpx", reason="web test client is not installed")
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from src.web.app import create_app  # noqa: E402
-from src.web.engine import WebEngine, WebEngineError  # noqa: E402
+from src.web.app import create_app
+from src.web.engine import WebEngine, WebEngineError
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CAPTURE = REPO_ROOT / "tests" / "corpus" / "reference_export" / "corpus_capture_01.normalized.json"

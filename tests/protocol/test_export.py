@@ -81,7 +81,7 @@ def test_generated_parser_matches_engine_values():
     parsed = module.parse_stream(data, "s1", "A_to_B")
 
     assert len(parsed) == len(engine_messages)
-    for got, expected in zip(parsed, engine_messages):
+    for got, expected in zip(parsed, engine_messages, strict=False):
         assert got["offset"] == expected.offset
         assert got["length"] == expected.length
         assert got["fields"] == expected.field_values()

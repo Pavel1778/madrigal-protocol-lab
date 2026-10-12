@@ -33,12 +33,12 @@ SLIDE_W = Inches(13.333)
 SLIDE_H = Inches(7.5)
 
 PALETTES = {
-    "Тёмная": dict(bg=RGBColor(0x13, 0x15, 0x16), surface=RGBColor(0x1D, 0x1D, 0x1D),
-                   text=RGBColor(0xED, 0xED, 0xED), secondary=RGBColor(0xB8, 0xB8, 0xB8),
-                   accent=RGBColor(0xA2, 0x39, 0x1D)),
-    "Светлая": dict(bg=RGBColor(0xFA, 0xFA, 0xFA), surface=RGBColor(0xFF, 0xFF, 0xFF),
-                    text=RGBColor(0x16, 0x18, 0x1A), secondary=RGBColor(0x4A, 0x4A, 0x4A),
-                    accent=RGBColor(0xB7, 0x30, 0x1A)),
+    "Тёмная": {"bg": RGBColor(0x13, 0x15, 0x16), "surface": RGBColor(0x1D, 0x1D, 0x1D),
+                   "text": RGBColor(0xED, 0xED, 0xED), "secondary": RGBColor(0xB8, 0xB8, 0xB8),
+                   "accent": RGBColor(0xA2, 0x39, 0x1D)},
+    "Светлая": {"bg": RGBColor(0xFA, 0xFA, 0xFA), "surface": RGBColor(0xFF, 0xFF, 0xFF),
+                    "text": RGBColor(0x16, 0x18, 0x1A), "secondary": RGBColor(0x4A, 0x4A, 0x4A),
+                    "accent": RGBColor(0xB7, 0x30, 0x1A)},
 }
 
 MEMBERS = [
@@ -89,7 +89,7 @@ def _slide(prs, palette, title):
     _rect(slide, 0, 0, SLIDE_W, SLIDE_H, palette["bg"])
     _rect(slide, 0, 0, Inches(0.08), SLIDE_H, palette["accent"])
 
-    box, tf = _text(slide, Inches(0.9), Inches(0.6), Inches(11.5), Inches(0.9))
+    _box, tf = _text(slide, Inches(0.9), Inches(0.6), Inches(11.5), Inches(0.9))
     _line(tf, title, 34, palette["text"], bold=True, font=F_HEAD, first=True)
 
     _, tf2 = _text(slide, Inches(0.9), Inches(1.35), Inches(11.5), Inches(0.4))

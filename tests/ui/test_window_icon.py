@@ -12,12 +12,12 @@ import xml.dom.minidom
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-import pytest  # noqa: E402
+import pytest
 
 try:
-    from PySide6 import QtSvg, QtWidgets  # noqa: E402
+    from PySide6 import QtSvg, QtWidgets
 
-    from src.ui.main_window import (  # noqa: E402
+    from src.ui.main_window import (
         APP_DESKTOP_FILE,
         APP_ICON,
         MainWindow,

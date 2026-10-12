@@ -92,8 +92,8 @@ def _diagnostics(path: Path, *, verify_checksums: bool = False) -> list[str]:
 
 
 def _rule_totals(rule_name: str, payload: dict) -> dict:
-    from src.protocol.rule import load_rule
     from src.hypothesis.corpus import verify_on_corpus
+    from src.protocol.rule import load_rule
 
     rule = load_rule(str(EXAMPLES / rule_name))
     report = verify_on_corpus(rule, _streams(payload))
@@ -101,8 +101,8 @@ def _rule_totals(rule_name: str, payload: dict) -> dict:
 
 
 def _refinement(payload: dict) -> tuple[dict, dict, list]:
-    from src.protocol.rule import load_rule
     from src.hypothesis.corpus import verify_on_corpus
+    from src.protocol.rule import load_rule
 
     naive = verify_on_corpus(load_rule(str(EXAMPLES / REQUEST_V1)), _streams(payload))
     refined = verify_on_corpus(load_rule(str(EXAMPLES / REQUEST_V2)), _streams(payload))
@@ -184,17 +184,17 @@ def build_report() -> str:
     sections = [
         "# Investigation of the supplied captures",
         "",
-        "The organizer's capture set is normalized with the same path the "
+        ("The organizer's capture set is normalized with the same path the "
         "application uses (`src/capture/pipeline.py`) and read back through the "
         "capture contract, so these numbers describe the shipped files and the "
-        "shipped code, not a fixture.",
+        "shipped code, not a fixture."),
         "",
         "## 1. Research captures",
         "",
-        "The request rule (`examples/thermostand_request_v2.json`) and the "
+        ("The request rule (`examples/thermostand_request_v2.json`) and the "
         "response rule (`examples/thermostand_response_v2.json`) are applied to "
         "every research capture. `not_applicable` counts the messages the other "
-        "direction carries, so a clean capture reports only `matched`.",
+        "direction carries, so a clean capture reports only `matched`."),
         "",
         "Requests:",
         "",
@@ -210,18 +210,18 @@ def build_report() -> str:
             ["capture", "matched", "mismatched", "incomplete", "not_applicable"],
         ),
         "",
-        "No message is mismatched, incomplete or ambiguous in any research "
+        ("No message is mismatched, incomplete or ambiguous in any research "
         "capture. The two exceptions in the response stream of the variations "
         "capture are error replies (`value_out_of_range`, `malformed_body`): "
         "they carry a one-byte body, so the configuration fields after the "
         "status are correctly out of the message and the fields that belong to "
-        "a successful reply are not applied.",
+        "a successful reply are not applied."),
         "",
         "## 2. Refinement from a counterexample",
         "",
-        "The first reading (`examples/thermostand_request_v1.json`) assumes the "
+        ("The first reading (`examples/thermostand_request_v1.json`) assumes the "
         "length field counts the payload only and that a message starts at the "
-        "first byte of the length field. Applied to the configuration capture:",
+        "first byte of the length field. Applied to the configuration capture:"),
         "",
         _table(
             [
@@ -245,35 +245,35 @@ def build_report() -> str:
         "",
         _table(counter_rows, ["status", "field", "reason"]),
         "",
-        "The fix is a four-byte header bias on the length framing, which v2 "
+        ("The fix is a four-byte header bias on the length framing, which v2 "
         "carries as `length_bias`. The counterexamples are the evidence: the "
         "first message under v1 is framed four bytes short, so the magic is read "
-        "at the wrong offset and the counter lands outside the message.",
+        "at the wrong offset and the counter lands outside the message."),
         "",
         "## 3. Diagnostic captures",
         "",
-        "Each diagnostic capture is built to exercise one failure mode. The "
-        "diagnostics below are what the reassembler actually reports.",
+        ("Each diagnostic capture is built to exercise one failure mode. The "
+        "diagnostics below are what the reassembler actually reports."),
         "",
         _table(diagnostic_rows, ["capture", "exercises", "diagnostics reported"]),
         "",
-        f"Checksum verification is off by default, so "
+        (f"Checksum verification is off by default, so "
         f"`07_checksum_offload.pcap` reports `{', '.join(offload_default) or 'none'}`. "
         f"With `--verify-checksums` it reports "
-        f"`{', '.join(offload_checked) or 'none'}`.",
+        f"`{', '.join(offload_checked) or 'none'}`."),
         "",
         "## 4. Journal correlation",
         "",
-        f"The action journal holds {len(entries)} entries. The decoded requests "
-        f"correlate as follows: {correlation.summary()}",
+        (f"The action journal holds {len(entries)} entries. The decoded requests "
+        f"correlate as follows: {correlation.summary()}"),
         "",
-        "The correlation ties each request message to the operator action it "
+        ("The correlation ties each request message to the operator action it "
         "performs and confirms the decoded parameters against the recorded "
-        "values, so a field name is not merely a plausible label.",
+        "values, so a field name is not merely a plausible label."),
         "",
         "## 5. Where the set comes from",
         "",
-        "The composition and the data origin are recorded by the organizer in "
+        ("The composition and the data origin are recorded by the organizer in "
         "`tests/corpus/real/dataset_manifest.json`: the expected session and "
         "action counts per research capture, and the statement that the "
         "application bytes come from a real client/simulator TCP socket exchange "
@@ -281,7 +281,7 @@ def build_report() -> str:
         "generated. The pipeline reproduces the recorded session counts (2, 1, "
         "1, 1) exactly, and the eight diagnostic captures each carry one "
         "capture or integrity condition. The full analysis is in "
-        "`docs/REAL_CORPUS_ANALYSIS.md`.",
+        "`docs/REAL_CORPUS_ANALYSIS.md`."),
         "",
     ]
     return "\n".join(sections)

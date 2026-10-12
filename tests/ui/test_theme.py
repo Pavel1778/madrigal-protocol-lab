@@ -12,13 +12,13 @@ import os
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-import pytest  # noqa: E402
+import pytest
 
 try:
-    from PySide6 import QtCore, QtGui, QtWidgets  # noqa: E402
+    from PySide6 import QtCore, QtGui, QtWidgets
 
-    from src.ui import theme  # noqa: E402
-    from src.ui.model import UNCOVERED, ByteAnnotation  # noqa: E402
+    from src.ui import theme
+    from src.ui.model import UNCOVERED, ByteAnnotation
 except ImportError as exc:  # pragma: no cover - depends on the runner
     pytest.skip(f"Qt runtime unavailable: {exc}", allow_module_level=True)
 

@@ -112,10 +112,10 @@ class FieldSpec:
     expression: dict | None = None
     # conditional
     condition: dict | None = None
-    inner: "FieldSpec | None" = None
+    inner: FieldSpec | None = None
 
     @classmethod
-    def from_dict(cls, raw: dict) -> "FieldSpec":
+    def from_dict(cls, raw: dict) -> FieldSpec:
         """Build a field spec from its declarative mapping.
 
         Args:
@@ -363,7 +363,7 @@ class FieldSpec:
             raise RuleError(f"field {self.name!r} has no fixed size")
         return size
 
-    def equals(self, other: "FieldSpec") -> bool:
+    def equals(self, other: FieldSpec) -> bool:
         """Whether two specs serialise identically."""
         return self.to_dict() == other.to_dict()
 
@@ -403,7 +403,7 @@ class Rule:
             "fields": [f.to_dict() for f in self.fields],
         }
 
-    def bump_version(self, **changes: object) -> "Rule":
+    def bump_version(self, **changes: object) -> Rule:
         """Return a copy of this rule with a new ``rule_version``.
 
         Args:
@@ -509,7 +509,7 @@ def load_rule(path: str) -> Rule:
         RuleError: If the file cannot be parsed as a rule.
         OSError: If the file cannot be read.
     """
-    with open(path, "r", encoding="utf-8") as handle:
+    with open(path, encoding="utf-8") as handle:
         text = handle.read()
     return parse_rule(load_rule_text(text))
 
