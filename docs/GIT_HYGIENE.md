@@ -25,11 +25,10 @@ done
 
 The ignore file covers the environments and tools in use: `.venv/`,
 `__pycache__/`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `build/`,
-`dist/`, and editor droppings, plus the agent scratch directories `.agent-cache/`
-and `.openhands/`. The Slidev build output under `presentation/`
-(`node_modules/`, `dist/`, `.vite-cache/`) is ignored too. Capture files
-(`*.pcap`, `*.pcapng`) are ignored by default, with the fixtures, corpus, and
-reference exports re-included explicitly.
+`dist/`, editor droppings, and the local scratch directories. The Slidev build
+output under `presentation/` (`node_modules/`, `dist/`, `.vite-cache/`) is
+ignored too. Capture files (`*.pcap`, `*.pcapng`) are ignored by default, with
+the fixtures, corpus, and reference exports re-included explicitly.
 
 Large generated binaries stay out of history: `presentation/video.mp4` is
 ignored and rebuilt from `presentation/VIDEO.md`. The committed artefacts
