@@ -85,3 +85,28 @@ with dark text, the dark set uses muted fills with light text. The names are
 - No friendly tone.
 - Status colours are used for statuses only, never as decoration.
 - No jargon humor.
+
+## Brand confirmation
+
+The palette and the two typefaces are not a guess: they match the public
+website of the case owner, as saved from the live page.
+
+| Item | Value (as shipped) | Value on the site |
+| --- | --- | --- |
+| Background | `#141210` | `#131516` |
+| Panel | `#1C1917` | `#1D1D1D` |
+| Light card | `#E8E8E8` | `#E8E8E8` |
+| Accent | `#7A1224` | `#6D071F` |
+| Accent gradient | `#4A0A16` → `#6C1020` → `#A8391F` | `#410913` → `#610D1C` → `#A2391D` |
+| Text | `#E6E1DB` | `#E0E0E0` |
+| Secondary text | `#A8A099` | `#9F9F9F` |
+| Headings | Tektur (500, 600) | Tektur (500, 600) |
+| Body | Montserrat (400, 600) | Montserrat (400, 600) |
+
+The shipped tokens are perceptually warmer than the site values on purpose, so
+the interface reads as one material rather than as flat web colours; the hue and
+the accent are the same. The `.ttf` files live in `assets/fonts/`. The site logo,
+its square mark and three abstract background textures are kept under
+`presentation/assets/`; see `presentation/assets/brand/README.md`. No portrait of
+a person from the site is included.
+
