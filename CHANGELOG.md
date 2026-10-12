@@ -138,6 +138,12 @@ is the merge of PR #14 (`f637644`); the entries below are the work that followed
 - The deck was rebuilt as editable native PPTX text with click build-ins, then
   reduced to nineteen slides with varied layouts and no overflow (PR #16,
   PR #21, PR #25).
+- The final pass trimmed the animations to at most three click build-ins per
+  slide and a plain fade transition everywhere; the cover, the section
+  dividers, the recording slide and the closing slide are now static. The
+  recording slide's play badge moved to a 40 px marker in the bottom-right
+  corner, the metric note states that the 4 GiB budget is on a 16 GiB machine,
+  and the PPTX captions and labels were raised to 14 pt.
 - The defense script was split into a 5-minute and a 10-minute route with
   timings derived from the spoken text (PR #24).
 - The test counts across the documentation were refreshed to the merged
