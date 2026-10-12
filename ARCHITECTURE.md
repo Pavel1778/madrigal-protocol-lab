@@ -105,8 +105,10 @@ See `docs/CONTRACT.md`. The three formats are:
 
 ## Limits and what is not implemented
 
-- **IPv6** is not reassembled. Frames are counted and reported as
-  `ipv6_ignored`; their payload never reaches a stream.
+- **IPv6** is parsed. TCP sessions over IPv6 yield streams like IPv4, and IPv6
+  TCP checksums are verified with `--verify-checksums`. Only IPv6
+  fragmentation is not reassembled: a fragment is reported as `ip_fragment`
+  and skipped.
 - **IP fragmentation** is not reassembled. A fragment is reported as
   `ip_fragment` and skipped.
 - **Encrypted traffic** is not decrypted. TLS and anything else above TCP
