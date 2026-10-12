@@ -23,6 +23,7 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 
+from presentation.fonts import collect_text, embed_brand_fonts
 from presentation.reproducible import freeze_zip
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -359,22 +360,24 @@ def build_slide(prs, spec):
         col_w = (SLIDE_W - 2 * MARGIN - Inches(0.5)) / 2
         for i, (name, role, handle, qr, avatar) in enumerate(spec["members"]):
             x = MARGIN + i * (col_w + Inches(0.5))
-            panel(slide, x, BODY_TOP, col_w, Inches(2.6))
+            # 2.7in clears the 180px avatar (bottom at 2.25) with a margin.
+            panel(slide, x, BODY_TOP, col_w, Inches(2.7))
             steps.append((slide.shapes[-1].shape_id, "fade"))
             picture(slide, f"public/{avatar}", x + Inches(0.3),
                     BODY_TOP + Inches(0.4), Inches(1.8), Inches(1.8))
             tx = x + Inches(2.35)
-            _, tf = textbox(slide, tx, BODY_TOP + Inches(0.45),
+            _, tf = textbox(slide, tx, BODY_TOP + Inches(0.5),
                             col_w - Inches(3.6), Inches(0.6))
-            add_runs(tf.paragraphs[0], name, 24, TEXT, bold=True, font=F_HEAD)
-            _, tf = textbox(slide, tx, BODY_TOP + Inches(1.05),
+            add_runs(tf.paragraphs[0], name, 21, TEXT, bold=True, font=F_HEAD)
+            _, tf = textbox(slide, tx, BODY_TOP + Inches(1.1),
                             col_w - Inches(3.6), Inches(0.5))
             add_runs(tf.paragraphs[0], role, 14, SECONDARY)
-            _, tf = textbox(slide, tx, BODY_TOP + Inches(1.55),
+            _, tf = textbox(slide, tx, BODY_TOP + Inches(1.6),
                             col_w - Inches(3.6), Inches(0.4))
             add_runs(tf.paragraphs[0], handle, 14, ACCENT, font=F_MONO)
-            picture(slide, f"public/{qr}", x + col_w - Inches(1.5),
-                    BODY_TOP + Inches(0.55), Inches(1.2), Inches(1.2))
+            # 80px QR, aligned with the top of the avatar.
+            picture(slide, f"public/{qr}", x + col_w - Inches(1.15),
+                    BODY_TOP + Inches(0.5), Inches(0.83), Inches(0.83))
 
     elif kind == "arch":
         heading(slide, spec["title"])
@@ -616,14 +619,18 @@ def build_slide(prs, spec):
                     Inches(1.24), BG, shape=MSO_SHAPE.OVAL, line=ACCENT)
         ring.line.width = Pt(3)
         ring.fill.background()
+        steps.append((ring.shape_id, "fade"))
         tri = rect(slide, cx - Inches(0.16), cy - Inches(0.24), Inches(0.5),
                    Inches(0.48), ACCENT, shape=MSO_SHAPE.ISOSCELES_TRIANGLE)
         tri.rotation = 90
+        steps.append((tri.shape_id, "fade"))
         if spec.get("meta"):
             tb, tf = textbox(slide, MARGIN, Inches(5.9), SLIDE_W - 2 * MARGIN,
                              Inches(0.4))
             add_runs(tf.paragraphs[0], spec["meta"], 14, SECONDARY, font=F_MONO)
-        caption(slide, spec["caption"])
+            steps.append((tb.shape_id, "fade"))
+        cap = caption(slide, spec["caption"])
+        steps.append((cap.shape_id, "fade"))
 
     elif kind == "limits":
         heading(slide, spec["title"])
@@ -650,11 +657,12 @@ def build_slide(prs, spec):
             x = x0 + i * (qw + gap)
             pic = picture(slide, rel, x, Inches(3.1), qw, qw)
             steps.append((pic.shape_id, "fade"))
-            _, tf = textbox(slide, x - Inches(0.3), Inches(4.75),
-                            qw + Inches(0.6), Inches(0.35))
+            lbl, tf = textbox(slide, x - Inches(0.3), Inches(4.75),
+                              qw + Inches(0.6), Inches(0.35))
             p2 = tf.paragraphs[0]
             p2.alignment = PP_ALIGN.CENTER
             add_runs(p2, label, 11, SECONDARY)
+            steps.append((lbl.shape_id, "fade"))
         tb, tf = textbox(slide, Inches(1.0), Inches(5.5), SLIDE_W - Inches(2.0),
                          Inches(0.5))
         p3 = tf.paragraphs[0]
@@ -716,13 +724,13 @@ def deck() -> list[dict]:
              images=["public/screenshot-rule.png",
                      "public/screenshot-validation.png"]),
         dict(kind="shot_side", page=9, title="Контрпример важнее метрики",
-             kicker="4 независимых сессии + журнал действий устройства",
+             kicker="4 независимые сессии в корпусе + журнал действий устройства",
              image="public/screenshot-counterexamples.png",
              blocks=[dict(accent=True, lead="",
                           text="02 00 00 03 13 00 55  —  команда 2 вне ожидаемого набора [1]"),
                      dict(lead="Один байт — 80 контрпримеров",
                           text="80 несоответствий v1 — на offset 0 в сессиях s2 и s3.")],
-             caption="Значение 2 повторяется в 4 независимых сессиях и связано с действием «изменить настройку» в журнале"),
+             caption="Значение 2 повторяется в 4 независимых сессиях корпуса и связано с действием «изменить настройку» в журнале"),
         dict(kind="divider", page=10, index="01", title="Что получилось",
              note="Точность, покрытие корпуса организаторов, ресурсы"),
         dict(kind="bars", page=11, title="Уточнили правило: 60 из 140 → 140 из 140",
@@ -736,7 +744,7 @@ def deck() -> list[dict]:
              caption="Данные не использовались при уточнении правила"),
         dict(kind="metric", page=13, title="95 МиБ разбираются за 12 секунд",
              big="12 с", image="assets/memory_sweep.png",
-             note="Пик памяти 350 МиБ при бюджете 4 ГиБ",
+             note="Пик памяти 350 МиБ — 9% бюджета 4 ГиБ",
              chips=["12 с общее время", "350 МиБ пик памяти", "250k пакетов"],
              caption="Условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ"),
         dict(kind="divider", page=14, index="02", title="Демонстрация",
@@ -780,6 +788,10 @@ def main() -> None:
         add_transition(slide, "push" if spec["kind"] == "divider" else "fade")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     prs.save(str(OUT))
+    # The deck names Tektur/Montserrat/JetBrains Mono, which a viewer may not
+    # have; embed the faces so the deck renders the same everywhere, then pin
+    # the zip timestamps so the result stays byte-reproducible.
+    embed_brand_fonts(OUT, collect_text(prs))
     freeze_zip(OUT)
     print(f"wrote {OUT} ({OUT.stat().st_size} bytes, {len(prs.slides)} slides)")
 

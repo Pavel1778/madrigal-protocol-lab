@@ -5,7 +5,10 @@ a fallback for the defense in case the live demonstration fails. The recording
 runs on any machine with a display; the tool is not tied to a platform.
 
 Target length: 4 minutes. Six scenes. Every number spoken is from
-`docs/METRICS.md`; the window path is the one in `docs/demo.md`.
+`docs/METRICS.md`; the window path is the one in `docs/demo.md`. The six scenes
+line up with the six stages the deck names on the «Ход работы» slide
+(наблюдение → гипотеза → проверка → контрпример → уточнение → повторная
+проверка), so the recording and the slide tell the same story.
 
 ## Tool
 

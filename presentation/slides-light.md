@@ -207,7 +207,7 @@ layout: default
 
 # Контрпример важнее метрики
 
-<div class="kicker">4 независимых сессии + журнал действий устройства</div>
+<div class="kicker">4 независимые сессии в корпусе + журнал действий устройства</div>
 
 <div class="shot shot--side">
 
@@ -217,7 +217,7 @@ layout: default
 <img src="/screenshot-counterexamples.png" alt="Список контрпримеров, привязанных к байту">
 </div>
 
-<div class="caption">Значение <code>2</code> повторяется в 4 независимых сессиях и связано с действием «изменить настройку» в журнале</div>
+<div class="caption">Значение <code>2</code> повторяется в 4 независимых сессиях корпуса и связано с действием «изменить настройку» в журнале</div>
 
 </div>
 
@@ -318,7 +318,7 @@ layout: default
 
 <div>
 <div class="bignum" v-click>12 с</div>
-<div class="metric__note" v-click>Пик памяти 350 МиБ при бюджете 4 ГиБ</div>
+<div class="metric__note" v-click>Пик памяти 350 МиБ — 9% бюджета 4 ГиБ</div>
 </div>
 
 <div class="metric__figure" v-click>
