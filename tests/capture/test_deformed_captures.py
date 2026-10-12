@@ -59,12 +59,28 @@ def test_unsupported_link_type_reports_and_stops_cleanly() -> None:
     assert _types(diagnostics) == ["unsupported_linktype"]
 
 
-def test_mixed_ip_versions_reports_ipv6_and_keeps_ipv4() -> None:
+def test_mixed_ip_versions_keeps_both_families() -> None:
     diagnostics: list[Diagnostic] = []
     packets = list(read_capture(defect("mixed_ip_versions.pcapng"), diagnostics))
-    assert len(packets) == 6
-    assert _types(diagnostics) == ["ipv6_ignored"]
+    assert len(packets) == 7
+    assert _types(diagnostics) == []
     capture = normalize(defect("mixed_ip_versions.pcapng"))
+    assert len(capture.sessions) == 2
+    families = {
+        endpoint.ip
+        for session in capture.sessions
+        for endpoint in session.endpoints
+    }
+    assert "2001:db8::1" in families
+    assert "10.0.0.1" in families
+
+
+def test_ipv6_fragments_are_reported_and_not_reassembled() -> None:
+    diagnostics: list[Diagnostic] = []
+    packets = list(read_capture(defect("fragmented_ipv6.pcapng"), diagnostics))
+    assert len(packets) == 6
+    assert _types(diagnostics) == ["ip_fragment", "ip_fragment", "ip_fragment"]
+    capture = normalize(defect("fragmented_ipv6.pcapng"))
     assert len(capture.sessions) == 1
 
 
