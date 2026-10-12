@@ -5,16 +5,18 @@ pcapng without an external process, unlike PyShark which shells out to tshark
 and would require tshark on every machine that opens a capture. dpkt is also
 lighter and faster than scapy for the reference workload of up to 250k packets.
 
-Only IPv4 over Ethernet (raw IP and the Linux cooked and BSD loopback families
-are also accepted) is interpreted. Other link-layer types and IPv6 packets are
+IPv4 and IPv6 over Ethernet (raw IP and the Linux cooked and BSD loopback
+families are also accepted) are interpreted. Other link-layer types are
 reported as diagnostics rather than raising, so a mixed capture still yields
-every TCP session that can be read.
+every TCP session that can be read. Fragmented datagrams of either version are
+reported as ``ip_fragment`` and not reassembled: reassembly is a separate task.
 """
 
 from __future__ import annotations
 
 import io
 import logging
+import socket
 import struct
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -37,6 +39,9 @@ _DLT_EN10MB = 1
 _DLT_RAW = 12
 _DLT_LOOP = 108
 _DLT_LINUX_SLL = 113
+
+# IPv6 next-header value for the fragment header (RFC 8200).
+_IPPROTO_FRAGMENT = 44
 
 _SUPPORTED_LINKTYPES = {_DLT_NULL, _DLT_EN10MB, _DLT_RAW, _DLT_LOOP, _DLT_LINUX_SLL}
 
@@ -156,34 +161,51 @@ def _ip_to_str(raw: bytes) -> str:
     return ".".join(str(b) for b in raw)
 
 
-def _layer3_ip(linktype: int, buf: bytes) -> bytes | Diagnostic:
-    """Return the IPv4 datagram bytes of a frame, or a diagnostic.
+def _ip6_to_str(raw: bytes) -> str:
+    return socket.inet_ntop(socket.AF_INET6, raw)
 
-    IPv6 and non-IP frames are returned as diagnostics, never as data.
+
+def _layer3_ip(linktype: int, buf: bytes) -> tuple[int, bytes] | Diagnostic:
+    """Return ``(version, datagram)`` of a frame, or a diagnostic.
+
+    ``version`` is 4 or 6. Non-IP frames and frames too short to hold a header
+    are returned as diagnostics, never as data.
     """
 
     if linktype == _DLT_EN10MB:
         eth = dpkt.ethernet.Ethernet(buf)
         if isinstance(eth.data, dpkt.ip6.IP6):
-            return Diagnostic("ipv6_ignored", detail="IPv6 packet skipped")
+            return 6, bytes(eth.data)
         if not isinstance(eth.data, dpkt.ip.IP):
-            return Diagnostic("non_ip", detail=f"non-IPv4 ethertype {eth.type:#06x}")
-        return bytes(eth.data)
+            return Diagnostic("non_ip", detail=f"non-IP ethertype {eth.type:#06x}")
+        return 4, bytes(eth.data)
     if linktype == _DLT_RAW:
         if len(buf) < 1:
             return Diagnostic("truncated_frame", detail="empty raw frame")
-        if buf[0] >> 4 != 4:
-            return Diagnostic("ipv6_ignored", detail="non-IPv4 raw frame")
-        return buf
+        version = buf[0] >> 4
+        if version not in (4, 6):
+            return Diagnostic("non_ip", detail=f"raw frame IP version {version}")
+        return version, buf
     if linktype in (_DLT_NULL, _DLT_LOOP):
         if len(buf) < 4:
             return Diagnostic("truncated_frame", detail="short loopback header")
-        return buf[4:]
+        return _raw_version(buf[4:])
     if linktype == _DLT_LINUX_SLL:
         if len(buf) < 16:
             return Diagnostic("truncated_frame", detail="short cooked header")
-        return buf[16:]
+        return _raw_version(buf[16:])
     return Diagnostic("unsupported_linktype", detail=f"datalink {linktype}")
+
+
+def _raw_version(payload: bytes) -> tuple[int, bytes] | Diagnostic:
+    """Read the IP version of a headerless datagram, or report why not."""
+
+    if not payload:
+        return Diagnostic("truncated_frame", detail="empty IP datagram")
+    version = payload[0] >> 4
+    if version not in (4, 6):
+        return Diagnostic("non_ip", detail=f"IP version {version}")
+    return version, payload
 
 
 @dataclass(slots=True)
@@ -195,7 +217,19 @@ class _TcpRecord:
     truncated: bool
 
 
-def _parse_tcp(ip_bytes: bytes) -> _TcpRecord | Diagnostic:
+def _parse_tcp(ip_bytes: bytes, version: int = 4) -> _TcpRecord | Diagnostic:
+    """Parse an IP datagram into a TCP record or a diagnostic.
+
+    IPv4 and IPv6 are both accepted. A fragmented datagram of either version is
+    reported as ``ip_fragment`` and not reassembled.
+    """
+
+    if version == 6:
+        return _parse_tcp6(ip_bytes)
+    return _parse_tcp4(ip_bytes)
+
+
+def _parse_tcp4(ip_bytes: bytes) -> _TcpRecord | Diagnostic:
     """Parse an IPv4 datagram into a TCP record or a diagnostic."""
 
     try:
@@ -203,7 +237,7 @@ def _parse_tcp(ip_bytes: bytes) -> _TcpRecord | Diagnostic:
     except (dpkt.UnpackError, struct.error) as exc:
         return Diagnostic("truncated_frame", detail=f"IPv4 parse failed: {exc}")
     if isinstance(ip.data, dpkt.ip6.IP6):
-        return Diagnostic("ipv6_ignored", detail="IPv6 packet skipped")
+        return Diagnostic("non_ip", detail="IPv6 packet on an IPv4 datagram")
     if ip.offset or ip.mf:
         # Fragments are reported, not reassembled. Only the first fragment
         # carries a TCP header, and the specification excludes reassembly.
@@ -220,6 +254,40 @@ def _parse_tcp(ip_bytes: bytes) -> _TcpRecord | Diagnostic:
     return _TcpRecord(
         src_ip=_ip_to_str(ip.src),
         dst_ip=_ip_to_str(ip.dst),
+        tcp=tcp,
+        payload=payload,
+        truncated=len(payload) < expected_payload,
+    )
+
+
+def _parse_tcp6(ip_bytes: bytes) -> _TcpRecord | Diagnostic:
+    """Parse an IPv6 datagram into a TCP record or a diagnostic.
+
+    ``dpkt`` walks the extension-header chain and leaves the transport header in
+    ``ip.data``. The chain is kept in ``ip.extension_hdrs``; a fragment header
+    there (protocol 44) marks a fragmented datagram, which is reported and not
+    reassembled.
+    """
+
+    try:
+        ip = dpkt.ip6.IP6(ip_bytes)
+    except (dpkt.UnpackError, struct.error) as exc:
+        return Diagnostic("truncated_frame", detail=f"IPv6 parse failed: {exc}")
+    fragment = ip.extension_hdrs.get(_IPPROTO_FRAGMENT)
+    if fragment is not None and (fragment.frag_off or fragment.m_flag):
+        return Diagnostic(
+            "ip_fragment",
+            detail=f"IPv6 fragment at offset {fragment.frag_off} ignored",
+        )
+    if not isinstance(ip.data, dpkt.tcp.TCP):
+        return Diagnostic("non_tcp", detail=f"IPv6 next header {ip.nxt}")
+    tcp = ip.data
+    payload = bytes(tcp.data)
+    header_bytes = max(tcp.off * 4, 0)
+    expected_payload = max(int(ip.plen) - header_bytes, 0)
+    return _TcpRecord(
+        src_ip=_ip6_to_str(ip.src),
+        dst_ip=_ip6_to_str(ip.dst),
         tcp=tcp,
         payload=payload,
         truncated=len(payload) < expected_payload,
@@ -282,7 +350,7 @@ def _read_rows(path: Path, torn: list[str]) -> Iterator[tuple[float, bytes]]:
                 row = next(reader)
             except StopIteration:
                 return
-            except Exception as exc:  # noqa: BLE001 - a torn record is a diagnostic, not a crash
+            except Exception as exc:
                 torn.append(str(exc))
                 return
             yield row
@@ -296,16 +364,16 @@ def read_capture(
     *,
     verify_checksums: bool = False,
 ) -> Iterator[Packet]:
-    """Read ``path`` and yield every TCP/IPv4 packet in file order.
+    """Read ``path`` and yield every TCP/IP packet in file order.
 
     A capture with defects is read as far as it can be, and every part that
     could not be read becomes a diagnostic of type ``truncated_frame``,
-    ``unsupported_linktype``, ``ipv6_ignored``, ``ip_fragment``, or ``non_tcp``.
+    ``unsupported_linktype``, ``non_ip``, ``ip_fragment``, or ``non_tcp``.
     A file that is not a capture at all raises ``ValueError``.
 
     If a list is passed as ``diagnostics``, notes about skipped link types,
-    IPv6, and non-TCP frames are appended to it; the iterator is unaffected
-    either way.
+    fragments, and non-TCP frames are appended to it; the iterator is
+    unaffected either way.
 
     Checksum offloading on the sending host leaves wrong checksums in many
     captured files, so checksums are not verified by default. When
@@ -405,16 +473,17 @@ def _packet_from_row(
 ) -> Packet | None:
     """Turn one raw frame into a packet, or record why it was skipped.
 
-    Returns ``None`` when the frame is IPv6, non-IP, or non-TCP; the reason is
+    Returns ``None`` when the frame is non-IP or non-TCP; the reason is
     appended to ``diagnostics``.
     """
 
-    ip_bytes = _layer3_ip(linktype, buf)
-    if isinstance(ip_bytes, Diagnostic):
-        ip_bytes.packet_index = packet_index
-        diagnostics.append(ip_bytes)
+    layer3 = _layer3_ip(linktype, buf)
+    if isinstance(layer3, Diagnostic):
+        layer3.packet_index = packet_index
+        diagnostics.append(layer3)
         return None
-    record = _parse_tcp(ip_bytes)
+    version, ip_bytes = layer3
+    record = _parse_tcp(ip_bytes, version)
     if isinstance(record, Diagnostic):
         record.packet_index = packet_index
         diagnostics.append(record)
@@ -429,7 +498,7 @@ def _packet_from_row(
             )
         )
     checksum_valid = (
-        _checksum_state(tcp, ip_bytes) if verify_checksums else None
+        _checksum_state(tcp, ip_bytes, version) if verify_checksums else None
     )
     return Packet(
         index=index,
@@ -447,16 +516,26 @@ def _packet_from_row(
     )
 
 
-def _checksum_state(tcp: Any, ip_bytes: bytes) -> bool | None:
+def _checksum_state(tcp: Any, ip_bytes: bytes, version: int = 4) -> bool | None:
     """Return the TCP checksum verdict, or ``None`` when it cannot be read."""
 
     try:
-        return bool(tcp.sum == 0 or _tcp_checksum_ok(ip_bytes))
-    except Exception:  # noqa: BLE001 - an unreadable checksum leaves the field unknown
+        if tcp.sum == 0:
+            return True
+        return _tcp_checksum_ok(ip_bytes, version)
+    except Exception:
         return None
 
 
-def _tcp_checksum_ok(ip_bytes: bytes) -> bool:
+def _tcp_checksum_ok(ip_bytes: bytes, version: int = 4) -> bool:
+    """Return whether the TCP checksum of an IP datagram is correct."""
+
+    if version == 6:
+        return _tcp_checksum_ok6(ip_bytes)
+    return _tcp_checksum_ok4(ip_bytes)
+
+
+def _tcp_checksum_ok4(ip_bytes: bytes) -> bool:
     """Return whether the TCP checksum of an IPv4 datagram is correct."""
 
     ip = dpkt.ip.IP(ip_bytes)
@@ -468,3 +547,31 @@ def _tcp_checksum_ok(ip_bytes: bytes) -> bool:
     computed = dpkt.in_cksum(bytes(tcp))
     tcp.sum = saved
     return computed == saved
+
+
+def _tcp_checksum_ok6(ip_bytes: bytes) -> bool:
+    """Return whether the TCP checksum of an IPv6 datagram is correct.
+
+    The pseudo-header is built here because dpkt 1.9.8 ships no IPv6 checksum
+    helper. A datagram whose extension headers are present is left unverified:
+    the transport offset inside the pseudo-header would have to be recomputed.
+    """
+
+    ip = dpkt.ip6.IP6(ip_bytes)
+    tcp = ip.data
+    if not isinstance(tcp, dpkt.tcp.TCP):
+        return True
+    if ip.extension_hdrs:
+        return True
+    saved = tcp.sum
+    tcp.sum = 0
+    tcp_bytes = bytes(tcp)
+    tcp.sum = saved
+    pseudo = (
+        bytes(ip.src)
+        + bytes(ip.dst)
+        + struct.pack("!I", len(tcp_bytes))
+        + b"\x00\x00\x00"
+        + bytes([ip.nxt])
+    )
+    return dpkt.in_cksum(pseudo + tcp_bytes) == saved

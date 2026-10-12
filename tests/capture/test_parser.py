@@ -55,12 +55,26 @@ def test_reads_classic_pcap(tmp_path: Path) -> None:
     assert packets[0].syn
 
 
-def test_ipv6_is_a_diagnostic_not_a_failure(fixtures_dir: Path) -> None:
+def test_ipv6_packets_are_parsed(fixtures_dir: Path) -> None:
     diagnostics: list[Diagnostic] = []
     packets = list(read_capture(fixture("ipv6_mixed.pcapng"), diagnostics))
-    assert len(packets) == 5
-    assert [d.type for d in diagnostics] == ["ipv6_ignored"]
-    assert diagnostics[0].packet_index == 1
+    assert len(packets) == 6
+    assert diagnostics == []
+    assert (packets[0].src_ip, packets[0].dst_ip) == ("2001:db8::1", "2001:db8::2")
+    assert packets[0].syn and not packets[0].ack_flag
+
+
+def test_ipv6_session_endpoints_and_roles(fixtures_dir: Path) -> None:
+    from src.capture.session import build_sessions
+
+    packets = list(read_capture(fixture("ipv6_session.pcapng")))
+    sessions = build_sessions(packets)
+    assert len(sessions) == 1
+    session = sessions[0]
+    assert session.endpoints[0].ip == "2001:db8::1"
+    assert session.endpoints[1].ip == "2001:db8::2"
+    assert (session.role_a, session.role_b) == ("client", "server")
+    assert session.syn_seen
 
 
 def test_missing_file_raises(tmp_path: Path) -> None:

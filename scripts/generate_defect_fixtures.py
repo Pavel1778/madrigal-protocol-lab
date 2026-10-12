@@ -179,6 +179,38 @@ def build_fragmented_ip() -> bytes:
     return data
 
 
+def build_fragmented_ipv6() -> bytes:
+    """IPv6 fragments alongside a clean exchange, written as pcapng."""
+
+    def fragment(payload: bytes, more: bool, offset: int) -> bytes:
+        frag = dpkt.ip6.IP6FragmentHeader()
+        frag.nxt = dpkt.ip.IP_PROTO_TCP
+        frag.frag_off = offset
+        frag.m_flag = 1 if more else 0
+        frag.data = payload
+        ip6 = dpkt.ip6.IP6(
+            src=socket.inet_pton(socket.AF_INET6, "2001:db8::1"),
+            dst=socket.inet_pton(socket.AF_INET6, "2001:db8::2"),
+        )
+        ip6.nxt = 44
+        ip6.data = bytes(frag)
+        ip6.plen = len(bytes(frag))
+        eth = dpkt.ethernet.Ethernet(
+            src=b"\x02\x00\x00\x00\x00\x01",
+            dst=b"\x02\x00\x00\x00\x00\x02",
+            type=dpkt.ethernet.ETH_TYPE_IP6,
+            data=ip6,
+        )
+        return bytes(eth)
+
+    packets = [
+        (0, fragment(b"AAAA", True, 0)),
+        (0, fragment(b"BBBB", True, 3)),
+        (0, fragment(b"CC", False, 6)),
+    ] + [(0, frame) for frame in _exchange()]
+    return _pcapng([_DLT_EN10MB], packets)
+
+
 BUILDERS = {
     "truncated_header.pcapng": build_truncated_header,
     "truncated_packet.pcapng": build_truncated_packet,
@@ -186,6 +218,7 @@ BUILDERS = {
     "unsupported_link_type.pcapng": build_unsupported_link_type,
     "mixed_ip_versions.pcapng": build_mixed_ip_versions,
     "fragmented_ip.pcap": build_fragmented_ip,
+    "fragmented_ipv6.pcapng": build_fragmented_ipv6,
 }
 
 

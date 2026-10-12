@@ -25,6 +25,10 @@ _CLIENT_IP = "10.0.0.1"
 _SERVER_IP = "10.0.0.2"
 _CLIENT_PORT = 40000
 _SERVER_PORT = 9000
+
+# IPv6 addresses of the same two hosts, in the documentation prefix (RFC 3849).
+_IPV6_CLIENT = socket.inet_pton(socket.AF_INET6, "2001:db8::1")
+_IPV6_SERVER = socket.inet_pton(socket.AF_INET6, "2001:db8::2")
 _BASE_TS = 1_700_000_000.0
 
 
@@ -72,20 +76,53 @@ def segment(
     return bytes(eth)
 
 
-def ipv6_frame(payload: bytes = b"\x00" * 8) -> bytes:
-    """Build one Ethernet frame carrying an IPv6 packet."""
+def ipv6_segment(
+    *,
+    src_port: int,
+    dst_port: int,
+    seq: int,
+    ack: int,
+    flags: int,
+    payload: bytes = b"",
+    src: bytes = _IPV6_CLIENT,
+    dst: bytes = _IPV6_SERVER,
+) -> bytes:
+    """Build one Ethernet frame carrying a TCP segment inside IPv6."""
 
-    ip6 = dpkt.ip6.IP6(src=b"\x00" * 15 + b"\x01", dst=b"\x00" * 15 + b"\x02")
+    tcp = dpkt.tcp.TCP(
+        sport=src_port,
+        dport=dst_port,
+        seq=seq & 0xFFFFFFFF,
+        ack=ack & 0xFFFFFFFF,
+        flags=flags,
+        win=64240,
+        data=payload,
+    )
+    tcp.off = 5
+    ip6 = dpkt.ip6.IP6(src=src, dst=dst)
     ip6.nxt = dpkt.ip.IP_PROTO_TCP
-    ip6.data = payload
-    ip6.plen = len(payload)
+    ip6.data = bytes(tcp)
+    ip6.plen = len(bytes(tcp))
+    forward = src == _IPV6_CLIENT
     eth = dpkt.ethernet.Ethernet(
-        src=_CLIENT_MAC,
-        dst=_SERVER_MAC,
+        src=_CLIENT_MAC if forward else _SERVER_MAC,
+        dst=_SERVER_MAC if forward else _CLIENT_MAC,
         type=dpkt.ethernet.ETH_TYPE_IP6,
         data=ip6,
     )
     return bytes(eth)
+
+
+def ipv6_frame() -> bytes:
+    """Build one Ethernet frame carrying an IPv6 TCP SYN."""
+
+    return ipv6_segment(
+        src_port=_CLIENT_PORT,
+        dst_port=_SERVER_PORT,
+        seq=7000,
+        ack=0,
+        flags=dpkt.tcp.TH_SYN,
+    )
 
 
 def syn(seq: int, isn_b: int | None = None) -> bytes:
@@ -362,6 +399,56 @@ def build_ipv6_mixed() -> bytes:
     )
 
 
+def build_ipv6_session() -> bytes:
+    """A complete IPv6 TCP session with a request and a response."""
+
+    return _write_pcapng(
+        [
+            ipv6_segment(
+                src_port=_CLIENT_PORT,
+                dst_port=_SERVER_PORT,
+                seq=7000,
+                ack=0,
+                flags=dpkt.tcp.TH_SYN,
+            ),
+            ipv6_segment(
+                src_port=_SERVER_PORT,
+                dst_port=_CLIENT_PORT,
+                seq=9000,
+                ack=7001,
+                flags=dpkt.tcp.TH_SYN | dpkt.tcp.TH_ACK,
+                src=_IPV6_SERVER,
+                dst=_IPV6_CLIENT,
+            ),
+            ipv6_segment(
+                src_port=_CLIENT_PORT,
+                dst_port=_SERVER_PORT,
+                seq=7001,
+                ack=9001,
+                flags=dpkt.tcp.TH_ACK,
+            ),
+            ipv6_segment(
+                src_port=_CLIENT_PORT,
+                dst_port=_SERVER_PORT,
+                seq=7001,
+                ack=9001,
+                flags=dpkt.tcp.TH_ACK | dpkt.tcp.TH_PUSH,
+                payload=b"\x01\x02\x03\x04",
+            ),
+            ipv6_segment(
+                src_port=_SERVER_PORT,
+                dst_port=_CLIENT_PORT,
+                seq=9001,
+                ack=7005,
+                flags=dpkt.tcp.TH_ACK | dpkt.tcp.TH_PUSH,
+                payload=b"\x09\x08",
+                src=_IPV6_SERVER,
+                dst=_IPV6_CLIENT,
+            ),
+        ]
+    )
+
+
 BUILDERS = {
     "normal.pcapng": build_normal,
     "retransmission.pcapng": build_retransmission,
@@ -374,6 +461,7 @@ BUILDERS = {
     "port_reuse.pcapng": build_port_reuse,
     "seq_wrap.pcapng": build_seq_wrap,
     "ipv6_mixed.pcapng": build_ipv6_mixed,
+    "ipv6_session.pcapng": build_ipv6_session,
 }
 
 
