@@ -129,6 +129,21 @@ def _version_lines(item: dict[str, Any]) -> str:
     return line
 
 
+def _annotation_lines(item: dict[str, Any]) -> list[str]:
+    offset = item.get("offset", 0)
+    length = item.get("length", 0)
+    where = f"offset {offset}, length {length}"
+    session = item.get("session_id")
+    direction = item.get("direction")
+    if session:
+        where = f"{session}/{direction or '?'} {where}"
+    out = [f"- [{item.get('kind', '?')}] {where}: {item.get('text', '')}"]
+    if item.get("created_at"):
+        out.append(f"  recorded {item['created_at']}")
+    out.append("")
+    return out
+
+
 def render_markdown(investigation: dict[str, Any], out_path: Path) -> None:
     """Write ``investigation`` as Markdown to ``out_path``."""
 
@@ -167,6 +182,18 @@ def render_markdown(investigation: dict[str, Any], out_path: Path) -> None:
         lines.append("")
     else:
         lines += ["No rule versions were recorded.", ""]
+
+    lines += ["## Annotations", ""]
+    if model["annotations"]:
+        lines += [
+            "Researcher notes bound to a byte range. Each entry names the byte",
+            "range it refers to so a reader can return to the packet.",
+            "",
+        ]
+        for item in model["annotations"]:
+            lines += _annotation_lines(item)
+    else:
+        lines += ["No annotations were recorded.", ""]
 
     lines += ["## Open questions", ""]
     if model["open_questions"]:

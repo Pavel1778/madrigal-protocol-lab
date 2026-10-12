@@ -255,6 +255,29 @@ def render_html(investigation: dict[str, Any], out_path: Path) -> None:
     else:
         version_html = '<p class="muted">No rule versions were recorded.</p>'
 
+    if model["annotations"]:
+        rows = []
+        for item in model["annotations"]:
+            rows.append(
+                "<tr>"
+                f"<td>{_esc(item.get('kind', '?'))}</td>"
+                f"<td>{_esc(item.get('session_id', ''))}</td>"
+                f"<td>{_esc(item.get('direction', ''))}</td>"
+                f"<td>{_esc(item.get('offset', ''))}</td>"
+                f"<td>{_esc(item.get('length', ''))}</td>"
+                f"<td>{_esc(item.get('text', ''))}</td>"
+                "</tr>"
+            )
+        annotation_html = (
+            "<p class=\"muted\">Researcher notes bound to a byte range. Each row "
+            "names the range it refers to.</p>"
+            "<table><thead><tr><th>Kind</th><th>Session</th><th>Direction</th>"
+            f"<th>Offset</th><th>Length</th><th>Note</th></tr></thead>"
+            f"<tbody>{''.join(rows)}</tbody></table>"
+        )
+    else:
+        annotation_html = '<p class="muted">No annotations were recorded.</p>'
+
     if model["open_questions"]:
         questions = "".join(f"<li>{_esc(q)}</li>" for q in model["open_questions"])
         questions_html = f"<ul>{questions}</ul>"
@@ -288,6 +311,9 @@ def render_html(investigation: dict[str, Any], out_path: Path) -> None:
 
 <h2>Rule versions</h2>
 {version_html}
+
+<h2>Annotations</h2>
+{annotation_html}
 
 <h2>Open questions</h2>
 {questions_html}
