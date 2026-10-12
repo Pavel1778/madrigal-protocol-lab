@@ -27,7 +27,7 @@ if [[ ! -x "$BINARY" ]]; then
 fi
 
 TOOL_URL="https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
-TOOL="$ROOT/.agent-cache/appimagetool-x86_64.AppImage"
+TOOL="$ROOT/.scratch/appimagetool-x86_64.AppImage"
 APPIMAGETOOL=""
 
 if command -v appimagetool >/dev/null 2>&1; then
@@ -40,11 +40,11 @@ else
         chmod +x "$TOOL"
     fi
     # appimagetool is itself an AppImage; run it extracted so no FUSE is needed.
-    EXTRACT_DIR="$ROOT/.agent-cache/appimagetool-extract"
+    EXTRACT_DIR="$ROOT/.scratch/appimagetool-extract"
     if [[ ! -x "$EXTRACT_DIR/AppRun" ]]; then
         rm -rf "$EXTRACT_DIR"
-        ( cd "$ROOT/.agent-cache" && "$TOOL" --appimage-extract >/dev/null )
-        mv "$ROOT/.agent-cache/squashfs-root" "$EXTRACT_DIR"
+        ( cd "$ROOT/.scratch" && "$TOOL" --appimage-extract >/dev/null )
+        mv "$ROOT/.scratch/squashfs-root" "$EXTRACT_DIR"
     fi
     APPIMAGETOOL="$EXTRACT_DIR/AppRun"
 fi
