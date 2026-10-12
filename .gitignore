@@ -50,3 +50,10 @@ sample_protocol.tar*
 
 # Slidev pptx export leaves per-click frames behind
 presentation/slides-*_[0-9]*.png
+
+# Incoming archives dropped in the repository root, and browser "save page"
+# bundles. The tracked presentation/presentation_html.zip is nested and stays.
+/*.zip
+/*.tar.gz
+/*.tgz
+/*_files/
