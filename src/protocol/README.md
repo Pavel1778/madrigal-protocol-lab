@@ -80,11 +80,28 @@ allowed values; a value outside the list is
 ```
 python -m src.protocol.cli apply  --rule rule.json --capture normalized.json --out result.json
 python -m src.protocol.cli verify --rule rule.json --capture normalized.json --out report.json
+python -m src.protocol.cli pair   --rule rule.json --capture normalized.json --out pairing.json
 ```
 
 `apply` writes a result in the contract format (`docs/schemas/result.schema.json`).
+The `--out` suffix selects the format: `.jsonl` writes one message per line and
+`.csv` writes a header plus one row per message; anything else is contract JSON.
 `verify` applies the rule to every stream of the capture and writes a report with
-per-status counts and the counterexamples.
+per-status counts and the counterexamples. `pair` frames both directions of a
+session and pairs request and response messages into turns, each with a
+confidence derived from the observations listed in its `basis`.
+
+## Pairing request and response
+
+When a rule frames both directions, `src/hypothesis/pairing.py` orders the
+messages by timestamp and pairs each one with the next message in the opposite
+direction. A message with no such follower is reported as an unanswered turn
+with confidence `0`. Confidence is a weighted sum of the observations
+(opposite direction, time order, closeness within the window, clean framing,
+both matched); it is a score over those observations, not a probability that
+the reply belongs to the request. The weights live at the top of the module so
+the reasoning stays auditable.
+
 
 ## Versioning
 
@@ -98,5 +115,5 @@ Editing a rule that changes framing or field reading produces a new
 
 - `src/protocol/` — `stream.py`, `framing.py`, `rule.py`, `engine.py`,
   `result.py`, `cli.py`, `examples/`
-- `src/hypothesis/` — `status.py`, `corpus.py`, `versioning.py`
+- `src/hypothesis/` — `status.py`, `corpus.py`, `versioning.py`, `pairing.py`
 - `tests/protocol/`, `tests/hypothesis/`

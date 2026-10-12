@@ -96,6 +96,21 @@ def test_cli_apply_writes_valid_result(tmp_path):
     validate_result(payload)
 
 
+def test_cli_pair_writes_turns(tmp_path):
+    stream_a = _message(4, 21)
+    stream_b = _message(4, 22)
+    capture_path = _write(tmp_path, "capture.json", _capture(stream_a, stream_b))
+    rule_path = _write(tmp_path, "rule.json", RULE)
+    out_path = str(tmp_path / "pairing.json")
+
+    code = main(["pair", "--rule", rule_path, "--capture", capture_path, "--out", out_path])
+    assert code == 0
+
+    payload = json.loads(Path(out_path).read_text(encoding="utf-8"))
+    assert payload["kind"] == "request_response_pairing"
+    assert payload["summary"]["turns"] >= 1
+
+
 def test_cli_apply_writes_csv_when_out_ends_in_csv(tmp_path):
     import csv
 

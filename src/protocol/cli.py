@@ -33,6 +33,7 @@ from ..hypothesis.diff import (
 )
 from ..hypothesis.journal import correlate, load_journal
 from ..hypothesis.metrics import compute_metrics
+from ..hypothesis.pairing import DEFAULT_WINDOW_SECONDS, build_turns
 from .engine import Counterexample, apply_rule
 from .export import export_kaitai, export_python
 from .result import build_result, write_result
@@ -95,6 +96,20 @@ def _build_parser() -> argparse.ArgumentParser:
         help="report every hypothesis field instead of one field",
     )
     alternatives.add_argument("--out", default=None, help="path to write JSON to (default: stdout)")
+
+    pair = sub.add_parser(
+        "pair", help="pair request and response messages of a capture into turns"
+    )
+    pair.add_argument("--rule", required=True, help="path to a rule (JSON or YAML)")
+    pair.add_argument("--capture", required=True, help="path to a normalized capture")
+    pair.add_argument("--session", default=None, help="session id (default: first session)")
+    pair.add_argument(
+        "--window-ms",
+        type=int,
+        default=int(DEFAULT_WINDOW_SECONDS * 1000),
+        help="time window in milliseconds for a close reply",
+    )
+    pair.add_argument("--out", default=None, help="path to write JSON to (default: stdout)")
     return parser
 
 
@@ -269,6 +284,34 @@ def _cmd_correlate(args) -> int:
     return 0
 
 
+def _cmd_pair(args) -> int:
+    rule = load_rule(args.rule)
+    capture = load_capture(args.capture)
+    streams = capture.iter_streams()
+    if args.session is not None:
+        streams = [item for item in streams if item[0] == args.session]
+    if not streams:
+        raise CaptureError("no stream matches the requested session")
+    messages = [
+        message
+        for session_id, direction, stream in streams
+        for message in apply_rule(stream, rule, session_id, direction)
+    ]
+    report = build_turns(
+        messages,
+        session_id=args.session or streams[0][0],
+        window_seconds=args.window_ms / 1000.0,
+    )
+    text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2)
+    if args.out:
+        with open(args.out, "w", encoding="utf-8") as handle:
+            handle.write(text + "\n")
+    else:
+        print(text)
+    print(report.summary(), file=sys.stderr)
+    return 0
+
+
 def _cmd_export(args) -> int:
     import os
 
@@ -406,6 +449,8 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_metrics(args)
         if args.command == "correlate":
             return _cmd_correlate(args)
+        if args.command == "pair":
+            return _cmd_pair(args)
         if args.command == "export":
             return _cmd_export(args)
         if args.command == "alternatives":
