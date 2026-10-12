@@ -178,7 +178,7 @@ def heading(slide, text, size=40, height=Inches(1.15)):
 
 def caption(slide, text, y=Inches(6.6)):
     tb, tf = textbox(slide, MARGIN, y, SLIDE_W - 2 * MARGIN, Inches(0.4))
-    add_runs(tf.paragraphs[0], text, 12, SECONDARY)
+    add_runs(tf.paragraphs[0], text, 14, SECONDARY)
     return tb
 
 
@@ -232,7 +232,7 @@ def panel(slide, x, y, w, h, accent=False):
 
 def lead(slide, x, y, w, text):
     tb, tf = textbox(slide, x, y, w, Inches(0.35))
-    add_runs(tf.paragraphs[0], text.upper(), 12, ACCENT, bold=True)
+    add_runs(tf.paragraphs[0], text.upper(), 14, ACCENT, bold=True)
     return tb
 
 
@@ -259,7 +259,7 @@ def _fade(spid: int, cid: int) -> str:
   </p:set>
   <p:anim calcmode="lin" valueType="num">
    <p:cBhvr additive="base">
-    <p:cTn id="{cid+2}" dur="500" fill="hold"/>
+    <p:cTn id="{cid+2}" dur="300" fill="hold"/>
     <p:tgtEl><p:spTgt spid="{spid}"/></p:tgtEl>
     <p:attrNameLst><p:attrName>style.opacity</p:attrName></p:attrNameLst>
    </p:cBhvr>
@@ -289,7 +289,7 @@ def _wipe(spid: int, cid: int) -> str:
   </p:set>
   <p:anim calcmode="lin" valueType="num">
    <p:cBhvr additive="base">
-    <p:cTn id="{cid+2}" dur="700" fill="hold"/>
+    <p:cTn id="{cid+2}" dur="400" fill="hold"/>
     <p:tgtEl><p:spTgt spid="{spid}"/></p:tgtEl>
     <p:attrNameLst><p:attrName>ppt_w</p:attrName></p:attrNameLst>
    </p:cBhvr>
@@ -346,7 +346,6 @@ def build_slide(prs, spec):
                          Inches(1.5))
         add_runs(tf.paragraphs[0], spec["title"], 56, TEXT, bold=True,
                  font=F_HEAD)
-        steps.append((tb.shape_id, "fade"))
         tb, tf = textbox(slide, MARGIN, Inches(3.7), Inches(9.5), Inches(1.0))
         add_runs(tf.paragraphs[0], spec["sub"], 22, TEXT)
         rect(slide, MARGIN, Inches(4.75), Inches(2.4), Inches(0.07), ACCENT)
@@ -362,9 +361,9 @@ def build_slide(prs, spec):
             x = MARGIN + i * (col_w + Inches(0.5))
             # 2.7in clears the 180px avatar (bottom at 2.25) with a margin.
             panel(slide, x, BODY_TOP, col_w, Inches(2.7))
-            steps.append((slide.shapes[-1].shape_id, "fade"))
-            picture(slide, f"public/{avatar}", x + Inches(0.3),
-                    BODY_TOP + Inches(0.4), Inches(1.8), Inches(1.8))
+            av = picture(slide, f"public/{avatar}", x + Inches(0.3),
+                         BODY_TOP + Inches(0.4), Inches(1.8), Inches(1.8))
+            steps.append((av.shape_id, "fade"))
             tx = x + Inches(2.35)
             _, tf = textbox(slide, tx, BODY_TOP + Inches(0.5),
                             col_w - Inches(3.6), Inches(0.6))
@@ -402,8 +401,7 @@ def build_slide(prs, spec):
                 tb, tf = textbox(slide, x, y + Inches(0.85), arrow_w,
                                  Inches(0.6), anchor=MSO_ANCHOR.MIDDLE)
                 tf.paragraphs[0].alignment = PP_ALIGN.CENTER
-                add_runs(tf.paragraphs[0], "JSON →", 12, ACCENT, font=F_MONO)
-                steps.append((tb.shape_id, "fade"))
+                add_runs(tf.paragraphs[0], "JSON →", 14, ACCENT, font=F_MONO)
                 x += arrow_w
         if spec.get("caption"):
             caption(slide, spec["caption"])
@@ -411,7 +409,7 @@ def build_slide(prs, spec):
     elif kind == "statement":
         tb, tf = textbox(slide, MARGIN, Inches(0.85), SLIDE_W - 2 * MARGIN,
                          Inches(0.4))
-        add_runs(tf.paragraphs[0], "ПОСТАНОВКА ЗАДАЧИ", 13, ACCENT, bold=True)
+        add_runs(tf.paragraphs[0], "ПОСТАНОВКА ЗАДАЧИ", 14, ACCENT, bold=True)
         tb, tf = textbox(slide, MARGIN, Inches(1.35), SLIDE_W - 2 * MARGIN,
                          Inches(1.3))
         add_runs(tf.paragraphs[0], spec["title"], 44, TEXT, bold=True,
@@ -429,17 +427,17 @@ def build_slide(prs, spec):
         for i, (title, items) in enumerate(spec["columns"]):
             x = MARGIN + i * (col_w + Inches(0.5))
             panel(slide, x, BODY_TOP, col_w, Inches(3.6), accent=True)
+            steps.append((slide.shapes[-1].shape_id, "fade"))
             lead(slide, x + Inches(0.35), BODY_TOP + Inches(0.3),
                  col_w - Inches(0.7), title)
-            for spid in bullets_each(slide, items, x + Inches(0.35),
-                                     BODY_TOP + Inches(0.85), col_w - Inches(0.7),
-                                     line_h=Inches(0.9), size=17):
-                steps.append((spid, "fade"))
+            bullets_each(slide, items, x + Inches(0.35),
+                         BODY_TOP + Inches(0.85), col_w - Inches(0.7),
+                         line_h=Inches(0.9), size=17)
 
     elif kind == "moment":
         tb, tf = textbox(slide, MARGIN, Inches(0.85), SLIDE_W - 2 * MARGIN,
                          Inches(0.4))
-        add_runs(tf.paragraphs[0], "ХОД РАБОТЫ", 13, ACCENT, bold=True)
+        add_runs(tf.paragraphs[0], "ХОД РАБОТЫ", 14, ACCENT, bold=True)
         tb, tf = textbox(slide, MARGIN, Inches(1.3), SLIDE_W - 2 * MARGIN,
                          Inches(1.1))
         add_runs(tf.paragraphs[0], spec["title"], 34, TEXT, bold=True,
@@ -460,7 +458,7 @@ def build_slide(prs, spec):
             _, tf = textbox(slide, x, Inches(5.55), cw, Inches(0.35))
             p = tf.paragraphs[0]
             p.alignment = PP_ALIGN.CENTER
-            add_runs(p, chip, 12, WHITE, font=F_MONO)
+            add_runs(p, chip, 14, WHITE, font=F_MONO)
             _ = box
 
     elif kind == "diagram":
@@ -475,9 +473,8 @@ def build_slide(prs, spec):
         if spec.get("kicker"):
             tb, tf = textbox(slide, MARGIN, BODY_TOP - Inches(0.55),
                              SLIDE_W - 2 * MARGIN, Inches(0.35))
-            add_runs(tf.paragraphs[0], spec["kicker"].upper(), 12, ACCENT,
+            add_runs(tf.paragraphs[0], spec["kicker"].upper(), 14, ACCENT,
                      bold=True)
-            steps.append((tb.shape_id, "fade"))
         left_w = Inches(7.4)
         right_x = MARGIN + left_w + Inches(0.5)
         right_w = SLIDE_W - right_x - MARGIN
@@ -488,7 +485,8 @@ def build_slide(prs, spec):
             y = BODY_TOP + i * Inches(1.5)
             panel(slide, right_x, y, right_w, Inches(1.35),
                   accent=block.get("accent", False))
-            steps.append((slide.shapes[-1].shape_id, "fade"))
+            if spec.get("build_blocks"):
+                steps.append((slide.shapes[-1].shape_id, "fade"))
             if block.get("lead"):
                 lead(slide, right_x + Inches(0.25), y + Inches(0.18),
                      right_w - Inches(0.5), block["lead"])
@@ -504,9 +502,8 @@ def build_slide(prs, spec):
         gap = Inches(0.5)
         cw = (SLIDE_W - 2 * MARGIN - gap) / 2
         for i, img in enumerate(spec["images"]):
-            pic = fit_picture(slide, img, MARGIN + i * (cw + gap), BODY_TOP,
-                              cw, Inches(3.9))
-            steps.append((pic.shape_id, "fade"))
+            fit_picture(slide, img, MARGIN + i * (cw + gap), BODY_TOP,
+                        cw, Inches(3.9))
         if spec.get("caption"):
             caption(slide, spec["caption"])
 
@@ -515,7 +512,6 @@ def build_slide(prs, spec):
                          Inches(1.4))
         add_runs(tf.paragraphs[0], spec["index"], 72, ACCENT, bold=True,
                  font=F_HEAD)
-        steps.append((tb.shape_id, "fade"))
         tb, tf = textbox(slide, MARGIN, Inches(3.5), SLIDE_W - 2 * MARGIN,
                          Inches(1.0))
         add_runs(tf.paragraphs[0], spec["title"], 40, TEXT, bold=True,
@@ -537,16 +533,18 @@ def build_slide(prs, spec):
         tb, tf = textbox(slide, MARGIN, Inches(2.5), Inches(5.6), Inches(2.0))
         add_runs(tf.paragraphs[0], spec["big"], spec.get("bigsize", 88), ACCENT,
                  bold=True, font=F_HEAD)
-        steps.append((tb.shape_id, "fade"))
         tb, tf = textbox(slide, MARGIN, Inches(4.6), Inches(5.6), Inches(1.2))
         add_runs(tf.paragraphs[0], spec["note"], 16, TEXT)
+        if spec.get("animated"):
+            steps.append((tb.shape_id, "fade"))
         if spec.get("image"):
             pic = fit_picture(slide, spec["image"], Inches(6.6), Inches(2.2),
                               SLIDE_W - Inches(6.6) - MARGIN, Inches(4.0))
-            steps.append((pic.shape_id, "wipe"))
+            if spec.get("animated"):
+                steps.append((pic.shape_id, "wipe"))
         if spec.get("chips"):
             cx = MARGIN
-            for chip in spec["chips"]:
+            for ci, chip in enumerate(spec["chips"]):
                 cw = Inches(0.22) + Inches(0.085) * len(chip)
                 box = rect(slide, cx, Inches(5.85), cw, Inches(0.4),
                            SURFACE_HI, shape=MSO_SHAPE.ROUNDED_RECTANGLE,
@@ -554,8 +552,9 @@ def build_slide(prs, spec):
                 _, tf = textbox(slide, cx, Inches(5.9), cw, Inches(0.32))
                 p = tf.paragraphs[0]
                 p.alignment = PP_ALIGN.CENTER
-                add_runs(p, chip, 11, TEXT)
-                steps.append((box.shape_id, "fade"))
+                add_runs(p, chip, 14, TEXT)
+                if spec.get("animated") and ci == 0:
+                    steps.append((box.shape_id, "fade"))
                 cx += cw + Inches(0.25)
         if spec.get("caption"):
             caption(slide, spec["caption"])
@@ -578,7 +577,6 @@ def build_slide(prs, spec):
             tb, tf = textbox(slide, MARGIN, Inches(5.9), SLIDE_W - 2 * MARGIN,
                              Inches(0.6))
             add_runs(tf.paragraphs[0], spec["note"], 16, TEXT)
-            steps.append((tb.shape_id, "fade"))
 
         bx = MARGIN
         bw = SLIDE_W - 2 * MARGIN
@@ -587,59 +585,50 @@ def build_slide(prs, spec):
             tb, tf = textbox(slide, bx, y, Inches(1.0), Inches(0.7),
                              anchor=MSO_ANCHOR.MIDDLE)
             add_runs(tf.paragraphs[0], label, 22, SECONDARY, font=F_MONO)
-            track = rect(slide, bx + Inches(1.1), y + Inches(0.05),
-                         bw - Inches(3.4), Inches(0.6), SURFACE_HI)
+            rect(slide, bx + Inches(1.1), y + Inches(0.05),
+                 bw - Inches(3.4), Inches(0.6), SURFACE_HI)
             fill = rect(slide, bx + Inches(1.1), y + Inches(0.05),
                         (bw - Inches(3.4)) * ratio, Inches(0.6), color)
             tb, tf = textbox(slide, bx + bw - Inches(2.2), y, Inches(2.2),
                              Inches(0.7), anchor=MSO_ANCHOR.MIDDLE)
             tf.paragraphs[0].alignment = PP_ALIGN.RIGHT
             add_runs(tf.paragraphs[0], value, 40, TEXT, bold=True, font=F_HEAD)
-            steps.append((track.shape_id, "fade"))
             steps.append((fill.shape_id, "fade"))
-            steps.append((tb.shape_id, "fade"))
         if spec.get("caption"):
             caption(slide, spec["caption"])
 
     elif kind == "live":
         heading(slide, spec["title"])
-        pic = fit_picture(slide, spec["image"], MARGIN, BODY_TOP,
-                          SLIDE_W - 2 * MARGIN, Inches(4.0))
-        steps.append((pic.shape_id, "fade"))
+        fit_picture(slide, spec["image"], MARGIN, BODY_TOP,
+                    SLIDE_W - 2 * MARGIN, Inches(4.0))
         caption(slide, spec["caption"])
 
     elif kind == "video":
         heading(slide, spec["title"])
         pic = fit_picture(slide, spec["poster"], MARGIN, BODY_TOP,
                           SLIDE_W - 2 * MARGIN, Inches(3.6))
-        steps.append((pic.shape_id, "fade"))
-        cx = pic.left + pic.width // 2
-        cy = pic.top + pic.height // 2
-        ring = rect(slide, cx - Inches(0.62), cy - Inches(0.62), Inches(1.24),
-                    Inches(1.24), BG, shape=MSO_SHAPE.OVAL, line=ACCENT)
-        ring.line.width = Pt(3)
-        ring.fill.background()
-        steps.append((ring.shape_id, "fade"))
-        tri = rect(slide, cx - Inches(0.16), cy - Inches(0.24), Inches(0.5),
-                   Inches(0.48), ACCENT, shape=MSO_SHAPE.ISOSCELES_TRIANGLE)
+        # A small 40 px play badge in the bottom-right corner: a poster with a
+        # centred badge reads as a real video embed and competes with the frame.
+        size = Inches(0.4)
+        px = pic.left + pic.width - size - Inches(0.25)
+        py = pic.top + pic.height - size - Inches(0.25)
+        rect(slide, px, py, size, size, BG, shape=MSO_SHAPE.OVAL, line=ACCENT)
+        tri = rect(slide, px + Inches(0.13), py + Inches(0.08), Inches(0.14),
+                   Inches(0.24), ACCENT, shape=MSO_SHAPE.ISOSCELES_TRIANGLE)
         tri.rotation = 90
-        steps.append((tri.shape_id, "fade"))
         if spec.get("meta"):
             tb, tf = textbox(slide, MARGIN, Inches(5.9), SLIDE_W - 2 * MARGIN,
                              Inches(0.4))
             add_runs(tf.paragraphs[0], spec["meta"], 14, SECONDARY, font=F_MONO)
-            steps.append((tb.shape_id, "fade"))
-        cap = caption(slide, spec["caption"])
-        steps.append((cap.shape_id, "fade"))
+        caption(slide, spec["caption"])
 
     elif kind == "limits":
         heading(slide, spec["title"])
         col_w = (SLIDE_W - 2 * MARGIN - Inches(0.5)) / 2
         for i, items in enumerate(spec["columns"]):
             x = MARGIN + i * (col_w + Inches(0.5))
-            for spid in bullets_each(slide, items, x, BODY_TOP + Inches(0.2),
-                                     col_w, line_h=Inches(1.0), size=17):
-                steps.append((spid, "fade"))
+            bullets_each(slide, items, x, BODY_TOP + Inches(0.2), col_w,
+                         line_h=Inches(1.0), size=17)
 
     elif kind == "closing":
         tb, tf = textbox(slide, Inches(1.0), Inches(1.4), SLIDE_W - Inches(2.0),
@@ -647,7 +636,6 @@ def build_slide(prs, spec):
         p = tf.paragraphs[0]
         p.alignment = PP_ALIGN.CENTER
         add_runs(p, spec["title"], 34, TEXT, bold=True, font=F_HEAD)
-        steps.append((tb.shape_id, "fade"))
         qw = Inches(1.5)
         gap = Inches(0.9)
         n = len(spec["qrs"])
@@ -655,14 +643,12 @@ def build_slide(prs, spec):
         x0 = (SLIDE_W - total) / 2
         for i, (rel, label, _url) in enumerate(spec["qrs"]):
             x = x0 + i * (qw + gap)
-            pic = picture(slide, rel, x, Inches(3.1), qw, qw)
-            steps.append((pic.shape_id, "fade"))
-            lbl, tf = textbox(slide, x - Inches(0.3), Inches(4.75),
-                              qw + Inches(0.6), Inches(0.35))
+            picture(slide, rel, x, Inches(3.1), qw, qw)
+            _, tf = textbox(slide, x - Inches(0.3), Inches(4.75),
+                            qw + Inches(0.6), Inches(0.35))
             p2 = tf.paragraphs[0]
             p2.alignment = PP_ALIGN.CENTER
-            add_runs(p2, label, 11, SECONDARY)
-            steps.append((lbl.shape_id, "fade"))
+            add_runs(p2, label, 14, SECONDARY)
         tb, tf = textbox(slide, Inches(1.0), Inches(5.5), SLIDE_W - Inches(2.0),
                          Inches(0.5))
         p3 = tf.paragraphs[0]
@@ -725,12 +711,13 @@ def deck() -> list[dict]:
                      "public/screenshot-validation.png"]),
         dict(kind="shot_side", page=9, title="Контрпример важнее метрики",
              kicker="4 независимые сессии в корпусе + журнал действий устройства",
+             build_blocks=True,
              image="public/screenshot-counterexamples.png",
              blocks=[dict(accent=True, lead="",
                           text="02 00 00 03 13 00 55  —  команда 2 вне ожидаемого набора [1]"),
                      dict(lead="Один байт — 80 контрпримеров",
                           text="80 несоответствий v1 — на offset 0 в сессиях s2 и s3.")],
-             caption="Значение 2 повторяется в 4 независимых сессиях корпуса и связано с действием «изменить настройку» в журнале"),
+             caption="Значение 2 повторяется в независимых сессиях корпуса и связано с действием «изменить настройку» в журнале"),
         dict(kind="divider", page=10, index="01", title="Что получилось",
              note="Точность, покрытие корпуса организаторов, ресурсы"),
         dict(kind="bars", page=11, title="Уточнили правило: 60 из 140 → 140 из 140",
@@ -743,8 +730,8 @@ def deck() -> list[dict]:
              note="45 запросов + 45 ответов. Все matched.",
              caption="Данные не использовались при уточнении правила"),
         dict(kind="metric", page=13, title="95 МиБ разбираются за 12 секунд",
-             big="12 с", image="assets/memory_sweep.png",
-             note="Пик памяти 350 МиБ — 9% бюджета 4 ГиБ",
+             big="12 с", animated=True, image="assets/memory_sweep.png",
+             note="Пик памяти 350 МиБ — 9% бюджета 4 ГиБ на машине 16 ГиБ",
              chips=["12 с общее время", "350 МиБ пик памяти", "250k пакетов"],
              caption="Условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ"),
         dict(kind="divider", page=14, index="02", title="Демонстрация",
@@ -785,7 +772,7 @@ def main() -> None:
         slide, steps = build_slide(prs, spec)
         if steps:
             add_entrance(slide, steps)
-        add_transition(slide, "push" if spec["kind"] == "divider" else "fade")
+        add_transition(slide, "fade")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     prs.save(str(OUT))
     # The deck names Tektur/Montserrat/JetBrains Mono, which a viewer may not

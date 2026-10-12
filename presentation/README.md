@@ -94,9 +94,10 @@ python -m presentation.fetch_icons
   `style.css`. Dark theme: background `#0E1011`, surface `#1F2124`, body text
   `#F4F1EC`, secondary `#A8A29E`, accent `#D0603A`. Light theme (`html.light`):
   background `#FAF9F7`, surface `#FFFFFF`, text `#1C1917`, secondary `#57534E`,
-  accent `#C2410C`. Rounded corners 12 px. Slide transition is `slide-left`;
-  build-ins are `v-click`.
+  accent `#C2410C`. Rounded corners 12 px. Slide transition is a plain `fade`;
+  build-ins are `v-click`, kept to at most three per slide.
 - Slide 16 shows `public/screencast-poster.png` — a still baked from
-  `screencast.mp4` (the sharpest of six sampled frames) with a play glyph drawn
-  over it in CSS; the frame stays an image so the build does not depend on a
+  `screencast.mp4` (the sharpest of six sampled frames) with a small 40 px play
+  badge in the bottom-right corner drawn in CSS; the frame stays an image so the
+  build does not depend on a
   video codec.

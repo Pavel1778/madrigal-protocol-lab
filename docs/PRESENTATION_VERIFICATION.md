@@ -134,16 +134,18 @@ asset count — and the word «Вопросы» appears nowhere in the deck.
 | fact | value | command |
 | --- | --- | --- |
 | slides | 19, 16:9 (13.333 x 7.5 in) | `python -m presentation.scripts.build_pptx` |
-| entrance animations | 60, click-triggered (58 fade, 2 wipe) | XML scan of `slides.pptx` |
-| chart build-ins | 2 wipe (donut and memory-sweep figures) | XML scan of `slides.pptx` |
-| transitions | 19 (fade; push on the three section dividers) | XML scan of `slides.pptx` |
+| entrance animations | 20, click-triggered (19 fade, 1 wipe), at most 3 per slide | XML scan of `slides.pptx` |
+| chart build-in | 1 wipe (the memory-sweep figure) | XML scan of `slides.pptx` |
+| transitions | 19, plain fade | XML scan of `slides.pptx` |
 | embedded fonts | Tektur, Montserrat, JetBrains Mono (5 faces) | `pytest tests/project/test_presentation_sync.py` |
 | text | native editable runs, deck palette | python-pptx |
 
-The deck is drawn directly with python-pptx — no PowerPoint template. Headings
-fade in, bullet lists build one item per click, the two chart figures wipe in
-left to right, and every slide carries a fade transition (push on the three
-section dividers). The XML of all 105 parts parses without error.
+The deck is drawn directly with python-pptx — no PowerPoint template. Content
+fades in on click, kept to at most three build-ins per slide, and the
+memory-sweep figure wipes in left to right. Every slide carries a plain fade
+transition; the cover, the three section dividers, the recording slide and the
+closing slide carry no click animation at all. The XML of all 105 parts parses
+without error.
 
 ## Fonts
 

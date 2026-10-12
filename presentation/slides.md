@@ -47,8 +47,8 @@ layout: default
 
 <div class="team">
 
-<div class="member" v-click>
-<img src="/avatar_pavel_round.png" alt="Сабадаш Павел" class="member__photo">
+<div class="member">
+<img src="/avatar_pavel_round.png" alt="Сабадаш Павел" class="member__photo" v-click>
 <div class="member__info">
 <div class="member__name">Сабадаш Павел</div>
 <div class="member__role">Архитектура · захват · интерфейс</div>
@@ -59,8 +59,8 @@ layout: default
 </div>
 </div>
 
-<div class="member" v-click>
-<img src="/avatar_nikita_round.png" alt="Предков Никита" class="member__photo">
+<div class="member">
+<img src="/avatar_nikita_round.png" alt="Предков Никита" class="member__photo" v-click>
 <div class="member__info">
 <div class="member__name">Предков Никита</div>
 <div class="member__role">Правила · тесты · ревью</div>
@@ -103,7 +103,7 @@ layout: default
 <div class="lead">Дано</div>
 <ul>
 <li v-click>Захваты <code>pcap</code>/<code>pcapng</code> и журнал действий устройства</li>
-<li v-click>Спецификации протокола нет</li>
+<li>Спецификации протокола нет</li>
 </ul>
 </div>
 
@@ -111,7 +111,7 @@ layout: default
 <div class="lead">Требуется</div>
 <ul>
 <li v-click>Проверяемая интерпретация структуры сообщений</li>
-<li v-click>Видно, где чтение верно, а где перестаёт работать</li>
+<li>Видно, где чтение верно, а где перестаёт работать</li>
 </ul>
 </div>
 
@@ -157,14 +157,14 @@ layout: default
 <div class="arch__desc">pcap/pcapng → сессии<br>reassembly, provenance</div>
 </div>
 
-<div class="arch__arrow" v-click><span>JSON</span>→</div>
+<div class="arch__arrow"><span>JSON</span>→</div>
 
 <div class="arch__box" v-click>
 <div class="arch__name">protocol + hypothesis</div>
 <div class="arch__desc">правила, фрейминг<br>контрпримеры, версии</div>
 </div>
 
-<div class="arch__arrow" v-click><span>JSON</span>→</div>
+<div class="arch__arrow"><span>JSON</span>→</div>
 
 <div class="arch__box" v-click>
 <div class="arch__name">ui</div>
@@ -173,7 +173,7 @@ layout: default
 
 </div>
 
-<div class="caption" v-click>Контракты между модулями зафиксированы схемами JSON; порядок вызовов не важен</div>
+<div class="caption">Контракты между модулями зафиксированы схемами JSON; порядок вызовов не важен</div>
 
 ---
 layout: default
@@ -181,11 +181,11 @@ layout: default
 
 # От интерпретации можно вернуться к исходным данным
 
-<div class="shot__frame" v-click>
+<div class="shot__frame">
 <img class="shot--full" src="/screenshot-provenance.png" alt="Байты сообщения и панель происхождения: пакет, последовательность, время">
 </div>
 
-<div class="byte-line" v-click>packet 3 · seq 1001 · ts 1700000000.004 · сессия <code>s1</code></div>
+<div class="byte-line">packet 3 · seq 1001 · ts 1700000000.004 · сессия <code>s1</code></div>
 
 ---
 layout: default
@@ -193,11 +193,11 @@ layout: default
 
 # Правило проверяется на всём корпусе сразу
 
-<div class="shot__frame" v-click>
+<div class="shot__frame">
 <img class="shot--half" src="/screenshot-rule.png" alt="Правило в редакторе: JSON крупным планом">
 </div>
 
-<div class="shot__frame" v-click>
+<div class="shot__frame">
 <img class="shot--half" src="/screenshot-validation.png" alt="Результат применения правила к потоку">
 </div>
 
@@ -217,7 +217,7 @@ layout: default
 <img src="/screenshot-counterexamples.png" alt="Список контрпримеров, привязанных к байту">
 </div>
 
-<div class="caption">Значение <code>2</code> повторяется в 4 независимых сессиях корпуса и связано с действием «изменить настройку» в журнале</div>
+<div class="caption">Значение <code>2</code> повторяется в независимых сессиях корпуса и связано с действием «изменить настройку» в журнале</div>
 
 </div>
 
@@ -238,7 +238,7 @@ layout: default
 </div>
 
 ---
-transition: slide-left
+transition: fade
 layout: default
 ---
 
@@ -292,11 +292,11 @@ layout: default
 <div class="metric__grid">
 
 <div>
-<div class="bignum" v-click>90</div>
-<div class="metric__note" v-click>45 запросов + 45 ответов. Все matched.</div>
+<div class="bignum">90</div>
+<div class="metric__note">45 запросов + 45 ответов. Все matched.</div>
 </div>
 
-<div class="metric__figure" v-click>
+<div class="metric__figure">
 <img src="/assets/coverage_donut.svg" alt="Пончик: 45 запросов и 45 ответов, 0 неприменимых">
 </div>
 
@@ -317,8 +317,8 @@ layout: default
 <div class="metric__grid">
 
 <div>
-<div class="bignum" v-click>12 с</div>
-<div class="metric__note" v-click>Пик памяти 350 МиБ — 9% бюджета 4 ГиБ</div>
+<div class="bignum">12 с</div>
+<div class="metric__note" v-click>Пик памяти 350 МиБ — 9% бюджета 4 ГиБ на машине 16 ГиБ</div>
 </div>
 
 <div class="metric__figure" v-click>
@@ -329,8 +329,8 @@ layout: default
 
 <div class="metric-row">
 <span v-click><b>12 с</b> общее время</span>
-<span v-click><b>350 МиБ</b> пик памяти</span>
-<span v-click><b>250k</b> пакетов</span>
+<span><b>350 МиБ</b> пик памяти</span>
+<span><b>250k</b> пакетов</span>
 </div>
 
 <div class="caption">Условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ</div>
@@ -338,7 +338,7 @@ layout: default
 </div>
 
 ---
-transition: slide-left
+transition: fade
 layout: default
 ---
 
@@ -362,11 +362,11 @@ layout: default
 
 # Живое окно
 
-<div class="live__frame" v-click>
+<div class="live__frame">
 <img class="shot--live" src="/screenshot-main.png" alt="Главное окно: сессии, байты, интерпретация, диагностика">
 </div>
 
-<div class="caption" v-click>Сессии, байты, интерпретация, происхождение и диагностика в одном окне</div>
+<div class="caption">Сессии, байты, интерпретация, происхождение и диагностика в одном окне</div>
 
 </div>
 
@@ -380,9 +380,9 @@ layout: default
 
 <div class="recording__frame">
 <img src="/screencast-poster.png" alt="Кадр записи: главное окно с разобранным сообщением">
-<svg class="recording__play" viewBox="0 0 120 120" role="img" aria-label="Запись прогона">
-<circle cx="60" cy="60" r="54" fill="none" stroke="#D0603A" stroke-width="3"/>
-<polygon points="48,38 48,82 84,60" fill="#D0603A"/>
+<svg class="recording__play" viewBox="0 0 40 40" role="img" aria-label="Запись прогона">
+<circle cx="20" cy="20" r="18" fill="none" stroke="#D0603A" stroke-width="2"/>
+<polygon points="16,12 16,28 29,20" fill="#D0603A"/>
 </svg>
 </div>
 
@@ -396,7 +396,7 @@ layout: default
 <div class="caption">Играется, если живое окно не поднимется на защите</div>
 
 ---
-transition: slide-left
+transition: fade
 layout: default
 ---
 
@@ -422,15 +422,15 @@ layout: default
 
 <div>
 <ul>
-<li v-click>Смысл байта флагов не установлен: в корпусе он постоянен</li>
-<li v-click>Поле значения остаётся гипотезой, а не фактом</li>
+<li>Смысл байта флагов не установлен: в корпусе он постоянен</li>
+<li>Поле значения остаётся гипотезой, а не фактом</li>
 </ul>
 </div>
 
 <div>
 <ul>
-<li v-click>Альтернативные чтения берутся из заданного набора</li>
-<li v-click>Интерпретация верна для проверенных захватов и молчит вне них</li>
+<li>Альтернативные чтения берутся из заданного набора</li>
+<li>Интерпретация верна для проверенных захватов и молчит вне них</li>
 </ul>
 </div>
 
@@ -446,22 +446,22 @@ layout: default
 
 <div class="qr-grid">
 
-<div class="qr-item" v-click>
+<div class="qr-item">
 <img src="/qr_repo.png" alt="QR: репозиторий">
 <div class="caption">Репозиторий</div>
 </div>
 
-<div class="qr-item" v-click>
+<div class="qr-item">
 <img src="/qr_release.png" alt="QR: релиз v1.0.0">
 <div class="caption">Релиз v1.0.0</div>
 </div>
 
-<div class="qr-item" v-click>
+<div class="qr-item">
 <img src="/qr_telegram_pasha.png" alt="QR: Telegram Павла">
 <div class="caption">@Pasha1778</div>
 </div>
 
-<div class="qr-item" v-click>
+<div class="qr-item">
 <img src="/qr_telegram_nikita.png" alt="QR: Telegram Никиты">
 <div class="caption">@petruan</div>
 </div>
