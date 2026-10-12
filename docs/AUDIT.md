@@ -343,3 +343,80 @@ a live socket.
 
 Historical commits carry service email addresses as author or committer.
 Left in place (no rewrite). Display is normalized via `.mailmap`.
+
+## 15. Full-project audit and extended lint
+
+A second pass over the whole repository (not only the capture zone), started on
+`main` at `0466abc` and landed on `89ada7f` after the final presentation polish
+was merged.
+
+### Lint gate widened
+
+The `[tool.ruff]` selection was widened from the starter set to `E`, `F`, `I`,
+`UP`, `B`, `SIM`, `C4`, `ISC` and the remaining groups noted in
+`pyproject.toml`. `ruff check .` is clean over `src`, `tests`, `scripts` and
+`presentation`. The findings were fixed automatically where the rewrite was
+safe, then by hand for the rest. The hand edits worth naming:
+
+- `src/protocol/cli.py`: a file opened without a context manager (`SIM115`).
+- `src/protocol/export.py`: `%`-formatting replaced with f-strings (`UP031`).
+- `tests/hypothesis/test_real_corpus.py`, `tests/protocol/test_cli.py`: the same
+  `SIM115` pattern in test helpers.
+- `tests/integration/test_reference_report.py`: implicit string concatenation
+  (`ISC001`).
+- `presentation/scripts/build_pptx.py`: `Inches()` calls moved out of function
+  defaults (`B008`).
+
+Two automatic rewrites had to be followed up, because they changed more than
+formatting:
+
+- `C408` turned the `dict(kind=...)` slide specs in `build_pptx.py` into `{...}`
+  literals. The presentation sync guard (`tests/project/test_presentation_sync.py`)
+  reads those specs from the source with `ast`; it now accepts both spellings and
+  collects only string *values*, never mapping keys, so nested spec keys such as
+  `accent`/`lead`/`text` are no longer mistaken for slide copy.
+- `UP042` turned `(str, Enum)` into `StrEnum` in `src/hypothesis/status.py` and
+  `src/capture/session.py`. This supersedes the note in section 3 that kept the
+  `str, Enum` spelling: the two are equivalent for the public contract, because
+  every writer serialises through `.value` and every reader parses with
+  `Status(text)` / `Direction(text)`, never `str(member)`.
+
+### IPv6
+
+`src/capture/parser.py` now parses IPv6 as well as IPv4. `_layer3_ip` returns the
+IP version with the datagram; `_parse_tcp` and the checksum check dispatch on it,
+and IPv6 TCP checksums are verified against the IPv6 pseudo-header. A TCP session
+over IPv6 yields a stream exactly like IPv4. Only IPv6 fragmentation is still not
+reassembled: such a packet is reported as `ip_fragment` and skipped, as before.
+
+`docs/CAPTURE_API.md`, `docs/CONTRACT.md`, `ARCHITECTURE.md` and
+`docs/PROJECT_MAP.md` no longer list IPv6 as unsupported. The schema keeps
+`ipv6_ignored` in its enum so files written before this change still validate,
+but the parser no longer emits it. `tests/fixtures/ipv6_session.pcapng` and
+`tests/fixtures/defects/fragmented_ipv6.pcapng` cover both paths; the two tests
+that pinned the old "skip IPv6" behaviour were rewritten.
+
+### Presentation
+
+The recording-slide play badge was also moved out of the frame centre on this
+pass. The same fix landed on `main` first, in the presentation polish
+(`0c164e8`, a 40 px badge in the lower-right corner); the two agree on the size
+and placement, so this pass keeps that version and contributes only the source
+consistency it needs. The `C408` rewrite described above is what the presentation
+sync guard had to be taught to read.
+
+### Final numbers
+
+| Check | Result |
+| --- | --- |
+| `pytest tests/ -q` (LANG=en_US.UTF-8, `QT_QPA_PLATFORM=offscreen`) | 794 passed, 0 failed |
+| `ruff check .` | All checks passed |
+| `ruff format --check .` | 91 files would be reformatted (still deferred) |
+| `mypy src/` | 93 findings in 11 files (still deferred) |
+| `presentation/slides.pdf`, `slides-light.pdf` | 19 pages, no blank page |
+
+The `mypy` findings are concentrated in three files: `src/protocol/engine.py`
+(56), `src/ui/main_window.py` (17) and `src/protocol/rule.py` (6). The engine
+figure is mostly one pattern — `FieldResult(**kwargs)` built from a mixed-type
+mapping — and the fix is a typed constructor call at each of the six call sites,
+which is left for a dedicated change rather than folded into this pass.
