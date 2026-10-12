@@ -132,6 +132,16 @@ is the merge of PR #14 (`f637644`); the entries below are the work that followed
 - `presentation/fonts.py`, which embeds Tektur, Montserrat and JetBrains Mono
   into `slides.pptx` as obfuscated `.fntdata` parts, so the deck renders its own
   typefaces on a machine that has none of them installed.
+- Field types `float`, `varint`, `tlv` and bit fields, decoded by the rule engine
+  and covered by the rule schema.
+- CSV and JSONL result export: `write_result` picks the format from the output
+  suffix, alongside the contract JSON.
+- Request/response pairing (`src/hypothesis/pairing.py`): turns carry a
+  confidence and the observations it rests on, and the protocol CLI gained a
+  `pair` subcommand.
+- Researcher annotations stored in the project (`src/project/annotations.py`),
+  with `annotate` and `annotations` subcommands, and an Annotations section in
+  both report renderers.
 
 ### Changed
 

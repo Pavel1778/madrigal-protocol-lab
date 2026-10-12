@@ -70,6 +70,10 @@ GUI works with `apply_rule` / `apply_rule_fields`, `build_result`,
 - `ApplicationResult.to_dict()`; `write_result(result, path, validate=True)`;
   `validate_result(payload, schema_path=None)`;
   `message_status(result_payload: dict, offset: int) -> Status | None`.
+  `write_result` selects the format from the path suffix: `.jsonl` writes one
+  compact message per line and `.csv` writes a header plus one row per message
+  with a column per declared field; any other suffix is contract JSON, which is
+  validated against the schema.
 
 ### Hypothesis
 
@@ -128,6 +132,7 @@ python -m src.protocol.cli verify --rule rule.json --capture capture.json --out 
 python -m src.protocol.cli diff   --rule-a v1.json --rule-b v2.json --report-a r1.json --report-b r2.json
 python -m src.protocol.cli metrics --report r1.json --out metrics.json
 python -m src.protocol.cli correlate --capture capture.json --journal journal.md --out correlations.json
+python -m src.protocol.cli pair   --rule rule.json --capture capture.json --out pairing.json
 python -m src.protocol.cli export --rule rule.json --format kaitai --out out/
 python -m src.protocol.cli alternatives --report r1.json --corpus capture.json --journal journal.md --field value --out alternatives.json
 ```
@@ -550,6 +555,36 @@ evidence was available. An entry is used at most once.
 python -m src.protocol.cli correlate --rule rule.json --capture capture.json \
     --journal journal.md --window-ms 500 --out correlations.json
 ```
+
+### Request and response pairing
+
+Journal correlation relates a message to the researcher's own notes. Pairing
+relates a message to *another message*: when a rule frames both directions,
+`build_turns(messages, session_id="", window_seconds=5.0)` orders the messages
+by timestamp and pairs each one with the next message in the opposite
+direction. It is in `src/hypothesis/pairing.py`.
+
+Each `Turn` holds the request, the response (or `None`), the observed
+`gap_seconds`, a `confidence` in `[0, 1]`, and `basis`, the list of
+observations the confidence rests on. A message with no follower in the
+opposite direction is reported as unanswered with confidence `0`. Confidence is
+a fixed weighted sum — base `0.40`, opposite directions `0.15`, observed time
+order `0.15`, a reply within the window `0.10`, both messages framed cleanly
+`0.10`, both matched `0.05`, minus `0.20` when either message was framed weakly
+(`ambiguous`, `incomplete`, `unknown`) and `0.15` when a timestamp is missing.
+The weights are stated at the top of the module.
+
+The number is a score over those observations, not a probability that the reply
+belongs to the request. Pairing never asserts ownership; it reports order,
+direction and timing, and leaves the meaning to the researcher.
+
+```
+python -m src.protocol.cli pair --rule rule.json --capture capture.json \
+    --session s1 --window-ms 500 --out pairing.json
+```
+
+`build_turns_for_corpus(streams)` pairs within each session separately, so a
+reply from one connection is never matched to a request from another.
 
 ## 10. Alternatives and export
 
