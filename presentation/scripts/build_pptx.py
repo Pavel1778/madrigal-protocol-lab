@@ -149,7 +149,7 @@ SECTIONS = ((1, "Постановка и метод"), (10, "Результат�
 
 
 def footer(slide, page):
-    tb, tf = textbox(slide, MARGIN, SLIDE_H - FOOTER_H, Inches(4.2),
+    _tb, tf = textbox(slide, MARGIN, SLIDE_H - FOOTER_H, Inches(4.2),
                      Inches(0.3))
     add_runs(tf.paragraphs[0], "Команда HTTP 418 · кейс #02 · Мадригал", 10,
              SECONDARY)
@@ -157,32 +157,38 @@ def footer(slide, page):
     for start, label in SECTIONS:
         if page >= start:
             section = label
-    tb1, tf1 = textbox(slide, Inches(4.8), SLIDE_H - FOOTER_H, Inches(3.7),
+    _tb1, tf1 = textbox(slide, Inches(4.8), SLIDE_H - FOOTER_H, Inches(3.7),
                        Inches(0.3))
     p1 = tf1.paragraphs[0]
     p1.alignment = PP_ALIGN.CENTER
     add_runs(p1, section, 10, SECONDARY)
-    tb2, tf2 = textbox(slide, Inches(8.9), SLIDE_H - FOOTER_H, Inches(3.5),
+    _tb2, tf2 = textbox(slide, Inches(8.9), SLIDE_H - FOOTER_H, Inches(3.5),
                        Inches(0.3))
     p2 = tf2.paragraphs[0]
     p2.alignment = PP_ALIGN.RIGHT
     add_runs(p2, f"{page} / {TOTAL}", 10, SECONDARY)
 
 
-def heading(slide, text, size=40, height=Inches(1.15)):
+def heading(slide, text, size=40, height=None):
+    if height is None:
+        height = Inches(1.15)
     tb, tf = textbox(slide, MARGIN, Inches(0.5), SLIDE_W - 2 * MARGIN,
                      height)
     add_runs(tf.paragraphs[0], text, size, TEXT, bold=True, font=F_HEAD)
     return tb
 
 
-def caption(slide, text, y=Inches(6.6)):
+def caption(slide, text, y=None):
+    if y is None:
+        y = Inches(6.6)
     tb, tf = textbox(slide, MARGIN, y, SLIDE_W - 2 * MARGIN, Inches(0.4))
     add_runs(tf.paragraphs[0], text, 14, SECONDARY)
     return tb
 
 
-def bullets(slide, items, x, y, w, h, size=17, gap=Pt(10)):
+def bullets(slide, items, x, y, w, h, size=17, gap=None):
+    if gap is None:
+        gap = Pt(10)
     tb, tf = textbox(slide, x, y, w, h)
     first = True
     for it in items:
@@ -193,8 +199,10 @@ def bullets(slide, items, x, y, w, h, size=17, gap=Pt(10)):
     return tb
 
 
-def bullets_each(slide, items, x, y, w, line_h=Inches(0.8), size=17):
+def bullets_each(slide, items, x, y, w, line_h=None, size=17):
     """One textbox per bullet, so each can build in on its own click."""
+    if line_h is None:
+        line_h = Inches(0.8)
     ids = []
     for i, it in enumerate(items):
         tb, tf = textbox(slide, x, y + i * line_h, w, line_h)
@@ -670,94 +678,94 @@ def build_slide(prs, spec):
 # --- content (mirrors slides.md, 19 slides) ---------------------------------
 def deck() -> list[dict]:
     return [
-        dict(kind="cover", page=1, title="Лаборатория протоколов",
-             sub="Восстановление недокументированного бинарного протокола поверх TCP",
-             meta="UMIRHack 2026 · кейс #02 · Мадригал · команда HTTP 418",
-             notes="Приветствие, 20 секунд."),
-        dict(kind="team", page=2, title="Нас двое",
-             members=[("Сабадаш Павел", "Архитектура · захват · интерфейс",
+        {"kind": "cover", "page": 1, "title": "Лаборатория протоколов",
+             "sub": "Восстановление недокументированного бинарного протокола поверх TCP",
+             "meta": "UMIRHack 2026 · кейс #02 · Мадригал · команда HTTP 418",
+             "notes": "Приветствие, 20 секунд."},
+        {"kind": "team", "page": 2, "title": "Нас двое",
+             "members": [("Сабадаш Павел", "Архитектура · захват · интерфейс",
                        "@Pasha1778", "qr_telegram_pasha.png",
                        "avatar_pavel_round.png"),
                       ("Предков Никита", "Правила · тесты · ревью", "@petruan",
                        "qr_telegram_nikita.png", "avatar_nikita_round.png")],
-             notes="Два человека, разделение ролей, QR на контакт у каждого."),
-        dict(kind="statement", page=3,
-             title="TCP разрезает сообщения посередине",
-             sub="Границы пакета и границы сообщения — разные вещи",
-             image="assets/tcp_framing.png"),
-        dict(kind="given", page=4, title="Дано и требуется",
-             columns=[("Дано", ["Захваты `pcap`/`pcapng` и журнал действий устройства",
+             "notes": "Два человека, разделение ролей, QR на контакт у каждого."},
+        {"kind": "statement", "page": 3,
+             "title": "TCP разрезает сообщения посередине",
+             "sub": "Границы пакета и границы сообщения — разные вещи",
+             "image": "assets/tcp_framing.png"},
+        {"kind": "given", "page": 4, "title": "Дано и требуется",
+             "columns": [("Дано", ["Захваты `pcap`/`pcapng` и журнал действий устройства",
                                 "Спецификации протокола нет"]),
                       ("Требуется", ["Проверяемая интерпретация структуры сообщений",
-                                     "Видно, где чтение верно, а где перестаёт работать"])]),
-        dict(kind="moment", page=5,
-             title="Смещение поля длины оказалось на четыре байта позже, чем мы считали",
-             sub="Одно правило, два чтения: поле длины остаётся на offset 2",
-             image="assets/length_offset.png",
-             chips=["наблюдение", "гипотеза", "проверка", "контрпример", "уточнение",
-                    "повторная проверка"]),
-        dict(kind="arch", page=6,
-             title="Три модуля связаны форматами, а не вызовами",
-             modules=[("capture", "pcap/pcapng → сессии\nreassembly, provenance"),
+                                     "Видно, где чтение верно, а где перестаёт работать"])]},
+        {"kind": "moment", "page": 5,
+             "title": "Смещение поля длины оказалось на четыре байта позже, чем мы считали",
+             "sub": "Одно правило, два чтения: поле длины остаётся на offset 2",
+             "image": "assets/length_offset.png",
+             "chips": ["наблюдение", "гипотеза", "проверка", "контрпример", "уточнение",
+                    "повторная проверка"]},
+        {"kind": "arch", "page": 6,
+             "title": "Три модуля связаны форматами, а не вызовами",
+             "modules": [("capture", "pcap/pcapng → сессии\nreassembly, provenance"),
                       ("protocol + hypothesis", "правила, фрейминг\nконтрпримеры, версии"),
                       ("ui", "окно PySide6\nисследование и просмотр")],
-             caption="Контракты между модулями зафиксированы схемами JSON; порядок вызовов не важен"),
-        dict(kind="shot_side", page=7, title="От интерпретации можно вернуться к исходным данным",
-             image="public/screenshot-provenance.png",
-             blocks=[dict(accent=True, lead="",
-                          text="packet 3 · seq 1001 · ts 1700000000.004 · сессия s1")]),
-        dict(kind="pair", page=8, title="Правило проверяется на всём корпусе сразу",
-             images=["public/screenshot-rule.png",
-                     "public/screenshot-validation.png"]),
-        dict(kind="shot_side", page=9, title="Контрпример важнее метрики",
-             kicker="4 независимые сессии в корпусе + журнал действий устройства",
-             build_blocks=True,
-             image="public/screenshot-counterexamples.png",
-             blocks=[dict(accent=True, lead="",
-                          text="02 00 00 03 13 00 55  —  команда 2 вне ожидаемого набора [1]"),
-                     dict(lead="Один байт — 80 контрпримеров",
-                          text="80 несоответствий v1 — на offset 0 в сессиях s2 и s3.")],
-             caption="Значение 2 повторяется в независимых сессиях корпуса и связано с действием «изменить настройку» в журнале"),
-        dict(kind="divider", page=10, index="01", title="Что получилось",
-             note="Точность, покрытие корпуса организаторов, ресурсы"),
-        dict(kind="bars", page=11, title="Уточнили правило: 60 из 140 → 140 из 140",
-             sub="На корпусе уточнения. Отдельно проверено на реальном датасете: 45 + 45, precision 1.00",
-             note="Было 60 matched из 140 и 80 контрпримеров. Стало 140 matched из 140 и ноль контрпримеров",
-             bars=[("v1", "0.43", 0.43, MISMATCHED),
-                   ("v2", "1.00", 1.0, MATCHED)]),
-        dict(kind="metric", page=12, title="Набор организаторов разобран целиком",
-             big="90", bigsize=120, image="assets/coverage_donut.png",
-             note="45 запросов + 45 ответов. Все matched.",
-             caption="Данные не использовались при уточнении правила"),
-        dict(kind="metric", page=13, title="95 МиБ разбираются за 12 секунд",
-             big="12 с", animated=True, image="assets/memory_sweep.png",
-             note="Пик памяти 350 МиБ — 9% бюджета 4 ГиБ на машине 16 ГиБ",
-             chips=["12 с общее время", "350 МиБ пик памяти", "250k пакетов"],
-             caption="Условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ"),
-        dict(kind="divider", page=14, index="02", title="Демонстрация",
-             note="Живое окно и запись прогона"),
-        dict(kind="live", page=15, title="Живое окно",
-             image="public/screenshot-main.png",
-             caption="Сессии, байты, интерпретация, происхождение и диагностика в одном окне"),
-        dict(kind="video", page=16,
-             title="Резерв: запись прогона",
-             poster="public/screencast-poster.png",
-             meta="Полный прогон референсного исследования · 2:22 · без звука",
-             caption="Играется, если живое окно не поднимется на защите"),
-        dict(kind="divider", page=17, index="03", title="Границы и итог",
-             note="Что мы не утверждаем и что осталось за рамками"),
-        dict(kind="limits", page=18, title="Что мы не утверждаем",
-             columns=[["Смысл байта флагов не установлен: в корпусе он постоянен",
+             "caption": "Контракты между модулями зафиксированы схемами JSON; порядок вызовов не важен"},
+        {"kind": "shot_side", "page": 7, "title": "От интерпретации можно вернуться к исходным данным",
+             "image": "public/screenshot-provenance.png",
+             "blocks": [{"accent": True, "lead": "",
+                          "text": "packet 3 · seq 1001 · ts 1700000000.004 · сессия s1"}]},
+        {"kind": "pair", "page": 8, "title": "Правило проверяется на всём корпусе сразу",
+             "images": ["public/screenshot-rule.png",
+                     "public/screenshot-validation.png"]},
+        {"kind": "shot_side", "page": 9, "title": "Контрпример важнее метрики",
+             "kicker": "4 независимые сессии в корпусе + журнал действий устройства",
+             "build_blocks": True,
+             "image": "public/screenshot-counterexamples.png",
+             "blocks": [{"accent": True, "lead": "",
+                          "text": "02 00 00 03 13 00 55  —  команда 2 вне ожидаемого набора [1]"},
+                     {"lead": "Один байт — 80 контрпримеров",
+                          "text": "80 несоответствий v1 — на offset 0 в сессиях s2 и s3."}],
+             "caption": "Значение 2 повторяется в независимых сессиях корпуса и связано с действием «изменить настройку» в журнале"},
+        {"kind": "divider", "page": 10, "index": "01", "title": "Что получилось",
+             "note": "Точность, покрытие корпуса организаторов, ресурсы"},
+        {"kind": "bars", "page": 11, "title": "Уточнили правило: 60 из 140 → 140 из 140",
+             "sub": "На корпусе уточнения. Отдельно проверено на реальном датасете: 45 + 45, precision 1.00",
+             "note": "Было 60 matched из 140 и 80 контрпримеров. Стало 140 matched из 140 и ноль контрпримеров",
+             "bars": [("v1", "0.43", 0.43, MISMATCHED),
+                   ("v2", "1.00", 1.0, MATCHED)]},
+        {"kind": "metric", "page": 12, "title": "Набор организаторов разобран целиком",
+             "big": "90", "bigsize": 120, "image": "assets/coverage_donut.png",
+             "note": "45 запросов + 45 ответов. Все matched.",
+             "caption": "Данные не использовались при уточнении правила"},
+        {"kind": "metric", "page": 13, "title": "95 МиБ разбираются за 12 секунд",
+             "big": "12 с", "animated": True, "image": "assets/memory_sweep.png",
+             "note": "Пик памяти 350 МиБ — 9% бюджета 4 ГиБ на машине 16 ГиБ",
+             "chips": ["12 с общее время", "350 МиБ пик памяти", "250k пакетов"],
+             "caption": "Условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ"},
+        {"kind": "divider", "page": 14, "index": "02", "title": "Демонстрация",
+             "note": "Живое окно и запись прогона"},
+        {"kind": "live", "page": 15, "title": "Живое окно",
+             "image": "public/screenshot-main.png",
+             "caption": "Сессии, байты, интерпретация, происхождение и диагностика в одном окне"},
+        {"kind": "video", "page": 16,
+             "title": "Резерв: запись прогона",
+             "poster": "public/screencast-poster.png",
+             "meta": "Полный прогон референсного исследования · 2:22 · без звука",
+             "caption": "Играется, если живое окно не поднимется на защите"},
+        {"kind": "divider", "page": 17, "index": "03", "title": "Границы и итог",
+             "note": "Что мы не утверждаем и что осталось за рамками"},
+        {"kind": "limits", "page": 18, "title": "Что мы не утверждаем",
+             "columns": [["Смысл байта флагов не установлен: в корпусе он постоянен",
                        "Поле значения остаётся гипотезой, а не фактом"],
                       ["Альтернативные чтения берутся из заданного набора",
-                       "Интерпретация верна для проверенных захватов и молчит вне них"]]),
-        dict(kind="closing", page=19,
-             title="Инструмент превращает байты в проверяемое знание",
-             qrs=[("public/qr_repo.png", "Репозиторий", GITHUB),
+                       "Интерпретация верна для проверенных захватов и молчит вне них"]]},
+        {"kind": "closing", "page": 19,
+             "title": "Инструмент превращает байты в проверяемое знание",
+             "qrs": [("public/qr_repo.png", "Репозиторий", GITHUB),
                   ("public/qr_release.png", "Релиз v1.0.0", RELEASE),
                   ("public/qr_telegram_pasha.png", "@Pasha1778", "https://t.me/Pasha1778"),
                   ("public/qr_telegram_nikita.png", "@petruan", "https://t.me/petruan")],
-             notes="QR ведут на репозиторий, релиз и контакты."),
+             "notes": "QR ведут на репозиторий, релиз и контакты."},
     ]
 
 
