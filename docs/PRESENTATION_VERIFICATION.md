@@ -97,11 +97,12 @@ Two further scans, both clean on the dark and the light export:
 
 Nine of nine present.
 
-- Requirement 2: slide 2 shows the two real member photos — `1.jpg` and `2.jpg`
-  at the repository root, cropped by `presentation/make_assets.py` to
-  `public/avatar_pavel_round.png` and `public/avatar_nikita_round.png` (360x360,
-  real PNGs) — beside both entries: «Сабадаш Павел» with the architecture,
-  capture and interface role, and «Предков Никита» with the rules and tests role.
+- Requirement 2: slide 2 shows the two real member photos —
+  `assets/team/pavel.jpg` and `assets/team/nikita.jpg`, cropped by
+  `presentation/make_assets.py` to `public/avatar_pavel_round.png` and
+  `public/avatar_nikita_round.png` (360x360, real PNGs) — beside both entries:
+  «Сабадаш Павел» with the architecture, capture and interface role, and
+  «Предков Никита» with the rules and tests role.
   The two avatars are distinct files with distinct hashes; no placeholder or
   duplicated portrait is used. The deck sizes the avatar at 180 px, the member
   name at 28 px and the per-member QR at 80 px.

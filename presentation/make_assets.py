@@ -3,7 +3,8 @@
 Everything here is derived from a committed source, nothing is drawn by hand:
 
 * ``avatar_pavel_round.png`` / ``avatar_nikita_round.png``  the per-member team
-  photos (``1.jpg`` / ``2.jpg`` at the repository root), cropped to circles;
+  photos (``assets/team/pavel.jpg`` / ``assets/team/nikita.jpg``), cropped to
+  circles;
 * ``qr_telegram_pasha.png`` / ``qr_telegram_nikita.png``  Telegram codes;
 * ``screenshot-*.png``  crops of the real GUI captures at the panel seams
   detected in the pixel data, so each slide can show the region it talks about
@@ -45,11 +46,11 @@ TELEGRAM = {
     "qr_telegram_nikita.png": "https://t.me/petruan",
 }
 
-# Per-member team photos, kept at the repository root so a teammate can drop in
+# Per-member team photos, kept under ``assets/team/`` so a teammate can drop in
 # a replacement without hunting through the presentation tree. Cropped to a
 # circle and sized for the 180 px slot on slide 2 (2x for crisp rendering).
-MEMBER_PHOTOS = (("1.jpg", "avatar_pavel_round.png"),
-                 ("2.jpg", "avatar_nikita_round.png"))
+MEMBER_PHOTOS = (("assets/team/pavel.jpg", "avatar_pavel_round.png"),
+                 ("assets/team/nikita.jpg", "avatar_nikita_round.png"))
 
 # Per-member QR shown next to the handle on the team slide. The avatar is
 # cropped to a circle and the role line stays visible, so a viewer can scan a
