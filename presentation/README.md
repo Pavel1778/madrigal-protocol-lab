@@ -16,6 +16,7 @@ from the repository's own code. Every number is from `docs/METRICS.md`.
 | `slides-light.pdf` | the same deck exported for a washed-out projector |
 | `slides.pptx` | the editable PPTX: native text, entrance animations, transitions |
 | `scripts/build_pptx.py` | builds `slides.pptx` from code (python-pptx), not a picture dump |
+| `fonts.py` | embeds Tektur, Montserrat and JetBrains Mono into the PPTX as `.fntdata` parts |
 | `screenshots/` | 11 real GUI captures at 1920×1080 (`generate_screenshots.py`) |
 | `assets/` | 8 branded SVG visualisations, dark and light (`build_visualizations.py`) |
 | `icons/` | Lucide line icons used by the deck (`fetch_icons.py`) |
@@ -78,7 +79,9 @@ python -m presentation.fetch_icons
 ## Notes
 
 - Fonts (Tektur, Montserrat) are bundled: `public/fonts/` for Slidev,
-  `assets/fonts/` for the visualisation script.
+  `assets/fonts/` for the visualisation script. The PPTX embeds them too
+  (`fonts.py`), subset to the glyphs the deck uses, so a viewer without the
+  families installed still shows the deck's own typefaces instead of Calibri.
 - `node_modules/`, `dist/` and `.vite-cache/` are ignored by git.
 - Every generated artifact is reproducible: the charts are written without a
   date stamp and with sequential ids (`build_visualizations.py`), and the PPTX
