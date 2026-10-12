@@ -102,6 +102,9 @@ Nine of nine present.
   `public/avatar_pavel_round.png` and `public/avatar_nikita_round.png` (360x360,
   real PNGs) — beside both entries: «Сабадаш Павел» with the architecture,
   capture and interface role, and «Предков Никита» with the rules and tests role.
+  The two avatars are distinct files with distinct hashes; no placeholder or
+  duplicated portrait is used. The deck sizes the avatar at 180 px, the member
+  name at 28 px and the per-member QR at 80 px.
 - Requirement 3: the stack line «Python 3.12 · PySide6 · dpkt · pytest ·
   Docker» sits on the title slide; the architecture slide repeats the module
   breakdown.
@@ -130,15 +133,44 @@ asset count — and the word «Вопросы» appears nowhere in the deck.
 | fact | value | command |
 | --- | --- | --- |
 | slides | 19, 16:9 (13.333 x 7.5 in) | `python -m presentation.scripts.build_pptx` |
-| entrance animations | 52, click-triggered (50 fade, 2 wipe) | XML scan of `slides.pptx` |
+| entrance animations | 60, click-triggered (58 fade, 2 wipe) | XML scan of `slides.pptx` |
 | chart build-ins | 2 wipe (donut and memory-sweep figures) | XML scan of `slides.pptx` |
 | transitions | 19 (fade; push on the three section dividers) | XML scan of `slides.pptx` |
+| embedded fonts | Tektur, Montserrat, JetBrains Mono (5 faces) | `pytest tests/project/test_presentation_sync.py` |
 | text | native editable runs, deck palette | python-pptx |
 
 The deck is drawn directly with python-pptx — no PowerPoint template. Headings
 fade in, bullet lists build one item per click, the two chart figures wipe in
 left to right, and every slide carries a fade transition (push on the three
-section dividers). The XML of all 44 parts parses without error.
+section dividers). The XML of all 105 parts parses without error.
+
+## Fonts
+
+The deck asks for Tektur (headings, the wordmark), Montserrat (body) and
+JetBrains Mono (code, handles, the byte line). The TTFs in
+`presentation/public/fonts/` declare themselves as `Tektur SemiBold`,
+`Tektur Medium` and so on, so a viewer without those families installed used to
+substitute Calibri and the title stopped looking like the deck. The PPTX now
+carries the fonts: `presentation/fonts.py` subsets each face to the glyphs the
+deck renders, renames the subset to the plain family the runs reference,
+obfuscates the first 32 bytes per the OOXML rule and registers it as an
+`.fntdata` part with a `<p:embeddedFontLst>` entry.
+
+| fact | value | command |
+| --- | --- | --- |
+| embedded faces | 5 (Tektur regular + bold, Montserrat regular + bold, JetBrains Mono regular) | XML scan of `slides.pptx` |
+| embed flag | `embedTrueTypeFonts="1"`, `saveSubsetFonts="1"` | `ppt/presentation.xml` |
+| content type | `fntdata` → `application/x-fontdata` | `[Content_Types].xml` |
+| theme fonts | Montserrat (no Calibri anywhere in the package) | XML scan of `slides.pptx` |
+| runs with a fallback name | 0 of 150 | python-pptx scan |
+| Cyrillic coverage | 55 of 55 characters present in every subset | de-obfuscation scan |
+
+The check the organizers can repeat: open `presentation/slides.pptx` and inspect
+any text element; the title «Лаборатория протоколов» reports Tektur, the body
+reports Montserrat, the byte line reports JetBrains Mono. `pytest
+tests/project/test_presentation_sync.py::test_pptx_embeds_the_brand_fonts`
+de-obfuscates every `.fntdata` and fails if a family name, a cmap or the TTF
+signature is wrong.
 
 ## Screencast
 

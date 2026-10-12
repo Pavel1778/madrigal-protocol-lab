@@ -172,6 +172,27 @@ def test_team_slide_uses_two_distinct_member_photos() -> None:
     assert pavel != nikita, "the member photos are byte-identical"
 
 
+def test_team_slide_uses_the_requested_sizes() -> None:
+    """The organizers asked for a 180 px avatar, a 28 px name and an 80 px QR."""
+    css = (PRES / "style.css").read_text(encoding="utf-8")
+
+    def rule(selector: str) -> str:
+        block = re.search(rf"{re.escape(selector)}\s*\{{(.*?)\}}", css, re.S)
+        assert block, f"{selector} is missing from style.css"
+        return block.group(1)
+
+    assert re.search(r"width:\s*180px", rule(".member__photo"))
+    assert re.search(r"height:\s*180px", rule(".member__photo"))
+    assert re.search(r"font-size:\s*28px", rule(".member__name"))
+    assert re.search(r"width:\s*80px", rule(".member__qr"))
+    assert re.search(r"height:\s*80px", rule(".member__qr"))
+
+    # The PPTX mirrors the CSS: a 1.8 in avatar and a 0.83 in QR, at 100 px/in.
+    deck = (PRES / "scripts" / "build_pptx.py").read_text(encoding="utf-8")
+    assert "Inches(1.8), Inches(1.8)" in deck
+    assert "Inches(0.83), Inches(0.83)" in deck
+
+
 def test_chart_assets_carry_no_build_timestamp() -> None:
     """A rebuild must be a no-op: no wall-clock stamp in the sixteen charts.
 
@@ -196,3 +217,48 @@ def test_pptx_parts_have_fixed_timestamps() -> None:
         assert pptx.is_file(), f"presentation/{name} is not built"
         stamps = {item.date_time for item in zipfile.ZipFile(pptx).infolist()}
         assert stamps == {(1980, 1, 1, 0, 0, 0)}, f"{name} parts carry build times: {stamps}"
+
+
+def test_pptx_embeds_the_brand_fonts() -> None:
+    """The deck names Tektur/Montserrat/JetBrains Mono; without an embedded
+    copy a viewer substitutes Calibri and the title stops looking like the deck.
+    Every face the runs reference must ship as a de-obfuscatable ``.fntdata``."""
+    import io
+
+    from fontTools.ttLib import TTFont
+
+    pptx = PRES / "slides.pptx"
+    with zipfile.ZipFile(pptx) as z:
+        pres = z.read("ppt/presentation.xml").decode("utf-8")
+        types = z.read("[Content_Types].xml").decode("utf-8")
+        assert 'Extension="fntdata"' in types
+        assert "<p:embeddedFontLst>" in pres and 'embedTrueTypeFonts="1"' in pres
+        rels = z.read("ppt/_rels/presentation.xml.rels").decode("utf-8")
+
+        families = dict(
+            re.findall(r'<p:font typeface="([^"]+)"/>(.*?)</p:embeddedFont>', pres, re.S)
+        )
+        assert set(families) == {"Tektur", "Montserrat", "JetBrains Mono"}
+        for family, body in families.items():
+            for variant in ("regular", "bold"):
+                m = re.search(
+                    rf'<p:{variant} r:id="(rId\d+)" fontKey="\{{([^}}]+)\}}"/>', body
+                )
+                if not m:
+                    continue
+                rid, guid = m.groups()
+                target = re.search(
+                    rf'Id="{rid}"[^>]*Target="([^"]+)"', rels
+                ).group(1)
+                data = z.read("ppt/" + target)
+                key = bytes(reversed(bytes.fromhex(guid.replace("-", ""))))
+                head = bytearray(data[:32])
+                for i in range(len(head)):
+                    head[i] ^= key[i % 16]
+                raw = bytes(head) + data[32:]
+                assert raw[:4] == b"\x00\x01\x00\x00", f"{family} {variant} not a TTF"
+                face = TTFont(io.BytesIO(raw), lazy=True)
+                names = {r.nameID: r.toUnicode() for r in face["name"].names}
+                assert names.get(1) == family, f"{family} {variant}: {names.get(1)!r}"
+                assert face.getBestCmap(), f"{family} {variant} lost its cmap"
+
