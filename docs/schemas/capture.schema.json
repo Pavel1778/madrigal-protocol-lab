@@ -74,6 +74,9 @@
             "non_ip",
             "non_tcp",
             "ip_fragment",
+            "ip_fragment_reassembled",
+            "ip_fragment_incomplete",
+            "ip_fragment_overlap",
             "truncated_packet",
             "truncated_frame",
             "unsupported_linktype"
@@ -143,6 +146,11 @@
         "packet_indices": {
           "type": "array",
           "items": { "type": "integer", "minimum": 0 }
+        },
+        "reassembled_from": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0 },
+          "description": "Capture indices of the IP fragment packets this session's datagrams were reassembled from; empty when no fragment was involved."
         }
       }
     }

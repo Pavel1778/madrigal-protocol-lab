@@ -75,20 +75,20 @@ def test_mixed_ip_versions_keeps_both_families() -> None:
     assert "10.0.0.1" in families
 
 
-def test_ipv6_fragments_are_reported_and_not_reassembled() -> None:
+def test_ipv6_fragments_that_never_complete_are_reported() -> None:
     diagnostics: list[Diagnostic] = []
     packets = list(read_capture(defect("fragmented_ipv6.pcapng"), diagnostics))
     assert len(packets) == 6
-    assert _types(diagnostics) == ["ip_fragment", "ip_fragment", "ip_fragment"]
+    assert _types(diagnostics) == ["ip_fragment_incomplete"]
     capture = normalize(defect("fragmented_ipv6.pcapng"))
     assert len(capture.sessions) == 1
 
 
-def test_fragments_are_reported_and_not_reassembled() -> None:
+def test_fragments_that_never_complete_are_reported() -> None:
     diagnostics: list[Diagnostic] = []
     packets = list(read_capture(defect("fragmented_ip.pcap"), diagnostics))
     assert len(packets) == 6
-    assert _types(diagnostics) == ["ip_fragment", "ip_fragment", "ip_fragment"]
+    assert _types(diagnostics) == ["ip_fragment_incomplete"]
     capture = normalize(defect("fragmented_ip.pcap"))
     assert len(capture.sessions) == 1
 

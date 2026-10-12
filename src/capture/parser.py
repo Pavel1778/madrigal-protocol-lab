@@ -25,6 +25,14 @@ from typing import Any, BinaryIO
 
 import dpkt
 
+from src.capture.fragment import (
+    FRAGMENT_REASSEMBLED,
+    FragmentReassembler,
+    ReassembledDatagram,
+    build_ip_datagram,
+    extract_fragment,
+)
+
 logger = logging.getLogger(__name__)
 
 # TCP flag bits, re-exported for callers that classify packets.
@@ -117,6 +125,7 @@ class Packet:
     payload: bytes
     is_truncated: bool = False
     checksum_valid: bool | None = None
+    fragment_packet_indices: tuple[int, ...] = ()
 
     @property
     def syn(self) -> bool:
@@ -415,13 +424,37 @@ def read_capture(
             return
         index = 0
         torn: list[str] = []
+        fragments = FragmentReassembler()
         for packet_index, (timestamp, buf) in enumerate(_read_rows(path, torn), start=1):
-            packet = _packet_from_row(
-                linktype,
-                buf,
+            layer3 = _layer3_ip(linktype, buf)
+            if isinstance(layer3, Diagnostic):
+                layer3.packet_index = packet_index
+                diagnostics.append(layer3)
+                continue
+            version, ip_bytes = layer3
+            spec = extract_fragment(version, ip_bytes, packet_index, float(timestamp))
+            if spec is None:
+                packet = _packet_from_row(
+                    linktype,
+                    buf,
+                    index=index,
+                    packet_index=packet_index,
+                    timestamp=timestamp,
+                    verify_checksums=verify_checksums,
+                    diagnostics=diagnostics,
+                )
+                if packet is None:
+                    continue
+                yield packet
+                index += 1
+                continue
+            datagram = fragments.add(spec)
+            if datagram is None:
+                continue
+            diagnostics.append(_reassembled_note(datagram))
+            packet = _packet_from_reassembled(
+                datagram,
                 index=index,
-                packet_index=packet_index,
-                timestamp=timestamp,
                 verify_checksums=verify_checksums,
                 diagnostics=diagnostics,
             )
@@ -429,6 +462,16 @@ def read_capture(
                 continue
             yield packet
             index += 1
+        for name, entry in fragments.finish():
+            diagnostics.append(
+                Diagnostic(
+                    name,
+                    packet_index=entry.get("packet_index"),  # type: ignore[arg-type]
+                    offset=entry.get("offset"),  # type: ignore[arg-type]
+                    length=entry.get("length"),  # type: ignore[arg-type]
+                    detail=str(entry.get("detail", "")),
+                )
+            )
     finally:
         handle.close()
     if torn:
@@ -513,6 +556,58 @@ def _packet_from_row(
         payload=record.payload,
         is_truncated=record.truncated,
         checksum_valid=checksum_valid,
+    )
+
+
+def _reassembled_note(datagram: ReassembledDatagram) -> Diagnostic:
+    """A note recording the frames a reassembled datagram was built from."""
+
+    return Diagnostic(
+        FRAGMENT_REASSEMBLED,
+        packet_index=datagram.packet_indices[0] if datagram.packet_indices else None,
+        detail=(
+            f"reassembled IPv{datagram.version} datagram from "
+            f"{len(datagram.packet_indices)} fragment(s): "
+            f"{', '.join(str(i) for i in datagram.packet_indices)}"
+        ),
+    )
+
+
+def _packet_from_reassembled(
+    datagram: ReassembledDatagram,
+    *,
+    index: int,
+    verify_checksums: bool,
+    diagnostics: list[Diagnostic],
+) -> Packet | None:
+    """Parse a reassembled datagram to a packet, or record why it was skipped."""
+
+    ip_bytes = build_ip_datagram(datagram)
+    record = _parse_tcp(ip_bytes, datagram.version)
+    if isinstance(record, Diagnostic):
+        record.packet_index = datagram.packet_indices[0]
+        if record.detail:
+            record.detail = f"reassembled datagram: {record.detail}"
+        diagnostics.append(record)
+        return None
+    tcp = record.tcp
+    checksum_valid = (
+        _checksum_state(tcp, ip_bytes, datagram.version) if verify_checksums else None
+    )
+    return Packet(
+        index=index,
+        timestamp=datagram.timestamp,
+        src_ip=datagram.src,
+        src_port=int(tcp.sport),
+        dst_ip=datagram.dst,
+        dst_port=int(tcp.dport),
+        seq=int(tcp.seq),
+        ack=int(tcp.ack),
+        flags=int(tcp.flags),
+        payload=record.payload,
+        is_truncated=record.truncated,
+        checksum_valid=checksum_valid,
+        fragment_packet_indices=tuple(datagram.packet_indices),
     )
 
 
