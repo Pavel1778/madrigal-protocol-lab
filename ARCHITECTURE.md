@@ -53,9 +53,15 @@ yields the TCP sessions that can be read.
   with a monotonic `index`, timestamp, endpoints, sequence numbers, flags, and
   payload. Non-TCP packets are skipped with a diagnostic where relevant. An
   unsupported link type is reported as a diagnostic; IPv6, including the
-  extension-header chain, is parsed. A damaged but recognizable file is read as
-  far as possible and the rest is reported as diagnostics; only a non-capture
-  raises.
+  extension-header chain, is parsed. A fragmented datagram is handed to
+  `fragment.py` and yields one packet once its fragments are complete. A damaged
+  but recognizable file is read as far as possible and the rest is reported as
+  diagnostics; only a non-capture raises.
+- `fragment.py` — `FragmentReassembler` collects IPv4 and IPv6 fragments and
+  returns a datagram when every byte is present. IPv4 keeps the first arrival on
+  an overlap and reports it; IPv6 discards the datagram on any overlap, as
+  RFC 5722 requires. A datagram that never completes is reported as
+  `ip_fragment_incomplete` and no bytes are guessed.
 - `session.py` — `build_sessions(packets) -> list[Session]`. Groups packets into
   TCP connection instances. A new session is started on SYN without ACK, on a
   new tuple after a FIN/RST, and on any reuse of an endpoint pair after the
@@ -109,11 +115,14 @@ See `docs/CONTRACT.md`. The three formats are:
 ## Limits and what is not implemented
 
 - **IPv6** is parsed. TCP sessions over IPv6 yield streams like IPv4, and IPv6
-  TCP checksums are verified with `--verify-checksums`. Only IPv6
-  fragmentation is not reassembled: a fragment is reported as `ip_fragment`
-  and skipped.
-- **IP fragmentation** is not reassembled. A fragment is reported as
-  `ip_fragment` and skipped.
+  TCP checksums are verified with `--verify-checksums`. IPv6 fragmentation is
+  reassembled; an overlap causes the whole datagram to be discarded, as RFC 5722
+  requires, and the conflict is reported.
+- **IP fragmentation** is reassembled for both versions. Fragments of one
+  datagram may be separated by unrelated traffic and delivered out of order.
+  An overlap is reported for IPv4 (first arrival kept) and discards the datagram
+  for IPv6. A datagram that never completes is reported as
+  `ip_fragment_incomplete`; its bytes are not guessed.
 - **Encrypted traffic** is not decrypted. TLS and anything else above TCP
   appears as opaque bytes; the byte-level tools still work on it.
 - **Only Ethernet, Linux loopback, and BSD cooked** link types are understood.

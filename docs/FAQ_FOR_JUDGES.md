@@ -86,8 +86,9 @@ plus eight diagnostic captures, 45 requests + 45 responses). See
 ## 12. What if a PCAP file is damaged?
 
 A damaged but recognizable file is read as far as possible; the rest becomes
-diagnostics. Truncated headers, unsupported link types, IP fragments and mixed
-link types are reported, not raised. See `docs/METRICS.md` (Robustness),
+diagnostics. Truncated headers, unsupported link types, incomplete fragments and mixed
+link types are reported, not raised. A fragmented datagram is reassembled when
+its bytes are all present. See `docs/METRICS.md` (Robustness),
 `tests/fixtures/defects/`.
 
 ## 13. How does it scale to 100k messages?
