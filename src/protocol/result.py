@@ -8,7 +8,9 @@ so a schema drift is caught before the file leaves the engine.
 
 from __future__ import annotations
 
+import csv
 import json
+import os
 from dataclasses import dataclass, field
 
 from ..hypothesis.status import ALL_STATUSES, Status
@@ -106,25 +108,96 @@ def build_result(
     )
 
 
-def write_result(result: ApplicationResult, path: str, validate: bool = True) -> None:
-    """Write a result as JSON, optionally validating it against the schema.
+def write_result(
+    result: ApplicationResult,
+    path: str,
+    validate: bool = True,
+) -> None:
+    """Write a result as JSON, JSONL or CSV, chosen by the file suffix.
+
+    ``.jsonl`` writes one message per line (streaming-friendly, no header) and
+    ``.csv`` writes a header row plus one row per message with one column per
+    declared field. Every other suffix keeps the contract JSON, validated
+    against the schema when asked.
 
     Args:
         result: The result to write.
-        path: Destination file path.
-        validate: Whether to validate against the result JSON Schema first.
+        path: Destination file path; its suffix selects the format.
+        validate: Whether to validate the JSON against the result schema first.
 
     Raises:
-        jsonschema.ValidationError: If ``validate`` is set and the payload does
-            not match the schema.
+        jsonschema.ValidationError: If ``validate`` is set for JSON and the
+            payload does not match the schema.
         OSError: If the file cannot be written.
     """
+    suffix = os.path.splitext(path)[1].lower()
+    if suffix == ".csv":
+        write_result_csv(result, path)
+        return
+    if suffix == ".jsonl":
+        write_result_jsonl(result, path)
+        return
     payload = result.to_dict()
     if validate:
         validate_result(payload)
     with open(path, "w", encoding="utf-8") as handle:
         json.dump(payload, handle, ensure_ascii=False, indent=2)
         handle.write("\n")
+
+
+def write_result_jsonl(result: ApplicationResult, path: str) -> None:
+    """Write one compact JSON object per message, one per line.
+
+    Args:
+        result: The result whose messages are written.
+        path: Destination file path.
+    """
+    with open(path, "w", encoding="utf-8") as handle:
+        for message in result.messages:
+            handle.write(json.dumps(message, ensure_ascii=False))
+            handle.write("\n")
+
+
+def _csv_cell(value) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, ensure_ascii=False)
+    return str(value)
+
+
+def write_result_csv(result: ApplicationResult, path: str) -> None:
+    """Write one row per message, one column per declared field.
+
+    Columns are ``message_offset``, ``message_length``, ``message_status`` and
+    ``reason``, followed by the union of the field names across every message
+    in the order they are first seen. A message that does not carry a field
+    leaves its cell empty; list and mapping values are written as JSON so the
+    row stays on one line.
+
+    Args:
+        result: The result whose messages are written.
+        path: Destination file path.
+    """
+    field_names: list[str] = []
+    for message in result.messages:
+        for name in message.get("fields", {}):
+            if name not in field_names:
+                field_names.append(name)
+    columns = ["message_offset", "message_length", "message_status", "reason", *field_names]
+    with open(path, "w", encoding="utf-8", newline="") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(columns)
+        for message in result.messages:
+            fields = message.get("fields", {})
+            row = [
+                message.get("offset", ""),
+                message.get("length", ""),
+                message.get("status", ""),
+                _csv_cell(message.get("reason")),
+                *[_csv_cell(fields.get(name)) for name in field_names],
+            ]
+            writer.writerow(row)
 
 
 def validate_result(payload: dict, schema_path: str | None = None) -> None:

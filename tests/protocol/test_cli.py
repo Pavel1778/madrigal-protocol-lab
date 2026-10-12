@@ -96,6 +96,23 @@ def test_cli_apply_writes_valid_result(tmp_path):
     validate_result(payload)
 
 
+def test_cli_apply_writes_csv_when_out_ends_in_csv(tmp_path):
+    import csv
+
+    stream = _message(4, 21) + _message(9, 22)
+    capture_path = _write(tmp_path, "capture.json", _capture(stream))
+    rule_path = _write(tmp_path, "rule.json", RULE)
+    out_path = str(tmp_path / "result.csv")
+
+    code = main(["apply", "--rule", rule_path, "--capture", capture_path, "--out", out_path])
+    assert code == 0
+
+    with open(out_path, encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    assert [row["message_status"] for row in rows] == ["matched", "mismatched"]
+    assert rows[1]["command"] == "9"
+
+
 def test_cli_apply_honours_session_and_direction(tmp_path):
     capture_path = _write(tmp_path, "capture.json", _capture(_message(4, 1), _message(4, 2)))
     rule_path = _write(tmp_path, "rule.json", RULE)
