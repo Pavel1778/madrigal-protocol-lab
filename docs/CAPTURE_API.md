@@ -282,10 +282,10 @@ for piece in stream.provenance.split(start, end):
 | `gap` | reassembly | unobserved bytes; `offset` and `length` locate the hole |
 | `ambiguity` | reassembly | the same bytes were seen with two different values; the first is kept and both are named in `detail` |
 | `checksum_offload` | reassembly | a TCP checksum mismatch, only when checksums are verified |
-| `ipv6_ignored` | parser | an IPv6 frame was skipped |
-| `non_ip` | parser | an Ethernet frame that is not IPv4 |
-| `non_tcp` | parser | an IPv4 packet that is not TCP |
-| `ip_fragment` | parser | an IP fragment was skipped, not reassembled |
+| `ipv6_ignored` | parser | retained for files written before IPv6 was parsed; no longer emitted |
+| `non_ip` | parser | a frame that is neither IPv4 nor IPv6 |
+| `non_tcp` | parser | an IP packet that is not TCP |
+| `ip_fragment` | parser | an IPv4 or IPv6 fragment was skipped, not reassembled |
 | `truncated_packet` | parser | the captured payload is shorter than the header declares |
 | `truncated_frame` | parser | the frame was shorter than its headers claimed, or the capture header is damaged |
 | `unsupported_linktype` | parser | the capture uses a link type other than Ethernet, loopback, or cooked, or mixes link types |
@@ -308,10 +308,13 @@ far as possible and reported; only a file that is not a capture at all raises
 
 ## Limitations
 
-- IPv6 is not reassembled. Frames are counted and reported as `ipv6_ignored`,
-  but their TCP payload never reaches a stream.
-- IP fragmentation is not reassembled. A fragment is reported as `ip_fragment`
-  and skipped; only the first fragment of a datagram carries a TCP header.
+- IPv6 is parsed. TCP sessions over IPv6 yield streams exactly like IPv4, and
+  IPv6 TCP checksums are verified when `--verify-checksums` is set. Only IPv6
+  fragmentation is left alone: a fragment is reported as `ip_fragment` and
+  skipped.
+- IP fragmentation is not reassembled, for either version. A fragment is
+  reported as `ip_fragment` and skipped; only the first fragment of a datagram
+  carries a TCP header.
 - Encrypted traffic is not decrypted. TLS, and anything else above TCP, appears
   as opaque bytes.
 - Only Ethernet, Linux loopback, and BSD cooked captures are understood; other
