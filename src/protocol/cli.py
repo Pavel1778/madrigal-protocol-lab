@@ -47,7 +47,7 @@ def _build_parser() -> argparse.ArgumentParser:
     apply = sub.add_parser("apply", help="apply one rule to one directional stream")
     apply.add_argument("--rule", required=True, help="path to a rule (JSON or YAML)")
     apply.add_argument("--capture", required=True, help="path to a normalized capture")
-    apply.add_argument("--out", required=True, help="path to write the result to")
+    apply.add_argument("--out", required=True, help="path to write the result to (.json, .jsonl or .csv)")
     apply.add_argument("--session", default=None, help="session id (default: first session)")
     apply.add_argument("--direction", default=None, help="A_to_B or B_to_A (default: rule scope or A_to_B)")
 

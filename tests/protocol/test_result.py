@@ -5,7 +5,7 @@ import struct
 import jsonschema
 
 from src.protocol.engine import apply_rule
-from src.protocol.result import build_result, summarise
+from src.protocol.result import build_result, summarise, write_result
 from src.protocol.rule import parse_rule
 from src.protocol.stream import DirectionalStream
 
@@ -68,3 +68,45 @@ def test_result_passes_schema_validation():
     messages = apply_rule(DirectionalStream.from_bytes(_message(4, 8, 21)), rule, "s1", "A_to_B")
     payload = build_result(rule, CAPTURE_ID, messages).to_dict()
     jsonschema.Draft202012Validator(schema).validate(payload)
+
+
+def test_csv_export_has_a_column_per_field(tmp_path):
+    import csv
+
+    rule = parse_rule(RULE)
+    messages = apply_rule(
+        DirectionalStream.from_bytes(_message(4, 8, 21) + _message(9, 8, 22)),
+        rule,
+        "s1",
+        "A_to_B",
+    )
+    result = build_result(rule, CAPTURE_ID, messages)
+    path = tmp_path / "result.csv"
+    write_result(result, str(path))
+    with open(path, encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    assert rows[0].keys() == {
+        "message_offset", "message_length", "message_status", "reason",
+        "command", "value",
+    }
+    assert rows[0]["message_status"] == "matched"
+    assert rows[0]["command"] == "4"
+    assert rows[1]["message_status"] == "mismatched"
+
+
+def test_jsonl_export_writes_one_message_per_line(tmp_path):
+    rule = parse_rule(RULE)
+    messages = apply_rule(
+        DirectionalStream.from_bytes(_message(4, 8, 21) + _message(4, 8, 22)),
+        rule,
+        "s1",
+        "A_to_B",
+    )
+    result = build_result(rule, CAPTURE_ID, messages)
+    path = tmp_path / "result.jsonl"
+    write_result(result, str(path))
+    lines = path.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 2
+    first = json.loads(lines[0])
+    assert first["status"] == "matched"
+    assert first["fields"]["value"] == 21
