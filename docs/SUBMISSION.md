@@ -72,8 +72,8 @@ investigation from the command line, used as the fallback, is in
 
 | Area | State |
 | --- | --- |
-| IPv6 | Not supported; reported as a diagnostic, the record is skipped. |
-| IP fragmentation | Not reassembled; a fragmented payload is reported as incomplete. |
+| IPv6 | Supported; sessions, streams and checksums behave as for IPv4. |
+| IP fragmentation | Reassembled for IPv4 and IPv6; an incomplete datagram is reported, never guessed. |
 | Encrypted payloads | Out of scope; the bytes are reported as they appear. |
 | Checksum offloading | Off by default; reordering is treated as a diagnostic. |
 | Window project menu | Not present; the pipeline CLI drives project export and import. |

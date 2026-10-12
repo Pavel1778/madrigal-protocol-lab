@@ -103,6 +103,9 @@ def normalize_packets(
     streams: dict[str, dict[Direction, DirectionalStream]] = {}
     for session in sessions:
         members = [by_index[i] for i in session.packet_indices if i in by_index]
+        session.reassembled_from = sorted(
+            {i for p in members for i in p.fragment_packet_indices}
+        )
         by_direction: dict[Direction, DirectionalStream] = {}
         for direction in (Direction.A_TO_B, Direction.B_TO_A):
             by_direction[direction] = reassemble(

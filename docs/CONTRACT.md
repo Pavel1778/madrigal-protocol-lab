@@ -52,8 +52,9 @@ Notes:
   not filled with zero bytes; the missing ranges appear in `diagnostics` with
   `type` = `gap`.
 - `diagnostics[].type` is an open set. Stream defects use `gap` and
-  `ambiguity`; parser notes use `non_ip`, `non_tcp`, `ip_fragment`,
-  `truncated_packet`, `truncated_frame`, and `unsupported_linktype`.
+  `ambiguity`; parser notes use `non_ip`, `non_tcp`, `ip_fragment_reassembled`,
+  `ip_fragment_incomplete`, `ip_fragment_overlap`, `truncated_packet`,
+  `truncated_frame`, and `unsupported_linktype`.
   Consumers must tolerate types they do not know.
   Every diagnostic that points at stream bytes carries `offset` and `length`;
   parser notes may carry `packet_index` instead. `docs/CAPTURE_API.md` lists
