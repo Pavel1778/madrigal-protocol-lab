@@ -19,7 +19,7 @@ python -m build --wheel           # -> dist/madrigal_protocol_lab-<version>-py3-
 
 `build_deb.sh`, `build_appimage.sh` and `build_run.sh` package the binary from
 `build_linux_binary.sh`; run that one first. `build_appimage.sh` downloads
-`appimagetool` into `.agent-cache/` and runs it extracted, so no FUSE is needed
+`appimagetool` into `.scratch/` and runs it extracted, so no FUSE is needed
 at build time.
 
 The binary bundles the interpreter, PySide6, the fonts, the docs and the

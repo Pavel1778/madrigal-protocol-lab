@@ -46,7 +46,7 @@ the repository at the final revision; re-run the command if the branch has moved
 
 - [ ] Забрать обратную связь организаторов.
 - [ ] Отозвать любой временный токен, если он ещё активен (см. `docs/GIT_HYGIENE.md`).
-- [ ] Записать разбор в `.agent-cache/` и в память проекта.
+- [ ] Записать разбор в `.scratch/` и в память проекта.
 
 ## Быстрый прогон одной строкой
 
