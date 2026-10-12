@@ -31,6 +31,8 @@ _KAITAI_TYPES = {
 
 _ENDIAN = {"big": "be", "little": "le"}
 
+_KAITAI_FLOAT = {"float32": "f4", "float64": "f8"}
+
 
 def export_kaitai(rule: Rule) -> str:
     """Return a Kaitai Struct YAML document describing one message."""
@@ -69,6 +71,14 @@ def _kaitai_field(field, index: int, rule: Rule) -> list[str]:
         width = (field.bit_offset or 0) + (field.bit_length or 0)
         out.append(f"    type: b{field.bit_length or 1}")
         out.append(f"    size: {(width + 7) // 8}")
+    elif ftype in _KAITAI_FLOAT:
+        out.append(f"    type: {_KAITAI_FLOAT[ftype]}")
+    elif ftype == "varint":
+        out.append("    type: vlq_base128_le")
+        out.append("    doc: base-128 variable-length integer, protobuf wire format")
+    elif ftype == "tlv":
+        out.append("    type: bytes")
+        out.append("    doc: tag-length-value record; the length is data-dependent, read by the engine")
     elif ftype == "string":
         out.append("    type: str")
         if field.terminated:

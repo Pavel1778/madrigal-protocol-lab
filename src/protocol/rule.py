@@ -27,8 +27,24 @@ FIELD_TYPES = {
     "int32": 4,
 }
 
+# IEEE-754 floating point types read with ``struct``. They are kept apart from
+# ``FIELD_TYPES`` because array elements and length fields are integer-only.
+FLOAT_TYPES = {
+    "float32": 4,
+    "float64": 8,
+}
+
+# Compound types whose width is not known until the bytes are read: a
+# type-length-value record and a variable-length integer. They are only valid
+# inside a framing strategy that delimits the message on its own.
+DYNAMIC_FIELD_TYPES = {"varint", "tlv"}
+
+# A varint is a base-128 continuation chain; ten groups bound a 64-bit value and
+# stop a malformed stream from looping forever.
+VARINT_MAX_BYTES = 10
+
 # Field types read directly from the byte layout of a message.
-DATA_FIELD_TYPES = set(FIELD_TYPES) | {
+DATA_FIELD_TYPES = set(FIELD_TYPES) | set(FLOAT_TYPES) | DYNAMIC_FIELD_TYPES | {
     "bytes",
     "enum",
     "bitmask",
@@ -110,6 +126,10 @@ class FieldSpec:
     start: int | None = None
     end: int | None = None
     expression: dict | None = None
+    # varint / tlv
+    signed: bool = False
+    tag_type: str = "uint8"
+    length_type: str = "uint8"
     # conditional
     condition: dict | None = None
     inner: FieldSpec | None = None
@@ -170,6 +190,16 @@ class FieldSpec:
             bit_length = int(bit_length)
             if int(raw.get("bit_offset", 0)) < 0:
                 raise RuleError(f"field {name!r} has a negative bit_offset")
+
+        tag_type = str(raw.get("tag_type", "uint8"))
+        length_type = str(raw.get("length_type", "uint8"))
+        if ftype == "varint" and length is not None:
+            raise RuleError(f"field {name!r} of type varint takes no 'length'")
+        if ftype == "tlv":
+            if tag_type not in FIELD_TYPES:
+                raise RuleError(f"field {name!r} tlv tag_type must be an integer type")
+            if length_type not in FIELD_TYPES:
+                raise RuleError(f"field {name!r} tlv length_type must be an integer type")
 
         element_type = raw.get("element_type")
         count = raw.get("count")
@@ -272,6 +302,9 @@ class FieldSpec:
             start=int(raw["start"]) if raw.get("start") is not None else None,
             end=int(raw["end"]) if raw.get("end") is not None else None,
             expression=expression,
+            signed=bool(raw.get("signed", False)),
+            tag_type=tag_type,
+            length_type=length_type,
             condition=condition,
             inner=inner,
         )
@@ -280,6 +313,8 @@ class FieldSpec:
     def _size_of(ftype: str, length: int | None, element_type: str | None = None) -> int | None:
         if ftype in FIELD_TYPES:
             return FIELD_TYPES[ftype]
+        if ftype in FLOAT_TYPES:
+            return FLOAT_TYPES[ftype]
         if ftype == "enum":
             return length if length is not None else 1
         if ftype in ("bytes", "string", "checksum", "padding", "computed"):
@@ -300,6 +335,11 @@ class FieldSpec:
         if self.type == "bitmask":
             out["bit_offset"] = self.bit_offset
             out["bit_length"] = self.bit_length
+        if self.type == "varint":
+            out["signed"] = self.signed
+        if self.type == "tlv":
+            out["tag_type"] = self.tag_type
+            out["length_type"] = self.length_type
         if self.type == "string":
             out["encoding"] = self.encoding
             if self.terminated:
@@ -358,6 +398,11 @@ class FieldSpec:
             if self.inner is None:
                 raise RuleError(f"field {self.name!r} conditional has no inner field")
             return self.inner.size
+        if self.type in DYNAMIC_FIELD_TYPES:
+            raise RuleError(
+                f"field {self.name!r} of type {self.type} has no fixed size; "
+                "it is read from the message bytes"
+            )
         size = self._size_of(self.type, self.length)
         if size is None:
             raise RuleError(f"field {self.name!r} has no fixed size")

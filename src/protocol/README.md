@@ -68,8 +68,10 @@ A rule is JSON or YAML. The machine-readable definition is
 }
 ```
 
-Field types: `uint8`, `uint16`, `uint32`, `int8`, `int16`, `int32`, `bytes`,
-`enum`. `expected` lists allowed values; a value outside the list is
+Field types: `uint8`, `uint16`, `uint32`, `int8`, `int16`, `int32`,
+`float32`, `float64`, `varint`, `tlv`, `bytes`, `enum`, `bitmask`, `string`,
+`array`, `padding`, `checksum`, `computed`, `conditional`. `expected` lists
+allowed values; a value outside the list is
 `mismatched`. `hypothesis: true` marks a field whose meaning is an assumption.
 `missing_ok: true` lets a field be absent without failing the message.
 
