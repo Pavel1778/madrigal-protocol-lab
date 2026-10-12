@@ -12,8 +12,8 @@ const isClosing = computed(() => page.value === total.value)
 const SECTIONS: Array<[number, string]> = [
   [1, 'Постановка и метод'],
   [10, 'Результаты'],
-  [14, 'Демонстрация'],
-  [17, 'Границы и итог'],
+  [12, 'Демонстрация'],
+  [13, 'Границы и итог'],
 ]
 const section = computed(() => {
   let name = SECTIONS[0][1]

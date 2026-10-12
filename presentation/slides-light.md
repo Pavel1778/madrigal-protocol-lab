@@ -22,6 +22,7 @@ fonts:
 <div class="cover__brand">
 <img src="/logo.svg" alt="Логотип проекта" class="cover__logo">
 <span class="cover__name">madrigal-protocol-lab</span>
+<img src="/madrigal-logo.png" alt="Мадригал" class="cover__client">
 </div>
 
 # Лаборатория протоколов
@@ -185,7 +186,7 @@ layout: default
 <img class="shot--full" src="/screenshot-provenance.png" alt="Байты сообщения и панель происхождения: пакет, последовательность, время">
 </div>
 
-<div class="byte-line">packet 3 · seq 1001 · ts 1700000000.004 · сессия <code>s1</code></div>
+<div class="byte-line">packet 3 · seq 1001 · сессия <code>s1</code></div>
 
 ---
 layout: default
@@ -193,12 +194,16 @@ layout: default
 
 # Правило проверяется на всём корпусе сразу
 
+<div class="pair">
+
 <div class="shot__frame">
-<img class="shot--half" src="/screenshot-rule.png" alt="Правило в редакторе: JSON крупным планом">
+<img src="/screenshot-rule.png" alt="Правило в редакторе: JSON крупным планом">
 </div>
 
 <div class="shot__frame">
-<img class="shot--half" src="/screenshot-validation.png" alt="Результат применения правила к потоку">
+<img src="/screenshot-validation.png" alt="Результат применения правила к потоку">
+</div>
+
 </div>
 
 ---
@@ -238,33 +243,16 @@ layout: default
 </div>
 
 ---
-transition: fade
-layout: default
----
-
-<div class="divider">
-
-<div class="index">01</div>
-
-# Что получилось
-
-<div class="bar"></div>
-
-<div class="divider__note">Точность, покрытие корпуса организаторов, ресурсы</div>
-
-</div>
-
----
 layout: default
 ---
 
 <div class="metric">
 
-# Уточнили правило: 60 из 140 → 140 из 140
+# Что получилось
 
-<div class="metric__sub">На корпусе уточнения. Отдельно проверено на реальном датасете: 45 + 45, precision 1.00</div>
+<div class="metric__sub">140 / 140 на корпусе уточнения. Отдельно проверено на наборе организаторов: 45 + 45, precision 1.00</div>
 
-<div class="bars bars--lg">
+<div class="bars">
 <div class="bars__row" v-click>
 <span class="bars__label">v1</span>
 <span class="bars__track"><i class="bars__fill bars__fill--bad" style="width: 43%"></i></span>
@@ -277,32 +265,7 @@ layout: default
 </div>
 </div>
 
-<div class="caption" v-click>Было 60 matched из 140 и 80 контрпримеров. Стало 140 matched из 140 и ноль контрпримеров</div>
-
-</div>
-
----
-layout: default
----
-
-<div class="metric">
-
-# Набор организаторов разобран целиком
-
-<div class="metric__grid">
-
-<div>
-<div class="bignum">90</div>
-<div class="metric__note">45 запросов + 45 ответов. Все matched.</div>
-</div>
-
-<div class="metric__figure">
-<img src="/assets/coverage_donut-light.svg" alt="Пончик: 45 запросов и 45 ответов, 0 неприменимых">
-</div>
-
-</div>
-
-<div class="caption">Данные не использовались при уточнении правила</div>
+<div class="caption">Было 60 matched из 140 и 80 контрпримеров. Стало 140 matched из 140 и ноль контрпримеров</div>
 
 </div>
 
@@ -338,27 +301,12 @@ layout: default
 </div>
 
 ---
-transition: fade
-layout: default
----
-
-<div class="divider">
-
-<div class="index">02</div>
-
-# Демонстрация
-
-<div class="bar"></div>
-
-<div class="divider__note">Живое окно и запись прогона</div>
-
-</div>
-
----
 layout: default
 ---
 
 <div class="live">
+
+<div class="kicker">Демонстрация</div>
 
 # Живое окно
 
@@ -367,48 +315,6 @@ layout: default
 </div>
 
 <div class="caption">Сессии, байты, интерпретация, происхождение и диагностика в одном окне</div>
-
-</div>
-
----
-layout: default
----
-
-# Резерв: запись прогона
-
-<div class="recording">
-
-<div class="recording__frame">
-<img src="/screencast-poster.png" alt="Кадр записи: главное окно с разобранным сообщением">
-<svg class="recording__play" viewBox="0 0 40 40" role="img" aria-label="Запись прогона">
-<circle cx="20" cy="20" r="18" fill="none" stroke="#D0603A" stroke-width="2"/>
-<polygon points="16,12 16,28 29,20" fill="#D0603A"/>
-</svg>
-</div>
-
-<div class="recording__meta">
-<span>Полный прогон референсного исследования</span>
-<span>2:22 · без звука</span>
-</div>
-
-</div>
-
-<div class="caption">Играется, если живое окно не поднимется на защите</div>
-
----
-transition: fade
-layout: default
----
-
-<div class="divider">
-
-<div class="index">03</div>
-
-# Границы и итог
-
-<div class="bar"></div>
-
-<div class="divider__note">Что мы не утверждаем и что осталось за рамками</div>
 
 </div>
 
@@ -469,5 +375,7 @@ layout: default
 </div>
 
 <div class="closing__line">github.com/Pavel1778/madrigal-protocol-lab</div>
+
+<img src="/madrigal-logo.png" alt="Мадригал" class="closing__client">
 
 </div>

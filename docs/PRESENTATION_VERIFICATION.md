@@ -13,10 +13,10 @@ Reproduce any line below with the command in the same row.
 
 | fact | value | command |
 | --- | --- | --- |
-| pages in the committed PDF (dark) | 19 | `pdfinfo presentation/slides.pdf` |
-| pages in the committed PDF (light) | 19 | `pdfinfo presentation/slides-light.pdf` |
-| slides in the source | 19 | `grep -c '^---$' presentation/slides.md` = 38, two fences per slide (headmatter plus one frontmatter block) |
-| slides in the PPTX | 19 | `python -m presentation.scripts.build_pptx` |
+| pages in the committed PDF (dark) | 14 | `python -c "import pypdfium2 as p; print(len(p.PdfDocument('presentation/slides.pdf')))"` |
+| pages in the committed PDF (light) | 14 | same on `presentation/slides-light.pdf` |
+| slides in the source | 14 | fourteen top-level headings in `presentation/slides.md` |
+| slides in the PPTX | 14 | `python -m presentation.scripts.build_pptx` |
 | page size | 735.12 x 414 pts, 16:9 | `pdfinfo presentation/slides.pdf` |
 | empty pages | 0 | render scan below |
 | overflow (content past 100 % of the frame) | 0 | render scan below |
@@ -30,7 +30,7 @@ The source and both PDFs agree on the set of slides, and the team slide is page
 `presentation/build_light.py`, which flips `colorSchema` to `light` and swaps the
 chart SVGs for their light variants; layout and content are identical.
 
-Per-page headings, from `pdftotext -layout presentation/slides.pdf`:
+Per-page headings, from the rendered PDF text:
 
     1  Лаборатория протоколов
     2  Нас двое
@@ -41,16 +41,11 @@ Per-page headings, from `pdftotext -layout presentation/slides.pdf`:
     7  От интерпретации можно вернуться к исходным данным
     8  Правило проверяется на всём корпусе сразу
     9  Контрпример важнее метрики
-    10 01 Что получилось
-    11 Уточнили правило: 60 из 140 → 140 из 140
-    12 Набор организаторов разобран целиком
-    13 95 МиБ разбираются за 12 секунд
-    14 02 Демонстрация
-    15 Живое окно
-    16 Резерв: запись прогона
-    17 03 Границы и итог
-    18 Что мы не утверждаем
-    19 Инструмент превращает байты в проверяемое знание
+    10 Что получилось
+    11 95 МиБ разбираются за 12 секунд
+    12 Живое окно
+    13 Что мы не утверждаем
+    14 Инструмент превращает байты в проверяемое знание
 
 No page is blank; each carries a heading or a section number.
 
@@ -59,24 +54,19 @@ No page is blank; each carries a heading or a section number.
 `presentation/check_layout.py` renders every page of both PDFs and looks for
 content that reaches the frame edge (a clear margin of at least 60 px at every
 edge) and for content that reaches the reserved footer band. It reports zero
-problems across 19 pages in each theme:
+problems across 14 pages in each theme:
 
     python -m presentation.check_layout presentation/slides.pdf presentation/slides-light.pdf
     layout ok: no edge or footer-band overflow
 
 The overflow scan masks the footer band and the accent rule, then measures the
-remaining ink bounding box:
-
-    worst content bottom (dark)  = 0.861 of page height (slide 16)
-    worst content bottom (light) = 0.861 of page height (slide 16)
-
-Slide 16 fills closest to the footer but stays inside the reserved band. No text
-or figure crosses the 100 % frame.
+remaining ink bounding box. The deepest content stays inside the reserved band
+on every page; no text or figure crosses the 100 % frame.
 
 Two further scans, both clean on the dark and the light export:
 
-- Word overlap: `pdftotext -bbox` boxes are compared pairwise; no two words
-  intersect by more than 20 % of the smaller box (0 hits across 19 pages).
+- Word overlap: text boxes are compared pairwise; no two words intersect by more
+  than 20 % of the smaller box (0 hits across 14 pages).
 - Fonts: `pdffonts` lists only JetBrainsMono-Regular, Montserrat-Regular,
   Montserrat-SemiBold and Tektur-SemiBold. No DejaVu, so no glyph fell back to a
   system font.
@@ -90,10 +80,10 @@ Two further scans, both clean on the dark and the light export:
 | 3 | Технический стек | yes | 1, 6 | 1, 6 |
 | 4 | Архитектура | yes | 6 | 6 |
 | 5 | Функционал и киллер-фичи | yes | 7, 8, 9 | 7, 8, 9 |
-| 6 | Скриншоты или скринкаст | yes | 7, 8, 9, 15, 16 | 7, 8, 9, 15, 16 |
-| 7 | QR на GitHub | yes | 19 | 19 |
-| 8 | Демонстрация отдельным блоком | yes | 14–16 | 14–16 |
-| 9 | Направления развития | yes | 18 | 18 |
+| 6 | Скриншоты или скринкаст | yes | 7, 8, 9, 12 | 7, 8, 9, 12 |
+| 7 | QR на GitHub | yes | 14 | 14 |
+| 8 | Демонстрация отдельным блоком | yes | 12 | 12 |
+| 9 | Направления развития | yes | 13 | 13 |
 
 Nine of nine present.
 
@@ -109,20 +99,23 @@ Nine of nine present.
 - Requirement 3: the stack line «Python 3.12 · PySide6 · dpkt · pytest ·
   Docker» sits on the title slide; the architecture slide repeats the module
   breakdown.
-- Requirement 6: five GUI screenshots plus the committed screencast.
+- Requirement 6: screenshots of the rule editor, the validation view, the
+  counterexample panel and the live window, plus the committed screencast kept
+  in `presentation/public/`.
 - Requirement 7: `public/qr_repo.png` and `public/qr_release.png` are referenced
   by the closing slide and decode to the repository and the `v1.0.0` release;
   the per-member Telegram codes decode to `@Pasha1778` and `@petruan`.
 
 Every image reference resolves. `grep -oE 'src="[^"]+"'` over `slides.md` yields
-the chart SVGs under `/assets/`, the `/public/screenshot-*.png` crops,
-`/avatar_pavel_round.png`, `/avatar_nikita_round.png`, the four
-`/qr_*.png` codes and `/screencast-poster.png`; each is present under
-`presentation/assets` or `presentation/public`.
+the chart SVGs under `/assets/` (`tcp_framing`, `length_offset`, `memory_sweep`),
+the `/screenshot-*.png` crops, `/avatar_pavel_round.png`,
+`/avatar_nikita_round.png`, `/logo.svg`, `/madrigal-logo.png` and the four
+`/qr_*.png` codes; each is present under `presentation/assets` or
+`presentation/public`.
 
 ## Final slide
 
-Slide 19 is a closing slide, not a "Вопросы" slide. It carries the one-line
+Slide 14 is a closing slide, not a "Вопросы" slide. It carries the one-line
 conclusion «Инструмент превращает байты в проверяемое знание», two QR codes
 (repository and release) with captions, and the contact line
 `github.com/Pavel1778/madrigal-protocol-lab · @Pasha1778`. It carries no
@@ -133,19 +126,18 @@ asset count — and the word «Вопросы» appears nowhere in the deck.
 
 | fact | value | command |
 | --- | --- | --- |
-| slides | 19, 16:9 (13.333 x 7.5 in) | `python -m presentation.scripts.build_pptx` |
-| entrance animations | 20, click-triggered (19 fade, 1 wipe), at most 3 per slide | XML scan of `slides.pptx` |
+| slides | 14, 16:9 (13.333 x 7.5 in) | `python -m presentation.scripts.build_pptx` |
+| entrance animations | click-triggered, at most 3 per slide | XML scan of `slides.pptx` |
 | chart build-in | 1 wipe (the memory-sweep figure) | XML scan of `slides.pptx` |
-| transitions | 19, plain fade | XML scan of `slides.pptx` |
+| transitions | 14, plain fade | XML scan of `slides.pptx` |
 | embedded fonts | Tektur, Montserrat, JetBrains Mono (5 faces) | `pytest tests/project/test_presentation_sync.py` |
 | text | native editable runs, deck palette | python-pptx |
 
 The deck is drawn directly with python-pptx — no PowerPoint template. Content
 fades in on click, kept to at most three build-ins per slide, and the
 memory-sweep figure wipes in left to right. Every slide carries a plain fade
-transition; the cover, the three section dividers, the recording slide and the
-closing slide carry no click animation at all. The XML of all 105 parts parses
-without error.
+transition; the cover and the closing slide carry no click animation at all.
+The XML of all 94 parts parses without error.
 
 ## Fonts
 

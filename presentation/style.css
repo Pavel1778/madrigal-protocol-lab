@@ -203,6 +203,7 @@ html.light {
 .cover { display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 16px; }
 .cover__brand { display: flex; align-items: center; gap: 22px; }
 .cover__logo { width: 58px; height: 58px; }
+.cover__client { width: 150px; height: auto; opacity: 0.9; margin-left: auto; }
 .cover__name {
   font-family: 'JetBrains Mono', monospace;
   font-size: 22px;
@@ -427,6 +428,7 @@ html.light {
 .qr-item img { width: 108px; height: 108px; display: block; background: #FFFFFF; border-radius: 8px; padding: 6px; }
 .qr-item .caption { margin-top: 8px; font-size: 19px; }
 .closing__line { font-family: 'JetBrains Mono', monospace; font-size: 20px; color: var(--secondary); }
+.closing__client { width: 130px; height: auto; opacity: 0.85; margin-top: 4px; }
 
 /* --- общие утилиты ------------------------------------------------------- */
 html, body, #app, #slide-container, .slidev-page, .slidev-slide-container,

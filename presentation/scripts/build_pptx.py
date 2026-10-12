@@ -1,6 +1,6 @@
 """Build the defence deck as a real, editable PPTX from our own code.
 
-Mirrors ``slides.md`` (19 slides, 16:9). Every slide is drawn with python-pptx
+Mirrors ``slides.md`` (14 slides, 16:9). Every slide is drawn with python-pptx
 directly — no PowerPoint template — with native editable text, the deck palette
 and brand fonts, click-triggered fade/wipe entrances and native slide
 transitions. The build fails loudly if the number of slides it emits is not the
@@ -54,7 +54,7 @@ SLIDE_H = Inches(7.5)
 BODY_TOP = Inches(1.85)
 GITHUB = "https://github.com/Pavel1778/madrigal-protocol-lab"
 RELEASE = "https://github.com/Pavel1778/madrigal-protocol-lab/releases/tag/v1.0.0"
-TOTAL = 19
+TOTAL = 14
 
 _TOKEN = re.compile(r"(\*\*[^*]+\*\*|`[^`]+`)")
 
@@ -145,7 +145,7 @@ def bg(slide):
 
 
 SECTIONS = ((1, "Постановка и метод"), (10, "Результаты"),
-            (14, "Демонстрация"), (17, "Границы и итог"))
+            (12, "Демонстрация"), (13, "Границы и итог"))
 
 
 def footer(slide, page):
@@ -350,6 +350,8 @@ def build_slide(prs, spec):
                          Inches(8.0), Inches(0.5))
         add_runs(tf.paragraphs[0], "MADRIGAL-PROTOCOL-LAB", 14, SECONDARY,
                  font=F_MONO)
+        picture(slide, "public/madrigal-logo.png", SLIDE_W - MARGIN - Inches(1.7),
+                Inches(1.3), Inches(1.7), Inches(0.7))
         tb, tf = textbox(slide, MARGIN, Inches(2.35), SLIDE_W - 2 * MARGIN,
                          Inches(1.5))
         add_runs(tf.paragraphs[0], spec["title"], 56, TEXT, bold=True,
@@ -568,42 +570,64 @@ def build_slide(prs, spec):
             caption(slide, spec["caption"])
 
     elif kind == "bars":
-        tb, tf = textbox(slide, MARGIN, Inches(1.3), SLIDE_W - 2 * MARGIN,
-                         Inches(0.9))
-        add_runs(tf.paragraphs[0], spec["title"], 30, TEXT, bold=True,
+        if spec.get("kicker"):
+            tb, tf = textbox(slide, MARGIN, Inches(0.5), SLIDE_W - 2 * MARGIN,
+                             Inches(0.35))
+            add_runs(tf.paragraphs[0], spec["kicker"].upper(), 14, ACCENT,
+                     bold=True)
+        tb, tf = textbox(slide, MARGIN, Inches(1.0), SLIDE_W - 2 * MARGIN,
+                         Inches(0.8))
+        add_runs(tf.paragraphs[0], spec["title"], 32, TEXT, bold=True,
                  font=F_HEAD)
         if spec.get("sub"):
-            tb, tf = textbox(slide, MARGIN, Inches(2.15),
-                             SLIDE_W - 2 * MARGIN, Inches(0.5))
+            tb, tf = textbox(slide, MARGIN, Inches(1.22), SLIDE_W - 2 * MARGIN,
+                             Inches(0.6))
             add_runs(tf.paragraphs[0], spec["sub"], 14, SECONDARY)
         if spec.get("big"):
-            tb, tf = textbox(slide, MARGIN, Inches(2.5), Inches(4.4), Inches(1.6))
-            add_runs(tf.paragraphs[0], spec["big"], 88, ACCENT, bold=True,
-                     font=F_HEAD)
+            tb, tf = textbox(slide, MARGIN, Inches(1.95), Inches(5.6),
+                             Inches(1.3))
+            add_runs(tf.paragraphs[0], spec["big"], spec.get("bigsize", 96),
+                     ACCENT, bold=True, font=F_HEAD)
             steps.append((tb.shape_id, "fade"))
         if spec.get("note"):
-            tb, tf = textbox(slide, MARGIN, Inches(5.9), SLIDE_W - 2 * MARGIN,
-                             Inches(0.6))
+            tb, tf = textbox(slide, MARGIN, Inches(3.25), Inches(5.6),
+                             Inches(1.0))
             add_runs(tf.paragraphs[0], spec["note"], 16, TEXT)
-
+        if spec.get("image"):
+            pic = fit_picture(slide, spec["image"], Inches(7.1), Inches(1.9),
+                              Inches(5.3), Inches(2.4))
+            steps.append((pic.shape_id, "fade"))
         bx = MARGIN
         bw = SLIDE_W - 2 * MARGIN
         for i, (label, value, ratio, color) in enumerate(spec["bars"]):
-            y = Inches(3.05) + i * Inches(1.3)
-            tb, tf = textbox(slide, bx, y, Inches(1.0), Inches(0.7),
+            y = Inches(4.55) + i * Inches(0.95)
+            tb, tf = textbox(slide, bx, y, Inches(1.0), Inches(0.6),
                              anchor=MSO_ANCHOR.MIDDLE)
-            add_runs(tf.paragraphs[0], label, 22, SECONDARY, font=F_MONO)
-            rect(slide, bx + Inches(1.1), y + Inches(0.05),
-                 bw - Inches(3.4), Inches(0.6), SURFACE_HI)
-            fill = rect(slide, bx + Inches(1.1), y + Inches(0.05),
-                        (bw - Inches(3.4)) * ratio, Inches(0.6), color)
-            tb, tf = textbox(slide, bx + bw - Inches(2.2), y, Inches(2.2),
-                             Inches(0.7), anchor=MSO_ANCHOR.MIDDLE)
+            add_runs(tf.paragraphs[0], label, 18, SECONDARY, font=F_MONO)
+            rect(slide, bx + Inches(1.0), y + Inches(0.08),
+                 bw - Inches(3.2), Inches(0.42), SURFACE_HI)
+            fill = rect(slide, bx + Inches(1.0), y + Inches(0.08),
+                        (bw - Inches(3.2)) * ratio, Inches(0.42), color)
+            tb, tf = textbox(slide, bx + bw - Inches(2.0), y, Inches(2.0),
+                             Inches(0.6), anchor=MSO_ANCHOR.MIDDLE)
             tf.paragraphs[0].alignment = PP_ALIGN.RIGHT
-            add_runs(tf.paragraphs[0], value, 40, TEXT, bold=True, font=F_HEAD)
+            add_runs(tf.paragraphs[0], value, 28, TEXT, bold=True, font=F_HEAD)
             steps.append((fill.shape_id, "fade"))
         if spec.get("caption"):
             caption(slide, spec["caption"])
+
+    elif kind == "demo":
+        tb, tf = textbox(slide, MARGIN, Inches(0.5), SLIDE_W - 2 * MARGIN,
+                         Inches(0.35))
+        add_runs(tf.paragraphs[0], spec["kicker"].upper(), 14, ACCENT,
+                 bold=True)
+        tb, tf = textbox(slide, MARGIN, Inches(0.95), SLIDE_W - 2 * MARGIN,
+                         Inches(0.9))
+        add_runs(tf.paragraphs[0], spec["title"], 40, TEXT, bold=True,
+                 font=F_HEAD)
+        fit_picture(slide, spec["image"], MARGIN, BODY_TOP,
+                    SLIDE_W - 2 * MARGIN, Inches(4.0))
+        caption(slide, spec["caption"])
 
     elif kind == "live":
         heading(slide, spec["title"])
@@ -667,6 +691,9 @@ def build_slide(prs, spec):
         run.font.name = F_MONO
         run.font.color.rgb = SECONDARY
         run.hyperlink.address = GITHUB
+        picture(slide, "public/madrigal-logo.png",
+                (SLIDE_W - Inches(1.5)) / 2, Inches(6.05), Inches(1.5),
+                Inches(0.62))
 
     if spec["kind"] not in ("cover", "closing"):
         footer(slide, spec["page"])
@@ -675,7 +702,7 @@ def build_slide(prs, spec):
     return slide, steps
 
 
-# --- content (mirrors slides.md, 19 slides) ---------------------------------
+# --- content (mirrors slides.md, 14 slides) ---------------------------------
 def deck() -> list[dict]:
     return [
         {"kind": "cover", "page": 1, "title": "Лаборатория протоколов",
@@ -710,10 +737,10 @@ def deck() -> list[dict]:
                       ("protocol + hypothesis", "правила, фрейминг\nконтрпримеры, версии"),
                       ("ui", "окно PySide6\nисследование и просмотр")],
              "caption": "Контракты между модулями зафиксированы схемами JSON; порядок вызовов не важен"},
-        {"kind": "shot_side", "page": 7, "title": "От интерпретации можно вернуться к исходным данным",
+        {"kind": "live", "page": 7,
+             "title": "От интерпретации можно вернуться к исходным данным",
              "image": "public/screenshot-provenance.png",
-             "blocks": [{"accent": True, "lead": "",
-                          "text": "packet 3 · seq 1001 · ts 1700000000.004 · сессия s1"}]},
+             "caption": "packet 3 · seq 1001 · сессия s1"},
         {"kind": "pair", "page": 8, "title": "Правило проверяется на всём корпусе сразу",
              "images": ["public/screenshot-rule.png",
                      "public/screenshot-validation.png"]},
@@ -726,40 +753,27 @@ def deck() -> list[dict]:
                      {"lead": "Один байт — 80 контрпримеров",
                           "text": "80 несоответствий v1 — на offset 0 в сессиях s2 и s3."}],
              "caption": "Значение 2 повторяется в независимых сессиях корпуса и связано с действием «изменить настройку» в журнале"},
-        {"kind": "divider", "page": 10, "index": "01", "title": "Что получилось",
-             "note": "Точность, покрытие корпуса организаторов, ресурсы"},
-        {"kind": "bars", "page": 11, "title": "Уточнили правило: 60 из 140 → 140 из 140",
-             "sub": "На корпусе уточнения. Отдельно проверено на реальном датасете: 45 + 45, precision 1.00",
-             "note": "Было 60 matched из 140 и 80 контрпримеров. Стало 140 matched из 140 и ноль контрпримеров",
+        {"kind": "bars", "page": 10,
+             "title": "Что получилось",
+             "sub": "140 / 140 на корпусе уточнения. Отдельно проверено на наборе организаторов: 45 + 45, precision 1.00",
              "bars": [("v1", "0.43", 0.43, MISMATCHED),
-                   ("v2", "1.00", 1.0, MATCHED)]},
-        {"kind": "metric", "page": 12, "title": "Набор организаторов разобран целиком",
-             "big": "90", "bigsize": 120, "image": "assets/coverage_donut.png",
-             "note": "45 запросов + 45 ответов. Все matched.",
-             "caption": "Данные не использовались при уточнении правила"},
-        {"kind": "metric", "page": 13, "title": "95 МиБ разбираются за 12 секунд",
+                   ("v2", "1.00", 1.0, MATCHED)],
+             "caption": "Было 60 matched из 140 и 80 контрпримеров. Стало 140 matched из 140 и ноль контрпримеров"},
+        {"kind": "metric", "page": 11, "title": "95 МиБ разбираются за 12 секунд",
              "big": "12 с", "animated": True, "image": "assets/memory_sweep.png",
              "note": "Пик памяти 350 МиБ — 9% бюджета 4 ГиБ на машине 16 ГиБ",
              "chips": ["12 с общее время", "350 МиБ пик памяти", "250k пакетов"],
              "caption": "Условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ"},
-        {"kind": "divider", "page": 14, "index": "02", "title": "Демонстрация",
-             "note": "Живое окно и запись прогона"},
-        {"kind": "live", "page": 15, "title": "Живое окно",
+        {"kind": "demo", "page": 12, "title": "Живое окно",
+             "kicker": "Демонстрация",
              "image": "public/screenshot-main.png",
              "caption": "Сессии, байты, интерпретация, происхождение и диагностика в одном окне"},
-        {"kind": "video", "page": 16,
-             "title": "Резерв: запись прогона",
-             "poster": "public/screencast-poster.png",
-             "meta": "Полный прогон референсного исследования · 2:22 · без звука",
-             "caption": "Играется, если живое окно не поднимется на защите"},
-        {"kind": "divider", "page": 17, "index": "03", "title": "Границы и итог",
-             "note": "Что мы не утверждаем и что осталось за рамками"},
-        {"kind": "limits", "page": 18, "title": "Что мы не утверждаем",
+        {"kind": "limits", "page": 13, "title": "Что мы не утверждаем",
              "columns": [["Смысл байта флагов не установлен: в корпусе он постоянен",
                        "Поле значения остаётся гипотезой, а не фактом"],
                       ["Альтернативные чтения берутся из заданного набора",
                        "Интерпретация верна для проверенных захватов и молчит вне них"]]},
-        {"kind": "closing", "page": 19,
+        {"kind": "closing", "page": 14,
              "title": "Инструмент превращает байты в проверяемое знание",
              "qrs": [("public/qr_repo.png", "Репозиторий", GITHUB),
                   ("public/qr_release.png", "Релиз v1.0.0", RELEASE),
