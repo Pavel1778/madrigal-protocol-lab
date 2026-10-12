@@ -33,7 +33,7 @@ class CorpusStream:
     @classmethod
     def from_bytes(
         cls, data: bytes, session_id: str = "", direction: str = "A_to_B"
-    ) -> "CorpusStream":
+    ) -> CorpusStream:
         """Wrap raw bytes as a labelled corpus stream.
 
         Args:

@@ -8,8 +8,8 @@ import at load time.
 from .status import ALL_STATUSES, CORE_STATUSES, Status
 
 __all__ = [
-    "Status",
-    "CORE_STATUSES",
     "ALL_STATUSES",
+    "CORE_STATUSES",
+    "Status",
 ]
 

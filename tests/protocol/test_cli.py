@@ -1,6 +1,7 @@
 import base64
 import json
 import struct
+from pathlib import Path
 
 from src.protocol.cli import main
 from src.protocol.result import validate_result
@@ -85,7 +86,7 @@ def test_cli_apply_writes_valid_result(tmp_path):
     code = main(["apply", "--rule", rule_path, "--capture", capture_path, "--out", out_path])
     assert code == 0
 
-    payload = json.loads(open(out_path, encoding="utf-8").read())
+    payload = json.loads(Path(out_path).read_text(encoding="utf-8"))
     assert payload["rule_id"] == "r1"
     assert payload["rule_version"] == 2
     assert payload["capture_id"] == "sha256:" + "ef" * 32
@@ -113,7 +114,7 @@ def test_cli_apply_honours_session_and_direction(tmp_path):
         ]
     )
     assert code == 0
-    payload = json.loads(open(out_path, encoding="utf-8").read())
+    payload = json.loads(Path(out_path).read_text(encoding="utf-8"))
     assert payload["summary"]["not_applicable"] == 1
 
 
@@ -124,7 +125,7 @@ def test_cli_verify_reports_counterexamples(tmp_path):
     out_path = str(tmp_path / "report.json")
     code = main(["verify", "--rule", rule_path, "--capture", capture_path, "--out", out_path])
     assert code == 0
-    report = json.loads(open(out_path, encoding="utf-8").read())
+    report = json.loads(Path(out_path).read_text(encoding="utf-8"))
     assert report["rule_id"] == "r1"
     assert report["counts"]["mismatched"] == 1
     assert report["contradictions"][0]["message_offset"] == 8
@@ -148,7 +149,7 @@ fields:
     out_path = str(tmp_path / "result.json")
     code = main(["apply", "--rule", str(rule_path), "--capture", capture_path, "--out", out_path])
     assert code == 0
-    payload = json.loads(open(out_path, encoding="utf-8").read())
+    payload = json.loads(Path(out_path).read_text(encoding="utf-8"))
     assert payload["summary"]["matched"] == 1
     assert payload["messages"][0]["fields"]["value"] == 21
 

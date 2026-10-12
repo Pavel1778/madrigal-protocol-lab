@@ -62,7 +62,7 @@ def test_build_result_matches_contract_shape():
 
 def test_result_passes_schema_validation():
     schema_path = os.path.join("docs", "schemas", "result.schema.json")
-    with open(schema_path, "r", encoding="utf-8") as handle:
+    with open(schema_path, encoding="utf-8") as handle:
         schema = json.load(handle)
     rule = parse_rule(RULE)
     messages = apply_rule(DirectionalStream.from_bytes(_message(4, 8, 21)), rule, "s1", "A_to_B")

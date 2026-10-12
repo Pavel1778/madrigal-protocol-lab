@@ -39,10 +39,10 @@ os.environ["LANG"] = "en_US.UTF-8"
 os.environ["LANGUAGE"] = "en"
 os.environ["LC_ALL"] = "en_US.UTF-8"
 
-import pytest  # noqa: E402
+import pytest
 
 try:
-    from PySide6 import QtCore  # noqa: E402
+    from PySide6 import QtCore
 except ImportError:  # pragma: no cover - depends on the runner
     QtCore = None  # type: ignore[assignment]
 

@@ -17,7 +17,8 @@ import math
 from collections import Counter
 from dataclasses import dataclass, field
 
-from ..protocol.checksums import ALGORITHMS, compute as checksum_compute
+from ..protocol.checksums import ALGORITHMS
+from ..protocol.checksums import compute as checksum_compute
 from ..protocol.engine import MessageResult
 from ..protocol.rule import Rule
 
@@ -259,7 +260,7 @@ def analyze_field(
     # Low-cardinality: a small closed set of values looks like an enum or flags.
     distinct = sorted({v for v in values if isinstance(v, int)})
     if not distinct:
-        distinct = sorted({v for v in values}, key=str)
+        distinct = sorted(set(values), key=str)
     if distinct and len(distinct) <= max(2, int(len(observations) * 0.3)):
         _add(
             alternatives,
@@ -478,10 +479,7 @@ def delta_correlation(field_values: list) -> dict:
         return {"total": 0, "mean_step": 0.0, "std_step": 0.0, "cv": 0.0, "verdict": "inconclusive"}
     mean = sum(steps) / len(steps)
     std = math.sqrt(sum((step - mean) ** 2 for step in steps) / len(steps))
-    if mean == 0:
-        cv = 0.0 if std == 0 else float("inf")
-    else:
-        cv = abs(std / mean)
+    cv = (0.0 if std == 0 else float("inf")) if mean == 0 else abs(std / mean)
     if cv < 0.1:
         verdict = "delta"
     elif cv > 0.5:
@@ -550,7 +548,7 @@ def _test_periodicity(alternatives, observations, limit) -> None:
     agreement = _period_agreement(values, lag)
     checks = [
         (message, value, ok, f"matches the value {lag} messages earlier")
-        for (message, value), (_, ok) in zip(observations, agreement)
+        for (message, value), (_, ok) in zip(observations, agreement, strict=False)
     ]
     _add(
         alternatives,
@@ -768,7 +766,7 @@ def _test_delta_encoding(alternatives, observations, limit) -> None:
         return
     checks = [
         (message, value, ok, f"running sum {running[index]}")
-        for index, ((message, value), ok) in enumerate(zip(observations, steps))
+        for index, ((message, value), ok) in enumerate(zip(observations, steps, strict=False))
     ]
     _add(
         alternatives,

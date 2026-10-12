@@ -8,10 +8,10 @@ with its declared layout, over the messages that were actually tested.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class Status(str, Enum):
+class Status(StrEnum):
     """Classification of a message or field against a rule.
 
     ``MATCHED`` means the bytes read consistently with the declared layout over

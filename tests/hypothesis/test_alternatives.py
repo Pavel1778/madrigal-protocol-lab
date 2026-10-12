@@ -89,7 +89,7 @@ def test_journal_alternative():
     messages[0].timestamp = 10.0
     messages[1].timestamp = 10.1
 
-    from src.hypothesis.journal import JournalEntry, Correlation
+    from src.hypothesis.journal import Correlation, JournalEntry
 
     correlations = [
         Correlation(

@@ -11,14 +11,14 @@ import os
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-import pytest  # noqa: E402
+import pytest
 
 try:
-    from PySide6 import QtWidgets  # noqa: E402
+    from PySide6 import QtWidgets
 
-    from src.hypothesis.alternatives import Alternative, FieldAlternatives  # noqa: E402
-    from src.ui import theme  # noqa: E402
-    from src.ui.hypotheses_view import (  # noqa: E402
+    from src.hypothesis.alternatives import Alternative, FieldAlternatives
+    from src.ui import theme
+    from src.ui.hypotheses_view import (
         HIGH_SCORE,
         MID_SCORE,
         HypothesesView,
@@ -32,7 +32,7 @@ except ImportError as exc:  # pragma: no cover - depends on the runner
 def app():
     try:
         application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
-    except Exception as exc:  # noqa: BLE001 - a missing Qt runtime is a skip
+    except Exception as exc:
         pytest.skip(f"Qt platform could not start: {exc}")
     return application
 

@@ -16,7 +16,7 @@ try:
 except ImportError as exc:  # pragma: no cover - depends on the runner
     pytest.skip(f"Qt runtime unavailable: {exc}", allow_module_level=True)
 
-from src.ui.settings import DEFAULTS  # noqa: E402
+from src.ui.settings import DEFAULTS
 
 
 def test_desktop_locale_is_english():

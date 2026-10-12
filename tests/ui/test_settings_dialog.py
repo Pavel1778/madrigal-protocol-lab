@@ -13,12 +13,13 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-import pytest  # noqa: E402
-from PySide6 import QtCore, QtWidgets  # noqa: E402
+import pytest
+from PySide6 import QtCore, QtWidgets
 
-from src.ui import i18n, settings as settings_mod, theme  # noqa: E402
-from src.ui.main_window import MainWindow  # noqa: E402
-from src.ui.settings import SettingsDialog  # noqa: E402
+from src.ui import i18n, theme
+from src.ui import settings as settings_mod
+from src.ui.main_window import MainWindow
+from src.ui.settings import SettingsDialog
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CATALOGUE = REPO_ROOT / "src" / "ui" / "locale" / "madrigal_ru.qm"
@@ -31,7 +32,7 @@ catalogue_required = pytest.mark.skipif(
 def app():
     try:
         application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
-    except Exception as exc:  # noqa: BLE001 - a missing Qt runtime is a skip
+    except Exception as exc:
         pytest.skip(f"Qt platform could not start: {exc}")
     theme.load_fonts(application)
     return application

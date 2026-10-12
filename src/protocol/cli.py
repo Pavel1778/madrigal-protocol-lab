@@ -19,9 +19,18 @@ import argparse
 import json
 import sys
 
-from ..hypothesis.alternatives import AlternativesReport, analyze_field, suggest_alternatives
+from ..hypothesis.alternatives import (
+    AlternativesReport,
+    analyze_field,
+    suggest_alternatives,
+)
 from ..hypothesis.corpus import CorpusStream, VerificationReport, verify_on_corpus
-from ..hypothesis.diff import diff_reports, diff_rules, format_report_diff, format_rule_diff
+from ..hypothesis.diff import (
+    diff_reports,
+    diff_rules,
+    format_report_diff,
+    format_rule_diff,
+)
 from ..hypothesis.journal import correlate, load_journal
 from ..hypothesis.metrics import compute_metrics
 from .engine import Counterexample, apply_rule
@@ -170,7 +179,7 @@ def _cmd_diff(args) -> int:
 
 
 def _load_report(path: str) -> VerificationReport:
-    with open(path, "r", encoding="utf-8") as handle:
+    with open(path, encoding="utf-8") as handle:
         payload = json.load(handle)
     return report_from_dict(payload)
 
@@ -286,7 +295,8 @@ def _cmd_export(args) -> int:
 
 
 def _cmd_alternatives(args) -> int:
-    payload = json.load(open(args.report, "r", encoding="utf-8"))
+    with open(args.report, encoding="utf-8") as handle:
+        payload = json.load(handle)
     rule = load_rule(args.rule)
     messages = _messages_from_payload(payload)
     correlations = None

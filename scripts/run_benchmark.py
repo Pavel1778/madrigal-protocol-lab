@@ -118,7 +118,7 @@ def _environment() -> dict[str, str]:
 def _version(module: str) -> str:
     try:
         return __import__(module).__version__
-    except Exception:  # noqa: BLE001 - report "unknown" for any missing or odd module
+    except Exception:
         return "unknown"
 
 

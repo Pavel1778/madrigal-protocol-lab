@@ -151,7 +151,7 @@ def validate_result(payload: dict, schema_path: str | None = None) -> None:
         schema_path = os.path.join(here, "docs", "schemas", "result.schema.json")
     if not os.path.exists(schema_path):
         return
-    with open(schema_path, "r", encoding="utf-8") as handle:
+    with open(schema_path, encoding="utf-8") as handle:
         schema = json.load(handle)
     jsonschema.Draft202012Validator(schema).validate(payload)
 

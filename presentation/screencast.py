@@ -18,10 +18,10 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "xcb")
 
-from PySide6 import QtCore, QtWidgets  # noqa: E402
+from PySide6 import QtCore, QtWidgets
 
-from src.ui import theme  # noqa: E402
-from src.ui.main_window import MainWindow, open_default_window  # noqa: E402
+from src.ui import theme
+from src.ui.main_window import MainWindow, open_default_window
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CAPTURE_01 = REPO_ROOT / "tests" / "corpus" / "reference_export" / "corpus_capture_01.normalized.json"
@@ -61,7 +61,7 @@ class Director:
         self.app.processEvents()
         try:
             action()
-        except Exception as exc:  # noqa: BLE001 - keep the recording going
+        except Exception as exc:
             print(f"step {self.index} failed: {exc}", file=sys.stderr)
         self.index += 1
         QtCore.QTimer.singleShot(delay * 1000, self.tick)

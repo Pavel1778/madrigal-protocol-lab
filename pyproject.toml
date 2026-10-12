@@ -60,12 +60,14 @@ target-version = "py312"
 line-length = 88
 
 [tool.ruff.lint]
-# Starter ruleset: only the rules that catch real mistakes are enabled while the
-# deadline is close. The extended set (isort, bugbear, pyupgrade, simplify,
-# comprehensions, ISC, RUF, BLE) is tracked in docs/AUDIT.md and will be turned
-# on after the defense.
-select = ["E4", "E7", "E9", "F"]
-ignore = ["E501"]
+# Extended ruleset: correctness (E/F), import order (I), modernisation (UP),
+# likely bugs (B), simplification (SIM/C4), implicit concatenation (ISC), and
+# the ruff-specific checks (RUF).
+select = ["E4", "E7", "E9", "F", "I", "UP", "B", "SIM", "C4", "ISC", "RUF"]
+# E501 stays off: the project keeps a hand-wrapped 88-column style, and line
+# length is not enforced as a hard limit. RUF001 is off because the Russian
+# text legitimately contains typographic characters that look like ASCII.
+ignore = ["E501", "RUF001"]
 
 [tool.mypy]
 python_version = "3.12"

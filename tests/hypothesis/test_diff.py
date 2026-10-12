@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-from src.hypothesis.corpus import CorpusStream
-from src.hypothesis.diff import diff_reports, diff_rules, format_report_diff, format_rule_diff
-from src.hypothesis.corpus import verify_on_corpus
+from src.hypothesis.corpus import CorpusStream, verify_on_corpus
+from src.hypothesis.diff import (
+    diff_reports,
+    diff_rules,
+    format_report_diff,
+    format_rule_diff,
+)
 from src.protocol.rule import parse_rule
 from src.protocol.stream import DirectionalStream
 
@@ -29,7 +33,7 @@ BASE_FIELDS = [
 
 def test_diff_detects_added_field():
     a = _rule(BASE_FIELDS)
-    b = _rule(BASE_FIELDS + [{"name": "flags", "offset": 3, "type": "uint8"}], framing={"type": "fixed_size", "size": 4})
+    b = _rule([*BASE_FIELDS, {"name": "flags", "offset": 3, "type": "uint8"}], framing={"type": "fixed_size", "size": 4})
     diff = diff_rules(a, b)
     assert diff.added_fields == ["flags"]
     assert not diff.removed_fields

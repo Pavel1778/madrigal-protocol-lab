@@ -62,7 +62,7 @@ def test_rst_closes_the_session(fixtures_dir: Path) -> None:
     packets = list(read_capture(fixture("normal.pcapng")))
     # Drop both FINs and close the connection with a reset instead.
     reset = replace(packets[-1], flags=TH_RST | TH_ACK)
-    sessions = build_sessions(packets[:-2] + [reset])
+    sessions = build_sessions([*packets[:-2], reset])
     assert sessions[0].rst_seen
     assert not sessions[0].fin_seen
 

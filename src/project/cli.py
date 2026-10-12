@@ -121,7 +121,7 @@ def _run_pipeline(args: argparse.Namespace) -> int:
     except KeyboardInterrupt:
         print("interrupted", file=sys.stderr)
         return 130
-    except Exception as exc:  # noqa: BLE001 - the CLI reports any failure
+    except Exception as exc:
         print(f"pipeline failed: {exc}", file=sys.stderr)
         return 1
     _print_outcome(outcome, quiet=args.quiet)

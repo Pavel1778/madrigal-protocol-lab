@@ -15,13 +15,13 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-import pytest  # noqa: E402
+import pytest
 
 try:
-    from PySide6 import QtCore, QtWidgets  # noqa: E402
+    from PySide6 import QtCore, QtWidgets
 
-    from src.ui import i18n, theme  # noqa: E402
-    from src.ui.main_window import MainWindow  # noqa: E402
+    from src.ui import i18n, theme
+    from src.ui.main_window import MainWindow
 except ImportError as exc:  # pragma: no cover - depends on the runner
     pytest.skip(f"Qt runtime unavailable: {exc}", allow_module_level=True)
 
@@ -44,7 +44,7 @@ corpus_required = pytest.mark.skipif(not CAPTURE.is_file(), reason="reference co
 def app():
     try:
         application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
-    except Exception as exc:  # noqa: BLE001 - a missing Qt runtime is a skip
+    except Exception as exc:
         pytest.skip(f"Qt platform could not start: {exc}")
     theme.load_fonts(application)
     application.setStyleSheet(theme.build_stylesheet())

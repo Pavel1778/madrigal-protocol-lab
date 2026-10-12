@@ -55,7 +55,7 @@ def _validate(schema_path: Path, payload: dict) -> None:
         pytest.skip(f"schema not present: {schema_path}")
     import jsonschema
 
-    with open(schema_path, "r", encoding="utf-8") as handle:
+    with open(schema_path, encoding="utf-8") as handle:
         schema = json.load(handle)
     jsonschema.Draft202012Validator(schema).validate(payload)
 

@@ -22,7 +22,12 @@ from src.capture.export import export_capture
 from src.capture.pipeline import normalize
 from src.protocol.engine import MessageResult, apply_rule
 from src.protocol.rule import Rule, RuleError, load_rule
-from src.protocol.stream import Capture, CaptureError, DirectionalStream, capture_from_dict
+from src.protocol.stream import (
+    Capture,
+    CaptureError,
+    DirectionalStream,
+    capture_from_dict,
+)
 
 HEX_BYTES_PER_LINE = 16
 
@@ -109,7 +114,7 @@ class WebEngine:
     @classmethod
     def open(
         cls, capture: str | Path, rule: str | Path | None = None
-    ) -> "WebEngine":
+    ) -> WebEngine:
         """Open a capture (normalized JSON or raw PCAP) and an optional rule.
 
         Raises:
@@ -443,7 +448,7 @@ def _read_capture(path: Path) -> dict:
     if suffix in (".pcap", ".pcapng"):
         try:
             normalized = normalize(path)
-        except Exception as exc:  # noqa: BLE001 - any parser failure is caller-facing
+        except Exception as exc:
             raise WebEngineError(f"could not normalize the capture: {exc}") from exc
         return _normalized_to_dict(normalized)
     raise WebEngineError(

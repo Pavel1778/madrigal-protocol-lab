@@ -54,7 +54,7 @@ def export_kaitai(rule: Rule) -> str:
 def _kaitai_field(field, index: int, rule: Rule) -> list[str]:
     out: list[str] = []
     ftype = field.type
-    field_id = "pad_%d" % index if ftype == "padding" else _identifier(field.name)
+    field_id = f"pad_{index}" if ftype == "padding" else _identifier(field.name)
     out.append(f"  - id: {field_id}")
 
     if ftype in _KAITAI_TYPES:
@@ -134,16 +134,16 @@ def export_python(rule: Rule) -> str:
     """Return a standalone Python module that frames and parses the layout."""
     payload = json.dumps(rule.to_dict(), ensure_ascii=False, sort_keys=True)
     header = (
-        '"""Standalone parser generated from rule %s v%s.\n\n'
+        f'"""Standalone parser generated from rule {rule.rule_id} v{rule.rule_version}.\n\n'
         "Frames a directional byte stream and reads the declared fields. The\n"
         "module has no dependency on the project that produced it.\n"
         '"""\n\n'
         "from __future__ import annotations\n\n"
         "import json\n"
         "import struct\n\n"
-        "RULE = json.loads(r'''%s''')\n"
-        "CHECKSUM_ALGORITHMS = %r\n\n"
-    ) % (rule.rule_id, rule.rule_version, payload, list(ALGORITHMS))
+        f"RULE = json.loads(r'''{payload}''')\n"
+        f"CHECKSUM_ALGORITHMS = {list(ALGORITHMS)!r}\n\n"
+    )
     return header + _PY_BODY
 
 

@@ -84,7 +84,7 @@ class DirectionalStream:
         return max(covered, 0)
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "DirectionalStream":
+    def from_bytes(cls, data: bytes) -> DirectionalStream:
         """Wrap raw bytes as a stream with no diagnostics or provenance.
 
         Args:
@@ -96,7 +96,7 @@ class DirectionalStream:
         return cls(data=bytes(data))
 
     @classmethod
-    def from_direction(cls, direction: dict) -> "DirectionalStream":
+    def from_direction(cls, direction: dict) -> DirectionalStream:
         """Build a stream from one ``directions`` entry of a capture.
 
         Args:
@@ -228,7 +228,7 @@ def load_capture(path: str) -> Capture:
         CaptureError: If the file does not match the capture contract.
         OSError: If the file cannot be read.
     """
-    with open(path, "r", encoding="utf-8") as handle:
+    with open(path, encoding="utf-8") as handle:
         raw = json.load(handle)
     return capture_from_dict(raw)
 

@@ -20,10 +20,10 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6 import QtCore, QtWidgets  # noqa: E402
+from PySide6 import QtCore, QtWidgets
 
-from src.ui import theme  # noqa: E402
-from src.ui.main_window import MainWindow, open_default_window  # noqa: E402
+from src.ui import theme
+from src.ui.main_window import MainWindow, open_default_window
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OUT = REPO_ROOT / "presentation" / "screenshots"

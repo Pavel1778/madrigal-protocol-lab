@@ -373,7 +373,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tr("Report tab"),
             self.tr("Version diff tab"),
         )
-        for index, (label, tip) in enumerate(zip(captions, tooltips)):
+        for index, (label, tip) in enumerate(zip(captions, tooltips, strict=False)):
             self.right_tabs.setTabText(index, label)
             self.right_tabs.setTabToolTip(index, tip)
 
@@ -601,7 +601,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._bytes_box.setTitle(self.tr("Bytes"))
         self._sessions_box.setTitle(self.tr("Sessions"))
         self._direction_label.setText(self.tr("direction"))
-        for chip, (kind, _name) in zip(self._legend_chips, LEGEND_KINDS):
+        for chip, (kind, _name) in zip(self._legend_chips, LEGEND_KINDS, strict=False):
             label = legend_label(kind)
             chip.setText(label)
             chip.setToolTip(label)
@@ -762,7 +762,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         try:
             self._rule.reload(self.validation_view.rule_text())
-        except Exception as exc:  # noqa: BLE001 - the message is shown to the user
+        except Exception as exc:
             self.validation_view.set_rule_status(self.tr("rule error: {0}").format(exc), error=True)
             return
         application = self._rule.apply(self._capture, self._session_id, self._direction)
@@ -815,7 +815,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         try:
             self._rule.reload(self.validation_view.rule_text())
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             self.validation_view.set_rule_status(self.tr("rule error: {0}").format(exc), error=True)
             return
         self._begin_run()
@@ -967,7 +967,7 @@ class MainWindow(QtWidgets.QMainWindow):
         result = build_result(application.rule, capture_id, application.messages)
         try:
             write_result(result, path)
-        except Exception as exc:  # noqa: BLE001 - report any write or schema failure
+        except Exception as exc:
             self.validation_view.set_rule_status(self.tr("could not save result: {0}").format(exc), error=True)
             self._notify(self.tr("could not save the result"))
             return
@@ -1047,13 +1047,13 @@ def _markdown_to_html(text: str) -> str:
     token = theme.current()
     out: list[str] = [
         "<!DOCTYPE html><html><head><meta charset='utf-8'>",
-        f"<style>body{{background:{token.background};color:{token.text_primary};"
+        (f"<style>body{{background:{token.background};color:{token.text_primary};"
         f"font-family:{token.font_body},sans-serif;"
         "max-width:960px;margin:2rem auto;padding:0 1rem} "
         f"h1,h2,h3{{font-family:{token.font_heading},sans-serif;color:{token.text_primary}}} "
         "table{border-collapse:collapse;margin:1rem 0} "
         f"td,th{{border:1px solid {token.border};padding:4px 8px}} "
-        f"code{{color:{token.accent}}}</style>",
+        f"code{{color:{token.accent}}}</style>"),
         "</head><body>",
     ]
     in_table = False

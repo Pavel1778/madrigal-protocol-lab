@@ -71,7 +71,7 @@ class Overlay(QtWidgets.QWidget):
         self.show()
         self.raise_()
 
-    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:  # noqa: N802
+    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         super().resizeEvent(event)
         self._layout()
 

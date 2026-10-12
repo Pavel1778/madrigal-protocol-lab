@@ -134,9 +134,9 @@ def test_example_rule_matches_rule_schema():
         pytest.skip("rule schema or example not present")
     import jsonschema
 
-    with open(schema_path, "r", encoding="utf-8") as handle:
+    with open(schema_path, encoding="utf-8") as handle:
         schema = json.load(handle)
-    with open(example_path, "r", encoding="utf-8") as handle:
+    with open(example_path, encoding="utf-8") as handle:
         example = json.load(handle)
     jsonschema.Draft202012Validator(schema).validate(example)
 
@@ -148,6 +148,6 @@ def test_example_rule_matches_capture_schema(tmp_path):
         pytest.skip("capture schema not present")
     import jsonschema
 
-    with open(capture_schema_path, "r", encoding="utf-8") as handle:
+    with open(capture_schema_path, encoding="utf-8") as handle:
         schema = json.load(handle)
     jsonschema.Draft202012Validator(schema).validate(_capture_dict())

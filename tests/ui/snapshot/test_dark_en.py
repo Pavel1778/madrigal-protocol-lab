@@ -7,7 +7,6 @@ ships.
 
 from __future__ import annotations
 
-
 from tests.ui.snapshot._diff import assert_snapshot
 from tests.ui.support import grab, set_state, snapshot_name
 

@@ -19,18 +19,18 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-import pytest  # noqa: E402
+import pytest
 
 # A headless runner may lack the Qt system libraries (for example libEGL). When
 # PySide6 cannot be imported the whole module is skipped rather than left as a
 # collection error.
 try:
-    from PySide6 import QtCore, QtTest, QtWidgets  # noqa: E402
+    from PySide6 import QtCore, QtTest, QtWidgets
 
-    from src.project.project import Project  # noqa: E402
-    from src.ui import theme  # noqa: E402
-    from src.ui.hex_view import _byte_char_index, annotations_from_stream  # noqa: E402
-    from src.ui.main_window import open_default_window  # noqa: E402
+    from src.project.project import Project
+    from src.ui import theme
+    from src.ui.hex_view import _byte_char_index, annotations_from_stream
+    from src.ui.main_window import open_default_window
 except ImportError as exc:  # pragma: no cover - depends on the runner
     pytest.skip(f"Qt runtime unavailable: {exc}", allow_module_level=True)
 
@@ -53,7 +53,7 @@ corpus_required = pytest.mark.skipif(
 def app():
     try:
         application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
-    except Exception as exc:  # noqa: BLE001 - a missing Qt runtime is a skip
+    except Exception as exc:
         pytest.skip(f"Qt platform could not start: {exc}")
     theme.load_fonts(application)
     application.setStyleSheet(theme.build_stylesheet())
