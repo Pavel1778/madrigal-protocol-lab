@@ -36,6 +36,9 @@ dev = [
     # Only the snapshot tests use it, and only to draw the difference image that
     # CI uploads when a baseline changes. The comparison itself does not need it.
     "Pillow>=10.4",
+    # The deck build embeds the brand fonts with fontTools, and the guard test
+    # that checks the embedded faces imports it too.
+    "fonttools>=4.60",
 ]
 
 [project.gui-scripts]
