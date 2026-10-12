@@ -27,9 +27,10 @@ from the repository's own code. Every number is from `docs/METRICS.md`.
 | `export_pdf.sh` | exports `slides.pdf` with a retry for the Slidev race |
 | `bundle_html.py` | packs the built `dist/` into `presentation_html.zip` |
 
-The two member photos on slide 2 come from `1.jpg` and `2.jpg` at the repository
-root; `presentation/make_assets.py` crops them to the round `public/avatar_*_round.png`
-the slide uses. Replace either JPEG and re-run `make_assets.py` to update a face.
+The two member photos on slide 2 come from `assets/team/pavel.jpg` and
+`assets/team/nikita.jpg`; `presentation/make_assets.py` crops them to the round
+`public/avatar_*_round.png` the slide uses. Replace either JPEG and re-run
+`make_assets.py` to update a face.
 
 ## Build (one command)
 

@@ -47,8 +47,6 @@ INCLUDE_DIRS = (
 
 # Top-level files copied into the archive when present.
 INCLUDE_ROOT_FILES = (
-    "1.jpg",
-    "2.jpg",
     "ARCHITECTURE.md",
     "CHANGELOG.md",
     "CONTRIBUTORS.md",
