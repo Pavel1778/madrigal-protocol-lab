@@ -51,31 +51,71 @@ def _markdown_slides() -> list[str]:
     return [b for b in blocks if re.search(r"(?m)^#\s+\S", b)]
 
 
+def _string_values(node: ast.AST) -> set[str]:
+    """String literals used as values inside ``node``, never as mapping keys."""
+
+    keys = {
+        id(key)
+        for sub in ast.walk(node)
+        if isinstance(sub, ast.Dict)
+        for key in sub.keys
+        if key is not None
+    }
+    return {
+        sub.value
+        for sub in ast.walk(node)
+        if isinstance(sub, ast.Constant)
+        and isinstance(sub.value, str)
+        and id(sub) not in keys
+    }
+
+
+def _spec_tokens(node: ast.AST) -> set[str]:
+    """Meaning-carrying text of one slide spec, whatever form it is written in.
+
+    The specs are plain ``{...}`` literals today and were ``dict(...)`` calls
+    before; both are read here so the guard does not depend on the spelling.
+    """
+
+    if isinstance(node, ast.Call):
+        pairs = [(kw.arg, kw.value) for kw in node.keywords]
+    elif isinstance(node, ast.Dict):
+        pairs = [
+            (key.value if isinstance(key, ast.Constant) else None, value)
+            for key, value in zip(node.keys, node.values, strict=True)
+        ]
+    else:
+        return set()
+    tokens: set[str] = set()
+    for name, value in pairs:
+        if name in ("notes", "kind"):
+            continue
+        for text in _string_values(value):
+            tokens |= _tokens(text)
+    return tokens
+
+
+def _is_spec(node: ast.AST) -> bool:
+    if isinstance(node, ast.Call):
+        return (
+            isinstance(node.func, ast.Name)
+            and node.func.id == "dict"
+            and any(kw.arg == "kind" for kw in node.keywords)
+        )
+    if isinstance(node, ast.Dict):
+        return any(
+            isinstance(key, ast.Constant) and key.value == "kind"
+            for key in node.keys
+        )
+    return False
+
+
 def _deck_slides() -> list[set[str]]:
     """Token sets of the ``deck()`` specs, in source order."""
     tree = ast.parse(SCRIPT.read_text(encoding="utf-8"))
-    calls: list[ast.Call] = [
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "dict"
-    ]
-    calls.sort(key=lambda call: call.lineno)
-
-    slides: list[set[str]] = []
-    for call in calls:
-        if not any(kw.arg == "kind" for kw in call.keywords):
-            continue
-        tokens: set[str] = set()
-        for kw in call.keywords:
-            if kw.arg in ("notes", "kind"):
-                continue
-            for node in ast.walk(kw.value):
-                if isinstance(node, ast.Constant) and isinstance(node.value, str):
-                    tokens |= _tokens(node.value)
-        slides.append(tokens)
-    return slides
+    specs = [node for node in ast.walk(tree) if _is_spec(node)]
+    specs.sort(key=lambda node: node.lineno)
+    return [_spec_tokens(node) for node in specs]
 
 
 def test_deck_and_markdown_have_the_same_slide_count() -> None:
@@ -83,21 +123,21 @@ def test_deck_and_markdown_have_the_same_slide_count() -> None:
 
 
 def test_deck_adds_no_text_absent_from_markdown() -> None:
-    pairs = zip(_deck_slides(), _markdown_slides())
+    pairs = zip(_deck_slides(), _markdown_slides(), strict=False)
     for page, (deck, body) in enumerate(pairs, start=1):
         extra = sorted(deck - _tokens(body) - _CHROME)
         assert not extra, f"slide {page}: deck() has text not in slides.md: {extra}"
 
 
 def test_markdown_visible_text_is_present_in_deck() -> None:
-    pairs = zip(_deck_slides(), _markdown_slides())
+    pairs = zip(_deck_slides(), _markdown_slides(), strict=False)
     for page, (deck, body) in enumerate(pairs, start=1):
         missing = sorted(_tokens(body) - deck - _CHROME)
         assert not missing, f"slide {page}: slides.md text missing from deck(): {missing}"
 
 
 def test_slide_titles_match_markdown_headings() -> None:
-    pairs = zip(_deck_slides(), _markdown_slides())
+    pairs = zip(_deck_slides(), _markdown_slides(), strict=False)
     for page, (deck, body) in enumerate(pairs, start=1):
         heading = re.search(r"(?m)^#\s+(.+)$", body)
         assert heading is not None, f"slide {page} has no H1"
