@@ -42,17 +42,20 @@ PCAP and PCAPNG reading uses **dpkt 1.9.8**.
 - scapy is kept as a mental fallback but is not a dependency: it is heavier and
   slower for the reference workload of up to 250k packets.
 
-Link-layer types other than Ethernet (raw IP, Linux cooked capture, ...) and
-IPv6 packets are reported as diagnostics instead of raising, so a mixed capture
-still yields the TCP sessions that can be read.
+IPv6 and several link-layer types (raw IP, Linux cooked capture, Linux
+loopback, BSD cooked) are parsed; an unsupported link type or a malformed
+header is reported as a diagnostic instead of raising, so a mixed capture still
+yields the TCP sessions that can be read.
 
 ### Modules
 
 - `parser.py` — `read_capture(path) -> Iterator[Packet]`. Yields TCP packets
   with a monotonic `index`, timestamp, endpoints, sequence numbers, flags, and
-  payload. Non-TCP and non-IPv4 packets are skipped with a diagnostic where
-  relevant. A damaged but recognizable file is read as far as possible and the
-  rest is reported as diagnostics; only a non-capture raises.
+  payload. Non-TCP packets are skipped with a diagnostic where relevant. An
+  unsupported link type is reported as a diagnostic; IPv6, including the
+  extension-header chain, is parsed. A damaged but recognizable file is read as
+  far as possible and the rest is reported as diagnostics; only a non-capture
+  raises.
 - `session.py` — `build_sessions(packets) -> list[Session]`. Groups packets into
   TCP connection instances. A new session is started on SYN without ACK, on a
   new tuple after a FIN/RST, and on any reuse of an endpoint pair after the

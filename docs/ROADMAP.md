@@ -33,8 +33,7 @@ shape a first version would take.
 
 | Item | Impact | Path |
 | --- | --- | --- |
-| IPv6 not parsed; skipped as a diagnostic | cannot read IPv6 exchanges | add an IPv6 branch in the parser |
-| IP fragmentation not reassembled | a fragmented payload is reported incomplete | reassemble fragments before the TCP layer |
+| IP fragmentation (IPv4 and IPv6) not reassembled | a fragmented payload is reported as a diagnostic and skipped | reassemble fragments before the TCP layer |
 | encrypted payloads | out of scope by design | none; the tool reports the bytes it sees |
 | memory scales with the capture | all packets held at once | session-by-session parse with provenance streamed to disk (see `docs/BENCHMARK.md`) |
 | extended lint and typing deferred | style drift in modules outside the audited zone | re-enable the extended `ruff` set, `ruff format --check`, `mypy` one zone at a time (see `docs/AUDIT.md`) |
@@ -50,6 +49,4 @@ shape a first version would take.
    compare and the applicability boundary is exercised on real variance.
 4. Memory-bounded mode by default: parse and reassemble session by session with
    provenance written as it is produced.
-5. IPv6 and fragment reassembly in the capture layer.
-6. Packaging: a Linux binary and a `.deb`, so the tool installs without a
-   Python setup (see phase D in `docs/PORTABILITY.md`).
+5. Fragment reassembly (IPv4 and IPv6) in the capture layer.
