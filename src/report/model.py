@@ -44,6 +44,7 @@ SECTIONS = (
     "hypotheses",
     "counterexamples",
     "rule_versions",
+    "annotations",
     "open_questions",
 )
 
@@ -76,6 +77,7 @@ def normalize(investigation: dict[str, Any]) -> dict[str, Any]:
         "hypotheses": list(investigation.get("hypotheses") or []),
         "counterexamples": list(investigation.get("counterexamples") or []),
         "rule_versions": list(investigation.get("rule_versions") or []),
+        "annotations": list(investigation.get("annotations") or []),
         "open_questions": list(investigation.get("open_questions") or []),
     }
     return model

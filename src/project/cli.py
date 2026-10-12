@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 
 from src.capture.logging_setup import configure_logging
+from src.project.annotations import ANNOTATION_KINDS, AnnotationError
 from src.project.manifest import ManifestError
 from src.project.pipeline import PipelineError, PipelineOutcome, run_pipeline
 from src.project.project import MANIFEST_FILE, Project, ProjectError
@@ -97,6 +98,26 @@ def _build_parser() -> argparse.ArgumentParser:
     import_.add_argument(
         "--target", required=True, type=Path, help="directory to create"
     )
+
+    annotate = sub.add_parser("annotate", help="record an annotation on a byte range")
+    annotate.add_argument("--project", required=True, type=Path, help="project directory")
+    annotate.add_argument("--capture", required=True, help="capture id the range belongs to")
+    annotate.add_argument("--session", required=True, help="session id")
+    annotate.add_argument("--direction", required=True, help="A_to_B or B_to_A")
+    annotate.add_argument("--offset", required=True, type=int, help="first byte offset")
+    annotate.add_argument("--length", required=True, type=int, help="byte count")
+    annotate.add_argument(
+        "--kind",
+        required=True,
+        choices=sorted(ANNOTATION_KINDS),
+        help="annotation kind",
+    )
+    annotate.add_argument("--text", required=True, help="the note itself")
+
+    annotations = sub.add_parser("annotations", help="list recorded annotations")
+    annotations.add_argument("--project", required=True, type=Path, help="project directory")
+    annotations.add_argument("--session", default=None, help="filter by session id")
+    annotations.add_argument("--direction", default=None, help="filter by direction")
 
     return parser
 
@@ -198,7 +219,28 @@ def main(argv: list[str] | None = None) -> int:
             broken = project.verify_captures()
             print(json.dumps({"project": str(project.root), "broken": broken}))
             return 0
-    except (ManifestError, ProjectError) as exc:
+
+        if args.command == "annotate":
+            project = Project.open(args.project)
+            annotation = project.add_annotation(
+                args.capture,
+                args.session,
+                args.direction,
+                args.offset,
+                args.length,
+                args.kind,
+                args.text,
+            )
+            print(json.dumps(annotation.to_dict()))
+            return 0
+
+        if args.command == "annotations":
+            project = Project.open(args.project)
+            with project.annotations() as store:
+                items = store.list(session_id=args.session, direction=args.direction)
+            print(json.dumps([item.to_dict() for item in items]))
+            return 0
+    except (ManifestError, ProjectError, AnnotationError) as exc:
         print(str(exc), file=sys.stderr)
         return 2
     except KeyboardInterrupt:

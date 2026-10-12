@@ -10,6 +10,12 @@ Public API:
 
 from __future__ import annotations
 
+from src.project.annotations import (
+    ANNOTATION_KINDS,
+    Annotation,
+    AnnotationError,
+    AnnotationStore,
+)
 from src.project.manifest import (
     ANNOTATIONS_FILE,
     CAPTURE_CONTRACT_VERSION,
@@ -29,9 +35,13 @@ from src.project.project import MANIFEST_FILE, Project, ProjectError
 
 __all__ = [
     "ANNOTATIONS_FILE",
+    "ANNOTATION_KINDS",
     "CAPTURE_CONTRACT_VERSION",
     "MANIFEST_FILE",
     "PROJECT_FORMAT_VERSION",
+    "Annotation",
+    "AnnotationError",
+    "AnnotationStore",
     "Manifest",
     "ManifestError",
     "PipelineError",

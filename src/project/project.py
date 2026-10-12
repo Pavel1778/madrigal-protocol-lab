@@ -30,6 +30,10 @@ import shutil
 import zipfile
 from pathlib import Path
 
+from src.project.annotations import (
+    Annotation,
+    AnnotationStore,
+)
 from src.project.manifest import (
     ANNOTATIONS_FILE,
     Manifest,
@@ -178,6 +182,42 @@ class Project:
             if _sha256(target) != entry.get("sha256"):
                 broken.append(relative)
         return broken
+
+    # -- annotations ------------------------------------------------------
+
+    def annotations(self) -> AnnotationStore:
+        """Open the project's annotation store.
+
+        The caller owns the returned store and should close it, or use it as a
+        context manager. The store creates the schema on first use, so an
+        untouched ``annotations.sqlite`` stays an empty database.
+        """
+
+        return AnnotationStore(self._root / ANNOTATIONS_FILE)
+
+    def add_annotation(
+        self,
+        capture_id: str,
+        session_id: str,
+        direction: str,
+        offset: int,
+        length: int,
+        kind: str,
+        text: str,
+    ) -> Annotation:
+        """Record one annotation and return it with its assigned id."""
+
+        annotation = Annotation(
+            capture_id=capture_id,
+            session_id=session_id,
+            direction=direction,
+            offset=offset,
+            length=length,
+            kind=kind,
+            text=text,
+        )
+        with self.annotations() as store:
+            return store.add(annotation)
 
     # -- transfer ---------------------------------------------------------
 

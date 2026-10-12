@@ -120,6 +120,7 @@ def build_investigation(
     capture_id: str,
     source_file: str,
     messages: list[Any] | None = None,
+    annotations: list[Any] | None = None,
 ) -> dict[str, Any]:
     """Derive an investigation dictionary from a contract result.
 
@@ -132,10 +133,15 @@ def build_investigation(
     When given, the counterexamples carry the session, direction and bytes of
     each message; when omitted, the contract result's own message dicts are
     used, which hold fewer fields.
+
+    ``annotations`` is an optional list of researcher annotations (objects with
+    ``to_dict`` or already-plain mappings) to carry into the report.
     """
 
     if messages is None:
         messages = result.get("messages") or []
+
+    annotation_dicts = [_annotation_dict(item) for item in (annotations or [])]
 
     summary = result.get("summary") or {}
     matched = int(summary.get("matched", 0))
@@ -186,8 +192,20 @@ def build_investigation(
                 "note": "applied by the pipeline",
             }
         ],
+        "annotations": annotation_dicts,
         "open_questions": open_questions,
     }
+
+
+def _annotation_dict(item: Any) -> dict[str, Any]:
+    """Return a plain mapping for an annotation object or mapping."""
+
+    if isinstance(item, dict):
+        return item
+    to_dict = getattr(item, "to_dict", None)
+    if callable(to_dict):
+        return to_dict()
+    raise PipelineError(f"annotation has no to_dict(): {item!r}")
 
 
 def _hypothesis_status(
@@ -428,12 +446,21 @@ def _apply_or_skip_rule(
     result_path = project.path("results", RESULT_NAME)
     result, messages = _apply_rule(normalized, Path(rule_path), result_path)
     outcome.result = result_path
+    annotations = _project_annotations(project)
     return build_investigation(
         result,
         capture_id=capture_id,
         source_file=relative_capture,
         messages=messages,
+        annotations=annotations,
     )
+
+
+def _project_annotations(project: Project) -> list[Any]:
+    """Return the annotations already recorded in the project."""
+
+    with project.annotations() as store:
+        return store.list()
 
 
 def _render_reports(
