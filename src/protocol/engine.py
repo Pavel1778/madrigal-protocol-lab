@@ -9,15 +9,43 @@ message, and through the message to the source packets.
 
 from __future__ import annotations
 
+import struct
 from dataclasses import dataclass, field
 
 from ..hypothesis.status import Status
 from .checksums import compute as checksum_compute
 from .framing import FramingStrategy, Message, frame_stream
-from .rule import FIELD_TYPES, FieldSpec, Rule
+from .rule import FIELD_TYPES, VARINT_MAX_BYTES, FieldSpec, Rule
 from .stream import DirectionalStream
 
 _SIGNED = {"int8", "int16", "int32"}
+
+_FLOAT_STRUCT = {"float32": "f", "float64": "d"}
+_ENDIAN_STRUCT = {"big": ">", "little": "<"}
+
+
+def _read_varint(data: bytes, start: int, signed: bool) -> tuple[int | None, int]:
+    """Read a base-128 varint (protobuf wire format).
+
+    Returns ``(value, size)``. ``value`` is ``None`` and ``size`` is ``0`` when
+    the continuation chain is unterminated or longer than :data:`VARINT_MAX_BYTES`;
+    that is a malformed field, not a zero.
+    """
+    result = 0
+    shift = 0
+    for i in range(VARINT_MAX_BYTES):
+        if start + i >= len(data):
+            return None, 0
+        byte = data[start + i]
+        result |= (byte & 0x7F) << shift
+        if not byte & 0x80:
+            if signed and result & 1:
+                result = ~(result >> 1)
+            elif signed:
+                result >>= 1
+            return result, i + 1
+        shift += 7
+    return None, 0
 
 
 @dataclass
@@ -259,6 +287,19 @@ def _decode_field(
         end = start + length if length is not None else message.end
     elif spec.type == "computed":
         end = start + spec.size
+    elif spec.type == "varint":
+        _, vsize = _read_varint(data, start, spec.signed)
+        end = start + vsize
+    elif spec.type == "tlv":
+        tag_w = FIELD_TYPES[spec.tag_type]
+        len_w = FIELD_TYPES[spec.length_type]
+        if start + tag_w + len_w > len(data):
+            end = start
+        else:
+            length_value = int.from_bytes(
+                data[start + tag_w : start + tag_w + len_w], spec.byte_order
+            )
+            end = start + tag_w + len_w + length_value
     else:
         end = start + spec.size
 
@@ -289,6 +330,11 @@ def _decode_field(
         return FieldResult(value=None, status=Status.INCOMPLETE, reason="gap_in_field_range", **base)
     if stream.has_ambiguity(start, end):
         return FieldResult(value=None, status=Status.AMBIGUOUS, reason="ambiguity_in_field_range", **base)
+
+    if spec.type == "varint" and end == start:
+        return FieldResult(value=None, status=Status.INCOMPLETE, reason="varint_unterminated", **base)
+    if spec.type == "tlv" and end == start:
+        return FieldResult(value=None, status=Status.INCOMPLETE, reason="tlv_header_truncated", **base)
 
     if spec.type == "checksum":
         return _decode_checksum(field, spec, data, message, start, end, context, **base)
@@ -458,6 +504,24 @@ def _decode_value(field: FieldSpec, data: bytes, start: int, end: int, context: 
         return values
     if field.type in FIELD_TYPES:
         return int.from_bytes(data[start:end], field.byte_order, signed=field.type in _SIGNED)
+    if field.type in _FLOAT_STRUCT:
+        (value,) = struct.unpack(
+            _ENDIAN_STRUCT[field.byte_order] + _FLOAT_STRUCT[field.type],
+            data[start:end],
+        )
+        return value
+    if field.type == "varint":
+        value, _ = _read_varint(data, start, field.signed)
+        return value
+    if field.type == "tlv":
+        tag_w = FIELD_TYPES[field.tag_type]
+        len_w = FIELD_TYPES[field.length_type]
+        tag = int.from_bytes(data[start : start + tag_w], field.byte_order)
+        length_value = int.from_bytes(
+            data[start + tag_w : start + tag_w + len_w], field.byte_order
+        )
+        value = data[start + tag_w + len_w : start + tag_w + len_w + length_value]
+        return {"tag": tag, "length": length_value, "value": value.hex()}
     raise ValueError(f"unsupported field type {field.type!r}")
 
 

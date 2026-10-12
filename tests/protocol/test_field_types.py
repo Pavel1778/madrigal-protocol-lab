@@ -4,6 +4,8 @@ array and padding. Each type has a success case and a boundary or failure case.
 
 from __future__ import annotations
 
+import struct
+
 import pytest
 
 from src.hypothesis.status import Status
@@ -333,3 +335,106 @@ def test_validation_rejects_unknown_field_reference():
                 ],
             }
         )
+
+
+# ---------------------------------------------------------------- float
+
+def test_float32_and_float64_decode_both_endians():
+    big = _rule(
+        [{"name": "temp", "offset": 0, "type": "float32", "byte_order": "big"}],
+        {"type": "fixed_size", "size": 4},
+    )
+    out = apply_rule(DirectionalStream.from_bytes(struct.pack(">f", 21.5)), big)[0]
+    assert out.field_values()["temp"] == 21.5
+
+    little = _rule(
+        [{"name": "temp", "offset": 0, "type": "float64", "byte_order": "little"}],
+        {"type": "fixed_size", "size": 8},
+    )
+    out = apply_rule(DirectionalStream.from_bytes(struct.pack("<d", -0.125)), little)[0]
+    assert out.field_values()["temp"] == -0.125
+
+
+def test_float_expected_value_is_checked():
+    rule = _rule(
+        [{"name": "temp", "offset": 0, "type": "float32", "expected": [21.5]}],
+        {"type": "fixed_size", "size": 4},
+    )
+    ok = apply_rule(DirectionalStream.from_bytes(struct.pack(">f", 21.5)), rule)[0]
+    bad = apply_rule(DirectionalStream.from_bytes(struct.pack(">f", 22.0)), rule)[0]
+    assert ok.status is Status.MATCHED
+    assert bad.status is Status.MISMATCHED
+
+
+# ---------------------------------------------------------------- varint
+
+def test_varint_reads_multibyte_and_reports_its_width():
+    rule = _rule(
+        [{"name": "count", "offset": 0, "type": "varint"}],
+        {"type": "manual", "messages": [{"offset": 0, "length": 3}]},
+    )
+    data = bytes([0xAC, 0x02, 0x00])
+    out = apply_rule(DirectionalStream.from_bytes(data), rule)[0]
+    assert out.field_values()["count"] == 300
+    assert out.fields[0].field_length == 2
+
+
+def test_signed_varint_uses_zigzag():
+    rule = _rule(
+        [{"name": "delta", "offset": 0, "type": "varint", "signed": True}],
+        {"type": "manual", "messages": [{"offset": 0, "length": 1}]},
+    )
+    out = apply_rule(DirectionalStream.from_bytes(bytes([0x2B])), rule)[0]
+    assert out.field_values()["delta"] == -22
+
+
+def test_unterminated_varint_is_incomplete_not_zero():
+    rule = _rule(
+        [{"name": "count", "offset": 0, "type": "varint"}],
+        {"type": "manual", "messages": [{"offset": 0, "length": 1}]},
+    )
+    out = apply_rule(DirectionalStream.from_bytes(bytes([0x80])), rule)[0]
+    assert out.fields[0].status is Status.INCOMPLETE
+    assert out.fields[0].value is None
+
+
+# ---------------------------------------------------------------- tlv
+
+def test_tlv_splits_tag_length_and_value():
+    rule = _rule(
+        [{"name": "record", "offset": 0, "type": "tlv"}],
+        {"type": "manual", "messages": [{"offset": 0, "length": 5}]},
+    )
+    data = bytes([0x01, 0x03, 0xAA, 0xBB, 0xCC])
+    out = apply_rule(DirectionalStream.from_bytes(data), rule)[0]
+    assert out.field_values()["record"] == {"tag": 1, "length": 3, "value": "aabbcc"}
+
+
+def test_tlv_uint16_length_field():
+    rule = _rule(
+        [{"name": "record", "offset": 0, "type": "tlv", "length_type": "uint16"}],
+        {"type": "manual", "messages": [{"offset": 0, "length": 5}]},
+    )
+    data = bytes([0x02, 0x00, 0x02, 0x11, 0x22])
+    out = apply_rule(DirectionalStream.from_bytes(data), rule)[0]
+    assert out.field_values()["record"] == {"tag": 2, "length": 2, "value": "1122"}
+
+
+def test_tlv_truncated_header_is_incomplete():
+    rule = _rule(
+        [{"name": "record", "offset": 0, "type": "tlv", "length_type": "uint16"}],
+        {"type": "manual", "messages": [{"offset": 0, "length": 1}]},
+    )
+    out = apply_rule(DirectionalStream.from_bytes(bytes([0x02])), rule)[0]
+    assert out.fields[0].status is Status.INCOMPLETE
+
+
+def test_validation_rejects_bad_varint_and_tlv_options():
+    cases = [
+        {"name": "v", "offset": 0, "type": "varint", "length": 4},
+        {"name": "t", "offset": 0, "type": "tlv", "tag_type": "float32"},
+        {"name": "t2", "offset": 0, "type": "tlv", "length_type": "bytes"},
+    ]
+    for field in cases:
+        with pytest.raises(RuleError):
+            parse_rule({"rule_id": "r", "fields": [field]})

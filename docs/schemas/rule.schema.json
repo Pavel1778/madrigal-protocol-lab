@@ -78,6 +78,7 @@
           "type": "string",
           "enum": [
             "uint8", "uint16", "uint32", "int8", "int16", "int32",
+            "float32", "float64", "varint", "tlv",
             "bytes", "enum", "bitmask", "string", "array", "padding",
             "checksum", "computed", "conditional"
           ]
@@ -96,6 +97,20 @@
         "missing_ok": { "type": "boolean" },
         "bit_offset": { "type": "integer", "minimum": 0 },
         "bit_length": { "type": "integer", "minimum": 1 },
+        "signed": {
+          "type": "boolean",
+          "description": "For type varint only: read the value as a signed zig-zag varint."
+        },
+        "tag_type": {
+          "type": "string",
+          "enum": ["uint8", "uint16", "uint32"],
+          "description": "For type tlv only: integer type of the record tag. Defaults to uint8."
+        },
+        "length_type": {
+          "type": "string",
+          "enum": ["uint8", "uint16", "uint32"],
+          "description": "Integer type of a length field: the length prefix of a tlv record, or the width of a checksum/computed value. Defaults to uint8."
+        },
         "encoding": { "type": "string", "enum": ["ascii", "utf-8", "latin-1"] },
         "terminated": { "type": "boolean" },
         "element_type": {
