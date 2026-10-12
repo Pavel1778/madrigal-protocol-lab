@@ -33,7 +33,6 @@ shape a first version would take.
 
 | Item | Impact | Path |
 | --- | --- | --- |
-| IP fragmentation (IPv4 and IPv6) not reassembled | a fragmented payload is reported as a diagnostic and skipped | reassemble fragments before the TCP layer |
 | encrypted payloads | out of scope by design | none; the tool reports the bytes it sees |
 | memory scales with the capture | all packets held at once | session-by-session parse with provenance streamed to disk (see `docs/BENCHMARK.md`) |
 | extended lint and typing deferred | style drift in modules outside the audited zone | re-enable the extended `ruff` set, `ruff format --check`, `mypy` one zone at a time (see `docs/AUDIT.md`) |

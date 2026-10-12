@@ -386,8 +386,11 @@ formatting:
 `src/capture/parser.py` now parses IPv6 as well as IPv4. `_layer3_ip` returns the
 IP version with the datagram; `_parse_tcp` and the checksum check dispatch on it,
 and IPv6 TCP checksums are verified against the IPv6 pseudo-header. A TCP session
-over IPv6 yields a stream exactly like IPv4. Only IPv6 fragmentation is still not
-reassembled: such a packet is reported as `ip_fragment` and skipped, as before.
+over IPv6 yields a stream exactly like IPv4. IPv6 fragmentation is now
+reassembled: `src/capture/fragment.py` collects the fragments of a datagram for
+both IP versions, reports `ip_fragment_reassembled`, `ip_fragment_incomplete` and
+`ip_fragment_overlap`, and keeps the parser list of emitted diagnostic types in
+step with the schema.
 
 `docs/CAPTURE_API.md`, `docs/CONTRACT.md`, `ARCHITECTURE.md` and
 `docs/PROJECT_MAP.md` no longer list IPv6 as unsupported. The schema keeps

@@ -285,7 +285,10 @@ for piece in stream.provenance.split(start, end):
 | `ipv6_ignored` | parser | retained for files written before IPv6 was parsed; no longer emitted |
 | `non_ip` | parser | a frame that is neither IPv4 nor IPv6 |
 | `non_tcp` | parser | an IP packet that is not TCP |
-| `ip_fragment` | parser | an IPv4 or IPv6 fragment was skipped, not reassembled |
+| `ip_fragment` | parser | retained for files written before fragment reassembly; no longer emitted |
+| `ip_fragment_reassembled` | parser | a fragmented datagram was completed; `detail` names its fragment packets |
+| `ip_fragment_incomplete` | parser | a fragmented datagram never completed; `offset` and `length` locate the hole |
+| `ip_fragment_overlap` | parser | two fragments disagreed on the same bytes; IPv4 keeps the first arrival, IPv6 discards the datagram |
 | `truncated_packet` | parser | the captured payload is shorter than the header declares |
 | `truncated_frame` | parser | the frame was shorter than its headers claimed, or the capture header is damaged |
 | `unsupported_linktype` | parser | the capture uses a link type other than Ethernet, loopback, or cooked, or mixes link types |
@@ -301,20 +304,38 @@ belongs to the stream, and `offset - length` is where the hole begins in the
 reconstructed ordering. `bytes_` itself never contains bytes for a hole.
 
 Reading never stops at a defect. A capture that ends mid-block, a cut section
-header, mixed link types, IP fragments, and mixed IP versions are all read as
-far as possible and reported; only a file that is not a capture at all raises
-`ValueError`. `tests/fixtures/defects/` holds one fixture per defect and
+header, mixed link types, fragmented datagrams, and mixed IP versions are all
+read as far as possible and reported; only a file that is not a capture at all
+raises `ValueError`. `tests/fixtures/defects/` holds one fixture per defect and
 `tests/capture/test_deformed_captures.py` covers each.
+
+## Fragment reassembly
+
+A fragmented datagram is reassembled before it reaches the TCP layer, so a
+session that the network split becomes visible. Fragments are grouped by source,
+destination, identification, and protocol (IPv4) or by source, destination, and
+identification (IPv6); the fragment offset is in units of eight bytes. A
+datagram is produced only once every byte from zero to its declared end is
+covered and the final fragment was seen.
+
+- An overlap with different bytes keeps the first arrival for IPv4 and reports
+  `ip_fragment_overlap`; for IPv6 the whole datagram is discarded, which is what
+  RFC 5722 requires to remove the ambiguity.
+- A datagram that never completes is reported as `ip_fragment_incomplete` with
+  the hole's `offset` and `length`; its bytes are not guessed.
+- A non-final IPv4 fragment whose length is not a multiple of eight is malformed
+  and is not reassembled.
+- Reassembly is complete for this purpose: fragments of one datagram may be
+  separated by unrelated traffic and delivered out of order. Timers are not
+  applied because the capture is read offline.
 
 ## Limitations
 
 - IPv6 is parsed. TCP sessions over IPv6 yield streams exactly like IPv4, and
-  IPv6 TCP checksums are verified when `--verify-checksums` is set. Only IPv6
-  fragmentation is left alone: a fragment is reported as `ip_fragment` and
-  skipped.
-- IP fragmentation is not reassembled, for either version. A fragment is
-  reported as `ip_fragment` and skipped; only the first fragment of a datagram
-  carries a TCP header.
+  IPv6 TCP checksums are verified when `--verify-checksums` is set. IPv6
+  fragmentation is reassembled.
+- IP fragmentation is reassembled for both versions. A datagram that never
+  completes in the file is reported as incomplete rather than timed out.
 - Encrypted traffic is not decrypted. TLS, and anything else above TCP, appears
   as opaque bytes.
 - Only Ethernet, Linux loopback, and BSD cooked captures are understood; other

@@ -124,6 +124,7 @@ class SessionInfo:
     direction_bytes: dict[str, int] = field(default_factory=dict)
     diagnostics: list[Diagnostic] = field(default_factory=list)
     packet_count: int = 0
+    reassembled_from: list[int] = field(default_factory=list)
 
 
 @dataclass
@@ -243,6 +244,9 @@ class CaptureModel:
                     direction_bytes=direction_bytes,
                     diagnostics=[d for d in diagnostics if d.session_id == sid],
                     packet_count=len(session.get("packet_indices", []) or []),
+                    reassembled_from=[
+                        int(i) for i in (session.get("reassembled_from", []) or [])
+                    ],
                 )
             )
         return infos

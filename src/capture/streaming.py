@@ -127,6 +127,9 @@ def process_streaming(
                 Direction.B_TO_A: reassemble(session, Direction.B_TO_A, packets),
             }
             session.packet_indices = [p.index for p in packets]
+            session.reassembled_from = sorted(
+                {i for p in packets for i in p.fragment_packet_indices}
+            )
             writer.write(session, streams)
             stats.flushes += 1
 

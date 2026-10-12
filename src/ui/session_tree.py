@@ -169,13 +169,17 @@ class SessionTree(QtWidgets.QTreeWidget):
         parent.setFont(0, theme.heading_font(self._font_size))
         parent.setFont(1, theme.body_font(self._font_size))
         parent.setData(0, QtCore.Qt.ItemDataRole.UserRole, ("session", session.session_id))
+        fragments = self.tr("reassembled from fragments {0}").format(
+            ", ".join(str(i) for i in session.reassembled_from)
+        )
         parent.setToolTip(1, summary)
         parent.setToolTip(
             0,
             f"{session.endpoints}\n"
             + self.tr("roles: {0} / {1}").format(session.role_a, session.role_b)
             + "\n"
-            + self.tr("packets: {0}").format(session.packet_count),
+            + self.tr("packets: {0}").format(session.packet_count)
+            + (f"\n{fragments}" if session.reassembled_from else ""),
         )
         if types:
             parent.setData(0, _DIAG_ROLE, True)
@@ -183,6 +187,19 @@ class SessionTree(QtWidgets.QTreeWidget):
         else:
             parent.setData(0, _DIAG_ROLE, False)
         self.addTopLevelItem(parent)
+
+        if session.reassembled_from:
+            fragment = QtWidgets.QTreeWidgetItem(
+                [
+                    self.tr("fragments {0}").format(
+                        ", ".join(str(i) for i in session.reassembled_from)
+                    ),
+                    self.tr("{0} datagram(s)").format(len(session.reassembled_from)),
+                ]
+            )
+            fragment.setFont(0, theme.body_font(self._font_size))
+            fragment.setFont(1, theme.body_font(self._font_size))
+            parent.addChild(fragment)
 
         for direction, size in session.direction_bytes.items():
             child = QtWidgets.QTreeWidgetItem([direction, f"{size} B"])

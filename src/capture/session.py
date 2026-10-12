@@ -60,6 +60,7 @@ class Session:
     packet_indices: list[int] = field(default_factory=list)
     role_a: str = "unknown"
     role_b: str = "unknown"
+    reassembled_from: list[int] = field(default_factory=list)
 
     def endpoint_index(self, ip: str, port: int) -> int:
         """Return 0 for endpoint A and 1 for endpoint B."""
@@ -87,6 +88,7 @@ class Session:
             "first_ts": self.first_ts,
             "last_ts": self.last_ts,
             "packet_indices": list(self.packet_indices),
+            "reassembled_from": list(self.reassembled_from),
         }
 
 
