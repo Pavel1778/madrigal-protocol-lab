@@ -88,7 +88,7 @@ def wordmark() -> Image.Image:
 
 
 def monogram() -> Image.Image:
-    """The square «М» mark, for a faint corner watermark."""
+    """The square monogram, for a faint corner watermark."""
     scale = 4
     size = 256 * scale
     radius = 40 * scale
