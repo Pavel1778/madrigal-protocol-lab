@@ -38,7 +38,7 @@ CORPUS_READY = (
 
 corpus_required = pytest.mark.skipif(
     not CORPUS_READY,
-    reason="corpus not ready, waiting for Agent 1",
+    reason="corpus not ready, waiting for the capture corpus",
 )
 
 

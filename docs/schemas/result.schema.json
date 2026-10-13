@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Pavel1778/madrigal-protocol-lab/docs/schemas/result.schema.json",
   "title": "Rule application result",
-  "description": "Output of the Protocol engine (Agent 2). Consumed by the UI (Agent 3). Pairs every interpreted field with the byte range it was read from, so a field in the UI resolves back to the source packet.",
+  "description": "Output of the Protocol engine. Consumed by the UI. Pairs every interpreted field with the byte range it was read from, so a field in the UI resolves back to the source packet.",
   "type": "object",
   "additionalProperties": false,
   "required": ["contract_version", "rule_id", "rule_version", "capture_id", "messages", "summary"],
