@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Pavel1778/madrigal-protocol-lab/docs/schemas/capture.schema.json",
   "title": "Normalized capture",
-  "description": "Output of the Capture Engine (Agent 1). Consumed by the Protocol engine (Agent 2) and the UI (Agent 3). Every byte range in a directional stream is tied to the packet it came from.",
+  "description": "Output of the Capture Engine. Consumed by the Protocol engine and the UI. Every byte range in a directional stream is tied to the packet it came from.",
   "type": "object",
   "additionalProperties": false,
   "required": ["contract_version", "capture_id", "source_file", "sessions"],

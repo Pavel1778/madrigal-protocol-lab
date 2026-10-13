@@ -33,17 +33,9 @@
 
 ## 3. Вне зоны этого документа
 
-Разделы ниже заполняют авторы соответствующих модулей.
-
-<!-- capture: to be filled by agent 1 -->
-
-<!-- project: to be filled by agent 1 -->
-
-<!-- report: to be filled by agent 1 -->
-
-<!-- ui: to be filled by agent 3 -->
-
-<!-- web: to be filled by agent 3 -->
+Документ закрывает сквозной сценарий и его обоснование. Разбор
+внутреннего устройства отдельных модулей, границ ответственности и
+деталей реализации — в `ARCHITECTURE.md` и `docs/PROJECT_MAP.md`.
 
 ## 4. Что честно НЕ сверх ТЗ
 
