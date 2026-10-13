@@ -2,7 +2,7 @@
 
 The capture engine is the first stage of the pipeline. Its only output is a
 normalized capture JSON that follows `docs/CONTRACT.md`. The protocol stage
-(Agent 2) and the UI stage (Agent 3) both consume that one file. Neither stage
+(protocol stage) and the UI stage (GUI stage) both consume that one file. Neither stage
 reads a PCAP directly.
 
 ```
@@ -12,7 +12,7 @@ PCAP/PCAPNG  --capture engine-->  normalized capture JSON  --+--> protocol stage
 
 ## Handing the capture to the protocol stage
 
-Agent 2 works from the normalized JSON, not from the capture. Produce it with
+The protocol stage works from the normalized JSON, not from the capture. Produce it with
 the CLI:
 
 ```
@@ -26,7 +26,7 @@ messages and to point a field result back at a packet.
 
 ## Handing the capture to the UI stage
 
-Agent 3 reads the same file. The session list, endpoints, diagnostics, and
+The GUI stage reads the same file. The session list, endpoints, diagnostics, and
 provenance ranges map directly onto the session tree, the hex view, and the
 packet detail panel. The UI should not re-parse the capture.
 
@@ -78,7 +78,7 @@ provenance range should resolve to a real packet index.
    `provenance.lookup` to move from a stream offset back to that packet
    (see `docs/CAPTURE_API.md`, *Reading provenance*).
 
-5. Open the JSON in the GUI when Agent 3 is ready. The session tree should list
+5. Open the JSON in the GUI when the GUI stage is ready. The session tree should list
    the three sessions, the hex view should render the stream bytes with
    provenance, and the defects capture should show its gap and its ambiguous
    overlap as diagnostics.
@@ -93,7 +93,7 @@ stages must handle honestly:
 - a request with a missing segment (`gap` diagnostic, response direction),
 - a response byte pair contradicted later (`ambiguity` diagnostic).
 
-When Agent 2 frames this capture, the affected messages should be classified
+When the protocol stage frames this capture, the affected messages should be classified
 `incomplete` or `ambiguous`, never `matched`.
 
 ## Boundaries

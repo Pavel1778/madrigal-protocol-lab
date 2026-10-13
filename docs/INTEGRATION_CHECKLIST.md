@@ -6,17 +6,17 @@ only after running the command or looking at the output, not from memory.
 
 ## Before the merge
 
-- [ ] `agent1/capture` CI is green for the current head.
-      `gh run list --repo Pavel1778/madrigal-protocol-lab --branch agent1/capture --limit 3`
-- [ ] `agent2/protocol` CI is green for the current head.
-      `gh run list --repo Pavel1778/madrigal-protocol-lab --branch agent2/protocol --limit 3`
-- [ ] `agent2/protocol` has merged the current `main` locally and the suite is
+- [ ] the capture stage CI is green for the current head.
+      `gh run list --repo Pavel1778/madrigal-protocol-lab --branch capture --limit 3`
+- [ ] the protocol stage CI is green for the current head.
+      `gh run list --repo Pavel1778/madrigal-protocol-lab --branch protocol --limit 3`
+- [ ] The protocol stage has merged the current `main` locally and the suite is
       green there, so the merge is a fast-forward of history, not a surprise.
-      `git checkout agent2/protocol && git merge main && pytest tests/ -q`
+      `git checkout protocol && git merge main && pytest tests/ -q`
 - [ ] The files each branch changed in the shared directories do not overlap, or
       the overlap is understood before starting. Shared locations are `docs/`,
       `README.md`, `ARCHITECTURE.md`, `.gitignore`, and `.github/workflows/`.
-      `git diff --name-only main...agent1/capture > /tmp/a1.txt && git diff --name-only main...agent2/protocol > /tmp/a2.txt && comm -12 <(sort /tmp/a1.txt) <(sort /tmp/a2.txt)`
+      `git diff --name-only main...capture > /tmp/a1.txt && git diff --name-only main...protocol > /tmp/a2.txt && comm -12 <(sort /tmp/a1.txt) <(sort /tmp/a2.txt)`
 - [ ] `docs/CONTRACT.md` and both schemas are unchanged by either branch.
       `git diff main -- docs/CONTRACT.md docs/schemas/`
 
@@ -26,7 +26,7 @@ only after running the command or looking at the output, not from memory.
       whole file, and never push a merge without reading the resolved diff.
       `git --no-pager diff --check`
 - [ ] A conflict in any of these shared files is escalated to the participant,
-      who decides; it is not resolved by the agent alone:
+      who decides; it is not resolved unilaterally:
       `docs/CONTRACT.md`, `.gitignore`, `README.md`, `ARCHITECTURE.md`,
       `.github/workflows/ci.yml`.
 - [ ] The merged `.github/workflows/ci.yml` keeps the Python and OS matrix, the
@@ -63,7 +63,7 @@ only after running the command or looking at the output, not from memory.
 - [ ] The exports still match the module.
       `bash tests/corpus/reference_export/regenerate.sh && git diff --stat`
 
-## Protocol stage (Agent 2)
+## Protocol stage
 
 - [ ] Applying `corpus_rule_v1.json` to every file in `reference_export/`
       completes without an error and produces a result that validates against
@@ -76,7 +76,7 @@ only after running the command or looking at the output, not from memory.
 - [ ] Changing the rule raises its version and marks the previous result
       `outdated`.
 
-## GUI (Agent 3)
+## GUI stage
 
 - [ ] The GUI opens `reference_export/corpus_capture_01.normalized.json` and
       lists three sessions.
