@@ -26,6 +26,7 @@ fonts:
 <span class="cover__client">
 <span class="cover__client-label">кейс заказчика</span>
 <img src="/assets/madrigal-logo.png" alt="Мадригал" class="cover__client-logo">
+<span class="cover__client-note">кейс #02 · UMIRHack 2026</span>
 </span>
 </div>
 
@@ -339,6 +340,8 @@ layout: default
 
 # Границы и итог
 
+<div class="limits-page">
+
 <div class="limits">
 
 <div>
@@ -355,6 +358,8 @@ layout: default
 <li>Альтернативные чтения берутся из заданного набора</li>
 <li>Интерпретация верна для проверенных захватов и молчит вне них</li>
 </ul>
+</div>
+
 </div>
 
 </div>
