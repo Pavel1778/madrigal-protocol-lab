@@ -332,15 +332,13 @@ v2 на том же корпусе: 140 matched, 0 mismatched, точность 
 - [docs/DEFENSE_CHECKLIST.md](docs/DEFENSE_CHECKLIST.md) — предполётный список к защите.
 - [docs/DEMO_CHEATSHEET.md](docs/DEMO_CHEATSHEET.md) — одностраничник для печати на защиту.
 - [docs/DEFENSE_FAQ.md](docs/DEFENSE_FAQ.md) и [docs/FAQ_FOR_JUDGES.md](docs/FAQ_FOR_JUDGES.md) — вероятные вопросы и ответы.
+- [docs/BEYOND_SCOPE.md](docs/BEYOND_SCOPE.md) — что реализовано сверх задания и что не является заслугой.
 - [presentation/Q_and_A.md](presentation/Q_and_A.md) — пятнадцать вопросов защиты в сжатой форме.
 - [docs/SETTINGS.md](docs/SETTINGS.md) — диалог настроек и хранимые ключи.
 - [docs/WEB.md](docs/WEB.md) — локальный веб-интерфейс: установка, запуск, объём.
 - [docs/PORTABILITY.md](docs/PORTABILITY.md) — проверенные окружения.
 - [docs/AUDIT.md](docs/AUDIT.md) — трассировка и замечания линтера и типизации.
 - [docs/SUBMISSION.md](docs/SUBMISSION.md) — сведения о сдаче.
-- [docs/DEFENSE_CHECKLIST.md](docs/DEFENSE_CHECKLIST.md) — чек-лист подготовки к защите.
-- [docs/FAQ_FOR_JUDGES.md](docs/FAQ_FOR_JUDGES.md) — короткие ответы на 15 вопросов жюри.
-- [docs/DEFENSE_FAQ.md](docs/DEFENSE_FAQ.md) — полный список из 28 вопросов с источниками.
 
 ## Форматы поставки
 
@@ -350,7 +348,7 @@ v2 на том же корпусе: 140 matched, 0 mismatched, точность 
 [v1.0.0](https://github.com/Pavel1778/madrigal-protocol-lab/releases/tag/v1.0.0);
 пошаговая установка из них — в [docs/INSTALL.md](docs/INSTALL.md).
 
-| Формат | Установка | Размер | Команда |
+| Формат | Установка | Размер | Команда запуска |
 | --- | --- | --- | --- |
 | AppImage | не требуется | ~71 МБ | `chmod +x; ./protocol-lab-*.AppImage` |
 | `.deb` | dpkg | ~71 МБ | `sudo dpkg -i madrigal-protocol-lab_*.deb` |
