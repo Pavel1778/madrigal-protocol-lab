@@ -1,8 +1,8 @@
 # Repository audit
 
 Scope: `src/capture`, `src/project`, `src/report`, `scripts`, their tests, the
-documentation, and the CI workflow. Run on the `agent1/capture` branch after
-syncing with `main` (`5dd907d`).
+documentation, and the CI workflow. Run on `main` after
+syncing (`5dd907d`).
 
 Environment at audit time: Python 3.13.15, Linux x86-64, 4 logical cores,
 15990 MiB RAM. The project targets Python 3.12 and newer; 3.13 is the
@@ -170,7 +170,7 @@ at their pinned versions: the specification fixes the versions, and moving
 
 ## 8. Fresh-clone verification
 
-A clean clone of `agent1/capture` was installed into a new virtual environment
+A clean clone of `main` was installed into a new virtual environment
 and every command in `README.md` and `docs/USAGE.md` was run:
 
 - `pip install -e ".[dev]"` succeeds.
@@ -245,8 +245,8 @@ The protocol and GUI branch was merged into `main` in two steps:
 
 | Step | From | To | Merge commit |
 | --- | --- | --- | --- |
-| branch merge | `agent2/protocol` (`2ed5970`) | `agent1/capture` | `a5535e0` |
-| main merge | `agent1/capture` | `main` | `779238c` |
+| branch merge | `protocol` (`2ed5970`) | `capture` | `a5535e0` |
+| main merge | `capture` | `main` | `779238c` |
 
 The only conflict was `README.md`, where both sides appended entries to the
 documentation link list. It was resolved by keeping both lists and removing
