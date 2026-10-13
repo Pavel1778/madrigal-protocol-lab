@@ -157,7 +157,7 @@ is the merge of PR #14 (`f637644`); the entries below are the work that followed
 - The defense script was split into a 5-minute and a 10-minute route with
   timings derived from the spoken text (PR #24).
 - The test counts across the documentation were refreshed to the merged
-  revision, and the deck and verification documents resynced to the 19-slide
+  revision, and the deck and verification documents resynced to the 14-slide
   deck (PR #16, PR #18, PR #25, PR #26).
 - The README, the audit, the portability report and the presentation
   verification now quote 781 tests and the published `v1.0.0` archive

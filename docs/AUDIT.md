@@ -412,11 +412,11 @@ sync guard had to be taught to read.
 
 | Check | Result |
 | --- | --- |
-| `pytest tests/ -q` (LANG=en_US.UTF-8, `QT_QPA_PLATFORM=offscreen`) | 794 passed, 0 failed |
+| `pytest tests/ -q` (LANG=en_US.UTF-8, `QT_QPA_PLATFORM=offscreen`) | 839 passed, 0 failed |
 | `ruff check .` | All checks passed |
 | `ruff format --check .` | 91 files would be reformatted (still deferred) |
 | `mypy src/` | 93 findings in 11 files (still deferred) |
-| `presentation/slides.pdf`, `slides-light.pdf` | 19 pages, no blank page |
+| `presentation/slides.pdf`, `slides-light.pdf` | 14 pages, no blank page |
 
 The `mypy` findings are concentrated in three files: `src/protocol/engine.py`
 (56), `src/ui/main_window.py` (17) and `src/protocol/rule.py` (6). The engine
