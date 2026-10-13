@@ -116,7 +116,7 @@ only after running the command or looking at the output, not from memory.
       `scripts/test_in_docker.sh ubuntu:22.04 3.12` and
       `scripts/test_in_docker.sh ubuntu:24.04 3.13`
 - [ ] A fresh clone installs and runs without the development host:
-      `python3.12 -m venv .venv && source .venv/bin/activate && pip install -e ".[dev]" && pytest tests/ -q`
+      `python3 -m venv .venv && source .venv/bin/activate && pip install -e ".[dev]" && pytest tests/ -q`
 - [ ] The results in `docs/PORTABILITY.md` match the run just performed.
 
 ## Submission

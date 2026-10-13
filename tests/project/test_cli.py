@@ -1,7 +1,7 @@
 """Tests for the project CLI and the end-to-end pipeline.
 
 The rule path is exercised only when the protocol engine is importable, so this
-suite does not depend on another work stream being present.
+suite also passes in a tree that carries only the capture and project modules.
 """
 
 from __future__ import annotations
