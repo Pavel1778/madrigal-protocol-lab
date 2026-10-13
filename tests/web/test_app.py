@@ -20,11 +20,21 @@ from src.web.app import create_app
 from src.web.engine import WebEngine, WebEngineError
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CAPTURE = REPO_ROOT / "tests" / "corpus" / "reference_export" / "corpus_capture_01.normalized.json"
+CAPTURE = (
+    REPO_ROOT
+    / "tests"
+    / "corpus"
+    / "reference_export"
+    / "corpus_capture_01.normalized.json"
+)
 RULE = REPO_ROOT / "examples" / "corpus_rule_v1.json"
 RAW_PCAP = REPO_ROOT / "tests" / "corpus" / "corpus_capture_01.pcapng"
 DEFECTS = (
-    REPO_ROOT / "tests" / "corpus" / "reference_export" / "corpus_capture_defects.normalized.json"
+    REPO_ROOT
+    / "tests"
+    / "corpus"
+    / "reference_export"
+    / "corpus_capture_defects.normalized.json"
 )
 
 corpus_required = pytest.mark.skipif(
@@ -76,7 +86,9 @@ def test_hex_page_renders_the_stream(client: TestClient) -> None:
 def test_root_has_favicon_link(client: TestClient) -> None:
     response = client.get("/")
     assert response.status_code == 200
-    assert '<link rel="icon" type="image/png" href="/static/favicon.png">' in response.text
+    assert (
+        '<link rel="icon" type="image/png" href="/static/favicon.png">' in response.text
+    )
 
 
 @corpus_required
@@ -133,7 +145,9 @@ def test_apply_on_defects_yields_a_mismatch() -> None:
 
 @corpus_required
 def test_provenance_returns_packet_index_seq_and_ts(client: TestClient) -> None:
-    response = client.get("/message/0/provenance", params={"session": "s1", "direction": "A_to_B"})
+    response = client.get(
+        "/message/0/provenance", params={"session": "s1", "direction": "A_to_B"}
+    )
     assert response.status_code == 200
     payload = response.json()
     assert payload["offset"] == 0
@@ -175,7 +189,9 @@ def test_messages_fragment_shows_offsets_and_lengths(client: TestClient) -> None
 
 @corpus_required
 def test_export_report_is_self_contained_html(client: TestClient) -> None:
-    response = client.get("/export/report", params={"session": "s1", "direction": "A_to_B"})
+    response = client.get(
+        "/export/report", params={"session": "s1", "direction": "A_to_B"}
+    )
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
     assert "<!DOCTYPE html>" in response.text
@@ -272,3 +288,12 @@ def test_main_reports_missing_capture(capsys) -> None:
     code = main(["--capture", str(REPO_ROOT / "nope.json"), "--port", "0"])
     assert code == 2
     assert "could not start" in capsys.readouterr().err
+
+
+def test_web_version_matches_the_package() -> None:
+    import tomllib
+
+    import src.web
+
+    project = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    assert src.web.__version__ == project["project"]["version"]
