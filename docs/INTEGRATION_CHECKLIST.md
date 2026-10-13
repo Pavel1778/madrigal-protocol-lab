@@ -40,7 +40,7 @@ only after running the command or looking at the output, not from memory.
 - [ ] CI on `main` is green.
       `gh run list --repo Pavel1778/madrigal-protocol-lab --branch main --limit 3`
 - [ ] The pipeline runs end to end on the corpus:
-      `python -m src.project.cli pipeline --pcap tests/corpus/corpus_capture_01.pcapng --project project.madrigal --report REPORT.md`
+      `python -m src.project.cli pipeline --pcap tests/corpus/corpus_capture_01.pcapng --project project.madrigal --report reports/REPORT.md`
 - [ ] The GUI opens `reference_export/corpus_capture_01.normalized.json` (or the
       matching project result) and lists three sessions.
 - [ ] Every file in `tests/corpus/reference_export/` validates against

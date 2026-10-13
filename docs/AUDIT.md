@@ -198,7 +198,7 @@ commands run and the `docs/PROTOCOL_API.md` link resolves.
 | Low | `src/project/pipeline.py` under 85% cover | The remaining lines are the engine import guard and error branches |
 | Info | An `ambiguous` message is listed as a counterexample but does not change the hypothesis status; an `incomplete` one is treated the same way | Behaviour pinned by a test; decide whether the status rule should count them |
 | Info | `PySide6`, `jsonschema`, `PyYAML` have newer releases | Held at the pinned versions |
-| Info | The protocol engine is on another branch | One test skips until it is merged |
+| Info | The protocol engine was once on another branch | Merged into `main`; no test skips for it |
 
 ## What this iteration changed as a result of the audit
 
@@ -289,25 +289,25 @@ Trace checks at this revision:
 
 ## 12. Deferred after the defense
 
-The lint gate runs the starter ruleset (`E4`, `E7`, `E9`, `F`) only. Two
-checks are written but commented out in the workflow, to be re-enabled once the
-deadline pressure is off:
+The lint gate now runs the full `ruff` set selected in `pyproject.toml`
+(`E4`, `E7`, `E9`, `F`, `I`, `UP`, `B`, `SIM`, `C4`, `ISC`, `RUF`), as widened
+in section 15. Two checks are written but commented out in the workflow, to be
+re-enabled once the deadline pressure is off:
 
 | Check | Why deferred | Plan |
 | --- | --- | --- |
-| Extended `ruff` set (isort, bugbear, pyupgrade, simplify, ...) | the findings are in modules outside this zone; 15 remain under the starter set and are handled by their owner | re-enable and fix zone by zone |
-| `ruff format --check .` | 42 files unformatted, none in the capture/project/report zone | format zone by zone, then gate |
-| `mypy .` | 75 findings, none in the audited zone | annotate zone by zone, then gate |
+| `ruff format --check .` | 100 files unformatted, none in the capture/project/report zone | format zone by zone, then gate |
+| `mypy .` | 114 findings in 13 files, none in the audited zone | annotate zone by zone, then gate |
 
 ### R5 annotations
 
 The project contract names an `annotations.sqlite` file, and
-`Project.create` creates it. It holds no table: observations and hypotheses
-are stored in the JSON description of the rules and in the structured
-investigation report. A separate annotations table was a deliberate choice in
-favour of a self-contained JSON format that travels with the project without an
-extra dependency, not a shortage of time. A consumer that opens
-`annotations.sqlite` finds an empty file.
+`Project.create` creates it. `src/project/annotations.py` opens it lazily and
+creates an `annotations` table on the first write; a researcher's notes on a
+byte range (kind, capture, session, direction, offset, length, text) live in
+that table, with the same provenance a rule result keeps. The store is not
+touched by `Project.create`, so a project that records no annotation keeps a
+valid empty database.
 
 ### Test stand timing
 
@@ -412,14 +412,14 @@ sync guard had to be taught to read.
 
 | Check | Result |
 | --- | --- |
-| `pytest tests/ -q` (LANG=en_US.UTF-8, `QT_QPA_PLATFORM=offscreen`) | 839 passed, 0 failed |
+| `pytest tests/ -q` (LANG=en_US.UTF-8, `QT_QPA_PLATFORM=offscreen`) | 840 passed, 0 failed |
 | `ruff check .` | All checks passed |
-| `ruff format --check .` | 91 files would be reformatted (still deferred) |
-| `mypy src/` | 93 findings in 11 files (still deferred) |
+| `ruff format --check .` | 100 files would be reformatted (still deferred) |
+| `mypy src/` | 114 findings in 13 files (still deferred) |
 | `presentation/slides.pdf`, `slides-light.pdf` | 14 pages, no blank page |
 
 The `mypy` findings are concentrated in three files: `src/protocol/engine.py`
-(56), `src/ui/main_window.py` (17) and `src/protocol/rule.py` (6). The engine
+(75), `src/ui/main_window.py` (17) and `src/protocol/rule.py` (6). The engine
 figure is mostly one pattern — `FieldResult(**kwargs)` built from a mixed-type
 mapping — and the fix is a typed constructor call at each of the six call sites,
 which is left for a dedicated change rather than folded into this pass.
