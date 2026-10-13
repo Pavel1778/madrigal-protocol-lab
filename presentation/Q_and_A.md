@@ -46,11 +46,11 @@ PyShark — это обёртка над `tshark`, то есть зависим�
 выбрасываем, а храним в отчёте: 80 контрпримеров правила v1 и есть основание
 расширить правило до v2. См. `src/hypothesis/corpus.py`, `docs/CORPUS_ANALYSIS.md` §4.
 
-## 7. Почему 781, а не больше тестов?
+## 7. Почему 839, а не больше тестов?
 
 Покрытие — 90 % по `src/`; остаток — ветки ошибок, которым нужен реальный сбой
-ввода-вывода. Полный набор — 781 с `pip install -e ".[dev,web]"` (CI-путь); без
-веб-дополнения 24 веб-теста скипаются и выходит 757 + 1 skipped. Больше тестов не
+ввода-вывода. Полный набор — 839 с `pip install -e ".[dev,web]"` (CI-путь); без
+веб-дополнения 24 веб-теста не собираются и остаётся 815. Больше тестов не
 подняли бы утверждение: мы заявляем «подтверждено в проверенном объёме», а не
 «доказано». См. `docs/AUDIT.md` §4, §11.
 
@@ -114,7 +114,7 @@ PyShark — это обёртка над `tshark`, то есть зависим�
 ## Команды, откуда взяты числа
 
 ```
-python -m pytest tests/ -q                      # 781 с [dev,web]
+python -m pytest tests/ -q                      # 839 с [dev,web]
 python -m src.protocol.cli verify --rule examples/corpus_rule_v1.json \
   --capture tests/corpus/reference_export/corpus_capture_01.normalized.json
 python -m src.protocol.cli verify --rule examples/corpus_rule_v2.json \
