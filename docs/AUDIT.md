@@ -423,3 +423,54 @@ The `mypy` findings are concentrated in three files: `src/protocol/engine.py`
 figure is mostly one pattern — `FieldResult(**kwargs)` built from a mixed-type
 mapping — and the fix is a typed constructor call at each of the six call sites,
 which is left for a dedicated change rather than folded into this pass.
+
+## 16. Cross-check against tshark
+
+The reassembler is the part of the pipeline a reviewer is least able to trust
+on inspection, so it was checked against an independent implementation. `tshark`
+4.4.18 (Wireshark) reassembles the same TCP streams with
+`tshark -r <file> -q -z follow,tcp,raw,<k>`; `scripts/cross_check_tshark.py`
+runs both and compares the bytes of every session direction.
+
+Command:
+
+```
+python scripts/cross_check_tshark.py $(find tests/corpus/real -name '*.pcap' -o -name '*.pcapng')
+```
+
+Result on the twelve committed research/diagnostic captures:
+
+| Capture | Directions | Result |
+| --- | --- | --- |
+| `additional/04_new_observations.pcapng` | 1 | byte-identical |
+| `diagnostics/01_retransmission.pcap` | 1 | byte-identical |
+| `diagnostics/02_reordered.pcapng` | 1 | byte-identical |
+| `diagnostics/03_missing_segment.pcap` | 1 | identical, except the gap marker below |
+| `diagnostics/04_snaplen_truncated.pcapng` | 1 | byte-identical |
+| `diagnostics/05_conflicting_overlap.pcap` | 1 | byte-identical |
+| `diagnostics/06_missing_beginning.pcapng` | 1 | byte-identical |
+| `diagnostics/07_checksum_offload.pcap` | 1 | byte-identical |
+| `diagnostics/08_bad_checksum.pcapng` | 1 | byte-identical |
+| `research/01_configuration.pcap` | 2 | byte-identical |
+| `research/02_variations.pcapng` | 1 | byte-identical |
+| `research/03_combined_messages.pcap` | 1 | byte-identical |
+
+Thirteen session directions checked, zero unexplained divergences.
+
+### The one difference, and why it is correct
+
+`diagnostics/03_missing_segment.pcap` has a hole in the middle of the response
+direction. `tshark` writes the literal marker
+`[35 bytes missing in capture file]\x00` into its `follow` output - a
+human-readable placeholder of exactly the width of the hole. This project
+stores only observed bytes and records the hole as a structured diagnostic:
+`gap(offset 0, length 35)`. After the marker is removed from both directions the
+observed runs match byte for byte, and the removed width (35) equals the
+recorded gap length. The contract in `docs/CONTRACT.md` requires exactly this -
+`bytes_b64` never contains synthesised bytes - so the divergence is the intended
+behaviour, not a reassembly defect. The cross-check script detects this case and
+reports it separately rather than counting it as a mismatch.
+
+The two policies differ only in how a hole is represented, never in the bytes a
+consumer sees for the ranges that were actually captured.
+
