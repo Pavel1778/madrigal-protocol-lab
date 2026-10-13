@@ -42,7 +42,7 @@ failed.
 
 No other test skipped on either: the corpus, the reference export and the
 `examples/` rules are inside the archive. The archive rows were measured on the
-published `v1.0.0` asset (`submission_20261011_1316.zip`, 474 entries), which is
+published `v1.0.0` asset (`submission_20261012_1944.zip`, 517 entries), which is
 the exact file a reviewer downloads; the checkout row is the same suite at
 `main`.
 
@@ -92,7 +92,7 @@ from the repository, so a forgotten file cannot hide behind the working tree.
 | Date | 2026-10-11 13:16 UTC |
 | Host | Debian GNU/Linux 13 (trixie), kernel 6.8.0-1055-gke, x86_64, 4 CPUs, 15 GiB RAM |
 | Python | 3.13.5 (the archive targets 3.12 or newer) |
-| Archive | `submission_20261011_1316.zip` (the published `v1.0.0` asset), 474 entries |
+| Archive | `submission_20261012_1944.zip` (the published `v1.0.0` asset), 517 entries |
 | Install time | a fresh venv with `pip install -e ".[dev]"` |
 | Suite | 780 passed, 1 skipped (the executable-bit test; see above) |
 | Static check | `ruff check . --select "E4,E7,E9,F" --ignore E501`: All checks passed |
