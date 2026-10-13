@@ -1,7 +1,7 @@
 """End-to-end pipeline: capture -> protocol -> result on the shared corpus.
 
 The corpus is produced by the capture module and lives in ``tests/corpus/``.
-Until Agent 1 publishes it, every test below is skipped with an explicit
+Until the corpus is published, every test below is skipped with an explicit
 reason; nothing here fabricates corpus data.
 
 Run with the corpus present:
@@ -46,7 +46,7 @@ CORPUS_READY = (
 
 corpus_required = pytest.mark.skipif(
     not CORPUS_READY,
-    reason="corpus not ready, waiting for Agent 1",
+    reason="corpus not ready, waiting for the capture corpus",
 )
 
 

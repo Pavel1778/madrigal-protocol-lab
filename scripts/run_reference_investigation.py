@@ -457,7 +457,7 @@ def main(argv=None) -> int:
     missing = [str(p) for p in capture_paths if not p.is_file()]
     if missing:
         raise SystemExit(
-            "corpus not ready, waiting for Agent 1; missing: " + ", ".join(missing)
+            "corpus not ready, waiting for the capture corpus; missing: " + ", ".join(missing)
         )
     if not args.rule.is_file():
         raise SystemExit(f"rule not found: {args.rule}")
