@@ -30,12 +30,16 @@ BINARY_DEPENDENT = [
 
 
 def _git_root() -> Path | None:
-    result = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-    )
+    # git may be absent (a slim container); the mode is then simply not asserted.
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        return None
     if result.returncode != 0:
         return None
     return Path(result.stdout.strip())
