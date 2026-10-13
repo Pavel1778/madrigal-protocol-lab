@@ -279,3 +279,4 @@ python -m src.protocol.cli verify --rule examples/thermostand_request_v2.json --
 - [docs/PROTOCOL_API.md](PROTOCOL_API.md) — API движка правил и гипотез.
 - [docs/CAPTURE_API.md](CAPTURE_API.md) — API движка захвата.
 - [docs/DEMO_CHEATSHEET.md](DEMO_CHEATSHEET.md) — одностраничник для защиты.
+- [docs/BEYOND_SCOPE.md](BEYOND_SCOPE.md) — что реализовано сверх ТЗ и что честно не является заслугой.
