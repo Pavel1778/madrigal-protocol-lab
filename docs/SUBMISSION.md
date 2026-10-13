@@ -39,7 +39,7 @@ pip install -e ".[dev]"
 | --- | --- |
 | Tests | `pytest tests/ -v` |
 | Window | `python -m src.ui.main_window --capture tests/corpus/reference_export/corpus_capture_01.normalized.json --rule examples/corpus_rule_v1.json` |
-| Pipeline | `python -m src.project.cli pipeline --pcap tests/corpus/corpus_capture_01.pcapng --project project.madrigal --report REPORT.md` |
+| Pipeline | `python -m src.project.cli pipeline --pcap tests/corpus/corpus_capture_01.pcapng --project project.madrigal --report reports/REPORT.md` |
 
 ## Demo
 

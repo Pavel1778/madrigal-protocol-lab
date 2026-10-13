@@ -35,7 +35,7 @@ shape a first version would take.
 | --- | --- | --- |
 | encrypted payloads | out of scope by design | none; the tool reports the bytes it sees |
 | memory scales with the capture | all packets held at once | session-by-session parse with provenance streamed to disk (see `docs/BENCHMARK.md`) |
-| extended lint and typing deferred | style drift in modules outside the audited zone | re-enable the extended `ruff` set, `ruff format --check`, `mypy` one zone at a time (see `docs/AUDIT.md`) |
+| formatting and typing deferred | `ruff format --check` and `mypy` still report findings in modules outside the audited zone (the extended `ruff` set itself is enabled) | re-enable `ruff format --check .` and `mypy .` one zone at a time (see `docs/AUDIT.md`) |
 | window has no project menu | project export/import is CLI only | a menu that calls the project layer |
 
 ## Product plan for a further month
