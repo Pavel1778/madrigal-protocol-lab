@@ -1,6 +1,6 @@
 """Build the defence deck as a real, editable PPTX from our own code.
 
-Mirrors ``slides.md`` (19 slides, 16:9). Every slide is drawn with python-pptx
+Mirrors ``slides.md`` (14 slides, 16:9). Every slide is drawn with python-pptx
 directly — no PowerPoint template — with native editable text, the deck palette
 and brand fonts, click-triggered fade/wipe entrances and native slide
 transitions. The build fails loudly if the number of slides it emits is not the
@@ -54,7 +54,7 @@ SLIDE_H = Inches(7.5)
 BODY_TOP = Inches(1.85)
 GITHUB = "https://github.com/Pavel1778/madrigal-protocol-lab"
 RELEASE = "https://github.com/Pavel1778/madrigal-protocol-lab/releases/tag/v1.0.0"
-TOTAL = 19
+TOTAL = 14
 
 _TOKEN = re.compile(r"(\*\*[^*]+\*\*|`[^`]+`)")
 
@@ -144,8 +144,8 @@ def bg(slide):
     gradient_bar(slide, 0, 0, Inches(0.08), SLIDE_H)
 
 
-SECTIONS = ((1, "Постановка и метод"), (10, "Результаты"),
-            (14, "Демонстрация"), (17, "Границы и итог"))
+SECTIONS = ((1, "Постановка и метод"), (8, "Результаты"),
+            (12, "Демонстрация"), (13, "Границы и итог"))
 
 
 def footer(slide, page):
@@ -347,9 +347,19 @@ def build_slide(prs, spec):
         logo = picture(slide, "public/logo.png", MARGIN, Inches(1.15),
                        Inches(0.9), Inches(0.9))
         tb, tf = textbox(slide, MARGIN + Inches(1.1), Inches(1.32),
-                         Inches(8.0), Inches(0.5))
+                         Inches(7.4), Inches(0.5))
         add_runs(tf.paragraphs[0], "MADRIGAL-PROTOCOL-LAB", 14, SECONDARY,
                  font=F_MONO)
+        client_w = Inches(2.6)
+        client_x = SLIDE_W - MARGIN - client_w
+        tb, tf = textbox(slide, client_x, Inches(1.06), client_w, Inches(0.3))
+        p = tf.paragraphs[0]
+        p.alignment = PP_ALIGN.RIGHT
+        add_runs(p, spec["client"].upper(), 11, SECONDARY, font=F_MONO)
+        rect(slide, client_x - Inches(0.18), Inches(1.4),
+             client_w + Inches(0.36), Inches(0.88), RGBColor(0xFF, 0xFF, 0xFF))
+        picture(slide, "assets/madrigal-logo.png", client_x, Inches(1.56),
+                client_w)
         tb, tf = textbox(slide, MARGIN, Inches(2.35), SLIDE_W - 2 * MARGIN,
                          Inches(1.5))
         add_runs(tf.paragraphs[0], spec["title"], 56, TEXT, bold=True,
@@ -360,6 +370,9 @@ def build_slide(prs, spec):
         tb, tf = textbox(slide, MARGIN, Inches(5.05), SLIDE_W - 2 * MARGIN,
                          Inches(0.5))
         add_runs(tf.paragraphs[0], spec["meta"], 15, SECONDARY, font=F_MONO)
+        tb, tf = textbox(slide, MARGIN, Inches(5.5), SLIDE_W - 2 * MARGIN,
+                         Inches(0.5))
+        add_runs(tf.paragraphs[0], spec["stack"], 15, ACCENT, font=F_MONO)
         _ = logo
 
     elif kind == "team":
@@ -367,24 +380,23 @@ def build_slide(prs, spec):
         col_w = (SLIDE_W - 2 * MARGIN - Inches(0.5)) / 2
         for i, (name, role, handle, qr, avatar) in enumerate(spec["members"]):
             x = MARGIN + i * (col_w + Inches(0.5))
-            # 2.7in clears the 180px avatar (bottom at 2.25) with a margin.
-            panel(slide, x, BODY_TOP, col_w, Inches(2.7))
+            panel(slide, x, BODY_TOP, col_w, Inches(2.45))
             av = picture(slide, f"public/{avatar}", x + Inches(0.3),
-                         BODY_TOP + Inches(0.4), Inches(1.8), Inches(1.8))
+                         BODY_TOP + Inches(0.3), Inches(1.8), Inches(1.8))
             steps.append((av.shape_id, "fade"))
             tx = x + Inches(2.35)
-            _, tf = textbox(slide, tx, BODY_TOP + Inches(0.5),
-                            col_w - Inches(3.6), Inches(0.6))
+            _, tf = textbox(slide, tx, BODY_TOP + Inches(0.4),
+                            col_w - Inches(3.0), Inches(0.6))
             add_runs(tf.paragraphs[0], name, 21, TEXT, bold=True, font=F_HEAD)
-            _, tf = textbox(slide, tx, BODY_TOP + Inches(1.1),
-                            col_w - Inches(3.6), Inches(0.5))
+            _, tf = textbox(slide, tx, BODY_TOP + Inches(1.0),
+                            col_w - Inches(3.0), Inches(0.5))
             add_runs(tf.paragraphs[0], role, 14, SECONDARY)
-            _, tf = textbox(slide, tx, BODY_TOP + Inches(1.6),
-                            col_w - Inches(3.6), Inches(0.4))
+            _, tf = textbox(slide, tx, BODY_TOP + Inches(1.45),
+                            col_w - Inches(3.0), Inches(0.4))
             add_runs(tf.paragraphs[0], handle, 14, ACCENT, font=F_MONO)
             # 80px QR, aligned with the top of the avatar.
-            picture(slide, f"public/{qr}", x + col_w - Inches(1.15),
-                    BODY_TOP + Inches(0.5), Inches(0.83), Inches(0.83))
+            picture(slide, f"public/{qr}", x + col_w - Inches(1.13),
+                    BODY_TOP + Inches(0.4), Inches(0.83), Inches(0.83))
 
     elif kind == "arch":
         heading(slide, spec["title"])
@@ -441,6 +453,25 @@ def build_slide(prs, spec):
             bullets_each(slide, items, x + Inches(0.35),
                          BODY_TOP + Inches(0.85), col_w - Inches(0.7),
                          line_h=Inches(0.9), size=17)
+
+    elif kind == "given_moment":
+        heading(slide, spec["title"], size=34)
+        col_w = (SLIDE_W - 2 * MARGIN - Inches(0.5)) / 2
+        for i, (title, items) in enumerate(spec["columns"]):
+            x = MARGIN + i * (col_w + Inches(0.5))
+            panel(slide, x, BODY_TOP, col_w, Inches(1.75), accent=True)
+            steps.append((slide.shapes[-1].shape_id, "fade"))
+            lead(slide, x + Inches(0.3), BODY_TOP + Inches(0.18),
+                 col_w - Inches(0.6), title)
+            bullets_each(slide, items, x + Inches(0.3),
+                         BODY_TOP + Inches(0.58), col_w - Inches(0.6),
+                         line_h=Inches(0.5), size=15)
+        tb, tf = textbox(slide, MARGIN, Inches(3.85), SLIDE_W - 2 * MARGIN,
+                         Inches(0.6))
+        add_runs(tf.paragraphs[0], spec["sub"], 15, SECONDARY)
+        pic = fit_picture(slide, spec["image"], MARGIN, Inches(4.6),
+                          SLIDE_W - 2 * MARGIN, Inches(1.4))
+        steps.append((pic.shape_id, "fade"))
 
     elif kind == "moment":
         tb, tf = textbox(slide, MARGIN, Inches(0.85), SLIDE_W - 2 * MARGIN,
@@ -545,19 +576,24 @@ def build_slide(prs, spec):
         add_runs(tf.paragraphs[0], spec["note"], 16, TEXT)
         if spec.get("animated"):
             steps.append((tb.shape_id, "fade"))
+        if spec.get("note2"):
+            tb, tf = textbox(slide, MARGIN, Inches(5.25), Inches(5.6),
+                             Inches(0.6))
+            add_runs(tf.paragraphs[0], spec["note2"], 15, SECONDARY)
+            steps.append((tb.shape_id, "fade"))
         if spec.get("image"):
             pic = fit_picture(slide, spec["image"], Inches(6.6), Inches(2.2),
                               SLIDE_W - Inches(6.6) - MARGIN, Inches(4.0))
-            if spec.get("animated"):
+            if spec.get("wipe"):
                 steps.append((pic.shape_id, "wipe"))
         if spec.get("chips"):
             cx = MARGIN
             for ci, chip in enumerate(spec["chips"]):
                 cw = Inches(0.22) + Inches(0.085) * len(chip)
-                box = rect(slide, cx, Inches(5.85), cw, Inches(0.4),
+                box = rect(slide, cx, Inches(5.4), cw, Inches(0.4),
                            SURFACE_HI, shape=MSO_SHAPE.ROUNDED_RECTANGLE,
                            line=SURFACE_HI)
-                _, tf = textbox(slide, cx, Inches(5.9), cw, Inches(0.32))
+                _, tf = textbox(slide, cx, Inches(5.45), cw, Inches(0.32))
                 p = tf.paragraphs[0]
                 p.alignment = PP_ALIGN.CENTER
                 add_runs(p, chip, 14, TEXT)
@@ -635,8 +671,41 @@ def build_slide(prs, spec):
         col_w = (SLIDE_W - 2 * MARGIN - Inches(0.5)) / 2
         for i, items in enumerate(spec["columns"]):
             x = MARGIN + i * (col_w + Inches(0.5))
-            bullets_each(slide, items, x, BODY_TOP + Inches(0.2), col_w,
+            lead(slide, x, BODY_TOP, col_w, spec["leads"][i])
+            bullets_each(slide, items, x, BODY_TOP + Inches(0.55), col_w,
                          line_h=Inches(1.0), size=17)
+
+    elif kind == "reassembly":
+        heading(slide, spec["title"], size=30)
+        tb, tf = textbox(slide, MARGIN, Inches(1.55), SLIDE_W - 2 * MARGIN,
+                         Inches(0.5))
+        add_runs(tf.paragraphs[0], spec["sub"], 14, SECONDARY)
+        left_w = Inches(5.9)
+        y = BODY_TOP + Inches(0.1)
+        for note in spec["bullets"]:
+            panel(slide, MARGIN, y, left_w, Inches(1.3))
+            steps.append((slide.shapes[-1].shape_id, "fade"))
+            _, tf = textbox(slide, MARGIN + Inches(0.3), y + Inches(0.2),
+                            left_w - Inches(0.6), Inches(0.9))
+            add_runs(tf.paragraphs[0], note, 15, TEXT)
+            y += Inches(1.5)
+        tb, tf = textbox(slide, Inches(6.7), Inches(2.4),
+                         SLIDE_W - Inches(6.7) - MARGIN, Inches(0.8))
+        p = tf.paragraphs[0]
+        p.alignment = PP_ALIGN.CENTER
+        add_runs(p, spec["bytes"], 20, ACCENT, font=F_MONO)
+        steps.append((tb.shape_id, "fade"))
+        cx = MARGIN
+        for chip in spec["chips"]:
+            cw = Inches(0.22) + Inches(0.085) * len(chip)
+            box = rect(slide, cx, Inches(5.35), cw, Inches(0.42), SURFACE_HI,
+                       shape=MSO_SHAPE.ROUNDED_RECTANGLE, line=SURFACE_HI)
+            _, tf = textbox(slide, cx, Inches(5.4), cw, Inches(0.34))
+            p = tf.paragraphs[0]
+            p.alignment = PP_ALIGN.CENTER
+            add_runs(p, chip, 13, TEXT)
+            cx += cw + Inches(0.22)
+        caption(slide, spec["caption"], y=Inches(6.05))
 
     elif kind == "closing":
         tb, tf = textbox(slide, Inches(1.0), Inches(1.4), SLIDE_W - Inches(2.0),
@@ -667,6 +736,15 @@ def build_slide(prs, spec):
         run.font.name = F_MONO
         run.font.color.rgb = SECONDARY
         run.hyperlink.address = GITHUB
+        rect(slide, Inches(5.17), Inches(6.05), Inches(3.0), Inches(0.72),
+             RGBColor(0xFF, 0xFF, 0xFF))
+        picture(slide, "assets/madrigal-logo.png", Inches(5.37), Inches(6.19),
+                Inches(2.6))
+        tb, tf = textbox(slide, Inches(1.0), Inches(6.85), SLIDE_W - Inches(2.0),
+                         Inches(0.35))
+        p4 = tf.paragraphs[0]
+        p4.alignment = PP_ALIGN.CENTER
+        add_runs(p4, spec["client"], 12, SECONDARY, font=F_MONO)
 
     if spec["kind"] not in ("cover", "closing"):
         footer(slide, spec["page"])
@@ -675,12 +753,14 @@ def build_slide(prs, spec):
     return slide, steps
 
 
-# --- content (mirrors slides.md, 19 slides) ---------------------------------
+# --- content (mirrors slides.md, 14 slides) ---------------------------------
 def deck() -> list[dict]:
     return [
         {"kind": "cover", "page": 1, "title": "Лаборатория протоколов",
              "sub": "Восстановление недокументированного бинарного протокола поверх TCP",
              "meta": "UMIRHack 2026 · кейс #02 · Мадригал · команда HTTP 418",
+             "stack": "Python 3.12 · PySide6 · dpkt · pytest · Docker",
+             "client": "Кейс заказчика",
              "notes": "Приветствие, 20 секунд."},
         {"kind": "team", "page": 2, "title": "Нас двое",
              "members": [("Сабадаш Павел", "Архитектура · захват · интерфейс",
@@ -693,31 +773,28 @@ def deck() -> list[dict]:
              "title": "TCP разрезает сообщения посередине",
              "sub": "Границы пакета и границы сообщения — разные вещи",
              "image": "assets/tcp_framing.png"},
-        {"kind": "given", "page": 4, "title": "Дано и требуется",
+        {"kind": "given_moment", "page": 4, "title": "Дано и требуется",
              "columns": [("Дано", ["Захваты `pcap`/`pcapng` и журнал действий устройства",
                                 "Спецификации протокола нет"]),
                       ("Требуется", ["Проверяемая интерпретация структуры сообщений",
-                                     "Видно, где чтение верно, а где перестаёт работать"])]},
-        {"kind": "moment", "page": 5,
-             "title": "Смещение поля длины оказалось на четыре байта позже, чем мы считали",
-             "sub": "Одно правило, два чтения: поле длины остаётся на offset 2",
+                                     "Видно, где чтение верно, а где перестаёт работать"])],
+             "sub": "Смещение поля длины оказалось на четыре байта позже, чем мы считали: одно правило, два чтения, поле длины остаётся на offset 2.",
              "image": "assets/length_offset.png",
-             "chips": ["наблюдение", "гипотеза", "проверка", "контрпример", "уточнение",
-                    "повторная проверка"]},
-        {"kind": "arch", "page": 6,
+             "notes": "Постановка задачи и наша первая гипотеза о смещении поля длины."},
+        {"kind": "arch", "page": 5,
              "title": "Три модуля связаны форматами, а не вызовами",
              "modules": [("capture", "pcap/pcapng → сессии\nreassembly, provenance"),
                       ("protocol + hypothesis", "правила, фрейминг\nконтрпримеры, версии"),
                       ("ui", "окно PySide6\nисследование и просмотр")],
              "caption": "Контракты между модулями зафиксированы схемами JSON; порядок вызовов не важен"},
-        {"kind": "shot_side", "page": 7, "title": "От интерпретации можно вернуться к исходным данным",
+        {"kind": "shot_side", "page": 6, "title": "От интерпретации можно вернуться к исходным данным",
              "image": "public/screenshot-provenance.png",
              "blocks": [{"accent": True, "lead": "",
                           "text": "packet 3 · seq 1001 · ts 1700000000.004 · сессия s1"}]},
-        {"kind": "pair", "page": 8, "title": "Правило проверяется на всём корпусе сразу",
+        {"kind": "pair", "page": 7, "title": "Правило проверяется на всём корпусе сразу",
              "images": ["public/screenshot-rule.png",
                      "public/screenshot-validation.png"]},
-        {"kind": "shot_side", "page": 9, "title": "Контрпример важнее метрики",
+        {"kind": "shot_side", "page": 8, "title": "Контрпример важнее метрики",
              "kicker": "4 независимые сессии в корпусе + журнал действий устройства",
              "build_blocks": True,
              "image": "public/screenshot-counterexamples.png",
@@ -726,41 +803,38 @@ def deck() -> list[dict]:
                      {"lead": "Один байт — 80 контрпримеров",
                           "text": "80 несоответствий v1 — на offset 0 в сессиях s2 и s3."}],
              "caption": "Значение 2 повторяется в независимых сессиях корпуса и связано с действием «изменить настройку» в журнале"},
-        {"kind": "divider", "page": 10, "index": "01", "title": "Что получилось",
-             "note": "Точность, покрытие корпуса организаторов, ресурсы"},
-        {"kind": "bars", "page": 11, "title": "Уточнили правило: 60 из 140 → 140 из 140",
+        {"kind": "bars", "page": 9, "title": "Что получилось: 60 из 140 → 140 из 140",
              "sub": "На корпусе уточнения. Отдельно проверено на реальном датасете: 45 + 45, precision 1.00",
              "note": "Было 60 matched из 140 и 80 контрпримеров. Стало 140 matched из 140 и ноль контрпримеров",
              "bars": [("v1", "0.43", 0.43, MISMATCHED),
                    ("v2", "1.00", 1.0, MATCHED)]},
-        {"kind": "metric", "page": 12, "title": "Набор организаторов разобран целиком",
+        {"kind": "reassembly", "page": 10,
+             "title": "Осколки IP собираются в одно сообщение",
+             "sub": "IPv4 и IPv6 по своим правилам. Сессия знает, из каких пакетов собрана: статус reassembled_from",
+             "bullets": ["IPv4 группирует по id и protocol, offset в единицах по 8 байт; неполный фрагмент не собирается.",
+                    "IPv6 группирует по id; перекрытие не допускается — датаграмма отбрасывается."],
+             "chips": ["IPv4 id + protocol, offset ×8", "IPv6 id, перекрытие отклонено",
+                    "12 тестов фрагментации"],
+             "bytes": "01 00 00 03 13 00 55 …  ▸ ▸ ▸ ▸ ▸ ▸ ▸",
+             "caption": "Дырка — это incomplete, а не ноль: байты не угадываются, пока не покрыт каждый байт до конца и не увиден последний фрагмент"},
+        {"kind": "metric", "page": 11, "title": "Набор организаторов разобран целиком",
              "big": "90", "bigsize": 120, "image": "assets/coverage_donut.png",
              "note": "45 запросов + 45 ответов. Все matched.",
-             "caption": "Данные не использовались при уточнении правила"},
-        {"kind": "metric", "page": 13, "title": "95 МиБ разбираются за 12 секунд",
-             "big": "12 с", "animated": True, "image": "assets/memory_sweep.png",
-             "note": "Пик памяти 350 МиБ — 9% бюджета 4 ГиБ на машине 16 ГиБ",
+             "note2": "12 с на 95 МиБ — пик памяти 350 МиБ, 9% бюджета 4 ГиБ",
              "chips": ["12 с общее время", "350 МиБ пик памяти", "250k пакетов"],
-             "caption": "Условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ"},
-        {"kind": "divider", "page": 14, "index": "02", "title": "Демонстрация",
-             "note": "Живое окно и запись прогона"},
-        {"kind": "live", "page": 15, "title": "Живое окно",
+             "caption": "Данные не использовались при уточнении правила; условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ", "wipe": True},
+        {"kind": "live", "page": 12, "title": "Демонстрация: живое окно и запись прогона",
              "image": "public/screenshot-main.png",
-             "caption": "Сессии, байты, интерпретация, происхождение и диагностика в одном окне"},
-        {"kind": "video", "page": 16,
-             "title": "Резерв: запись прогона",
-             "poster": "public/screencast-poster.png",
-             "meta": "Полный прогон референсного исследования · 2:22 · без звука",
-             "caption": "Играется, если живое окно не поднимется на защите"},
-        {"kind": "divider", "page": 17, "index": "03", "title": "Границы и итог",
-             "note": "Что мы не утверждаем и что осталось за рамками"},
-        {"kind": "limits", "page": 18, "title": "Что мы не утверждаем",
+             "caption": "Сессии, байты, интерпретация, происхождение и диагностика в одном окне. Резерв — запись полного прогона, 2:22, без звука; играется, если живое окно не поднимется"},
+        {"kind": "limits", "page": 13, "title": "Границы и итог",
+             "leads": ["Что мы не утверждаем", "Что осталось за рамками"],
              "columns": [["Смысл байта флагов не установлен: в корпусе он постоянен",
                        "Поле значения остаётся гипотезой, а не фактом"],
                       ["Альтернативные чтения берутся из заданного набора",
                        "Интерпретация верна для проверенных захватов и молчит вне них"]]},
-        {"kind": "closing", "page": 19,
+        {"kind": "closing", "page": 14,
              "title": "Инструмент превращает байты в проверяемое знание",
+             "client": "Кейс #02 · UMIRHack 2026",
              "qrs": [("public/qr_repo.png", "Репозиторий", GITHUB),
                   ("public/qr_release.png", "Релиз v1.0.0", RELEASE),
                   ("public/qr_telegram_pasha.png", "@Pasha1778", "https://t.me/Pasha1778"),

@@ -16,12 +16,17 @@ fonts:
   sans: Montserrat
   mono: JetBrains Mono
 ---
-
 <div class="cover">
 
 <div class="cover__brand">
+<span class="cover__brand-mark">
 <img src="/logo.svg" alt="Логотип проекта" class="cover__logo">
 <span class="cover__name">madrigal-protocol-lab</span>
+</span>
+<span class="cover__client">
+<span class="cover__client-label">кейс заказчика</span>
+<img src="/assets/madrigal-logo.png" alt="Мадригал" class="cover__client-logo">
+</span>
 </div>
 
 # Лаборатория протоколов
@@ -36,6 +41,8 @@ fonts:
 <span class="chip">Мадригал</span>
 <span class="chip">команда HTTP 418</span>
 </div>
+
+<div class="cover__stack">Python 3.12 · PySide6 · dpkt · pytest · Docker</div>
 
 </div>
 
@@ -97,7 +104,7 @@ layout: default
 
 # Дано и требуется
 
-<div class="given">
+<div class="given given--compact">
 
 <div class="panel panel--accent">
 <div class="lead">Дано</div>
@@ -117,31 +124,11 @@ layout: default
 
 </div>
 
----
-layout: default
----
-
-<div class="moment">
-
-<div class="kicker">Ход работы</div>
-
-# Смещение поля длины оказалось на четыре байта позже, чем мы считали
-
-<div class="moment__sub">Одно правило, два чтения: поле длины остаётся на offset 2</div>
-
+<div class="moment moment--compact">
+<div class="moment__sub">Смещение поля длины оказалось на четыре байта позже, чем мы считали: одно правило, два чтения, поле длины остаётся на offset 2.</div>
 <div class="moment__figure" v-click>
 <img src="/assets/length_offset.svg" alt="Байты 01 00 00 03 13 00 55 и два конкурирующих чтения">
 </div>
-
-<div class="steps" v-click>
-<span class="on">наблюдение</span>
-<span class="on">гипотеза</span>
-<span class="on">проверка</span>
-<span class="on">контрпример</span>
-<span class="on">уточнение</span>
-<span class="on">повторная проверка</span>
-</div>
-
 </div>
 
 ---
@@ -181,7 +168,7 @@ layout: default
 
 # От интерпретации можно вернуться к исходным данным
 
-<div class="shot__frame">
+<div class="shot__frame" v-click>
 <img class="shot--full" src="/screenshot-provenance.png" alt="Байты сообщения и панель происхождения: пакет, последовательность, время">
 </div>
 
@@ -193,21 +180,22 @@ layout: default
 
 # Правило проверяется на всём корпусе сразу
 
+<div class="pair">
 <div class="shot__frame">
 <img class="shot--half" src="/screenshot-rule.png" alt="Правило в редакторе: JSON крупным планом">
 </div>
-
 <div class="shot__frame">
 <img class="shot--half" src="/screenshot-validation.png" alt="Результат применения правила к потоку">
+</div>
 </div>
 
 ---
 layout: default
 ---
 
-# Контрпример важнее метрики
-
 <div class="kicker">4 независимые сессии в корпусе + журнал действий устройства</div>
+
+# Контрпример важнее метрики
 
 <div class="shot shot--side">
 
@@ -238,29 +226,12 @@ layout: default
 </div>
 
 ---
-transition: fade
-layout: default
----
-
-<div class="divider">
-
-<div class="index">01</div>
-
-# Что получилось
-
-<div class="bar"></div>
-
-<div class="divider__note">Точность, покрытие корпуса организаторов, ресурсы</div>
-
-</div>
-
----
 layout: default
 ---
 
 <div class="metric">
 
-# Уточнили правило: 60 из 140 → 140 из 140
+# Что получилось: 60 из 140 → 140 из 140
 
 <div class="metric__sub">На корпусе уточнения. Отдельно проверено на реальном датасете: 45 + 45, precision 1.00</div>
 
@@ -285,7 +256,40 @@ layout: default
 layout: default
 ---
 
-<div class="metric">
+<div class="metric metric--compact">
+
+# Осколки IP собираются в одно сообщение
+
+<div class="metric__sub">IPv4 и IPv6 по своим правилам. Сессия знает, из каких пакетов собрана: статус reassembled_from</div>
+
+<div class="metric__grid">
+
+<div>
+<div class="metric__note">IPv4 группирует по <code>id</code> и <code>protocol</code>, offset в единицах по 8 байт; неполный фрагмент не собирается.</div>
+<div class="metric__note">IPv6 группирует по <code>id</code>; перекрытие не допускается — датаграмма отбрасывается.</div>
+</div>
+
+<div class="metric__figure">
+<div class="bytes">01 00 00 03 13 00 55 … ▸ ▸ ▸ ▸ ▸ ▸ ▸</div>
+</div>
+
+</div>
+
+<div class="metric-row" v-click>
+<span><b>IPv4</b> id + protocol, offset ×8</span>
+<span><b>IPv6</b> id, перекрытие отклонено</span>
+<span><b>12</b> тестов фрагментации</span>
+</div>
+
+<div class="caption" v-click>Дырка — это incomplete, а не ноль: байты не угадываются, пока не покрыт каждый байт до конца и не увиден последний фрагмент</div>
+
+</div>
+
+---
+layout: default
+---
+
+<div class="metric metric--compact">
 
 # Набор организаторов разобран целиком
 
@@ -294,6 +298,7 @@ layout: default
 <div>
 <div class="bignum">90</div>
 <div class="metric__note">45 запросов + 45 ответов. Все matched.</div>
+<div class="metric__note" v-click><b>12 с</b> на 95 МиБ — пик памяти 350 МиБ, 9% бюджета 4 ГиБ</div>
 </div>
 
 <div class="metric__figure">
@@ -302,55 +307,13 @@ layout: default
 
 </div>
 
-<div class="caption">Данные не использовались при уточнении правила</div>
-
-</div>
-
----
-layout: default
----
-
-<div class="metric">
-
-# 95 МиБ разбираются за 12 секунд
-
-<div class="metric__grid">
-
-<div>
-<div class="bignum">12 с</div>
-<div class="metric__note" v-click>Пик памяти 350 МиБ — 9% бюджета 4 ГиБ на машине 16 ГиБ</div>
-</div>
-
-<div class="metric__figure" v-click>
-<img src="/assets/memory_sweep.svg" alt="Свип памяти: regular и streaming">
-</div>
-
-</div>
-
-<div class="metric-row">
-<span v-click><b>12 с</b> общее время</span>
+<div class="metric-row" v-click>
+<span><b>12 с</b> общее время</span>
 <span><b>350 МиБ</b> пик памяти</span>
 <span><b>250k</b> пакетов</span>
 </div>
 
-<div class="caption">Условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ</div>
-
-</div>
-
----
-transition: fade
-layout: default
----
-
-<div class="divider">
-
-<div class="index">02</div>
-
-# Демонстрация
-
-<div class="bar"></div>
-
-<div class="divider__note">Живое окно и запись прогона</div>
+<div class="caption">Данные не использовались при уточнении правила; условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ</div>
 
 </div>
 
@@ -358,69 +321,28 @@ layout: default
 layout: default
 ---
 
-<div class="live">
+<div class="live live--compact">
 
-# Живое окно
+# Демонстрация: живое окно и запись прогона
 
 <div class="live__frame">
 <img class="shot--live" src="/screenshot-main.png" alt="Главное окно: сессии, байты, интерпретация, диагностика">
 </div>
 
-<div class="caption">Сессии, байты, интерпретация, происхождение и диагностика в одном окне</div>
+<div class="caption">Сессии, байты, интерпретация, происхождение и диагностика в одном окне. Резерв — запись полного прогона, 2:22, без звука; играется, если живое окно не поднимется</div>
 
 </div>
 
 ---
 layout: default
 ---
-
-# Резерв: запись прогона
-
-<div class="recording">
-
-<div class="recording__frame">
-<img src="/screencast-poster.png" alt="Кадр записи: главное окно с разобранным сообщением">
-<svg class="recording__play" viewBox="0 0 40 40" role="img" aria-label="Запись прогона">
-<circle cx="20" cy="20" r="18" fill="none" stroke="#D0603A" stroke-width="2"/>
-<polygon points="16,12 16,28 29,20" fill="#D0603A"/>
-</svg>
-</div>
-
-<div class="recording__meta">
-<span>Полный прогон референсного исследования</span>
-<span>2:22 · без звука</span>
-</div>
-
-</div>
-
-<div class="caption">Играется, если живое окно не поднимется на защите</div>
-
----
-transition: fade
-layout: default
----
-
-<div class="divider">
-
-<div class="index">03</div>
 
 # Границы и итог
-
-<div class="bar"></div>
-
-<div class="divider__note">Что мы не утверждаем и что осталось за рамками</div>
-
-</div>
-
----
-layout: default
----
-
-# Что мы не утверждаем
 
 <div class="limits">
 
 <div>
+<div class="lead">Что мы не утверждаем</div>
 <ul>
 <li>Смысл байта флагов не установлен: в корпусе он постоянен</li>
 <li>Поле значения остаётся гипотезой, а не фактом</li>
@@ -428,6 +350,7 @@ layout: default
 </div>
 
 <div>
+<div class="lead">Что осталось за рамками</div>
 <ul>
 <li>Альтернативные чтения берутся из заданного набора</li>
 <li>Интерпретация верна для проверенных захватов и молчит вне них</li>
@@ -469,5 +392,10 @@ layout: default
 </div>
 
 <div class="closing__line">github.com/Pavel1778/madrigal-protocol-lab</div>
+
+<div class="closing__client">
+<img src="/assets/madrigal-logo.png" alt="Мадригал" class="closing__client-logo">
+<span class="closing__client-note">кейс #02 · UMIRHack 2026</span>
+</div>
 
 </div>
