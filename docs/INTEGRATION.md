@@ -148,7 +148,7 @@ project.madrigal/
 
 `manifest.json` records `contract_version`, `project_version`, `name`,
 `created_at`, `updated_at`, `captures` (relative path + `sha256`), `rules`
-(id + version + path), `results`, and `annotations`. Because every path is
+(id + version + path + `sha256`), `results`, and `annotations`. Because every path is
 relative and each capture carries its digest, the directory can be copied to
 another directory or machine and opened there unchanged:
 
@@ -158,16 +158,18 @@ from src.project import Project
 
 project = Project.create(Path("work/project.madrigal"), "cap1 investigation")
 project.add_capture(Path("captures/cap1.pcapng"))
+project.add_rule(Path("rules/set_parameter.json"), "set_parameter_request", 3)
 project.export(Path("work/cap1.zip"))
 
 # On another machine:
 restored = Project.import_(Path("work/cap1.zip"), Path("work/restored"))
-assert restored.verify_captures() == []  # digests still match
+assert restored.verify_captures() == []  # capture digests still match
+assert restored.verify_rules() == []  # rule digests still match
 ```
 
-`Project.import_` checks every capture against its recorded digest and refuses
-a tampered archive, deleting the partial directory. See the project section of
-`docs/CONTRACT.md`.
+`Project.import_` checks every capture and every registered rule against its
+recorded digest and refuses a tampered archive, deleting the partial directory.
+See the project section of `docs/CONTRACT.md`.
 
 ## Report seam
 
