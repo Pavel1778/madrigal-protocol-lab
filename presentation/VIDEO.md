@@ -131,9 +131,11 @@ Note: an earlier revision of this file quoted the clip as 1:25 and placed it on
 the team slide. That was wrong on both counts: the clip runs 2:22, and the team
 slide carries no video, only the avatar. The clip is a standalone fallback.
 
-The deck shows the clip as a still: slide 16 renders
-`presentation/public/screencast-poster.png`, baked from the sharpest of six
-sampled frames (5, 20, 40, 60, 90, 120 s) by `presentation/make_assets.py`,
-with a play glyph drawn over it in CSS. Keeping the frame an image means the
-deck renders identically in the PDF, the PPTX and the built SPA, with no video
-codec in the path.
+The deck no longer shows the clip as a still. After the 14-slide restructure the
+dedicated «Запись прогона» slide was folded into the demo slide (12), whose
+caption names the clip as the fallback («Резерв — запись полного прогона, 2:22,
+без звука»). The baked poster `presentation/public/screencast-poster.png` stays
+in `public/` unused, so a still frame can be reinstated without re-running
+`make_assets.py`; keeping the frame an image means the deck would render
+identically in the PDF, the PPTX and the built SPA, with no video codec in the
+path.

@@ -9,19 +9,20 @@ from the repository's own code. Every number is from `docs/METRICS.md`.
 
 | Path | What it is |
 | --- | --- |
-| `slides.md` | the deck source (19 slides, Madrigal theme, `v-click` build-ins) |
+| `slides.md` | the deck source (14 slides, Madrigal theme, `v-click` build-ins) |
 | `style.css` | the Madrigal theme: palette, Tektur + Montserrat, layout |
 | `slides-light.md` | the light variant, derived from `slides.md` by `build_light.py` |
-| `slides.pdf` | the printed export, 19 pages (archive copy for submission) |
+| `slides.pdf` | the printed export, 14 pages (archive copy for submission) |
 | `slides-light.pdf` | the same deck exported for a washed-out projector |
 | `slides.pptx` | the editable PPTX: native text, entrance animations, transitions |
 | `scripts/build_pptx.py` | builds `slides.pptx` from code (python-pptx), not a picture dump |
 | `fonts.py` | embeds Tektur, Montserrat and JetBrains Mono into the PPTX as `.fntdata` parts |
 | `screenshots/` | 11 real GUI captures at 1920×1080 (`generate_screenshots.py`) |
 | `assets/` | 8 branded SVG visualisations, dark and light (`build_visualizations.py`) |
+| `assets/madrigal-logo.png` | the case owner's «Мадригал» wordmark, shown on the cover and closing slides |
 | `icons/` | Lucide line icons used by the deck (`fetch_icons.py`) |
 | `public/` | assets the deck serves: fonts, logo, QR codes, member photos |
-| `public/screencast-poster.png` | the frame slide 16 shows (baked from `screencast.mp4`, sharpest of six sampled frames) |
+| `public/screencast-poster.png` | a spare poster frame baked from `screencast.mp4` (sharpest of six sampled frames; not shown on any slide) |
 | `defense_script.md` | the 8-minute speaker script, one section per slide |
 | `VIDEO.md` | shot list for the reserve screen recording |
 | `export_pdf.sh` | exports `slides.pdf` with a retry for the Slidev race |

@@ -13,10 +13,10 @@ Reproduce any line below with the command in the same row.
 
 | fact | value | command |
 | --- | --- | --- |
-| pages in the committed PDF (dark) | 19 | `pdfinfo presentation/slides.pdf` |
-| pages in the committed PDF (light) | 19 | `pdfinfo presentation/slides-light.pdf` |
-| slides in the source | 19 | `grep -c '^---$' presentation/slides.md` = 38, two fences per slide (headmatter plus one frontmatter block) |
-| slides in the PPTX | 19 | `python -m presentation.scripts.build_pptx` |
+| pages in the committed PDF (dark) | 14 | `pdfinfo presentation/slides.pdf` |
+| pages in the committed PDF (light) | 14 | `pdfinfo presentation/slides-light.pdf` |
+| slides in the source | 14 | `grep -c '^---$' presentation/slides.md` = 28, two fences per slide (headmatter plus one frontmatter block) |
+| slides in the PPTX | 14 | `python -m presentation.scripts.build_pptx` |
 | page size | 735.12 x 414 pts, 16:9 | `pdfinfo presentation/slides.pdf` |
 | empty pages | 0 | render scan below |
 | overflow (content past 100 % of the frame) | 0 | render scan below |
@@ -32,25 +32,20 @@ chart SVGs for their light variants; layout and content are identical.
 
 Per-page headings, from `pdftotext -layout presentation/slides.pdf`:
 
-    1  Лаборатория протоколов
-    2  Нас двое
-    3  TCP разрезает сообщения посередине
-    4  Дано и требуется
-    5  Смещение поля длины оказалось на четыре байта позже, чем мы считали
-    6  Три модуля связаны форматами, а не вызовами
-    7  От интерпретации можно вернуться к исходным данным
-    8  Правило проверяется на всём корпусе сразу
-    9  Контрпример важнее метрики
-    10 01 Что получилось
-    11 Уточнили правило: 60 из 140 → 140 из 140
-    12 Набор организаторов разобран целиком
-    13 95 МиБ разбираются за 12 секунд
-    14 02 Демонстрация
-    15 Живое окно
-    16 Резерв: запись прогона
-    17 03 Границы и итог
-    18 Что мы не утверждаем
-    19 Инструмент превращает байты в проверяемое знание
+     1  Лаборатория протоколов
+     2  Нас двое
+     3  TCP разрезает сообщения посередине
+     4  Дано и требуется
+     5  Три модуля связаны форматами, а не вызовами
+     6  От интерпретации можно вернуться к исходным данным
+     7  Правило проверяется на всём корпусе сразу
+     8  Контрпример важнее метрики
+     9  Что получилось: 60 из 140 → 140 из 140
+    10  Осколки IP собираются в одно сообщение
+    11  Набор организаторов разобран целиком
+    12  Демонстрация: живое окно и запись прогона
+    13  Границы и итог
+    14  Инструмент превращает байты в проверяемое знание
 
 No page is blank; each carries a heading or a section number.
 
@@ -59,7 +54,7 @@ No page is blank; each carries a heading or a section number.
 `presentation/check_layout.py` renders every page of both PDFs and looks for
 content that reaches the frame edge (a clear margin of at least 60 px at every
 edge) and for content that reaches the reserved footer band. It reports zero
-problems across 19 pages in each theme:
+problems across 14 pages in each theme:
 
     python -m presentation.check_layout presentation/slides.pdf presentation/slides-light.pdf
     layout ok: no edge or footer-band overflow
@@ -67,16 +62,16 @@ problems across 19 pages in each theme:
 The overflow scan masks the footer band and the accent rule, then measures the
 remaining ink bounding box:
 
-    worst content bottom (dark)  = 0.861 of page height (slide 16)
-    worst content bottom (light) = 0.861 of page height (slide 16)
+    worst content bottom (dark)  = 0.873 of page height (slide 4)
+    worst content bottom (light) = 0.873 of page height (slide 4)
 
-Slide 16 fills closest to the footer but stays inside the reserved band. No text
+Slide 4 fills closest to the footer but stays inside the reserved band. No text
 or figure crosses the 100 % frame.
 
 Two further scans, both clean on the dark and the light export:
 
-- Word overlap: `pdftotext -bbox` boxes are compared pairwise; no two words
-  intersect by more than 20 % of the smaller box (0 hits across 19 pages).
+- Word overlap: text boxes are compared pairwise; no two words intersect by more
+  than 20 % of the smaller box (0 hits across 14 pages).
 - Fonts: `pdffonts` lists only JetBrainsMono-Regular, Montserrat-Regular,
   Montserrat-SemiBold and Tektur-SemiBold. No DejaVu, so no glyph fell back to a
   system font.
@@ -87,13 +82,13 @@ Two further scans, both clean on the dark and the light export:
 | --- | --- | --- | --- | --- |
 | 1 | Тема | yes | 1 | 1 |
 | 2 | Состав команды с фото и ролями | yes | 2 | 2 |
-| 3 | Технический стек | yes | 1, 6 | 1, 6 |
-| 4 | Архитектура | yes | 6 | 6 |
-| 5 | Функционал и киллер-фичи | yes | 7, 8, 9 | 7, 8, 9 |
-| 6 | Скриншоты или скринкаст | yes | 7, 8, 9, 15, 16 | 7, 8, 9, 15, 16 |
-| 7 | QR на GitHub | yes | 19 | 19 |
-| 8 | Демонстрация отдельным блоком | yes | 14–16 | 14–16 |
-| 9 | Направления развития | yes | 18 | 18 |
+| 3 | Технический стек | yes | 1, 5 | 1, 5 |
+| 4 | Архитектура | yes | 5 | 5 |
+| 5 | Функционал и киллер-фичи | yes | 6, 7, 8 | 6, 7, 8 |
+| 6 | Скриншоты или скринкаст | yes | 6, 7, 8, 12 | 6, 7, 8, 12 |
+| 7 | QR на GitHub | yes | 14 | 14 |
+| 8 | Демонстрация отдельным блоком | yes | 12 | 12 |
+| 9 | Направления развития | yes | 13 | 13 |
 
 Nine of nine present.
 
@@ -115,37 +110,49 @@ Nine of nine present.
   the per-member Telegram codes decode to `@Pasha1778` and `@petruan`.
 
 Every image reference resolves. `grep -oE 'src="[^"]+"'` over `slides.md` yields
-the chart SVGs under `/assets/`, the `/public/screenshot-*.png` crops,
+the chart SVGs under `/assets/`, the five `/public/screenshot-*.png` crops,
 `/avatar_pavel_round.png`, `/avatar_nikita_round.png`, the four
-`/qr_*.png` codes and `/screencast-poster.png`; each is present under
-`presentation/assets` or `presentation/public`.
+`/qr_*.png` codes and `/assets/madrigal-logo.png` on the cover and closing
+slides; each is present under `presentation/assets` or `presentation/public`.
 
 ## Final slide
 
-Slide 19 is a closing slide, not a "Вопросы" slide. It carries the one-line
+Slide 14 is a closing slide, not a "Вопросы" slide. It carries the one-line
 conclusion «Инструмент превращает байты в проверяемое знание», two QR codes
 (repository and release) with captions, and the contact line
 `github.com/Pavel1778/madrigal-protocol-lab · @Pasha1778`. It carries no
 technical metric — no 781, no 90 %, no test count, no coverage figure, no release
 asset count — and the word «Вопросы» appears nowhere in the deck.
 
+## Client identity
+
+The public identity of the case owner is carried on the first and last slides
+only. The cover shows the «Мадригал» wordmark over a small white plate in the
+top-right corner, under a mono «КЕЙС ЗАКАЗЧИКА» kicker; the closing slide shows
+the same wordmark centred under the repository line, with «Кейс #02 · UMIRHack
+2026». Both are the committed `presentation/assets/madrigal-logo.png` (3000×628,
+monochrome #313130); the white plate is what keeps a near-black wordmark legible
+on the dark deck, so no theme-specific recolouring is needed. The lighter
+`madrigal-mark.png` and the partner `fstek.png` stay unused in `assets/` as
+reserve. The wordmark is presentational, not copy, so it is not mirrored in the
+PPTX `deck()` text and the sync guard ignores it.
+
 ## PPTX
 
 | fact | value | command |
 | --- | --- | --- |
-| slides | 19, 16:9 (13.333 x 7.5 in) | `python -m presentation.scripts.build_pptx` |
-| entrance animations | 20, click-triggered (19 fade, 1 wipe), at most 3 per slide | XML scan of `slides.pptx` |
-| chart build-in | 1 wipe (the memory-sweep figure) | XML scan of `slides.pptx` |
-| transitions | 19, plain fade | XML scan of `slides.pptx` |
+| slides | 14, 16:9 (13.333 x 7.5 in) | `python -m presentation.scripts.build_pptx` |
+| entrance animations | 21, click-triggered (20 fade, 1 wipe), at most 3 per slide | XML scan of `slides.pptx` |
+| chart build-in | 1 wipe (the coverage donut) | XML scan of `slides.pptx` |
+| transitions | 14, plain fade | XML scan of `slides.pptx` |
 | embedded fonts | Tektur, Montserrat, JetBrains Mono (5 faces) | `pytest tests/project/test_presentation_sync.py` |
 | text | native editable runs, deck palette | python-pptx |
 
 The deck is drawn directly with python-pptx — no PowerPoint template. Content
-fades in on click, kept to at most three build-ins per slide, and the
-memory-sweep figure wipes in left to right. Every slide carries a plain fade
-transition; the cover, the three section dividers, the recording slide and the
-closing slide carry no click animation at all. The XML of all 105 parts parses
-without error.
+fades in on click, kept to at most three build-ins per slide, and the coverage
+donut wipes in left to right. Every slide carries a plain fade transition; the
+cover, the section divider, the recording slide and the closing slide carry no
+click animation at all. The XML of all 96 parts parses without error.
 
 ## Fonts
 
@@ -165,7 +172,7 @@ obfuscates the first 32 bytes per the OOXML rule and registers it as an
 | embed flag | `embedTrueTypeFonts="1"`, `saveSubsetFonts="1"` | `ppt/presentation.xml` |
 | content type | `fntdata` → `application/x-fontdata` | `[Content_Types].xml` |
 | theme fonts | Montserrat (no Calibri anywhere in the package) | XML scan of `slides.pptx` |
-| runs with a fallback name | 0 of 150 | python-pptx scan |
+| runs with a fallback name | 0 of 126 | python-pptx scan |
 | Cyrillic coverage | 55 of 55 characters present in every subset | de-obfuscation scan |
 
 The check the organizers can repeat: open `presentation/slides.pptx` and inspect
@@ -185,12 +192,13 @@ signature is wrong.
 
 The raw take ran 166 s (2:46) with solid black at both ends; it was trimmed to
 the first and last frame with content and `blackdetect` now reports no black
-segment. Slide 16 shows `public/screencast-poster.png`, baked from the sharpest
-of six sampled frames (5, 20, 40, 60, 90, 120 s) with a play glyph on top, so
-the frame is an image in every build and no codec is needed to render it. The
-clip itself stays a committed asset: `presentation/public/screencast.mp4` is a
-symlink to `presentation/screencast.mp4`, played from the file system if the
-live window does not come up.
+segment. The screencast is not a slide of its own: after the 14-slide
+restructure the demo slide (12) shows the live-window screenshot and names the
+recording as its reserve in the caption («Резерв — запись полного прогона,
+2:22, без звука»). The clip stays a committed asset:
+`presentation/public/screencast.mp4` is a symlink to
+`presentation/screencast.mp4`, played from the file system if the live window
+does not come up.
 
 ## Demo driver
 
