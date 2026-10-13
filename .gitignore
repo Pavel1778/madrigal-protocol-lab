@@ -58,7 +58,3 @@ presentation/slides-*_[0-9]*.png
 /*.tar.gz
 /*.tgz
 /*_files/
-
-# Local agent workspace and cache: never part of the project tree
-.openhands/
-.agent-cache/
