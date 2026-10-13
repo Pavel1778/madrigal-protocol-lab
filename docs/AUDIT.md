@@ -276,7 +276,7 @@ the perceptual baseline comparison and the repository hygiene were merged into
 | Coverage | 90% over `src/` (`pytest --cov=src`); the largest gap is `src/ui/` wiring |
 | CI | green on `main`: test matrix (3.12 and 3.13), `ui` matrix, `code-quality`, `dependency-audit` |
 | Largest tracked file | `presentation/presentation_html.zip`, 1.8 MiB, well under 5 MiB |
-| Submission archive | `submission_20261011_1316.zip`, the published `v1.0.0` asset |
+| Submission archive | `submission_20261012_1944.zip`, the published `v1.0.0` asset |
 | Fresh unpack | 780 passed, 1 skipped from a clean unpack of that asset |
 
 Trace checks at this revision:

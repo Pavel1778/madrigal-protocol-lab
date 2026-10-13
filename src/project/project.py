@@ -65,6 +65,13 @@ def _sha256(path: Path) -> str:
     return f"sha256:{digest.hexdigest()}"
 
 
+def _slug(text: str) -> str:
+    """Reduce a rule identifier to a safe file-name stem."""
+
+    cleaned = [c if c.isalnum() or c in "-_" else "-" for c in text.strip()]
+    return "".join(cleaned).strip("-_")
+
+
 class Project:
     """An open investigation project rooted at ``root``."""
 
@@ -183,6 +190,71 @@ class Project:
                 broken.append(relative)
         return broken
 
+    # -- rules ------------------------------------------------------------
+
+    def add_rule(self, rule_path: Path, rule_id: str, rule_version: int) -> str:
+        """Copy a rule into the project and register it by version.
+
+        The interpretation that produced a result must travel with the project,
+        so the rule file is copied under ``rules/`` with its version in the name
+        and recorded in the manifest with its identity and digest. A rule
+        version already registered with the same bytes is not copied again; the
+        same version with different bytes is a different file, so the copy gets
+        a numeric suffix and nothing is silently overwritten.
+
+        Returns the relative path of the copy inside ``rules/``.
+        """
+
+        source = Path(rule_path)
+        if not source.is_file():
+            raise ProjectError(f"no rule at {source}")
+
+        digest = _sha256(source)
+        recorded = self._manifest.has_rule(rule_id, rule_version)
+        if recorded is not None:
+            for entry in self._manifest.rules:
+                if entry.get("rule_id") == rule_id and entry.get(
+                    "rule_version"
+                ) == rule_version:
+                    if entry.get("sha256") == digest:
+                        return entry["path"]
+                    break
+
+        stem = _slug(rule_id) or "rule"
+        target_name = f"{stem}_v{rule_version}.json"
+        counter = 1
+        while (self._root / "rules" / target_name).exists():
+            target_name = f"{stem}_v{rule_version}-{counter}.json"
+            counter += 1
+
+        relative = f"rules/{target_name}"
+        shutil.copy2(source, self._root / relative)
+        self._manifest.rules.append(
+            {
+                "rule_id": rule_id,
+                "rule_version": rule_version,
+                "path": relative,
+                "sha256": digest,
+                "added_at": utc_now(),
+            }
+        )
+        logger.info("added rule %s v%s to project %s", rule_id, rule_version, self._root)
+        return relative
+
+    def verify_rules(self) -> list[str]:
+        """Return the relative paths of registered rules whose bytes changed."""
+
+        broken: list[str] = []
+        for entry in self._manifest.rules:
+            relative = entry["path"]
+            target = self._root / relative
+            if not target.is_file():
+                broken.append(relative)
+                continue
+            if _sha256(target) != entry.get("sha256"):
+                broken.append(relative)
+        return broken
+
     # -- annotations ------------------------------------------------------
 
     def annotations(self) -> AnnotationStore:
@@ -281,6 +353,11 @@ class Project:
             if broken:
                 raise ProjectError(
                     "capture digests do not match after import: " + ", ".join(broken)
+                )
+            broken_rules = project.verify_rules()
+            if broken_rules:
+                raise ProjectError(
+                    "rule digests do not match after import: " + ", ".join(broken_rules)
                 )
             logger.info("imported project from %s to %s", archive_path, target)
             return project

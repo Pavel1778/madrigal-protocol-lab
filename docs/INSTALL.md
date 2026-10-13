@@ -140,3 +140,18 @@ venv/bin/madrigal-lab
 ```
 
 Из дерева доступны и тесты: `venv/bin/pytest tests/ -q`.
+
+Тесты интерфейса (`tests/ui/`) требуют системных библиотек Qt, которых нет в
+минимальном образе: загрузка `PySide6` падает с
+`ImportError: libEGL.so.1: cannot open shared object file`. Дисплея не нужно —
+модули выставляют `QT_QPA_PLATFORM=offscreen` сами, — но библиотеки обязательны:
+
+```
+sudo apt-get install -y libegl1 libgl1 libglib2.0-0 libxkbcommon0 \
+    libdbus-1-3 libfontconfig1
+venv/bin/pytest tests/ -q
+```
+
+Набор без интерфейса библиотек не требует и проходит в чистом окружении:
+`venv/bin/pytest tests/ --ignore=tests/ui -q`. Для настоящего окна (snapshot- и
+e2e-тесты) нужен виртуальный дисплей: `xvfb-run -a venv/bin/pytest tests/ui/ -q`.

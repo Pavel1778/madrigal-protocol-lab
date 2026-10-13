@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import shutil
 import zipfile
 from pathlib import Path
 
@@ -190,3 +191,53 @@ def test_pipeline_applies_rule_when_engine_present(tmp_path: Path) -> None:
     assert result["summary"]["matched"] + result["summary"]["incomplete"] > 0
     report = (project_path / "reports" / "REPORT.md").read_text(encoding="utf-8")
     assert "## Counterexamples" in report
+
+
+@pytest.mark.skipif(
+    not HAS_ENGINE, reason="protocol engine not present in this checkout"
+)
+def test_pipeline_registers_applied_rule_in_manifest(tmp_path: Path) -> None:
+    rule = (
+        Path(__file__).resolve().parent.parent.parent
+        / "src"
+        / "protocol"
+        / "examples"
+        / "set_parameter_request.json"
+    )
+    if not rule.is_file():
+        pytest.skip("example rule not present")
+
+    project_path = tmp_path / "project.madrigal"
+    outcome = run_pipeline(CAPTURE, project_path, rule_path=rule)
+    result = json.loads(outcome.result.read_text(encoding="utf-8"))
+
+    # The applied rule travels with the project: its file is copied under
+    # rules/ and recorded by identity and digest.
+    reopened = Project.open(project_path)
+    assert len(reopened.manifest.rules) == 1
+    entry = reopened.manifest.rules[0]
+    assert entry["rule_id"] == result["rule_id"]
+    assert entry["rule_version"] == result["rule_version"]
+    assert entry["path"].startswith("rules/")
+    assert (project_path / entry["path"]).is_file()
+    assert reopened.manifest.has_rule(entry["rule_id"], entry["rule_version"]) == (
+        entry["sha256"]
+    )
+    assert reopened.verify_rules() == []
+
+    # A second application of the same version does not duplicate the entry.
+    run_pipeline(CAPTURE, project_path, rule_path=rule, force=True)
+    reopened = Project.open(project_path)
+    assert len(reopened.manifest.rules) == 1
+
+    # The rule survives a move to another directory and an archive round trip.
+    moved = tmp_path / "elsewhere.madrigal"
+    shutil.copytree(project_path, moved)
+    copied = Project.open(moved)
+    assert copied.verify_rules() == []
+
+    archive = tmp_path / "project.zip"
+    copied.export(archive)
+    imported = Project.import_(archive, tmp_path / "imported.madrigal")
+    assert imported.manifest.rules[0]["rule_id"] == result["rule_id"]
+    assert imported.verify_rules() == []
