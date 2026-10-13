@@ -8,14 +8,16 @@ the repository at the final revision; re-run the command if the branch has moved
 
 - [ ] `main = origin/main`, дерево чистое.
       `git fetch --all --prune && git status -sb && git log --oneline -1 origin/main`
-- [ ] Тесты зелёные: `pytest tests/ -q` → **781 passed** (≈ 8 min).
+- [ ] Тесты зелёные: `pytest tests/ -q` → **≥ 800 passed** (на `b664128` — 838; ≈ 8 min).
 - [ ] Линт чистый: `ruff check . --select "E4,E7,E9,F" --ignore E501` → All checks passed.
 - [ ] Дека: `presentation/slides.pdf` и `presentation/slides-light.pdf` — по **19 страниц**;
       `presentation/slides.pptx` — 19 слайдов.
-      `pdfinfo presentation/slides.pdf | grep Pages`
+      `pdfinfo presentation/slides.pdf | grep Pages` (нужен `poppler-utils`);
+      без него слайды PPTX считаются стандартной библиотекой:
+      `python -c "import zipfile;z=zipfile.ZipFile('presentation/slides.pptx');print(len([n for n in z.namelist() if n.startswith('ppt/slides/slide') and n.endswith('.xml')]))"`
 - [ ] QR открываются: `zbarimg -q presentation/public/qr_repo.png` и
       `qr_release.png` декодируются в репозиторий и в релиз `v1.0.0`.
-- [ ] Релиз `v1.0.0` опубликован (не draft): 11 ассетов, включая
+- [ ] Релиз `v1.0.0` опубликован (не draft): 12 ассетов, включая
       `submission_*.zip`, `slides.pdf` и `.deb`.
       `gh release view v1.0.0 --json isDraft,assets`
 - [ ] Ссылки в форме сдачи открываются в инкогнито (без входа в аккаунт).
@@ -58,5 +60,5 @@ git fetch --all --prune && git status -sb \
   && gh release view v1.0.0 --json isDraft,assets
 ```
 
-Expected: a clean tree at `origin/main`, 781 passed, lint clean, 19 pages, a
-published release with 11 assets.
+Expected: a clean tree at `origin/main`, ≥ 800 passed, lint clean, 19 pages, a
+published release with 12 assets.
