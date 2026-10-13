@@ -141,12 +141,12 @@ TCP-сессии, собирает направленные потоки, пок
 
 ### Установка пакета и утилит
 
-Выполните:
+Выполните (проекту нужен Python 3.12 или новее; в Debian 13 и Ubuntu 24.04 это `python3`):
 
 ```
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install -y python3.12 python3.12-venv git
+sudo apt-get install -y python3 python3-venv git
 git clone https://github.com/Pavel1778/madrigal-protocol-lab
 cd madrigal-protocol-lab
 ```
@@ -156,7 +156,7 @@ cd madrigal-protocol-lab
 Зависимости ставятся через виртуальное окружение Python:
 
 ```
-python3.12 -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
 pip install -e ".[dev]"
@@ -201,7 +201,7 @@ python -m src.capture.cli --pcap tests/corpus/corpus_capture_01.pcapng \
 ```
 python -m src.project.cli pipeline \
   --pcap tests/corpus/corpus_capture_01.pcapng \
-  --project project.lab --report REPORT.md
+  --project project.lab --report reports/REPORT.md
 ```
 
 Флаг `--verbose` включает журнал чтения, сессий и экспорта в stderr; без него
