@@ -356,10 +356,12 @@ def build_slide(prs, spec):
         p = tf.paragraphs[0]
         p.alignment = PP_ALIGN.RIGHT
         add_runs(p, spec["client"].upper(), 11, SECONDARY, font=F_MONO)
-        rect(slide, client_x - Inches(0.18), Inches(1.4),
-             client_w + Inches(0.36), Inches(0.88), RGBColor(0xFF, 0xFF, 0xFF))
-        picture(slide, "assets/madrigal-logo.png", client_x, Inches(1.56),
-                client_w)
+        picture(slide, "assets/madrigal-logo.png", client_x, Inches(1.42),
+                client_w, Inches(0.63))
+        tb, tf = textbox(slide, client_x, Inches(2.16), client_w, Inches(0.3))
+        p = tf.paragraphs[0]
+        p.alignment = PP_ALIGN.RIGHT
+        add_runs(p, spec["note"], 10, SECONDARY, font=F_MONO)
         tb, tf = textbox(slide, MARGIN, Inches(2.35), SLIDE_W - 2 * MARGIN,
                          Inches(1.5))
         add_runs(tf.paragraphs[0], spec["title"], 56, TEXT, bold=True,
@@ -736,10 +738,8 @@ def build_slide(prs, spec):
         run.font.name = F_MONO
         run.font.color.rgb = SECONDARY
         run.hyperlink.address = GITHUB
-        rect(slide, Inches(5.17), Inches(6.05), Inches(3.0), Inches(0.72),
-             RGBColor(0xFF, 0xFF, 0xFF))
         picture(slide, "assets/madrigal-logo.png", Inches(5.37), Inches(6.19),
-                Inches(2.6))
+                Inches(2.6), Inches(0.63))
         tb, tf = textbox(slide, Inches(1.0), Inches(6.85), SLIDE_W - Inches(2.0),
                          Inches(0.35))
         p4 = tf.paragraphs[0]
@@ -761,6 +761,7 @@ def deck() -> list[dict]:
              "meta": "UMIRHack 2026 · кейс #02 · Мадригал · команда HTTP 418",
              "stack": "Python 3.12 · PySide6 · dpkt · pytest · Docker",
              "client": "Кейс заказчика",
+             "note": "кейс #02 · UMIRHack 2026",
              "notes": "Приветствие, 20 секунд."},
         {"kind": "team", "page": 2, "title": "Нас двое",
              "members": [("Сабадаш Павел", "Архитектура · захват · интерфейс",
