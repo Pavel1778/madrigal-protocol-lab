@@ -33,7 +33,7 @@ the boundary and defect fixtures; coverage is 90 % over `src/`, and the
 remaining lines are error branches that need a real I/O failure. More tests
 would not raise the claim, which is "confirmed in scope", not "proven". See
 `docs/AUDIT.md` sections 4 and 11. The figure is the count at the archived
-`v1.0.0` submission; the working `main` has since grown to 838.
+`v1.0.0` submission; the working `main` has since grown to 839.
 
 ## 5. What happens on a conflicting overlap?
 
