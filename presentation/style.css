@@ -454,11 +454,34 @@ html.light {
 .bars__value {
   font-family: 'Tektur', sans-serif; font-size: 26px; font-weight: 600; text-align: right;
 }
-.bars--lg { gap: 34px; }
+.bars--lg { gap: 12px; }
 .bars--lg .bars__row { grid-template-columns: 72px 1fr 110px; gap: 20px; }
-.bars--lg .bars__track { height: 52px; }
-.bars--lg .bars__label { font-size: 28px; }
-.bars--lg .bars__value { font-size: 40px; }
+.bars--lg .bars__track { height: 34px; }
+.bars--lg .bars__label { font-size: 24px; }
+.bars--lg .bars__value { font-size: 42px; }
+.bars--lg .bars__row:nth-child(1) .bars__value { color: var(--mismatched); }
+.bars--lg .bars__row:nth-child(2) .bars__value { color: var(--matched); }
+
+/* --- акценты: крупные числа, как на защите ------------------------------- */
+.accents { display: flex; align-items: flex-end; gap: 36px; margin: 6px 0 0; flex-wrap: wrap; }
+.accents__item { display: flex; flex-direction: column; gap: 3px; }
+.accents__num {
+  font-family: 'Tektur', sans-serif; font-weight: 600; font-size: 56px;
+  line-height: 1; color: var(--highlight);
+}
+.accents__num--bad { color: var(--mismatched); }
+.accents__num--good { color: var(--matched); }
+.accents__cap { font-size: 18px; color: var(--secondary); }
+.accents__arrow { font-family: 'Tektur', sans-serif; font-size: 40px; color: var(--tertiary); padding-bottom: 20px; }
+.accents--triple { gap: 52px; }
+.accents--triple .accents__num { font-size: 46px; }
+
+/* Верхняя компоновка для слайда результатов: акценты и бары не должны
+   уходить в полосу подвала. */
+.metric--top { justify-content: flex-start; padding-top: 6px; }
+.metric--top .metric__sub { margin-bottom: 6px; }
+.metric--top .bars--lg { margin-top: 6px; }
+.metric--top .caption { margin-top: 10px; }
 
 /* --- слайд 15: живое окно ------------------------------------------------ */
 .live { display: flex; flex-direction: column; }

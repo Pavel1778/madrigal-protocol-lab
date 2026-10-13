@@ -230,11 +230,15 @@ layout: default
 layout: default
 ---
 
-<div class="metric">
+<div class="metric metric--top">
 
 # Что получилось: 60 из 140 → 140 из 140
 
-<div class="metric__sub">На корпусе уточнения. Отдельно проверено на реальном датасете: 45 + 45, precision 1.00</div>
+<div class="accents">
+<span class="accents__item"><span class="accents__num accents__num--bad">80</span><span class="accents__cap">контрпримеров в v1</span></span>
+<span class="accents__arrow">→</span>
+<span class="accents__item"><span class="accents__num accents__num--good">0</span><span class="accents__cap">контрпримеров в v2</span></span>
+</div>
 
 <div class="bars bars--lg">
 <div class="bars__row" v-click>
@@ -308,10 +312,10 @@ layout: default
 
 </div>
 
-<div class="metric-row" v-click>
-<span><b>12 с</b> общее время</span>
-<span><b>350 МиБ</b> пик памяти</span>
-<span><b>250k</b> пакетов</span>
+<div class="accents accents--triple" v-click>
+<span class="accents__item"><span class="accents__num">12 с</span><span class="accents__cap">общее время на 95 МиБ</span></span>
+<span class="accents__item"><span class="accents__num">350 МиБ</span><span class="accents__cap">пик памяти · 9% бюджета</span></span>
+<span class="accents__item"><span class="accents__num">250k</span><span class="accents__cap">пакетов разобрано</span></span>
 </div>
 
 <div class="caption">Данные не использовались при уточнении правила; условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ</div>
@@ -380,8 +384,8 @@ layout: default
 </div>
 
 <div class="qr-item">
-<img src="/qr_release.png" alt="QR: релиз v1.0.0">
-<div class="caption">Релиз v1.0.0</div>
+<img src="/qr_release.png" alt="QR: релиз v1.1.0">
+<div class="caption">Релиз v1.1.0</div>
 </div>
 
 <div class="qr-item">
