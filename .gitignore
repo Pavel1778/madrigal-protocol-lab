@@ -21,7 +21,6 @@ dist/
 coverage.xml
 htmlcov/
 .scratch/
-.audit/
 .benchmark/
 out/
 
