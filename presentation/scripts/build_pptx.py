@@ -248,14 +248,14 @@ def accents_row(slide, x, y, items, arrow=None, size=80, w=3.5):
     cx = x
     for i, (num, cap, color) in enumerate(items):
         if i and arrow:
-            tb, tf = textbox(slide, cx, y, Inches(0.9), Inches(1.2),
-                             anchor=MSO_ANCHOR.BOTTOM)
+            _tb, tf = textbox(slide, cx, y, Inches(0.9), Inches(1.2),
+                              anchor=MSO_ANCHOR.BOTTOM)
             add_runs(tf.paragraphs[0], arrow, 44, TERTIARY, font=F_HEAD)
             cx += Inches(0.95)
-        tb, tf = textbox(slide, cx, y, Inches(w), Inches(1.2),
-                         anchor=MSO_ANCHOR.BOTTOM)
+        _tb, tf = textbox(slide, cx, y, Inches(w), Inches(1.2),
+                          anchor=MSO_ANCHOR.BOTTOM)
         add_runs(tf.paragraphs[0], num, size, color, bold=True, font=F_HEAD)
-        tb, tf = textbox(slide, cx, y + Inches(1.15), Inches(w), Inches(0.4))
+        _tb, tf = textbox(slide, cx, y + Inches(1.15), Inches(w), Inches(0.4))
         add_runs(tf.paragraphs[0], cap, 15, SECONDARY)
         cx += Inches(w + 0.1)
     return cx
