@@ -2,7 +2,7 @@
 
 Short record of the work on the capture, project, and report stages, by
 iteration. Commits are Conventional Commits; the short hashes are from the
-`agent1/capture` branch.
+the capture stage.
 
 ## Iteration 1 - capture engine
 

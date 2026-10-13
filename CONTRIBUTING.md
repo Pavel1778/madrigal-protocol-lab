@@ -15,8 +15,8 @@ pip install -e ".[dev]"
 
 - `main` holds the integrated project. Do not push to it directly; open a pull
   request.
-- Work on a short-lived branch named for its scope, for example
-  `agent1/capture` or `agent2/protocol`. Delete it after the merge.
+- Work on a short-lived branch named for its scope, for example `capture/tcp-reassembly`
+  or `protocol/field-types`. Delete it after the merge.
 
 ## Commits
 
@@ -60,9 +60,9 @@ and `mypy .` are deferred for the modules outside this change, as recorded in
 
 ## Ownership by area
 
-| Area | Directory | Owner |
-| --- | --- | --- |
-| Capture engine | `src/capture/` | branch `agent1/*` |
-| Protocol and hypothesis engines | `src/protocol/`, `src/hypothesis/` | branch `agent2/*` |
-| Window, project, report, presentation | `src/ui/`, `src/project/`, `src/report/`, `presentation/` | branch `agent3/*` |
-| Shared contracts and schemas | `docs/CONTRACT.md`, `docs/schemas/` | change by agreement, never silently |
+| Area | Directory |
+| --- | --- |
+| Capture engine | `src/capture/` |
+| Protocol and hypothesis engines | `src/protocol/`, `src/hypothesis/` |
+| Window, project, report, presentation | `src/ui/`, `src/project/`, `src/report/`, `presentation/` |
+| Shared contracts and schemas | `docs/CONTRACT.md`, `docs/schemas/` — change by agreement, never silently |
