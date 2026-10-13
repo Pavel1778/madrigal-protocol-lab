@@ -62,8 +62,8 @@ problems across 14 pages in each theme:
 The overflow scan masks the footer band and the accent rule, then measures the
 remaining ink bounding box:
 
-    worst content bottom (dark)  = 0.873 of page height (slide 4)
-    worst content bottom (light) = 0.873 of page height (slide 4)
+    worst content bottom (dark)  = 0.874 of page height (slide 4)
+    worst content bottom (light) = 0.874 of page height (slide 4)
 
 Slide 4 fills closest to the footer but stays inside the reserved band. No text
 or figure crosses the 100 % frame.
@@ -127,15 +127,14 @@ asset count — and the word «Вопросы» appears nowhere in the deck.
 ## Client identity
 
 The public identity of the case owner is carried on the first and last slides
-only. The cover shows the «Мадригал» wordmark over a small white plate in the
-top-right corner, under a mono «КЕЙС ЗАКАЗЧИКА» kicker; the closing slide shows
-the same wordmark centred under the repository line, with «Кейс #02 · UMIRHack
-2026». Both are the committed `presentation/assets/madrigal-logo.png` (3000×628,
-monochrome #313130); the white plate is what keeps a near-black wordmark legible
-on the dark deck, so no theme-specific recolouring is needed. The lighter
-`madrigal-mark.png` and the partner `fstek.png` stay unused in `assets/` as
-reserve. The wordmark is presentational, not copy, so it is not mirrored in the
-PPTX `deck()` text and the sync guard ignores it.
+only. The cover shows the «Мадригал» wordmark in the top-right corner, under a
+mono «КЕЙС ЗАКАЗЧИКА» kicker; the closing slide shows the same wordmark centred
+under the repository line, with «Кейс #02 · UMIRHack 2026». Both are the
+generated `presentation/assets/madrigal-logo.png` (960×232): a dark plate with
+light text and the brand accent bar, so it reads on the dark deck and the light
+one without a white backing plate. The square `madrigal-mark.png` is used as the
+faint slide watermark. The wordmark is presentational, not copy, so it is not
+mirrored in the PPTX `deck()` text and the sync guard ignores it.
 
 ## PPTX
 

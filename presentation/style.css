@@ -38,7 +38,7 @@
   --text: #F4F1EC;
   --secondary: #A8A29E;
   --tertiary: #7A7570;
-  --line: #26282B;
+  --line: #2A2C30;
   --accent: #D0603A;
   --accent-hover: #E87A52;
   --accent-deep: #610D1C;
@@ -49,11 +49,13 @@
   --ambiguous: #EA580C;
   --incomplete: #71717A;
   --uncovered: #A1A1AA;
-  --gradient: linear-gradient(135deg, #D0603A 0%, #E87A52 55%, #F4F1EC 100%);
+  --gradient: linear-gradient(135deg, #410913 0%, #A2391D 100%);
+  --rule-gradient: linear-gradient(180deg, #410913 0%, #A2391D 100%);
   --footer-h: 46px;
   --pad-x: 80px;
-  --pad-top: 52px;
+  --pad-top: 44px;
   --radius: 12px;
+  --shadow: 0 12px 26px -20px rgba(0, 0, 0, 0.8);
 }
 
 html.light {
@@ -74,7 +76,9 @@ html.light {
   --ambiguous: #EA580C;
   --incomplete: #71717A;
   --uncovered: #A1A1AA;
-  --gradient: linear-gradient(135deg, #9A3412 0%, #C2410C 55%, #EA580C 100%);
+  --gradient: linear-gradient(135deg, #9A3412 0%, #C2410C 100%);
+  --rule-gradient: linear-gradient(180deg, #9A3412 0%, #C2410C 100%);
+  --shadow: 0 12px 26px -22px rgba(28, 25, 23, 0.30);
 }
 
 .slidev-layout {
@@ -83,8 +87,8 @@ html.light {
   color: var(--text);
   font-family: 'Montserrat', system-ui, sans-serif;
   font-size: 26px;
-  line-height: 1.5;
-  padding: var(--pad-top) var(--pad-x) calc(22px + var(--footer-h));
+  line-height: 1.58;
+  padding: var(--pad-top) var(--pad-x) calc(18px + var(--footer-h));
   overflow: hidden;
 }
 
@@ -96,8 +100,25 @@ html.light {
   top: 0;
   width: 7px;
   height: 100%;
-  background: var(--gradient);
+  background: var(--rule-gradient);
 }
+
+/* Монохромный знак «М» в правом нижнем углу: заполняет пустой угол и
+   держит композицию. Стоит выше полосы футера, чтобы не попасть в
+   проверку раскладки. На обложке и финале не нужен — там своя композиция. */
+.slidev-layout::after {
+  content: '';
+  position: absolute;
+  right: calc(var(--pad-x) - 26px);
+  bottom: calc(150px + var(--footer-h));
+  width: 170px;
+  height: 170px;
+  background: url('/madrigal-mark.png') center / contain no-repeat;
+  opacity: 0.06;
+  pointer-events: none;
+}
+.slidev-layout:has(.cover)::after,
+.slidev-layout:has(.closing)::after { content: none; }
 
 .slidev-layout h1 {
   font-family: 'Tektur', system-ui, sans-serif;
@@ -184,13 +205,14 @@ html.light {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 26px 30px;
+  box-shadow: var(--shadow);
 }
 .panel--accent { border-left: 5px solid var(--accent); }
 .chip {
   display: inline-block;
   font-family: 'JetBrains Mono', monospace;
   font-size: 18px;
-  padding: 4px 12px;
+  padding: 6px 16px;
   border-radius: 999px;
   border: 1px solid var(--line);
   color: var(--secondary);
@@ -204,22 +226,26 @@ html.light {
 .cover__brand { display: flex; align-items: center; justify-content: space-between; gap: 22px; width: 100%; }
 .cover__brand-mark { display: flex; align-items: center; gap: 22px; }
 .cover__logo { width: 58px; height: 58px; }
-.cover__client { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.cover__client { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 .cover__client-label {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--secondary);
   opacity: 0.7;
 }
 .cover__client-logo {
-  height: 24px;
+  height: 30px;
   width: auto;
-  background: #FFFFFF;
-  padding: 8px 14px;
-  border-radius: 8px;
-  box-sizing: content-box;
+  display: block;
+}
+.cover__client-note {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--secondary);
+  opacity: 0.7;
 }
 .cover__name {
   font-family: 'JetBrains Mono', monospace;
@@ -240,6 +266,7 @@ html.light {
   display: flex; align-items: center; gap: 18px; min-width: 0;
   background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius); padding: 24px 26px;
+  box-shadow: var(--shadow);
 }
 .member__photo {
   width: 180px; height: 180px; border-radius: 50%; flex: none;
@@ -256,11 +283,16 @@ html.light {
 }
 
 /* --- слайд 3: утверждение ------------------------------------------------ */
-.statement { display: flex; flex-direction: column; justify-content: center; gap: 16px; }
+.statement { display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 16px; }
 .statement h1 { font-size: 44px; max-width: 26ch; margin: 0; }
-.statement__sub { font-size: 24px; color: var(--secondary); max-width: 44ch; }
-.statement__figure { margin-top: 14px; }
-.statement__figure img { width: 100%; height: 150px; object-fit: contain; }
+.statement__sub { font-size: 24px; color: var(--secondary); max-width: 46ch; }
+.statement__figure {
+  margin-top: 4px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 20px 24px;
+  box-shadow: var(--shadow);
+}
+.statement__figure img { width: 100%; height: 158px; object-fit: contain; }
 
 /* --- слайд 4: дано и требуется ------------------------------------------- */
 .given { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
@@ -290,12 +322,12 @@ html.light {
 .steps span.on { color: #FFFFFF; background: var(--accent); border-color: var(--accent); }
 
 /* --- слайд 6: схема ------------------------------------------------------ */
-.diagram img { display: block; width: 100%; height: 190px; object-fit: contain; margin: 6px auto 0; }
-.arch { display: flex; align-items: stretch; gap: 14px; margin-top: 6px; }
+.diagram img { display: block; width: 100%; height: 144px; object-fit: contain; margin: 6px auto 0; }
+.arch { display: flex; align-items: flex-start; gap: 14px; margin-top: 4px; }
 .arch__box {
   flex: 1 1 0; min-width: 0;
   background: var(--surface); border: 1.5px solid var(--highlight);
-  border-radius: var(--radius); padding: 20px 18px;
+  border-radius: var(--radius); padding: 16px 18px;
 }
 .arch__name { font-family: 'Tektur', sans-serif; font-size: 26px; font-weight: 600; }
 .arch__desc { font-size: 19px; color: var(--secondary); margin-top: 8px; line-height: 1.35; }
@@ -313,6 +345,7 @@ html.light {
 .shot__frame {
   border: 1px solid var(--line); border-radius: var(--radius);
   overflow: hidden; background: var(--surface);
+  box-shadow: var(--shadow);
 }
 .shot__frame img { display: block; width: 100%; object-fit: cover; object-position: top left; }
 .shot--wide .shot__frame img { height: 330px; object-fit: cover; object-position: top; }
@@ -338,11 +371,12 @@ html.light {
   border: 1px solid var(--line); border-left: 5px solid var(--accent);
   border-radius: var(--radius); background: var(--surface);
   padding: 16px 22px; white-space: nowrap;
+  box-shadow: var(--shadow);
 }
 .byte-line code { font-size: 0.95em; }
 
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
-.pair .shot__frame img { height: 190px; object-fit: cover; object-position: top; }
+.pair .shot__frame img { height: 210px; object-fit: cover; object-position: top; }
 .stack { display: flex; flex-direction: column; gap: 18px; }
 
 /* --- слайд 9: карточка байта -------------------------------------------- */
@@ -350,6 +384,7 @@ html.light {
   background: var(--surface); border: 1px solid var(--line);
   border-left: 5px solid var(--accent);
   border-radius: var(--radius); padding: 24px 26px;
+  box-shadow: var(--shadow);
 }
 .byte-mono {
   font-family: 'JetBrains Mono', monospace; font-size: 30px;
@@ -394,8 +429,8 @@ html.light {
 .metric--compact .caption { margin-top: 6px; font-size: 15px; }
 .metric--compact .metric__figure img { height: 150px; }
 .metric--compact h1 { font-size: 40px; }
-.live--compact .shot--live { height: 185px; }
-.live--compact .caption { font-size: 17px; margin-top: 8px; }
+.live--compact .shot--live { height: 230px; }
+.live--compact .caption { font-size: 18px; margin-top: 6px; }
 .metric-row { display: flex; gap: 16px; margin-top: 14px; }
 .metric-row span {
   font-size: 20px; color: var(--secondary);
@@ -430,10 +465,11 @@ html.light {
 .live__frame {
   border: 1px solid var(--line); border-radius: var(--radius);
   overflow: hidden; background: var(--surface);
+  box-shadow: var(--shadow);
 }
 .live__frame img { display: block; width: 100%; object-fit: cover; object-position: top left; }
-.shot--full { height: 195px; }
-.shot--half { height: 128px; }
+.shot--full { height: 192px; }
+.shot--half { height: 240px; }
 .shot--live { height: 250px; }
 
 /* --- слайд 16: запись прогона ------------------------------------------- */
@@ -457,10 +493,19 @@ html.light {
 .recording .caption { margin-top: 0; }
 
 /* --- слайд 18: границы --------------------------------------------------- */
-.limits { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
-.limits li { font-size: 26px; }
+.limits-page {
+  display: flex; flex-direction: column; justify-content: center;
+  height: 100%; gap: 6px;
+}
+.limits { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
+.limits > div {
+  border-top: 4px solid var(--accent);
+  padding-top: 18px;
+}
+.limits .lead { color: var(--accent); }
+.limits li { font-size: 24px; }
+.limits ul { margin: 0; }
 .limits li::marker { color: var(--accent); }
-.pair .shot__frame img { height: 190px; object-fit: cover; object-position: top; }
 
 /* --- слайд 10: сборка IP-фрагментов -------------------------------------- */
 .metric .metric__figure img { max-height: 260px; }
@@ -473,14 +518,11 @@ html.light {
 .qr-item img { width: 108px; height: 108px; display: block; background: #FFFFFF; border-radius: 8px; padding: 6px; }
 .qr-item .caption { margin-top: 8px; font-size: 19px; }
 .closing__line { font-family: 'JetBrains Mono', monospace; font-size: 20px; color: var(--secondary); }
-.closing__client { display: flex; align-items: center; gap: 16px; margin-top: 6px; }
+.closing__client { display: flex; align-items: center; gap: 18px; margin-top: 8px; }
 .closing__client-logo {
-  height: 22px;
+  height: 30px;
   width: auto;
-  background: #FFFFFF;
-  padding: 7px 12px;
-  border-radius: 7px;
-  box-sizing: content-box;
+  display: block;
 }
 .closing__client-note { font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: 0.08em; color: var(--secondary); opacity: 0.75; }
 
