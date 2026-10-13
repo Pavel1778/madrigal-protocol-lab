@@ -183,9 +183,31 @@ class HexView(QtWidgets.QPlainTextEdit):
         self._annotations: list[ByteAnnotation] = []
         self._header = QtWidgets.QLabel(self)
         self._header.setFont(self._header_font())
-        self._header.setFixedHeight(self.fontMetrics().height())
         self._header.setText(self._column_header())
         self._style_header()
+        self._position_header()
+
+    def _position_header(self) -> None:
+        """Place the column caption in a strip reserved above the bytes.
+
+        The caption is a plain child widget, not part of the text area. Its
+        geometry is set by hand and the viewport gets a matching top margin, so
+        the first line of bytes starts below the caption instead of under it.
+        """
+        height = self._header.fontMetrics().height()
+        self._header.setFixedHeight(height)
+        self.setViewportMargins(0, height, 0, 0)
+        viewport = self.viewport().geometry()
+        self._header.setGeometry(viewport.left(), self.contentsRect().top(), viewport.width(), height)
+        self._header.raise_()
+
+    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self._position_header()
+
+    def showEvent(self, event: QtGui.QShowEvent) -> None:
+        super().showEvent(event)
+        self._position_header()
 
     def _recompute_geometry(self) -> None:
         """Recompute the column geometry from the offset-visibility flag.
@@ -218,6 +240,7 @@ class HexView(QtWidgets.QPlainTextEdit):
         self._font_size = max(6, int(size))
         self.setFont(theme.mono_font(self._font_size))
         self._header.setFont(self._header_font())
+        self._position_header()
         if self._data:
             self._apply_annotations()
 

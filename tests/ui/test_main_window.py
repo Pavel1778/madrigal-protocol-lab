@@ -114,6 +114,17 @@ def test_hex_view_renders_many_lines(app):
     assert view.document().blockCount() >= 128
 
 
+def test_hex_view_header_sits_above_the_bytes(app):
+    view = HexView()
+    view.resize(400, 200)
+    view.show()
+    app.processEvents()
+    header = view._header
+    assert header.isVisible()
+    assert header.geometry().bottom() < view.viewport().geometry().top()
+    view.close()
+
+
 @corpus_required
 def test_applying_rule_v1_shows_matched_and_mismatched(app):
     window = open_window(app)
