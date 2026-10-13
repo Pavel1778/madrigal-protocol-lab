@@ -30,12 +30,12 @@ to support: the result does not run on an older one.
 
 | Artefact | Size |
 | --- | --- |
-| `dist/madrigal-lab` | about 71 MB |
-| `dist/madrigal-protocol-lab_1.0.0_amd64.deb` | about 70 MB |
-| `dist/protocol-lab-x86_64.AppImage` | about 71 MB |
-| `dist/madrigal-lab.run` | about 71 MB |
-| `dist/madrigal_protocol_lab-1.0.0-py3-none-any.whl` | about 175 KB |
-| `dist/madrigal-protocol-lab-docker.tar.gz` | about 540 MB (compressed image) |
+| `dist/madrigal-lab` | about 98 MB |
+| `dist/madrigal-protocol-lab_1.1.0_amd64.deb` | about 97 MB |
+| `dist/protocol-lab-x86_64.AppImage` | about 98 MB |
+| `dist/madrigal-lab.run` | about 97 MB |
+| `dist/madrigal_protocol_lab-1.1.0-py3-none-any.whl` | about 221 KB |
+| `dist/madrigal-protocol-lab-docker.tar.gz` | about 566 MB (compressed image) |
 
 Most of the size is Qt and the bundled CPython. The binary is not compressed; the
 AppImage and the `.run` carry the same binary in a SquashFS and a gzipped
@@ -55,7 +55,7 @@ desktop entry under `/usr/share`, and the docs, fonts and corpus under
 `/usr/share/madrigal-protocol-lab`:
 
 ```
-sudo dpkg -i dist/madrigal-protocol-lab_1.0.0_amd64.deb
+sudo dpkg -i dist/madrigal-protocol-lab_1.1.0_amd64.deb
 madrigal-lab
 ```
 
@@ -79,7 +79,7 @@ PREFIX=/tmp/prefix ./dist/madrigal-lab.run
 The wheel installs the package and its dependencies:
 
 ```
-pip install dist/madrigal_protocol_lab-1.0.0-py3-none-any.whl
+pip install dist/madrigal_protocol_lab-1.1.0-py3-none-any.whl
 ```
 
 ## Docker
@@ -110,8 +110,8 @@ docker save madrigal-protocol-lab | gzip > dist/madrigal-protocol-lab-docker.tar
 docker load < dist/madrigal-protocol-lab-docker.tar.gz
 ```
 
-The compressed image is large (about 540 MB): it is Debian slim plus CPython,
-PySide6 and the Qt libraries, not a reduction of the 71 MB binary, so it is a
+The compressed image is large (about 566 MB): it is Debian slim plus CPython,
+PySide6 and the Qt libraries, not a reduction of the 98 MB binary, so it is a
 build-from-`Dockerfile` path rather than a download path.
 
 ## What was verified
@@ -126,7 +126,7 @@ build-from-`Dockerfile` path rather than a download path.
 - The `.run` is built with `makeself`, installed into a temporary `PREFIX`, and
   the installed `bin/madrigal-lab --help` prints the usage; the desktop entry
   and all rendered icon sizes land under the prefix.
-- The wheel builds with `python -m build` and reports the version `1.0.0`. A
+- The wheel builds with `python -m build` and reports the version `1.1.0`. A
   fresh virtualenv installed from the wheel resolves `madrigal-lab` as a console
   script and prints the window usage.
 - The Docker image builds with `docker build`; `docker run --rm ... python -m
