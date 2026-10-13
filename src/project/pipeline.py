@@ -446,6 +446,11 @@ def _apply_or_skip_rule(
     result_path = project.path("results", RESULT_NAME)
     result, messages = _apply_rule(normalized, Path(rule_path), result_path)
     outcome.result = result_path
+    project.add_rule(
+        Path(rule_path),
+        str(result.get("rule_id", "rule")),
+        int(result.get("rule_version", 1)),
+    )
     annotations = _project_annotations(project)
     return build_investigation(
         result,
