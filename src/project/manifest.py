@@ -77,6 +77,16 @@ class Manifest:
                 return entry.get("sha256")
         return None
 
+    def has_rule(self, rule_id: str, rule_version: int) -> str | None:
+        """Return the recorded digest for a rule version, or ``None``."""
+
+        for entry in self.rules:
+            if entry.get("rule_id") == rule_id and entry.get(
+                "rule_version"
+            ) == rule_version:
+                return entry.get("sha256")
+        return None
+
     @classmethod
     def new(cls, name: str) -> Manifest:
         stamp = utc_now()
