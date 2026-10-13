@@ -8,7 +8,7 @@ the repository at the final revision; re-run the command if the branch has moved
 
 - [ ] `main = origin/main`, дерево чистое.
       `git fetch --all --prune && git status -sb && git log --oneline -1 origin/main`
-- [ ] Тесты зелёные: `pytest tests/ -q` → **838 passed** на текущем `main`
+- [ ] Тесты зелёные: `pytest tests/ -q` → **839 passed** на текущем `main`
       (на теге `v1.0.0`, который лежит в сдаваемом архиве, — **781 passed**; ≈ 8 min).
 - [ ] Линт чистый: `ruff check . --select "E4,E7,E9,F" --ignore E501` → All checks passed.
 - [ ] Дека: `presentation/slides.pdf` и `presentation/slides-light.pdf` — по **19 страниц**;
@@ -61,6 +61,6 @@ git fetch --all --prune && git status -sb \
   && gh release view v1.0.0 --json isDraft,assets
 ```
 
-Expected: a clean tree at `origin/main`, 838 passed on the current `main`
+Expected: a clean tree at `origin/main`, 839 passed on the current `main`
 (781 on the `v1.0.0` tag), lint clean, 19 pages, a published release with 12
 assets.
