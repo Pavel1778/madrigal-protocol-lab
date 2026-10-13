@@ -67,7 +67,7 @@ result, and a report:
 python -m src.project.cli pipeline \
   --pcap tests/corpus/corpus_capture_01.pcapng \
   --project project.madrigal \
-  --report REPORT.md
+  --report reports/REPORT.md
 ```
 
 Expected: a JSON summary listing the project, the normalized capture, the
