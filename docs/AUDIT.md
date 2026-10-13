@@ -184,11 +184,11 @@ and every command in `README.md` and `docs/USAGE.md` was run:
 - `pytest tests/ -q` gives 177 passed, 1 skipped (the historical count of that
   iteration; the suite is 781 tests at the final revision, section 11).
 
-The one command that cannot run from this branch is the rule path in sections 4
-and 6 of `docs/USAGE.md`, because `src.protocol` ships with the protocol/GUI
-branch. `docs/USAGE.md` now states this; the pipeline reports the missing engine
-instead of failing. The README link to `docs/PROTOCOL_API.md` will resolve once
-that branch is merged.
+At the time of this check the rule path in sections 4 and 6 of
+`docs/USAGE.md` could not run, because `src.protocol` was still in a separate
+branch; the pipeline reported the missing engine instead of failing.
+`src.protocol` and the interface are part of `main` now (section 10), so those
+commands run and the `docs/PROTOCOL_API.md` link resolves.
 
 ## Open issues
 
