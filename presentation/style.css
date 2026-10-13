@@ -201,8 +201,26 @@ html.light {
 
 /* --- слайд 1: обложка ---------------------------------------------------- */
 .cover { display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 16px; }
-.cover__brand { display: flex; align-items: center; gap: 22px; }
+.cover__brand { display: flex; align-items: center; justify-content: space-between; gap: 22px; width: 100%; }
+.cover__brand-mark { display: flex; align-items: center; gap: 22px; }
 .cover__logo { width: 58px; height: 58px; }
+.cover__client { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.cover__client-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--secondary);
+  opacity: 0.7;
+}
+.cover__client-logo {
+  height: 24px;
+  width: auto;
+  background: #FFFFFF;
+  padding: 8px 14px;
+  border-radius: 8px;
+  box-sizing: content-box;
+}
 .cover__name {
   font-family: 'JetBrains Mono', monospace;
   font-size: 22px;
@@ -214,6 +232,7 @@ html.light {
 .cover__sub { font-size: 24px; color: var(--text); max-width: 34ch; }
 .cover__meta { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 6px; }
 .cover__rule { width: 220px; height: 6px; background: var(--gradient); border-radius: 3px; }
+.cover__stack { font-family: 'JetBrains Mono', monospace; font-size: 18px; color: var(--accent); margin-top: 10px; }
 
 /* --- слайд 2: команда ---------------------------------------------------- */
 .team { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 36px; margin-top: 8px; }
@@ -254,6 +273,14 @@ html.light {
 .moment__sub { font-size: 21px; color: var(--secondary); max-width: 50ch; }
 .moment__figure { margin-top: 6px; }
 .moment__figure img { width: 100%; height: 112px; object-fit: contain; }
+.given--compact { gap: 24px; }
+.given--compact .panel { padding: 14px 20px; }
+.given--compact li { font-size: 18px; }
+.given--compact .lead { margin-bottom: 4px; }
+.moment--compact { margin-top: 8px; }
+.moment--compact .moment__sub { font-size: 15px; max-width: 110ch; margin-top: 2px; }
+.moment--compact .moment__figure { margin-top: 0; }
+.moment--compact .moment__figure img { height: 100px; }
 .steps { display: flex; gap: 8px; margin-top: 2px; flex-wrap: wrap; }
 .steps span {
   font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--secondary);
@@ -353,7 +380,22 @@ html.light {
 .metric__sub { font-size: 22px; color: var(--secondary); margin-bottom: 12px; max-width: 70ch; }
 .metric__note { margin-top: 12px; font-size: 26px; color: var(--text); max-width: 40ch; }
 .metric__figure img { width: 100%; height: 250px; object-fit: contain; }
+.bytes { font-family: 'JetBrains Mono', monospace; font-size: 26px; color: var(--accent); text-align: center; word-break: break-word; line-height: 1.7; }
+.metric__grid .metric__note + .metric__note { margin-top: 14px; }
 .metric .caption { margin-top: 12px; }
+.metric--compact { padding-top: 10px; }
+.metric--compact .bignum { font-size: 60px; }
+.metric--compact .metric__grid { gap: 28px; }
+.metric--compact .metric__sub { margin-bottom: 2px; font-size: 18px; }
+.metric--compact .metric__note { margin-top: 6px; font-size: 16px; line-height: 1.35; }
+.metric--compact .metric__grid .metric__note + .metric__note { margin-top: 6px; }
+.metric--compact .metric-row { margin-top: 8px; }
+.metric--compact .metric-row span { padding: 3px 10px; font-size: 16px; }
+.metric--compact .caption { margin-top: 6px; font-size: 15px; }
+.metric--compact .metric__figure img { height: 150px; }
+.metric--compact h1 { font-size: 40px; }
+.live--compact .shot--live { height: 185px; }
+.live--compact .caption { font-size: 17px; margin-top: 8px; }
 .metric-row { display: flex; gap: 16px; margin-top: 14px; }
 .metric-row span {
   font-size: 20px; color: var(--secondary);
@@ -418,6 +460,10 @@ html.light {
 .limits { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
 .limits li { font-size: 26px; }
 .limits li::marker { color: var(--accent); }
+.pair .shot__frame img { height: 190px; object-fit: cover; object-position: top; }
+
+/* --- слайд 10: сборка IP-фрагментов -------------------------------------- */
+.metric .metric__figure img { max-height: 260px; }
 
 /* --- слайд 19: финал ----------------------------------------------------- */
 .closing { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; gap: 22px; }
@@ -427,6 +473,16 @@ html.light {
 .qr-item img { width: 108px; height: 108px; display: block; background: #FFFFFF; border-radius: 8px; padding: 6px; }
 .qr-item .caption { margin-top: 8px; font-size: 19px; }
 .closing__line { font-family: 'JetBrains Mono', monospace; font-size: 20px; color: var(--secondary); }
+.closing__client { display: flex; align-items: center; gap: 16px; margin-top: 6px; }
+.closing__client-logo {
+  height: 22px;
+  width: auto;
+  background: #FFFFFF;
+  padding: 7px 12px;
+  border-radius: 7px;
+  box-sizing: content-box;
+}
+.closing__client-note { font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: 0.08em; color: var(--secondary); opacity: 0.75; }
 
 /* --- общие утилиты ------------------------------------------------------- */
 html, body, #app, #slide-container, .slidev-page, .slidev-slide-container,
