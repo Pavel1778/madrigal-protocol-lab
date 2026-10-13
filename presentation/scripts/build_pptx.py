@@ -39,6 +39,7 @@ SECONDARY = RGBColor(0xA8, 0xA2, 0x9E)
 ACCENT = RGBColor(0xD0, 0x60, 0x3A)
 ACCENT_HOVER = RGBColor(0xE8, 0x7A, 0x52)
 ACCENT_DEEP = RGBColor(0x61, 0x0D, 0x1C)
+TERTIARY = RGBColor(0x7A, 0x75, 0x70)
 MATCHED = RGBColor(0x16, 0xA3, 0x4A)
 MISMATCHED = RGBColor(0xDC, 0x26, 0x26)
 WHITE = RGBColor(0xFF, 0xFF, 0xFF)
@@ -53,7 +54,7 @@ SLIDE_W = Inches(13.333)
 SLIDE_H = Inches(7.5)
 BODY_TOP = Inches(1.85)
 GITHUB = "https://github.com/Pavel1778/madrigal-protocol-lab"
-RELEASE = "https://github.com/Pavel1778/madrigal-protocol-lab/releases/tag/v1.0.0"
+RELEASE = "https://github.com/Pavel1778/madrigal-protocol-lab/releases/tag/v1.1.0"
 TOTAL = 14
 
 _TOKEN = re.compile(r"(\*\*[^*]+\*\*|`[^`]+`)")
@@ -236,6 +237,28 @@ def panel(slide, x, y, w, h, accent=False):
     if accent:
         rect(slide, x, y, Inches(0.05), h, ACCENT)
     return box
+
+
+def accents_row(slide, x, y, items, arrow=None, size=80, w=3.5):
+    """Draw a row of large Tektur numbers, each with a small caption below.
+
+    ``items`` is a list of ``(number, caption, color)``; ``arrow`` optionally
+    separates two groups with a large glyph (used for the v1 → v2 jump).
+    """
+    cx = x
+    for i, (num, cap, color) in enumerate(items):
+        if i and arrow:
+            tb, tf = textbox(slide, cx, y, Inches(0.9), Inches(1.2),
+                             anchor=MSO_ANCHOR.BOTTOM)
+            add_runs(tf.paragraphs[0], arrow, 44, TERTIARY, font=F_HEAD)
+            cx += Inches(0.95)
+        tb, tf = textbox(slide, cx, y, Inches(w), Inches(1.2),
+                         anchor=MSO_ANCHOR.BOTTOM)
+        add_runs(tf.paragraphs[0], num, size, color, bold=True, font=F_HEAD)
+        tb, tf = textbox(slide, cx, y + Inches(1.15), Inches(w), Inches(0.4))
+        add_runs(tf.paragraphs[0], cap, 15, SECONDARY)
+        cx += Inches(w + 0.1)
+    return cx
 
 
 def lead(slide, x, y, w, text):
@@ -574,7 +597,7 @@ def build_slide(prs, spec):
         tb, tf = textbox(slide, MARGIN, Inches(2.5), Inches(5.6), Inches(2.0))
         add_runs(tf.paragraphs[0], spec["big"], spec.get("bigsize", 88), ACCENT,
                  bold=True, font=F_HEAD)
-        tb, tf = textbox(slide, MARGIN, Inches(4.6), Inches(5.6), Inches(1.2))
+        tb, tf = textbox(slide, MARGIN, Inches(4.3), Inches(5.6), Inches(1.2))
         add_runs(tf.paragraphs[0], spec["note"], 16, TEXT)
         if spec.get("animated"):
             steps.append((tb.shape_id, "fade"))
@@ -584,10 +607,13 @@ def build_slide(prs, spec):
             add_runs(tf.paragraphs[0], spec["note2"], 15, SECONDARY)
             steps.append((tb.shape_id, "fade"))
         if spec.get("image"):
-            pic = fit_picture(slide, spec["image"], Inches(6.6), Inches(2.2),
-                              SLIDE_W - Inches(6.6) - MARGIN, Inches(4.0))
+            pic = fit_picture(slide, spec["image"], Inches(6.6), Inches(1.9),
+                              SLIDE_W - Inches(6.6) - MARGIN, Inches(3.0))
             if spec.get("wipe"):
                 steps.append((pic.shape_id, "wipe"))
+        if spec.get("accents"):
+            accents_row(slide, MARGIN, Inches(5.05), spec["accents"], size=44,
+                        w=2.6)
         if spec.get("chips"):
             cx = MARGIN
             for ci, chip in enumerate(spec["chips"]):
@@ -611,23 +637,30 @@ def build_slide(prs, spec):
         add_runs(tf.paragraphs[0], spec["title"], 30, TEXT, bold=True,
                  font=F_HEAD)
         if spec.get("sub"):
-            tb, tf = textbox(slide, MARGIN, Inches(2.15),
+            tb, tf = textbox(slide, MARGIN, Inches(2.05),
                              SLIDE_W - 2 * MARGIN, Inches(0.5))
             add_runs(tf.paragraphs[0], spec["sub"], 14, SECONDARY)
+        bars_y = Inches(2.85)
+        bars_step = Inches(1.0)
+        if spec.get("accents"):
+            accents_row(slide, MARGIN, Inches(2.5), spec["accents"],
+                        arrow=spec.get("accents_arrow"), size=60)
+            bars_y = Inches(4.3)
+            bars_step = Inches(0.95)
         if spec.get("big"):
             tb, tf = textbox(slide, MARGIN, Inches(2.5), Inches(4.4), Inches(1.6))
             add_runs(tf.paragraphs[0], spec["big"], 88, ACCENT, bold=True,
                      font=F_HEAD)
             steps.append((tb.shape_id, "fade"))
         if spec.get("note"):
-            tb, tf = textbox(slide, MARGIN, Inches(5.9), SLIDE_W - 2 * MARGIN,
+            tb, tf = textbox(slide, MARGIN, Inches(6.3), SLIDE_W - 2 * MARGIN,
                              Inches(0.6))
             add_runs(tf.paragraphs[0], spec["note"], 16, TEXT)
 
         bx = MARGIN
         bw = SLIDE_W - 2 * MARGIN
         for i, (label, value, ratio, color) in enumerate(spec["bars"]):
-            y = Inches(3.05) + i * Inches(1.3)
+            y = bars_y + i * bars_step
             tb, tf = textbox(slide, bx, y, Inches(1.0), Inches(0.7),
                              anchor=MSO_ANCHOR.MIDDLE)
             add_runs(tf.paragraphs[0], label, 22, SECONDARY, font=F_MONO)
@@ -805,8 +838,10 @@ def deck() -> list[dict]:
                           "text": "80 несоответствий v1 — на offset 0 в сессиях s2 и s3."}],
              "caption": "Значение 2 повторяется в независимых сессиях корпуса и связано с действием «изменить настройку» в журнале"},
         {"kind": "bars", "page": 9, "title": "Что получилось: 60 из 140 → 140 из 140",
-             "sub": "На корпусе уточнения. Отдельно проверено на реальном датасете: 45 + 45, precision 1.00",
              "note": "Было 60 matched из 140 и 80 контрпримеров. Стало 140 matched из 140 и ноль контрпримеров",
+             "accents": [("80", "контрпримеров в v1", MISMATCHED),
+                         ("0", "контрпримеров в v2", MATCHED)],
+             "accents_arrow": "→",
              "bars": [("v1", "0.43", 0.43, MISMATCHED),
                    ("v2", "1.00", 1.0, MATCHED)]},
         {"kind": "reassembly", "page": 10,
@@ -821,8 +856,9 @@ def deck() -> list[dict]:
         {"kind": "metric", "page": 11, "title": "Набор организаторов разобран целиком",
              "big": "90", "bigsize": 120, "image": "assets/coverage_donut.png",
              "note": "45 запросов + 45 ответов. Все matched.",
-             "note2": "12 с на 95 МиБ — пик памяти 350 МиБ, 9% бюджета 4 ГиБ",
-             "chips": ["12 с общее время", "350 МиБ пик памяти", "250k пакетов"],
+             "accents": [("12 с", "общее время на 95 МиБ", ACCENT),
+                         ("350 МиБ", "пик памяти · 9% бюджета", ACCENT),
+                         ("250k", "пакетов разобрано", ACCENT)],
              "caption": "Данные не использовались при уточнении правила; условия замера: 95.66 МиБ, 250 000 пакетов, 1000 сессий, 4 vCPU / 16 ГиБ", "wipe": True},
         {"kind": "live", "page": 12, "title": "Демонстрация: живое окно и запись прогона",
              "image": "public/screenshot-main.png",
@@ -837,7 +873,7 @@ def deck() -> list[dict]:
              "title": "Инструмент превращает байты в проверяемое знание",
              "client": "Кейс #02 · UMIRHack 2026",
              "qrs": [("public/qr_repo.png", "Репозиторий", GITHUB),
-                  ("public/qr_release.png", "Релиз v1.0.0", RELEASE),
+                  ("public/qr_release.png", "Релиз v1.1.0", RELEASE),
                   ("public/qr_telegram_pasha.png", "@Pasha1778", "https://t.me/Pasha1778"),
                   ("public/qr_telegram_nikita.png", "@petruan", "https://t.me/petruan")],
              "notes": "QR ведут на репозиторий, релиз и контакты."},

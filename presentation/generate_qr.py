@@ -18,7 +18,7 @@ OUT = PRES / "public"
 
 CODES = {
     "qr_repo.png": "https://github.com/Pavel1778/madrigal-protocol-lab",
-    "qr_release.png": "https://github.com/Pavel1778/madrigal-protocol-lab/releases/tag/v1.0.0",
+    "qr_release.png": "https://github.com/Pavel1778/madrigal-protocol-lab/releases/tag/v1.1.0",
 }
 
 
