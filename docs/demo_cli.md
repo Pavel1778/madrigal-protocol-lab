@@ -8,7 +8,7 @@ the repository root.
 Set the environment once:
 
 ```
-python3.12 -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 export QT_QPA_PLATFORM=offscreen

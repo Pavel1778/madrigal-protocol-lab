@@ -2,8 +2,7 @@
 
 ## Approach
 
-The project is a local desktop application with three cooperating parts, each
-owned by one work stream:
+The project is a local desktop application with three cooperating parts:
 
 1. **Capture engine** (`src/capture/`) — reads a PCAP/PCAPNG file and produces a
    normalized capture: TCP sessions, reassembled directional streams, and
