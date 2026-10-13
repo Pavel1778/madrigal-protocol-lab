@@ -28,7 +28,7 @@ writes a portable project with a report.
 Python 3.12 or newer on Linux x86-64. Every command runs offline.
 
 ```
-python3.12 -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 ```

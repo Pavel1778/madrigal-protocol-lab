@@ -17,7 +17,7 @@ The tool has three stages, each usable on its own:
 ## 1. Environment
 
 ```
-python3.12 -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
 pip install -e ".[dev]"
@@ -210,7 +210,7 @@ hicolor copies with `python scripts/render_icons.py`.
 
 - All commands run offline.
 - The capture, project, and report stages run on their own. The rule engine in
-  `src.protocol` ships with the protocol/GUI branch, so the `--rule` variant in
+  `src.protocol` is optional, so the `--rule` variant in
   section 4 and the standalone command in section 6 require that module; without
   it the pipeline still runs and writes a report that states no rule was applied.
 - The measured resource figures are in `docs/BENCHMARK.md`.
