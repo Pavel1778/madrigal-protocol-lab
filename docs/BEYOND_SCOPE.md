@@ -25,7 +25,7 @@
 
 | Возможность | Файл | Зачем |
 | --- | --- | --- |
-| 18 типов полей вместо шести в ТЗ: `float32/64`, `varint` (со знаковым zig-zag), `tlv`, `bitmask`, `string`, `array`, `padding`, `checksum` (xor/sum/crc8/crc16), `computed`, `conditional` | `src/protocol/rule.py`, `docs/schemas/rule.schema.json` | Недокументированный протокол редко состоит из одних целых; типы снимают ручное описание |
+| 19 типов полей вместо шести в ТЗ: `float32/64`, `varint` (со знаковым zig-zag), `tlv`, `bitmask`, `string`, `array`, `padding`, `checksum` (xor/sum/crc8/crc16), `computed`, `conditional` | `src/protocol/rule.py`, `docs/schemas/rule.schema.json` | Недокументированный протокол редко состоит из одних целых; типы снимают ручное описание |
 | `length_covers` (`payload` / `payload_and_length_field` / `entire_message`) и `length_bias` | `src/protocol/rule.py` | Снимает разницу между тем, что именно считает поле длины, без правки кода |
 | Экспорт правила в Kaitai Struct `.ksy` и в автономный Python-парсер | `src/protocol/export.py`; команда `export` | Полученное знание уезжает из проекта как независимый артефакт и переиспользуется вне инструмента |
 | Выгрузка результата в CSV и JSONL | `src/protocol/cli.py` | Машинная обработка результата вне приложения |
