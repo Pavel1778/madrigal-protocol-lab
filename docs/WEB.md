@@ -50,6 +50,8 @@ python -m src.web.app --port 8765
 `GET /demo` performs the one-click open; it is a plain redirect, so it works
 without JavaScript.
 
+![The welcome page with the one-click demo](web-welcome.png)
+
 ## Screenshot
 
 ![The hex view with a rule applied](web-screenshot.png)
