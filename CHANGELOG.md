@@ -142,9 +142,20 @@ is the merge of PR #14 (`f637644`); the entries below are the work that followed
 - Researcher annotations stored in the project (`src/project/annotations.py`),
   with `annotate` and `annotations` subcommands, and an Annotations section in
   both report renderers.
+- A first-run welcome card in the window with the three steps of an
+  investigation and an `Open the built-in demo` button, backed by a small
+  capture, rule and journal under `src/ui/samples/`; the same text is shared by
+  the window and the web interface through `src/ui/guidance.py` and
+  `src/web/guidance.py`.
+- A welcome page for the web interface: with no `--capture` the page explains
+  the three steps and offers the bundled demo (`GET /demo`) or a path to your
+  own capture, instead of returning an error.
 
 ### Changed
 
+- The right dock of the window is grouped into tabs (build rule, results,
+  compare, hypotheses, report, versions), and the byte colours and statuses are
+  explained in place rather than only in the manual.
 - The deck was rebuilt as editable native PPTX text with click build-ins, then
   reduced to nineteen slides with varied layouts and no overflow (PR #16,
   PR #21, PR #25).
