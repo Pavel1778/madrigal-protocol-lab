@@ -36,11 +36,25 @@ Then open <http://127.0.0.1:8765>.
 The server binds `127.0.0.1` only. Passing any other `--host` is refused, so the
 interface cannot be exposed on the network by accident.
 
+### Without arguments
+
+Run it with no `--capture` and the page opens on a welcome screen instead of an
+error: a one-click button opens the capture and rule the tool ships, and a file
+box accepts a path to your own capture. The same three steps the desktop window
+shows are repeated there, so a first-time reader is not left at an empty page.
+
+```
+python -m src.web.app --port 8765
+```
+
+`GET /demo` performs the one-click open; it is a plain redirect, so it works
+without JavaScript.
+
 ## Screenshot
 
 ![The hex view with a rule applied](web-screenshot.png)
 
-The session list links each direction to the hex view; applying the rule turns
+The session list links each direction to the hex view; checking the rule turns
 the byte colours into verdicts, and clicking a byte shows its origin packet.
 
 ## Verified
@@ -60,6 +74,8 @@ conflicted, because `main` rewrote it in the submission format.
 ## What it does
 
 - Open a capture and list its sessions, with endpoints, roles and diagnostics.
+  With no capture given, open the bundled demo in one click from the welcome
+  page.
 - Pick a session and a direction.
 - View the reassembled bytes as hex, with matched/mismatched/gap/ambiguity
   highlighting.
