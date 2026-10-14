@@ -28,6 +28,7 @@ from .constants import (
     PROGRESS_BAR_WIDTH,
 )
 from .guide_panel import GuidePanel
+from .guided import GuidedPanel
 from .hex_view import (
     LEGEND_KINDS,
     HexView,
@@ -121,11 +122,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self._direction: str = ""
         self._corpus_report = None
         self._last_dir: Path | None = None
+        self._rule_applied = False
         self._theme_manager = None
         self._language_manager: LanguageManager | None = None
         self._capture_name: str = ""
         self._journal: list = []
         self._settings: dict = read_settings()
+        self._guided_enabled: bool = bool(
+            self._settings.get("general", {}).get("guided_mode", True)
+        )
 
         self._build_menu()
         self._build_central()
@@ -140,13 +145,79 @@ class MainWindow(QtWidgets.QMainWindow):
         """Explain the first-run window before a capture is opened."""
         self.hex_view.show_hint(
             self.tr(
-                "no capture loaded\n\n"
-                "Open a normalized capture (Ctrl+O) or press Open demo (Ctrl+D)\n"
-                "for the built-in example, then load a rule (Ctrl+R)."
+                "No recording is open yet.\n\n"
+                "Open the example (Ctrl+D) to see a whole investigation, or open\n"
+                "your own capture file (Ctrl+O). A rule that says how to read the\n"
+                "bytes is loaded with Ctrl+R."
             )
         )
         self.validation_view.set_rule_status(self.tr("no rule applied yet"))
         self.timeline_view.clear()
+
+    # -- guided mode -------------------------------------------------------
+
+    def _guided_index(self) -> int:
+        """Return the workflow stage the window is currently in.
+
+        The stage is derived from what is open, not from a click history, so
+        reopening a capture or clearing a rule moves the coach back on its own.
+        """
+        if self._capture is None:
+            return 0
+        if not self._session_id or not self._direction:
+            return 1
+        if self._rule is None:
+            return 2
+        if not self._rule_applied:
+            return 3
+        return 4
+
+    def _update_guided(self) -> None:
+        """Show the coach with the stage that matches the current state."""
+        if not self._guided_enabled:
+            self.guided_panel.setVisible(False)
+            return
+        self.guided_panel.setVisible(True)
+        self.guided_panel.set_step(self._guided_index())
+
+    def _guided_next(self) -> None:
+        """Perform the action the coach is pointing at."""
+        index = self.guided_panel.step_index
+        if index == 0:
+            self.open_demo()
+        elif index == 1:
+            self._highlight_panel(self._sessions_box)
+        elif index == 2:
+            self.build_rule()
+        elif index == 3:
+            self.apply_rule()
+        elif index == 4:
+            self.apply_to_capture()
+
+    def set_guided_mode(self, enabled: bool = False) -> None:
+        """Turn the coach on or off and remember the choice."""
+        self._guided_enabled = bool(enabled)
+        self._settings.setdefault("general", {})["guided_mode"] = self._guided_enabled
+        write_settings(self._settings)
+        if self._guided_enabled:
+            self._update_guided()
+        else:
+            self.guided_panel.setVisible(False)
+        self._notify(
+            self.tr("hints on") if self._guided_enabled else self.tr("hints off")
+        )
+
+    def _highlight_panel(self, panel: QtWidgets.QWidget) -> None:
+        """Flash a soft accent border on a panel to point the reader at it."""
+        effect = QtWidgets.QGraphicsColorizeEffect(panel)
+        effect.setColor(QtGui.QColor(theme.current().accent))
+        effect.setStrength(0.35)
+        panel.setGraphicsEffect(effect)
+
+        def _clear() -> None:
+            panel.setGraphicsEffect(None)
+
+        QtCore.QTimer.singleShot(1200, _clear)
 
     # -- construction ------------------------------------------------------
 
@@ -443,10 +514,19 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.guide_panel.setVisible(False)
         )
 
+        # Guided mode is the plain-language coach above the guide strip: one
+        # step at a time, with the next action on a button. It is on by default
+        # and is switched off from here or from the settings dialog.
+        self.guided_panel = GuidedPanel()
+        self.guided_panel.nextRequested.connect(self._guided_next)
+        self.guided_panel.dismissRequested.connect(self.set_guided_mode)
+        self.guided_panel.setVisible(self._guided_enabled)
+
         container = QtWidgets.QWidget()
         container_layout = QtWidgets.QVBoxLayout(container)
         container_layout.setContentsMargins(0, 0, 0, 0)
         container_layout.setSpacing(6)
+        container_layout.addWidget(self.guided_panel)
         container_layout.addWidget(self.guide_panel)
         container_layout.addWidget(splitter, 1)
         self.setCentralWidget(container)
@@ -548,6 +628,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ):
             view.apply_theme()
         self.guide_panel.apply_theme()
+        self.guided_panel.apply_theme()
         self.report_view.setFont(theme.mono_font(FONT_SIZE_BODY))
         self.diff_view.setFont(theme.mono_font(FONT_SIZE_BODY))
 
@@ -667,6 +748,14 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.hex_view.set_show_diagnostics(bool(advanced.get("show_diagnostics", True)))
 
+        guided = bool(general.get("guided_mode", True))
+        if guided != self._guided_enabled:
+            self._guided_enabled = guided
+        if self._guided_enabled:
+            self._update_guided()
+        else:
+            self.guided_panel.setVisible(False)
+
         level = str(advanced.get("log_level", "INFO"))
         if level in logging.getLevelNamesMapping():
             logging.getLogger().setLevel(level)
@@ -732,6 +821,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.timeline_view.retranslate_ui()
         self._timeline_box.setTitle(self.tr("Timeline"))
         self.guide_panel.retranslate_ui()
+        self.guided_panel.retranslate_ui()
         if self._capture_name:
             self._set_provenance_text(self._capture_summary())
 
@@ -764,6 +854,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         model = CaptureModel.from_file(path)
         self._capture = model
+        self._rule_applied = False
         self.session_tree.load(model)
         self._capture_name = Path(path).name
         self._refresh_title()
@@ -776,6 +867,7 @@ class MainWindow(QtWidgets.QMainWindow):
             )
         else:
             self.guide_panel.set_session_ready(False)
+        self._update_guided()
 
     def open_demo(self) -> None:
         """Open the small capture, rule and journal that ship with the tool.
@@ -933,6 +1025,7 @@ class MainWindow(QtWidgets.QMainWindow):
             )
         )
         self.guide_panel.set_rule(Path(path).name)
+        self._update_guided()
 
     def build_rule(self) -> None:
         """Open the form-based rule builder, seeded with the rule in the editor.
@@ -996,6 +1089,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.validation_view.set_context(session_id, direction)
         self.guide_panel.set_session_ready(True)
         self._render_stream()
+        self._update_guided()
 
     def _on_direction_changed(self, direction: str) -> None:
         if self._capture is None or not direction or direction == self._direction:
@@ -1027,6 +1121,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.compare_view.show_application(application)
         self._show_hypotheses(self._rule.rule, application.messages)
         self.guide_panel.set_applied(True)
+        self._rule_applied = True
+        self._update_guided()
         stream = self._capture.stream(self._session_id, self._direction)
         self.hex_view.set_annotations(annotations_from_application(application, stream))
         counts = ", ".join(f"{k}={v}" for k, v in sorted(application.counts.items()))
@@ -1090,6 +1186,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._show_report_diff(self._rule.previous_report, report)
         self._rule.corpus_report = report
         self._corpus_report = report
+        self._rule_applied = True
         self.validation_view.show_corpus_report(report)
         directions = (self._rule.rule.direction,) if self._rule.rule.direction else ()
         self._show_hypotheses(self._rule.rule, self._corpus_messages(directions))
@@ -1102,6 +1199,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._notify(
             self.tr("verified rule over the whole capture: {0}").format(counts)
         )
+        self._update_guided()
 
     def _show_report_diff(self, report_a, report_b) -> None:
         from ..hypothesis.diff import diff_reports, format_report_diff

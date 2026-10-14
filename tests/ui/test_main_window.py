@@ -346,7 +346,7 @@ def test_legend_uses_painted_swatches(app):
 
 def test_window_starts_with_an_empty_state_hint(app):
     window = MainWindow()
-    assert "no capture loaded" in window.hex_view.toPlainText()
+    assert "No recording is open" in window.hex_view.toPlainText()
     assert window._progress.isVisible() is False
     window.close()
 
