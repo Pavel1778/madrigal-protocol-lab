@@ -30,6 +30,7 @@ pyinstaller \
     --add-data "assets:assets" \
     --add-data "docs:docs" \
     --add-data "src/ui/locale:src/ui/locale" \
+    --add-data "src/ui/samples:src/ui/samples" \
     --add-data "tests/corpus:corpus" \
     --paths "$ROOT" \
     scripts/madrigal_lab.py

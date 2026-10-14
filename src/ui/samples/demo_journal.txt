@@ -1,0 +1,18 @@
+# Demo action journal
+# One line per thing the operator did:  <time> | <action> | <parameter> | <value>
+# The times line up with the capture, so each action can be matched to bytes.
+
+2023-11-14T22:13:20.004Z | set | temperature | None
+2023-11-14T22:13:20.006Z | set | humidity | None
+2023-11-14T22:13:20.008Z | set | voltage | None
+2023-11-14T22:13:20.009Z | set | temperature | None
+2023-11-14T22:13:20.011Z | set | humidity | None
+2023-11-14T22:13:20.013Z | set | voltage | None
+2023-11-14T22:13:20.015Z | set | temperature | None
+2023-11-14T22:13:20.017Z | set | humidity | None
+2023-11-14T22:13:20.019Z | set | voltage | None
+2023-11-14T22:13:20.021Z | set | temperature | None
+2023-11-14T22:13:20.023Z | set | humidity | None
+2023-11-14T22:13:20.025Z | set | voltage | None
+2023-11-14T22:13:20.027Z | set | temperature | None
+2023-11-14T22:13:20.029Z | set | humidity | None
