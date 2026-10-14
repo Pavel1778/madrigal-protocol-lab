@@ -39,12 +39,13 @@ def test_menu_titles_are_english(en):
 
 def test_tab_captions_are_english(en):
     tabs = [en.right_tabs.tabText(i) for i in range(en.right_tabs.count())]
-    assert tabs == ["Interpretation", "Compare", "Hypotheses", "Report", "Version diff"]
+    assert tabs == ["Build rule", "Results", "Compare", "Hypotheses", "Report", "Versions"]
 
 
 def test_group_boxes_are_english(en):
     assert en._bytes_box.title() == "Bytes"
     assert en._sessions_box.title() == "Sessions"
+    assert en._timeline_box.title() == "Timeline"
 
 
 def test_direction_label_is_english(en):
@@ -56,7 +57,7 @@ def test_direction_combo_values(en):
 
 
 def test_open_capture_action_is_english(en):
-    assert en._actions["open_capture"].text() == "Open &normalized capture..."
+    assert en._actions["open_capture"].text() == "Open &capture..."
 
 
 def test_theme_action_is_english(en):

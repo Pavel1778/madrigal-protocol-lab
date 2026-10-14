@@ -100,7 +100,7 @@ def test_window_retranslates_to_russian(english_window):
     assert window.windowTitle() == "Лаборатория протоколов Мадригал"
     assert window._menus["file"].title() == "&Файл"
     assert window._actions["quit"].text() == "Вы&ход"
-    assert window.right_tabs.tabText(0) == "Анализ"
+    assert window.right_tabs.tabText(0) == "Правило"
     assert window._bytes_box.title() == "Байты"
     assert window.validation_view.apply_button.text() == "Применить к текущему направлению"
 
@@ -112,7 +112,7 @@ def test_window_language_switch_is_reversible(english_window):
     window.set_language("en")
     assert window.windowTitle() == "Madrigal protocol laboratory"
     assert window._menus["file"].title() == "&File"
-    assert window.right_tabs.tabText(0) == "Interpretation"
+    assert window.right_tabs.tabText(0) == "Build rule"
 
 
 @catalogue_required
@@ -186,8 +186,8 @@ def test_catalogue_covers_the_navigable_captions():
     known = {message.findtext("source") for message in tree.getroot().iter("message")}
     expected = {
         "&File", "&Rule", "&Report", "&View", "&Help", "&Language",
-        "Interpretation", "Compare", "Hypotheses", "Report", "Version diff",
-        "Bytes", "Sessions", "direction", "session", "traffic",
+        "Build rule", "Results", "Compare", "Hypotheses", "Report", "Versions",
+        "Bytes", "Sessions", "Timeline", "direction", "session", "traffic",
         "&Settings...", "&Quick help", "&About", "&Dark theme", "&Light theme",
         "matched", "mismatched", "gap", "ambiguity", "uncovered", "incomplete",
     }

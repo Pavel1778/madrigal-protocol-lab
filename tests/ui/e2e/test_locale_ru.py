@@ -36,19 +36,21 @@ def test_menu_titles_are_russian(ru):
 
 def test_tab_captions_are_russian(ru):
     tabs = [ru.right_tabs.tabText(i) for i in range(ru.right_tabs.count())]
-    assert tabs == ["Анализ", "Сравн.", "Гип.", "Отчёт", "Диф."]
+    assert tabs == ["Правило", "Результаты", "Сравн.", "Гип.", "Отчёт", "Версии"]
 
 
 def test_short_tab_captions_keep_full_tooltips(ru):
     # The captions are shortened so they fit the narrow dock; the full name is
     # kept in the tooltip so nothing is lost on hover.
     full = [ru.right_tabs.tabToolTip(i) for i in range(ru.right_tabs.count())]
-    assert full == ["Интерпретация", "Сравнение", "Гипотезы", "Отчёт", "Различие версий"]
+    assert "Соберите правило" in full[0]
+    assert "как читать сообщения" in full[1]
 
 
 def test_group_boxes_are_russian(ru):
     assert ru._bytes_box.title() == "Байты"
     assert ru._sessions_box.title() == "Сессии"
+    assert ru._timeline_box.title() == "Хронология"
 
 
 def test_direction_label_is_russian(ru):
@@ -61,7 +63,7 @@ def test_direction_combo_values_are_protocol_names(ru):
 
 
 def test_open_capture_action_is_russian(ru):
-    assert ru._actions["open_capture"].text() == "Открыть &нормализованный захват..."
+    assert ru._actions["open_capture"].text() == "Открыть &захват..."
 
 
 def test_theme_action_is_russian(ru):
