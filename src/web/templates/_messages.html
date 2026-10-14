@@ -29,7 +29,7 @@
       <td>
         {% for field in message.fields %}
         <span class="field" title="{{ field.type }} @+{{ field.offset }} ({{ field.length }} B)">
-          {{ field.name }}<span class="field-value">{{ field.value }}</span>
+          {{ field.name }}<span class="field-value">{% if field.value is none %}absent{% else %}{{ field.value }}{% endif %}</span>
         </span>
         {% else %}
         <span class="muted">—</span>
