@@ -344,10 +344,29 @@ def test_legend_uses_painted_swatches(app):
     window.close()
 
 
-def test_window_starts_with_an_empty_state_hint(app):
+def test_window_starts_on_the_start_screen(app):
     window = MainWindow()
-    assert "no capture loaded" in window.hex_view.toPlainText()
+    assert window._centre_stack.currentWidget() is window.start_screen
+    assert window.start_screen.title.text() == "Start here"
+    assert window.start_screen.example_button.isVisibleTo(window) is True
+    assert window.hex_view.isVisibleTo(window) is False
     assert window._progress.isVisible() is False
+    window.close()
+
+
+def test_start_screen_steps_back_once_a_capture_is_open(app):
+    window = open_window(app)
+    assert window._centre_stack.currentWidget() is window.hex_view
+    assert window.start_screen.isVisibleTo(window) is False
+    window.close()
+
+
+def test_example_button_opens_a_capture_and_a_rule(app):
+    window = MainWindow()
+    window.open_example()
+    assert window._capture is not None
+    assert window._rule is not None
+    assert window._centre_stack.currentWidget() is window.hex_view
     window.close()
 
 

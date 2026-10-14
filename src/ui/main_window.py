@@ -49,6 +49,7 @@ from .settings import (
     read_settings,
     write_settings,
 )
+from .start_screen import StartScreen
 from .validation_view import ValidationView
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -57,6 +58,11 @@ APP_ICON = REPO_ROOT / "assets" / "icons" / "app" / "madrigal-protocol-lab.svg"
 # The desktop id, without the ``.desktop`` suffix Qt expects. The installed file
 # keeps the suffix: /usr/share/applications/madrigal-protocol-lab.desktop.
 APP_DESKTOP_FILE = "madrigal-protocol-lab"
+# The example a first-run reader can open in one click. It is the reference
+# capture the product documents, so the walkthrough in docs/demo.md matches
+# what the button shows; both files ship with the repository.
+EXAMPLE_CAPTURE = REPO_ROOT / "tests" / "corpus" / "reference_export" / "corpus_capture_01.normalized.json"
+EXAMPLE_RULE = REPO_ROOT / "examples" / "corpus_rule_v1.json"
 
 # The status line shows the provenance of the selected byte. The text changes
 # with every click and can be long, so the label reserves room for its text up
@@ -116,6 +122,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._theme_manager = None
         self._language_manager: LanguageManager | None = None
         self._capture_name: str = ""
+        self._rule_name: str = ""
+        self._applied: bool = False
         self._settings: dict = read_settings()
 
         self._build_menu()
@@ -128,15 +136,41 @@ class MainWindow(QtWidgets.QMainWindow):
         self._apply_stored_settings(adopt_from_managers=True)
 
     def _show_empty_state(self) -> None:
-        """Explain the first-run window before a capture is opened."""
-        self.hex_view.show_hint(
-            self.tr(
-                "no capture loaded\n\n"
-                "Open a normalized capture (Ctrl+O), pick a session and a direction,\n"
-                "then load a rule (Ctrl+R) or press Load example in the Rule tab."
-            )
+        """Put the start screen in front and state why the panels are empty."""
+        self._centre_stack.setCurrentWidget(self.start_screen)
+        self._sync_progress()
+
+    def _sync_progress(self) -> None:
+        """Push the current step state to the banner and the start screen.
+
+        A step is done when the state it names is true: a capture is open, a
+        session and a direction are picked, a rule is loaded and it has been
+        applied at least once. The two views show the same three steps, so they
+        are fed from one place and cannot drift apart.
+        """
+        capture_open = self._capture is not None
+        session_ready = capture_open and bool(self._session_id) and bool(self._direction)
+        rule_ready = self._rule is not None
+        applied = rule_ready and session_ready and self._applied
+        progress = {
+            "capture_open": capture_open,
+            "session_ready": session_ready,
+            "rule_ready": rule_ready,
+            "applied": applied,
+        }
+        self.guide_panel.set_progress(
+            **progress,
+            capture_name=self._capture_name,
+            rule_name=self._rule_name,
         )
-        self.validation_view.set_rule_status(self.tr("no rule applied yet"))
+        self.start_screen.set_progress(**progress)
+        self.validation_view.set_ready(rule_ready and session_ready)
+
+    def _show_workspace(self) -> None:
+        """Swap the start screen out for the hex view once bytes are on hand."""
+        if self._capture is not None:
+            self._centre_stack.setCurrentWidget(self.hex_view)
+            self._sync_tabs()
 
     # -- construction ------------------------------------------------------
 
@@ -153,10 +187,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self._menus["file"] = file_menu
         self._actions["open_capture"] = self._action(
             file_menu,
-            "Open &normalized capture...",
+            "Open a &recording...",
             self.open_capture_dialog,
             "Ctrl+O",
-            tip="Open a capture: a raw .pcap/.pcapng is normalized on the fly, a normalized JSON is read as is",
+            tip="Open a recording: a raw .pcap/.pcapng is normalized on the fly, a normalized JSON is read as is",
+        )
+        self._actions["open_example"] = self._action(
+            file_menu,
+            "Open the &example",
+            self.open_example,
+            "Ctrl+D",
+            tip="Open the small capture and rule that ship with the tool",
         )
         self._actions["open_rule"] = self._action(
             file_menu, "Open &rule...", self.open_rule_dialog, "Ctrl+R"
@@ -306,7 +347,8 @@ class MainWindow(QtWidgets.QMainWindow):
         for key, label in labels.items():
             self._menus[key].setTitle(label)
         sources = {
-            "open_capture": self.tr("Open &normalized capture..."),
+            "open_capture": self.tr("Open a &recording..."),
+            "open_example": self.tr("Open the &example"),
             "open_rule": self.tr("Open &rule..."),
             "build_rule": self.tr("&Build rule..."),
             "save_result": self.tr("&Save result..."),
@@ -374,8 +416,19 @@ class MainWindow(QtWidgets.QMainWindow):
             self._legend_chips.append(chip)
         controls.addWidget(self.annotation_legend)
         centre_layout.addLayout(controls)
+        # The centre switches between the start screen (before a capture is open)
+        # and the hex view, so the first thing a reader sees explains the tool in
+        # plain words instead of showing an empty grid.
+        self._centre_stack = QtWidgets.QStackedWidget()
+        self.start_screen = StartScreen()
+        self.start_screen.openExampleRequested.connect(self.open_example)
+        self.start_screen.openCaptureRequested.connect(self.open_capture_dialog)
+        self.start_screen.buildRuleRequested.connect(self.build_rule)
+        self.start_screen.applyRequested.connect(self.apply_rule)
+        self._centre_stack.addWidget(self.start_screen)
         self.hex_view = HexView()
-        centre_layout.addWidget(self.hex_view, 1)
+        self._centre_stack.addWidget(self.hex_view)
+        centre_layout.addWidget(self._centre_stack, 1)
         self._bytes_box = self._wrap(self.tr("Bytes"), centre)
         splitter.addWidget(self._bytes_box)
 
@@ -411,8 +464,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # fresh window is the order of work, not an empty hex view. It hides
         # itself once a capture, a rule and an applied rule are all present.
         self.guide_panel = GuidePanel()
+        self.guide_panel.openExampleRequested.connect(self.open_example)
         self.guide_panel.openCaptureRequested.connect(self.open_capture_dialog)
-        self.guide_panel.openRuleRequested.connect(self.open_rule_dialog)
         self.guide_panel.applyRequested.connect(self.apply_rule)
         self.guide_panel.dismissRequested.connect(
             lambda: self.guide_panel.setVisible(False)
@@ -436,26 +489,40 @@ class MainWindow(QtWidgets.QMainWindow):
     def _relabel_tabs(self) -> None:
         """Translate the right-hand tab captions in place.
 
-        The captions are kept short so they fit the narrow dock without eliding;
-        the full name is set as the tab tooltip, so nothing is lost on hover.
+        The caption names the tab; the tooltip repeats it with a "tab" suffix so
+        the hover text stands on its own when the dock is narrow.
         """
         captions = (
             self.tr("Interpretation"),
             self.tr("Compare"),
-            self.tr("Hypotheses"),
+            self.tr("Alternative readings"),
             self.tr("Report"),
             self.tr("Version diff"),
         )
         tooltips = (
             self.tr("Interpretation tab"),
             self.tr("Compare tab"),
-            self.tr("Hypotheses tab"),
+            self.tr("Alternative readings tab"),
             self.tr("Report tab"),
             self.tr("Version diff tab"),
         )
         for index, (label, tip) in enumerate(zip(captions, tooltips, strict=False)):
             self.right_tabs.setTabText(index, label)
             self.right_tabs.setTabToolTip(index, tip)
+        self._sync_tabs()
+
+    def _sync_tabs(self) -> None:
+        """Keep only the interpretation tab in front until a capture is open.
+
+        The dock carries five tabs; on a fresh window that is a lot to meet at
+        once. The other four name things that have nothing to show yet, so they
+        are disabled rather than removed, and become available the moment a
+        capture is open.
+        """
+        ready = self._capture is not None
+        for index in range(1, self.right_tabs.count()):
+            self.right_tabs.setTabEnabled(index, ready)
+        self.right_tabs.setCurrentIndex(0)
 
     def _build_status(self) -> None:
         bar = self.statusBar()
@@ -523,6 +590,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ):
             view.apply_theme()
         self.guide_panel.apply_theme()
+        self.start_screen.apply_theme()
         self.report_view.setFont(theme.mono_font(FONT_SIZE_BODY))
         self.diff_view.setFont(theme.mono_font(FONT_SIZE_BODY))
 
@@ -705,6 +773,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.session_tree.retranslate_ui()
         self.hex_view.retranslate_ui()
         self.guide_panel.retranslate_ui()
+        self.start_screen.retranslate_ui()
         if self._capture_name:
             self._set_provenance_text(self._capture_summary())
 
@@ -739,16 +808,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self._capture = model
         self.session_tree.load(model)
         self._capture_name = Path(path).name
+        self._applied = False
         self._refresh_title()
         self._set_provenance_text(self._capture_summary())
-        self.guide_panel.set_capture(self._capture_name)
         if model.sessions:
             self._on_direction_selected(
                 model.sessions[0].session_id,
                 model.directions(model.sessions[0].session_id)[0],
             )
         else:
-            self.guide_panel.set_session_ready(False)
+            self._session_id = ""
+            self._direction = ""
+        self._show_workspace()
+        self._sync_progress()
 
     def _start_dir(self, fallback: Path) -> str:
         """The directory a file dialog should open at.
@@ -852,7 +924,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 Path(path).name, self._rule.rule.rule_version
             )
         )
-        self.guide_panel.set_rule(Path(path).name)
+        self._rule_name = Path(path).name
+        self._applied = False
+        self._sync_progress()
 
     def build_rule(self) -> None:
         """Open the form-based rule builder, seeded with the rule in the editor.
@@ -900,6 +974,25 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         self.load_rule(examples[0])
 
+    def open_example(self) -> None:
+        """Open the small capture and rule that ship with the tool.
+
+        The first action on the start screen, so a reader sees a whole
+        investigation without hunting for a file first. Both paths are fixed in
+        the repository; if the capture is missing the open is reported like any
+        other, and a missing rule only leaves the editor empty.
+        """
+        if not EXAMPLE_CAPTURE.is_file():
+            QtWidgets.QMessageBox.information(
+                self,
+                self.tr("No example"),
+                self.tr("the example capture is not available in this installation"),
+            )
+            return
+        self._open_capture_reported(EXAMPLE_CAPTURE)
+        if EXAMPLE_RULE.is_file():
+            self.load_rule(EXAMPLE_RULE)
+
     # -- selection ---------------------------------------------------------
 
     def _on_direction_selected(self, session_id: str, direction: str) -> None:
@@ -914,7 +1007,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.direction_combo.setCurrentText(direction)
         self.direction_combo.blockSignals(False)
         self.validation_view.set_context(session_id, direction)
-        self.guide_panel.set_session_ready(True)
+        self._sync_progress()
         self._render_stream()
 
     def _on_direction_changed(self, direction: str) -> None:
@@ -946,7 +1039,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.validation_view.show_application(application)
         self.compare_view.show_application(application)
         self._show_hypotheses(self._rule.rule, application.messages)
-        self.guide_panel.set_applied(True)
+        self._applied = True
+        self._sync_progress()
         stream = self._capture.stream(self._session_id, self._direction)
         self.hex_view.set_annotations(annotations_from_application(application, stream))
         counts = ", ".join(f"{k}={v}" for k, v in sorted(application.counts.items()))
@@ -1182,14 +1276,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 "Order of work\n"
                 "The Start here panel on the workspace lists the same steps and\n"
                 "marks the ones already done. Help - Show start guide brings it back.\n"
-                "1. File - Open capture (Ctrl+O).\n"
+                "1. File - Open a recording (Ctrl+O), or Open the example (Ctrl+D).\n"
                 "2. Pick a session, then a direction.\n"
                 "3. Rule - Build rule (Ctrl+B) for a form, Open rule (Ctrl+R), or Load example.\n"
                 "4. F5 applies the rule to the current direction; F6 to the whole capture.\n"
                 "5. Read the Counterexamples tab; clicking a row jumps to the bytes.\n"
                 "\n"
                 "Keys\n"
-                "Ctrl+O open capture   Ctrl+B build rule   Ctrl+R open rule   Ctrl+S save result\n"
+                "Ctrl+O open recording   Ctrl+D open example   Ctrl+B build rule\n"
+                "Ctrl+R open rule   Ctrl+S save result\n"
                 "F5 apply direction    F6 apply capture   F1 this help\n"
                 "\n"
                 "The bytes are the source of truth. A rule is an interpretation; a\n"

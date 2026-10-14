@@ -159,6 +159,9 @@ class ValidationView(QtWidgets.QWidget):
         self._direction = ""
         self._status_error = False
         self._message_count = 0
+        # Nothing to apply on a fresh window; the window enables these once a
+        # capture, a direction and a rule are all present.
+        self.set_ready(False)
 
     # -- rule --------------------------------------------------------------
 
@@ -191,6 +194,16 @@ class ValidationView(QtWidgets.QWidget):
         self._context.setText(
             self.tr("session {0}   {1}").format(session_id, direction)
         )
+
+    def set_ready(self, ready: bool) -> None:
+        """Enable the apply actions only when there is something to apply.
+
+        A capture, a direction and a rule must all be present before applying
+        means anything. Until then the buttons are grey and inert, rather than
+        inviting a click that can only answer with a warning.
+        """
+        self.apply_button.setEnabled(ready)
+        self.apply_capture_button.setEnabled(ready)
 
     # -- editor feedback ---------------------------------------------------
 

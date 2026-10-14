@@ -32,6 +32,7 @@ SOURCES=(
     src/ui/validation_view.py
     src/ui/settings.py
     src/ui/guide_panel.py
+    src/ui/start_screen.py
     src/ui/rule_builder.py
 )
 TS="src/ui/locale/madrigal_ru.ts"

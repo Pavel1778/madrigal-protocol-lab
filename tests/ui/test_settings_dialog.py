@@ -245,10 +245,11 @@ def test_settings_signal_emits_mapping(app, isolated_settings):
 
 
 def test_start_guide_marks_progress(window):
-    """The guide walks capture, session, rule and apply, then hides itself."""
+    """The guide walks capture, session and apply, then hides itself."""
     guide = window.guide_panel
     assert not guide.isHidden(), "the guide is shown on a fresh window"
     assert guide.step_capture.property("state") == "next"
+    assert guide.step_session.property("state") == "locked"
 
     window.open_capture(
         REPO_ROOT
@@ -262,8 +263,7 @@ def test_start_guide_marks_progress(window):
     assert guide.step_rule.property("state") == "next"
 
     window.load_rule(REPO_ROOT / "examples" / "corpus_rule_v1.json")
-    assert guide.step_rule.property("state") == "done"
-    assert guide.step_apply.property("state") == "next"
+    assert guide.step_rule.property("state") == "next"
 
     window.apply_rule()
     assert guide.isHidden(), "the guide steps aside once the workspace is in use"
@@ -288,12 +288,13 @@ def test_start_guide_stays_a_thin_strip(window):
 
 
 def test_start_guide_keeps_the_step_hints_as_tooltips(window):
-    """The hint text is preserved, but rendered as a tooltip, not a paragraph."""
+    """Each step's explanation is a tooltip, not a paragraph."""
     guide = window.guide_panel
     step = guide.step_capture
-    assert "Ctrl+O" in step.hint.text()
-    assert step.toolTip() == step.hint.text()
-    assert step.hint.isHidden()
+    assert "Ctrl+O" in step.toolTip()
+    assert step.title.text() == "Open a recording"
+    # The strip carries no description label: the explanation lives on hover.
+    assert not hasattr(step, "description")
 
 
 def test_capture_action_names_both_accepted_forms(window):

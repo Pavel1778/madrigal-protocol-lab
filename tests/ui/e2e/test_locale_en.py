@@ -12,6 +12,7 @@ from __future__ import annotations
 import pytest
 
 from src.ui import theme
+from tests.ui.support import CAPTURE_01
 
 MODE = "en"
 
@@ -39,7 +40,13 @@ def test_menu_titles_are_english(en):
 
 def test_tab_captions_are_english(en):
     tabs = [en.right_tabs.tabText(i) for i in range(en.right_tabs.count())]
-    assert tabs == ["Interpretation", "Compare", "Hypotheses", "Report", "Version diff"]
+    assert tabs == [
+        "Interpretation",
+        "Compare",
+        "Alternative readings",
+        "Report",
+        "Version diff",
+    ]
 
 
 def test_group_boxes_are_english(en):
@@ -56,7 +63,8 @@ def test_direction_combo_values(en):
 
 
 def test_open_capture_action_is_english(en):
-    assert en._actions["open_capture"].text() == "Open &normalized capture..."
+    assert en._actions["open_capture"].text() == "Open a &recording..."
+    assert en._actions["open_example"].text() == "Open the &example"
 
 
 def test_theme_action_is_english(en):
@@ -107,3 +115,28 @@ def test_no_russian_leaks_into_the_menu(en):
 
 def test_font_family_loaded(en):
     assert theme.body_font(10).family()
+
+
+def test_start_screen_is_english(en):
+    screen = en.start_screen
+    assert screen.title.text() == "Start here"
+    assert screen.example_button.text() == "Open the example"
+    assert screen.capture_button.text() == "Open a file..."
+    assert screen.step_capture.title.text() == "Open a recording"
+    assert screen.step_session.title.text() == "Pick a conversation and a direction"
+    assert screen.step_rule.title.text() == "Describe the messages and check them"
+
+
+def test_right_tabs_are_gated_until_a_capture_is_open(app):
+    # The shared window already has a capture open, so a fresh one is built to
+    # observe the first-run dock.
+    from src.ui.main_window import MainWindow
+
+    window = MainWindow()
+    window.set_language(MODE)
+    flags = [window.right_tabs.isTabEnabled(i) for i in range(window.right_tabs.count())]
+    assert flags == [True, False, False, False, False]
+    window.open_capture(CAPTURE_01)
+    flags = [window.right_tabs.isTabEnabled(i) for i in range(window.right_tabs.count())]
+    assert all(flags)
+    window.close()

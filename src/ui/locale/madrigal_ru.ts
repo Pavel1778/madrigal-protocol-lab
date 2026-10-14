@@ -13,99 +13,138 @@
 <context>
     <name>GuidePanel</name>
     <message>
-        <location filename="../guide_panel.py" line="198"/>
+        <location filename="../guide_panel.py" line="184"/>
         <source>Nothing is open yet: the tool reads a capture file (pcap, pcapng or the normalized JSON) and a rule that says how to read it.</source>
         <translation>Пока ничего не открыто: приложение читает файл захвата (pcap, pcapng или нормализованный JSON) и правило, которое описывает, как его читать.</translation>
     </message>
     <message>
-        <location filename="../guide_panel.py" line="198"/>
+        <location filename="../guide_panel.py" line="184"/>
         <source>capture: {0}</source>
         <translation>захват: {0}</translation>
     </message>
     <message>
-        <location filename="../guide_panel.py" line="200"/>
+        <location filename="../guide_panel.py" line="186"/>
         <source>rule: {0}</source>
         <translation>правило: {0}</translation>
     </message>
     <message>
-        <location filename="../guide_panel.py" line="202"/>
+        <location filename="../guide_panel.py" line="188"/>
         <source>no rule yet</source>
         <translation>правила пока нет</translation>
     </message>
     <message>
-        <location filename="../guide_panel.py" line="209"/>
+        <location filename="../guide_panel.py" line="195"/>
         <source>Start here</source>
         <translation>Начните здесь</translation>
     </message>
     <message>
-        <location filename="../guide_panel.py" line="210"/>
+        <location filename="../guide_panel.py" line="196"/>
         <source>Hide</source>
         <translation>Скрыть</translation>
     </message>
     <message>
-        <location filename="../guide_panel.py" line="213"/>
+        <location filename="../guide_panel.py" line="199"/>
         <source>Hide the guide; Help - Quick help brings it back</source>
         <translation>Скрыть подсказку; «Справка — Краткая справка» вернёт её</translation>
     </message>
     <message>
-        <location filename="../guide_panel.py" line="214"/>
+        <location filename="../guide_panel.py" line="200"/>
         <source>What is open right now</source>
         <translation>Что открыто сейчас</translation>
     </message>
     <message>
+        <location filename="../guide_panel.py" line="201"/>
+        <source>Open a recording</source>
+        <translation>Открыть запись</translation>
+    </message>
+    <message>
+        <location filename="../guide_panel.py" line="204"/>
+        <source>A pcap, a pcapng or a normalized JSON. Ctrl+O.</source>
+        <translation>Файл pcap, pcapng или нормализованный JSON. Ctrl+O.</translation>
+    </message>
+    <message>
+        <location filename="../guide_panel.py" line="205"/>
+        <source>Open the example</source>
+        <translation>Открыть пример</translation>
+    </message>
+    <message>
+        <location filename="../guide_panel.py" line="208"/>
+        <source>Open the small capture and rule that ship with the tool</source>
+        <translation>Открыть небольшой захват и правило, поставляемые с инструментом</translation>
+    </message>
+    <message>
+        <location filename="../guide_panel.py" line="209"/>
+        <source>Pick a conversation</source>
+        <translation>Выбрать соединение</translation>
+    </message>
+    <message>
+        <location filename="../guide_panel.py" line="214"/>
+        <source>Choose the connection on the left; one way or the other is listed under it.</source>
+        <translation>Выберите соединение слева; направления перечислены под ним.</translation>
+    </message>
+    <message>
         <location filename="../guide_panel.py" line="215"/>
-        <source>Open a capture</source>
-        <translation>Откройте захват</translation>
-    </message>
-    <message>
-        <location filename="../guide_panel.py" line="218"/>
-        <source>pcap, pcapng or normalized JSON. Ctrl+O.</source>
-        <translation>pcap, pcapng или нормализованный JSON. Ctrl+O.</translation>
-    </message>
-    <message>
-        <location filename="../guide_panel.py" line="219"/>
-        <source>Open capture...</source>
-        <translation>Открыть захват...</translation>
+        <source>Describe and check</source>
+        <translation>Описать и проверить</translation>
     </message>
     <message>
         <location filename="../guide_panel.py" line="220"/>
+        <source>A rule says how the bytes are cut into messages and what each field means.</source>
+        <translation>Правило задаёт разбиение байтов на сообщения и смысл каждого поля.</translation>
+    </message>
+    <message>
+        <location filename="../guide_panel.py" line="221"/>
+        <source>Check the rule</source>
+        <translation>Проверить правило</translation>
+    </message>
+    <message>
+        <location filename="../guide_panel.py" line="224"/>
+        <source>Apply the rule to the current direction</source>
+        <translation>Применить правило к текущему направлению</translation>
+    </message>
+    <message>
+        <source>Open a capture</source>
+        <translation type="vanished">Откройте захват</translation>
+    </message>
+    <message>
+        <source>pcap, pcapng or normalized JSON. Ctrl+O.</source>
+        <translation type="vanished">pcap, pcapng или нормализованный JSON. Ctrl+O.</translation>
+    </message>
+    <message>
+        <source>Open capture...</source>
+        <translation type="vanished">Открыть захват...</translation>
+    </message>
+    <message>
         <source>Pick a session and a direction</source>
-        <translation>Выберите сессию и направление</translation>
+        <translation type="vanished">Выберите сессию и направление</translation>
     </message>
     <message>
-        <location filename="../guide_panel.py" line="225"/>
         <source>Choose the connection on the left; A to B and B to A are listed under it.</source>
-        <translation>Выберите соединение слева; A to B и B to A перечислены под ним.</translation>
+        <translation type="vanished">Выберите соединение слева; A to B и B to A перечислены под ним.</translation>
     </message>
     <message>
-        <location filename="../guide_panel.py" line="226"/>
         <source>Load or build a rule</source>
-        <translation>Загрузите или соберите правило</translation>
+        <translation type="vanished">Загрузите или соберите правило</translation>
     </message>
     <message>
-        <location filename="../guide_panel.py" line="231"/>
         <source>A rule says how the bytes are cut into messages and what each field means. Ctrl+R.</source>
-        <translation>Правило описывает, как байты делятся на сообщения и что означает каждое поле. Ctrl+R.</translation>
+        <translation type="vanished">Правило описывает, как байты делятся на сообщения и что означает каждое поле. Ctrl+R.</translation>
     </message>
     <message>
-        <location filename="../guide_panel.py" line="232"/>
         <source>Open rule...</source>
-        <translation>Открыть правило...</translation>
+        <translation type="vanished">Открыть правило...</translation>
     </message>
     <message>
-        <location filename="../guide_panel.py" line="233"/>
         <source>Apply the rule and read the verdicts</source>
-        <translation>Примените правило и прочитайте вердикты</translation>
+        <translation type="vanished">Примените правило и прочитайте вердикты</translation>
     </message>
     <message>
-        <location filename="../guide_panel.py" line="238"/>
         <source>F5 applies it to the current direction, F6 to the whole capture. Mismatches are kept as counterexamples.</source>
-        <translation>F5 применяет правило к текущему направлению, F6 — ко всему захвату. Несовпадения сохраняются как контрпримеры.</translation>
+        <translation type="vanished">F5 применяет правило к текущему направлению, F6 — ко всему захвату. Несовпадения сохраняются как контрпримеры.</translation>
     </message>
     <message>
-        <location filename="../guide_panel.py" line="239"/>
         <source>Apply to direction</source>
-        <translation>Применить к направлению</translation>
+        <translation type="vanished">Применить к направлению</translation>
     </message>
 </context>
 <context>
@@ -184,232 +223,232 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../main_window.py" line="106"/>
-        <location filename="../main_window.py" line="692"/>
+        <location filename="../main_window.py" line="112"/>
+        <location filename="../main_window.py" line="760"/>
         <source>Madrigal protocol laboratory</source>
         <translation>Лаборатория протоколов Мадригал</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="138"/>
         <source>no capture loaded
 
 Open a normalized capture (Ctrl+O), pick a session and a direction,
 then load a rule (Ctrl+R) or press Load example in the Rule tab.</source>
-        <translation>захват не загружен
+        <translation type="vanished">захват не загружен
 
 Откройте нормализованный захват (Ctrl+O), выберите сессию и направление,
 затем загрузите правило (Ctrl+R) или нажмите «Загрузить пример» на вкладке «Правило».</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="139"/>
         <source>no rule applied yet</source>
-        <translation>правило ещё не применено</translation>
+        <translation type="vanished">правило ещё не применено</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="299"/>
+        <location filename="../main_window.py" line="340"/>
         <source>&amp;File</source>
         <translation>&amp;Файл</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="300"/>
+        <location filename="../main_window.py" line="341"/>
         <source>&amp;Rule</source>
         <translation>&amp;Правило</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="301"/>
+        <location filename="../main_window.py" line="342"/>
         <source>&amp;Report</source>
         <translation>&amp;Отчёт</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="302"/>
+        <location filename="../main_window.py" line="343"/>
         <source>&amp;View</source>
         <translation>&amp;Вид</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="303"/>
+        <location filename="../main_window.py" line="344"/>
         <source>&amp;Help</source>
         <translation>&amp;Справка</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="304"/>
+        <location filename="../main_window.py" line="345"/>
         <source>&amp;Language</source>
         <translation>&amp;Язык</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="309"/>
         <source>Open &amp;normalized capture...</source>
-        <translation>Открыть &amp;нормализованный захват...</translation>
+        <translation type="vanished">Открыть &amp;нормализованный захват...</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="310"/>
+        <location filename="../main_window.py" line="352"/>
         <source>Open &amp;rule...</source>
         <translation>Открыть &amp;правило...</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="311"/>
+        <location filename="../main_window.py" line="353"/>
         <source>&amp;Build rule...</source>
         <translation>&amp;Собрать правило...</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="312"/>
+        <location filename="../main_window.py" line="354"/>
         <source>&amp;Save result...</source>
         <translation>&amp;Сохранить результат...</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="313"/>
+        <location filename="../main_window.py" line="355"/>
         <source>&amp;Import PCAP...</source>
         <translation>&amp;Импорт PCAP...</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="314"/>
+        <location filename="../main_window.py" line="356"/>
         <source>&amp;Quit</source>
         <translation>Вы&amp;ход</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="315"/>
+        <location filename="../main_window.py" line="357"/>
         <source>&amp;Apply to current direction</source>
         <translation>&amp;Применить к текущему направлению</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="316"/>
+        <location filename="../main_window.py" line="358"/>
         <source>Apply to &amp;whole capture</source>
         <translation>Применить ко &amp;всему захвату</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="317"/>
+        <location filename="../main_window.py" line="359"/>
         <source>&amp;Compare versions</source>
         <translation>&amp;Сравнить версии</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="318"/>
+        <location filename="../main_window.py" line="360"/>
         <source>Show &amp;REPORT.md</source>
         <translation>Показать &amp;REPORT.md</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="319"/>
+        <location filename="../main_window.py" line="361"/>
         <source>&amp;Export Markdown...</source>
         <translation>&amp;Экспорт Markdown...</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="320"/>
+        <location filename="../main_window.py" line="362"/>
         <source>Export &amp;HTML...</source>
         <translation>Экспорт &amp;HTML...</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="321"/>
+        <location filename="../main_window.py" line="363"/>
         <source>&amp;Dark theme</source>
         <translation>&amp;Тёмная тема</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="322"/>
+        <location filename="../main_window.py" line="364"/>
         <source>&amp;Light theme</source>
         <translation>&amp;Светлая тема</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="323"/>
+        <location filename="../main_window.py" line="365"/>
         <source>&amp;System theme</source>
         <translation>&amp;Системная тема</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="324"/>
+        <location filename="../main_window.py" line="366"/>
         <source>Zoom &amp;in</source>
         <translation>&amp;Увеличить</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="325"/>
+        <location filename="../main_window.py" line="367"/>
         <source>Zoom in</source>
         <translation>Увеличить</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="326"/>
+        <location filename="../main_window.py" line="368"/>
         <source>Zoom &amp;out</source>
         <translation>&amp;Уменьшить</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="327"/>
+        <location filename="../main_window.py" line="369"/>
         <source>&amp;Reset zoom</source>
         <translation>&amp;Сбросить масштаб</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="328"/>
+        <location filename="../main_window.py" line="370"/>
         <source>&amp;Settings...</source>
         <translation>&amp;Настройки...</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="329"/>
+        <location filename="../main_window.py" line="371"/>
         <source>Show &amp;start guide</source>
         <translation>Показать &amp;подсказку</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="330"/>
+        <location filename="../main_window.py" line="372"/>
         <source>&amp;Quick help</source>
         <translation>&amp;Краткая справка</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="331"/>
+        <location filename="../main_window.py" line="373"/>
         <source>&amp;About</source>
         <translation>&amp;О программе</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="338"/>
+        <location filename="../main_window.py" line="380"/>
         <source>System</source>
         <translation>Системный</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="345"/>
-        <location filename="../main_window.py" line="696"/>
+        <location filename="../main_window.py" line="387"/>
+        <location filename="../main_window.py" line="764"/>
         <source>Sessions</source>
         <translation>Сессии</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="356"/>
-        <location filename="../main_window.py" line="697"/>
+        <location filename="../main_window.py" line="398"/>
+        <location filename="../main_window.py" line="765"/>
         <source>direction</source>
         <translation>направление</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="379"/>
-        <location filename="../main_window.py" line="695"/>
+        <location filename="../main_window.py" line="432"/>
+        <location filename="../main_window.py" line="763"/>
         <source>Bytes</source>
         <translation>Байты</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="443"/>
+        <location filename="../main_window.py" line="496"/>
         <source>Interpretation</source>
         <translation>Анализ</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="444"/>
+        <location filename="../main_window.py" line="497"/>
         <source>Compare</source>
-        <translation>Сравн.</translation>
-    </message>
-    <message>
-        <location filename="../main_window.py" line="450"/>
-        <source>Interpretation tab</source>
-        <translation>Интерпретация</translation>
-    </message>
-    <message>
-        <location filename="../main_window.py" line="451"/>
-        <source>Compare tab</source>
         <translation>Сравнение</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="452"/>
+        <location filename="../main_window.py" line="498"/>
+        <source>Alternative readings</source>
+        <translation>Альтернативные прочтения</translation>
+    </message>
+    <message>
+        <location filename="../main_window.py" line="503"/>
+        <source>Interpretation tab</source>
+        <translation>Вкладка анализа</translation>
+    </message>
+    <message>
+        <location filename="../main_window.py" line="504"/>
+        <source>Compare tab</source>
+        <translation>Вкладка сравнения</translation>
+    </message>
+    <message>
         <source>Hypotheses tab</source>
-        <translation>Гипотезы</translation>
+        <translation type="vanished">Гипотезы</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="453"/>
+        <location filename="../main_window.py" line="506"/>
         <source>Report tab</source>
-        <translation>Отчёт</translation>
+        <translation>Вкладка отчёта</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="454"/>
+        <location filename="../main_window.py" line="507"/>
         <source>Version diff tab</source>
-        <translation>Различие версий</translation>
+        <translation>Вкладка различия версий</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="1197"/>
         <source>Order of work
 The Start here panel on the workspace lists the same steps and
 marks the ones already done. Help - Show start guide brings it back.
@@ -425,7 +464,7 @@ F5 apply direction    F6 apply capture   F1 this help
 
 The bytes are the source of truth. A rule is an interpretation; a
 mismatch is a counterexample kept against it, not discarded.</source>
-        <translation>Порядок работы
+        <translation type="vanished">Порядок работы
 Панель «Начните здесь» на рабочей области перечисляет те же шаги и
 отмечает уже выполненные. «Справка — Показать подсказку» вернёт её.
 1. Файл — Открыть захват (Ctrl+O).
@@ -442,187 +481,246 @@ F5 применить к направлению    F6 применить к за
 контрпример к нему, который сохраняется, а не отбрасывается.</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="445"/>
         <source>Hypotheses</source>
-        <translation>Гип.</translation>
+        <translation type="vanished">Гип.</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="446"/>
+        <location filename="../main_window.py" line="499"/>
         <source>Report</source>
         <translation>Отчёт</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="447"/>
+        <location filename="../main_window.py" line="500"/>
         <source>Version diff</source>
-        <translation>Диф.</translation>
+        <translation>Различие версий</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="468"/>
-        <location filename="../main_window.py" line="722"/>
+        <location filename="../main_window.py" line="505"/>
+        <source>Alternative readings tab</source>
+        <translation>Вкладка альтернативных прочтений</translation>
+    </message>
+    <message>
+        <location filename="../main_window.py" line="535"/>
+        <location filename="../main_window.py" line="791"/>
         <source>no byte selected</source>
         <translation>байт не выбран</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="576"/>
+        <location filename="../main_window.py" line="644"/>
         <source>zoom {0}%</source>
         <translation>масштаб {0}%</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="604"/>
+        <location filename="../main_window.py" line="672"/>
         <source>settings applied</source>
         <translation>настройки применены</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="725"/>
+        <location filename="../main_window.py" line="794"/>
         <source>none</source>
         <translation>нет</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="725"/>
+        <location filename="../main_window.py" line="794"/>
         <source>{0} sessions  capture_id {1}  diagnostics {2}</source>
         <translation>{0} сессий  capture_id {1}  диагностика {2}</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="851"/>
+        <location filename="../main_window.py" line="923"/>
         <source>loaded {0}  rule v{1}</source>
         <translation>загружено {0}  правило v{1}</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="879"/>
+        <location filename="../main_window.py" line="953"/>
         <source>rule built; apply it to check it</source>
         <translation>правило собрано; примените его для проверки</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="885"/>
+        <location filename="../main_window.py" line="959"/>
         <source>Open rule</source>
         <translation>Открыть правило</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="898"/>
+        <location filename="../main_window.py" line="972"/>
         <source>no example rule found</source>
         <translation>пример правила не найден</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="936"/>
-        <location filename="../main_window.py" line="992"/>
+        <location filename="../main_window.py" line="988"/>
+        <source>No example</source>
+        <translation>Нет примера</translation>
+    </message>
+    <message>
+        <location filename="../main_window.py" line="989"/>
+        <source>the example capture is not available in this installation</source>
+        <translation>пример захвата отсутствует в этой установке</translation>
+    </message>
+    <message>
+        <location filename="../main_window.py" line="1029"/>
+        <location filename="../main_window.py" line="1086"/>
         <source>open a capture and a rule first</source>
         <translation>сначала откройте захват и правило</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="942"/>
-        <location filename="../main_window.py" line="998"/>
+        <location filename="../main_window.py" line="1035"/>
+        <location filename="../main_window.py" line="1092"/>
         <source>rule error: {0}</source>
         <translation>ошибка правила: {0}</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="954"/>
+        <location filename="../main_window.py" line="1048"/>
         <source>rule v{0}  {1}</source>
         <translation>правило v{0}  {1}</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="957"/>
+        <location filename="../main_window.py" line="1051"/>
         <source>applied rule v{0} to {1} {2}</source>
         <translation>правило v{0} применено к {1} {2}</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="1018"/>
+        <location filename="../main_window.py" line="1112"/>
         <source>rule v{0} over the capture: {1}  counterexamples={2}</source>
         <translation>правило v{0} по всему захвату: {1}  контрпримеров={2}</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="1023"/>
+        <location filename="../main_window.py" line="1117"/>
         <source>verified rule over the whole capture: {0}</source>
         <translation>правило проверено по всему захвату: {0}</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="1038"/>
+        <location filename="../main_window.py" line="1132"/>
         <source>no previous rule version to compare</source>
         <translation>нет предыдущей версии правила для сравнения</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="1042"/>
+        <location filename="../main_window.py" line="1136"/>
         <source>rule v{0} supersedes v{1}; the old run is marked outdated</source>
         <translation>правило v{0} заменяет v{1}; старый прогон помечен как устаревший</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="1086"/>
+        <location filename="../main_window.py" line="1180"/>
         <source>packet {0}  seq {1}  ts {2}</source>
         <translation>пакет {0}  seq {1}  ts {2}</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="1123"/>
+        <location filename="../main_window.py" line="1217"/>
         <source>Markdown (*.md)</source>
         <translation>Markdown (*.md)</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="1131"/>
+        <location filename="../main_window.py" line="1225"/>
         <source>{0} is not available</source>
         <translation>{0} недоступен</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="1135"/>
+        <location filename="../main_window.py" line="1229"/>
         <source>Export report</source>
         <translation>Экспорт отчёта</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="840"/>
-        <location filename="../main_window.py" line="1145"/>
-        <location filename="../main_window.py" line="1174"/>
+        <location filename="../main_window.py" line="912"/>
+        <location filename="../main_window.py" line="1239"/>
+        <location filename="../main_window.py" line="1268"/>
         <source>wrote {0}</source>
         <translation>записано {0}</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="786"/>
+        <location filename="../main_window.py" line="350"/>
+        <source>Open a &amp;recording...</source>
+        <translation>Открыть &amp;запись...</translation>
+    </message>
+    <message>
+        <location filename="../main_window.py" line="351"/>
+        <source>Open the &amp;example</source>
+        <translation>Открыть &amp;пример</translation>
+    </message>
+    <message>
+        <location filename="../main_window.py" line="858"/>
         <source>Open capture</source>
         <translation>Открыть захват</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="800"/>
+        <location filename="../main_window.py" line="872"/>
         <source>Cannot open capture</source>
         <translation>Не удалось открыть захват</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="813"/>
+        <location filename="../main_window.py" line="885"/>
         <source>Import PCAP</source>
         <translation>Импорт PCAP</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="836"/>
+        <location filename="../main_window.py" line="908"/>
         <source>Cannot import capture</source>
         <translation>Не удалось импортировать захват</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="1155"/>
+        <location filename="../main_window.py" line="1249"/>
         <source>apply a rule before saving a result</source>
         <translation>примените правило перед сохранением результата</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="1158"/>
+        <location filename="../main_window.py" line="1252"/>
         <source>Save result</source>
         <translation>Сохранить результат</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="1170"/>
+        <location filename="../main_window.py" line="1264"/>
         <source>could not save result: {0}</source>
         <translation>не удалось сохранить результат: {0}</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="1172"/>
+        <location filename="../main_window.py" line="1266"/>
         <source>could not save the result</source>
         <translation>не удалось сохранить результат</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="1180"/>
+        <location filename="../main_window.py" line="1274"/>
         <source>Quick help</source>
         <translation>Краткая справка</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="1209"/>
+        <location filename="../main_window.py" line="1292"/>
+        <source>Order of work
+The Start here panel on the workspace lists the same steps and
+marks the ones already done. Help - Show start guide brings it back.
+1. File - Open a recording (Ctrl+O), or Open the example (Ctrl+D).
+2. Pick a session, then a direction.
+3. Rule - Build rule (Ctrl+B) for a form, Open rule (Ctrl+R), or Load example.
+4. F5 applies the rule to the current direction; F6 to the whole capture.
+5. Read the Counterexamples tab; clicking a row jumps to the bytes.
+
+Keys
+Ctrl+O open recording   Ctrl+D open example   Ctrl+B build rule
+Ctrl+R open rule   Ctrl+S save result
+F5 apply direction    F6 apply capture   F1 this help
+
+The bytes are the source of truth. A rule is an interpretation; a
+mismatch is a counterexample kept against it, not discarded.</source>
+        <translation>Порядок работы
+Панель «Начните здесь» на рабочей области перечисляет те же шаги и
+отмечает уже выполненные. Справка - Показать стартовое руководство возвращает её.
+1. Файл - Открыть запись (Ctrl+O) или Открыть пример (Ctrl+D).
+2. Выберите сессию, затем направление.
+3. Правило - Собрать правило (Ctrl+B) для формы, Открыть правило (Ctrl+R) или Загрузить пример.
+4. F5 применяет правило к текущему направлению; F6 ко всему захвату.
+5. Читайте вкладку контрпримеров; щелчок по строке переходит к байтам.
+
+Клавиши
+Ctrl+O открыть запись   Ctrl+D открыть пример   Ctrl+B собрать правило
+Ctrl+R открыть правило   Ctrl+S сохранить результат
+F5 применить направление    F6 применить захват   F1 эта справка
+
+Байты — источник истины. Правило — это интерпретация; несовпадение —
+контрпример, сохранённый против него, а не отброшенный.</translation>
+    </message>
+    <message>
+        <location filename="../main_window.py" line="1304"/>
         <source>About</source>
         <translation>О программе</translation>
     </message>
     <message>
-        <location filename="../main_window.py" line="1215"/>
+        <location filename="../main_window.py" line="1310"/>
         <source>Madrigal protocol laboratory
 A local tool for reconstructing an undocumented binary protocol over TCP.
 The bytes are the source of truth; a rule is an interpretation checked against them.</source>
@@ -917,6 +1015,89 @@ The bytes are the source of truth; a rule is an interpretation checked against t
     </message>
 </context>
 <context>
+    <name>StartScreen</name>
+    <message>
+        <location filename="../start_screen.py" line="194"/>
+        <source>Start here</source>
+        <translation>Начните здесь</translation>
+    </message>
+    <message>
+        <location filename="../start_screen.py" line="201"/>
+        <source>A capture is a recording of a network exchange. This tool puts the bytes back in order and shows how a rule reads them. Open the example to see a whole investigation, or open your own file.</source>
+        <translation>Захват — это запись сетевого обмена. Инструмент восстанавливает порядок байтов и показывает, как их читает правило. Откройте пример, чтобы увидеть готовое исследование, или откройте свой файл.</translation>
+    </message>
+    <message>
+        <location filename="../start_screen.py" line="202"/>
+        <source>Open the example</source>
+        <translation>Открыть пример</translation>
+    </message>
+    <message>
+        <location filename="../start_screen.py" line="205"/>
+        <source>Open the small capture and rule that ship with the tool</source>
+        <translation>Открыть небольшой захват и правило, поставляемые с инструментом</translation>
+    </message>
+    <message>
+        <location filename="../start_screen.py" line="206"/>
+        <source>Open a file...</source>
+        <translation>Открыть файл...</translation>
+    </message>
+    <message>
+        <location filename="../start_screen.py" line="209"/>
+        <source>Open a recording: pcap, pcapng or a normalized JSON</source>
+        <translation>Открыть запись: pcap, pcapng или нормализованный JSON</translation>
+    </message>
+    <message>
+        <location filename="../start_screen.py" line="211"/>
+        <source>Open a recording</source>
+        <translation>Открыть запись</translation>
+    </message>
+    <message>
+        <location filename="../start_screen.py" line="217"/>
+        <source>A pcap, a pcapng or an already normalized JSON. Open the example if you have none at hand.</source>
+        <translation>Файл pcap, pcapng или уже нормализованный JSON. Если файла нет, откройте пример.</translation>
+    </message>
+    <message>
+        <location filename="../start_screen.py" line="218"/>
+        <source>Pick a conversation and a direction</source>
+        <translation>Выберите соединение и направление</translation>
+    </message>
+    <message>
+        <location filename="../start_screen.py" line="224"/>
+        <source>One connection on the left, then the traffic one way or the other. The bytes appear as hex.</source>
+        <translation>Соединение слева, затем трафик в одну или другую сторону. Байты показаны в hex.</translation>
+    </message>
+    <message>
+        <location filename="../start_screen.py" line="225"/>
+        <source>Describe the messages and check them</source>
+        <translation>Опишите сообщения и проверьте их</translation>
+    </message>
+    <message>
+        <location filename="../start_screen.py" line="232"/>
+        <source>Write a rule that says how the bytes are cut into messages and what each field means, then check it. The tool marks every message the rule disagrees with.</source>
+        <translation>Напишите правило: как байты делятся на сообщения и что означает каждое поле, затем проверьте его. Инструмент помечает каждое сообщение, с которым правило не согласно.</translation>
+    </message>
+    <message>
+        <location filename="../start_screen.py" line="234"/>
+        <source>Build a rule...</source>
+        <translation>Собрать правило...</translation>
+    </message>
+    <message>
+        <location filename="../start_screen.py" line="237"/>
+        <source>Describe a message in a form instead of writing JSON by hand</source>
+        <translation>Описать сообщение в форме вместо ручного JSON</translation>
+    </message>
+    <message>
+        <location filename="../start_screen.py" line="238"/>
+        <source>Check the rule</source>
+        <translation>Проверить правило</translation>
+    </message>
+    <message>
+        <location filename="../start_screen.py" line="241"/>
+        <source>Apply the rule to the current direction</source>
+        <translation>Применить правило к текущему направлению</translation>
+    </message>
+</context>
+<context>
     <name>ValidationView</name>
     <message>
         <location filename="../validation_view.py" line="37"/>
@@ -930,25 +1111,25 @@ The bytes are the source of truth; a rule is an interpretation checked against t
     </message>
     <message>
         <location filename="../validation_view.py" line="88"/>
-        <location filename="../validation_view.py" line="462"/>
+        <location filename="../validation_view.py" line="475"/>
         <source>rule JSON or YAML</source>
         <translation>правило JSON или YAML</translation>
     </message>
     <message>
         <location filename="../validation_view.py" line="100"/>
-        <location filename="../validation_view.py" line="463"/>
+        <location filename="../validation_view.py" line="476"/>
         <source>Apply to current direction</source>
         <translation>Применить к текущему направлению</translation>
     </message>
     <message>
         <location filename="../validation_view.py" line="106"/>
-        <location filename="../validation_view.py" line="464"/>
+        <location filename="../validation_view.py" line="477"/>
         <source>Apply to whole capture</source>
         <translation>Применить ко всему захвату</translation>
     </message>
     <message>
         <location filename="../validation_view.py" line="109"/>
-        <location filename="../validation_view.py" line="465"/>
+        <location filename="../validation_view.py" line="478"/>
         <source>Build rule...</source>
         <translation>Собрать правило...</translation>
     </message>
@@ -959,45 +1140,45 @@ The bytes are the source of truth; a rule is an interpretation checked against t
     </message>
     <message>
         <location filename="../validation_view.py" line="115"/>
-        <location filename="../validation_view.py" line="466"/>
+        <location filename="../validation_view.py" line="479"/>
         <source>Load example</source>
         <translation>Загрузить пример</translation>
     </message>
     <message>
         <location filename="../validation_view.py" line="116"/>
-        <location filename="../validation_view.py" line="467"/>
+        <location filename="../validation_view.py" line="480"/>
         <source>Load the first rule from examples/</source>
         <translation>Загрузить первое правило из examples/</translation>
     </message>
     <message>
         <location filename="../validation_view.py" line="125"/>
         <location filename="../validation_view.py" line="126"/>
-        <location filename="../validation_view.py" line="468"/>
-        <location filename="../validation_view.py" line="469"/>
+        <location filename="../validation_view.py" line="481"/>
+        <location filename="../validation_view.py" line="482"/>
         <source>Rule</source>
         <translation>Правило</translation>
     </message>
     <message>
         <location filename="../validation_view.py" line="131"/>
-        <location filename="../validation_view.py" line="471"/>
+        <location filename="../validation_view.py" line="484"/>
         <source>offset</source>
         <translation>смещение</translation>
     </message>
     <message>
         <location filename="../validation_view.py" line="131"/>
-        <location filename="../validation_view.py" line="471"/>
+        <location filename="../validation_view.py" line="484"/>
         <source>len</source>
         <translation>дл.</translation>
     </message>
     <message>
         <location filename="../validation_view.py" line="131"/>
-        <location filename="../validation_view.py" line="471"/>
+        <location filename="../validation_view.py" line="484"/>
         <source>status</source>
         <translation>статус</translation>
     </message>
     <message>
         <location filename="../validation_view.py" line="132"/>
-        <location filename="../validation_view.py" line="472"/>
+        <location filename="../validation_view.py" line="485"/>
         <source>fields</source>
         <translation>поля</translation>
     </message>
@@ -1012,60 +1193,60 @@ The bytes are the source of truth; a rule is an interpretation checked against t
         <translation>Контрпримеры</translation>
     </message>
     <message>
-        <location filename="../validation_view.py" line="192"/>
-        <location filename="../validation_view.py" line="485"/>
+        <location filename="../validation_view.py" line="195"/>
+        <location filename="../validation_view.py" line="498"/>
         <source>session {0}   {1}</source>
         <translation>сессия {0}   {1}</translation>
     </message>
     <message>
-        <location filename="../validation_view.py" line="213"/>
-        <location filename="../validation_view.py" line="283"/>
+        <location filename="../validation_view.py" line="226"/>
+        <location filename="../validation_view.py" line="296"/>
         <source>invalid rule: {0}</source>
         <translation>некорректное правило: {0}</translation>
     </message>
     <message>
-        <location filename="../validation_view.py" line="216"/>
-        <location filename="../validation_view.py" line="278"/>
+        <location filename="../validation_view.py" line="229"/>
+        <location filename="../validation_view.py" line="291"/>
         <source>rule parses</source>
         <translation>правило разобрано</translation>
     </message>
     <message>
-        <location filename="../validation_view.py" line="296"/>
+        <location filename="../validation_view.py" line="309"/>
         <source>no messages yet - apply a rule to this direction (F5) or to the capture (F6)</source>
         <translation>сообщений пока нет — примените правило к этому направлению (F5) или ко всему захвату (F6)</translation>
     </message>
     <message>
-        <location filename="../validation_view.py" line="342"/>
+        <location filename="../validation_view.py" line="355"/>
         <source>no counterexamples in this direction</source>
         <translation>контрпримеров в этом направлении нет</translation>
     </message>
     <message>
-        <location filename="../validation_view.py" line="347"/>
-        <location filename="../validation_view.py" line="473"/>
-        <location filename="../validation_view.py" line="475"/>
+        <location filename="../validation_view.py" line="360"/>
+        <location filename="../validation_view.py" line="486"/>
+        <location filename="../validation_view.py" line="488"/>
         <source>Messages ({0})</source>
         <translation>Сообщения ({0})</translation>
     </message>
     <message>
-        <location filename="../validation_view.py" line="349"/>
-        <location filename="../validation_view.py" line="438"/>
-        <location filename="../validation_view.py" line="478"/>
-        <location filename="../validation_view.py" line="481"/>
+        <location filename="../validation_view.py" line="362"/>
+        <location filename="../validation_view.py" line="451"/>
+        <location filename="../validation_view.py" line="491"/>
+        <location filename="../validation_view.py" line="494"/>
         <source>Counterexamples ({0})</source>
         <translation>Контрпримеры ({0})</translation>
     </message>
     <message>
-        <location filename="../validation_view.py" line="353"/>
+        <location filename="../validation_view.py" line="366"/>
         <source>rule v{0}  {1}</source>
         <translation>правило v{0}  {1}</translation>
     </message>
     <message>
-        <location filename="../validation_view.py" line="435"/>
+        <location filename="../validation_view.py" line="448"/>
         <source>no counterexamples in this capture</source>
         <translation>контрпримеров в этом захвате нет</translation>
     </message>
     <message>
-        <location filename="../validation_view.py" line="453"/>
+        <location filename="../validation_view.py" line="466"/>
         <source>rule applied to {0} messages</source>
         <translation>правило применено к {0} сообщениям</translation>
     </message>

@@ -1,15 +1,15 @@
-"""First-run guide: the four steps from a capture to a checked rule.
+"""The compact "Start here" banner above the workspace.
 
 The window is dense by design, and a newcomer cannot tell from the panels alone
-in which order they are meant to be used. This panel names the four steps, marks
-the ones already done, and offers the button that performs the next one, so the
-tool can be driven without reading the manual first.
+in which order they are meant to be used. This banner names the three steps and
+marks the ones already done, so the tool can be driven without reading the
+manual first. The centre of the window carries the same steps at full size while
+nothing is open; once work has started this banner is the only reminder.
 
-The panel is a compact two-row strip above the workspace, not a dialog and not a
-block of prose: the steps sit side by side so the workspace keeps almost all of
-the window height. The longer hint for a step is a tooltip, not a paragraph. The
-strip hides itself once a capture, a rule and an applied rule are all present,
-because by then the workspace itself shows what to do.
+It is a single strip, not a block of prose: the steps sit side by side and each
+one's explanation is a tooltip, so the workspace keeps almost all of the window
+height. The strip hides itself once a capture, a rule and an applied rule are
+all present, because by then the workspace itself shows what to do.
 """
 
 from __future__ import annotations
@@ -21,9 +21,9 @@ from .constants import FONT_SIZE_BODY, FONT_SIZE_CAPTION
 
 
 class _Step(QtWidgets.QFrame):
-    """One numbered step: a title, a tooltip hint, an action and a done marker."""
+    """One numbered step: a title, a tooltip hint and an optional action."""
 
-    def __init__(self, number: int, title: str, hint: str, action: str | None) -> None:
+    def __init__(self, number: int, action: str | None) -> None:
         super().__init__()
         self.setObjectName("guideStep")
         # A step must not widen the window: its title and button are longer in
@@ -40,14 +40,9 @@ class _Step(QtWidgets.QFrame):
         self.number.setFixedWidth(14)
         layout.addWidget(self.number)
 
-        self.title = QtWidgets.QLabel(title)
+        self.title = QtWidgets.QLabel()
         self.title.setObjectName("guideStepTitle")
         layout.addWidget(self.title)
-        # The hint is kept for the caption text and the translations, but shown
-        # as a tooltip: a paragraph per step would push the workspace off screen.
-        self.hint = QtWidgets.QLabel(hint)
-        self.hint.setObjectName("guideStepHint")
-        self.hint.setVisible(False)
 
         self.marker = QtWidgets.QLabel()
         self.marker.setObjectName("guideStepMarker")
@@ -55,15 +50,13 @@ class _Step(QtWidgets.QFrame):
 
         self.button: QtWidgets.QPushButton | None = None
         if action is not None:
-            self.button = QtWidgets.QPushButton(action)
+            self.button = QtWidgets.QPushButton()
             self.button.setObjectName("guideStepAction")
             self.button.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
             layout.addWidget(self.button)
 
-        self.setToolTip(hint)
-
     def set_state(self, state: str) -> None:
-        """Colour the step: ``done``, ``next`` or ``todo``."""
+        """Colour the step: ``done``, ``next`` or ``locked``."""
         self.setProperty("state", state)
         self.marker.setText({"done": "✓", "next": "→"}.get(state, ""))
         self.title.setProperty("state", state)
@@ -73,14 +66,10 @@ class _Step(QtWidgets.QFrame):
 
 
 class GuidePanel(QtWidgets.QFrame):
-    """The four-step guide shown above the workspace on a fresh window.
+    """The three-step banner shown above the workspace while work is unfinished."""
 
-    Emits the same three intentions the menu offers, so the window wires the
-    buttons to the existing slots and the guide stays free of application logic.
-    """
-
+    openExampleRequested = QtCore.Signal()
     openCaptureRequested = QtCore.Signal()
-    openRuleRequested = QtCore.Signal()
     applyRequested = QtCore.Signal()
     dismissRequested = QtCore.Signal()
 
@@ -117,64 +106,55 @@ class GuidePanel(QtWidgets.QFrame):
         head.addWidget(self.hide_button)
         outer.addLayout(head)
 
-        self.step_capture = _Step(1, "", "", "")
-        self.step_session = _Step(2, "", "", None)
-        self.step_rule = _Step(3, "", "", "")
-        self.step_apply = _Step(4, "", "", "")
+        self.step_capture = _Step(1, "example")
+        self.step_session = _Step(2, None)
+        self.step_rule = _Step(3, "apply")
 
-        # The four steps sit side by side: a stack of four hint rows was taller
-        # than the workspace it was meant to introduce.
         steps = QtWidgets.QHBoxLayout()
         steps.setSpacing(6)
-        for step in (
-            self.step_capture,
-            self.step_session,
-            self.step_rule,
-            self.step_apply,
-        ):
+        for step in (self.step_capture, self.step_session, self.step_rule):
             steps.addWidget(step)
         steps.addStretch(1)
         outer.addLayout(steps)
-        self.step_capture.button.clicked.connect(self.openCaptureRequested.emit)
-        self.step_rule.button.clicked.connect(self.openRuleRequested.emit)
-        self.step_apply.button.clicked.connect(self.applyRequested.emit)
+        self.step_capture.button.clicked.connect(self.openExampleRequested.emit)
+        self.step_rule.button.clicked.connect(self.applyRequested.emit)
 
-        self._capture_name: str | None = None
+        self._capture_name: str = ""
+        self._rule_name: str = ""
+        self._capture_open = False
         self._session_ready = False
-        self._rule_name: str | None = None
+        self._rule_ready = False
         self._applied = False
         self.retranslate_ui()
         self.apply_theme()
 
     # -- state -------------------------------------------------------------
 
-    def set_capture(self, name: str | None) -> None:
-        """Record the open capture (its file name), or ``None`` when closed."""
-        self._capture_name = name
-        self._refresh()
-
-    def set_session_ready(self, ready: bool) -> None:
-        """Record whether a session and a direction are selected."""
-        self._session_ready = bool(ready)
-        self._refresh()
-
-    def set_rule(self, name: str | None) -> None:
-        """Record the open rule (its file name or title), or ``None``."""
-        self._rule_name = name
-        self._refresh()
-
-    def set_applied(self, applied: bool) -> None:
-        """Record whether the rule has been applied at least once."""
+    def set_progress(
+        self,
+        *,
+        capture_open: bool,
+        session_ready: bool,
+        rule_ready: bool,
+        applied: bool,
+        capture_name: str = "",
+        rule_name: str = "",
+    ) -> None:
+        """Record how far the reader has come and repaint the banner."""
+        self._capture_open = bool(capture_open)
+        self._session_ready = bool(session_ready)
+        self._rule_ready = bool(rule_ready)
         self._applied = bool(applied)
+        self._capture_name = capture_name
+        self._rule_name = rule_name
         self._refresh()
 
     def _refresh(self) -> None:
-        capture_done = self._capture_name is not None
+        capture_done = self._capture_open
         session_done = capture_done and self._session_ready
-        rule_done = self._rule_name is not None
-        apply_done = rule_done and session_done and self._applied
+        rule_done = self._rule_ready and session_done and self._applied
 
-        if capture_done and rule_done and apply_done:
+        if capture_done and rule_done:
             # Nothing left to explain; the workspace is self-describing now.
             self.setVisible(False)
             return
@@ -182,34 +162,27 @@ class GuidePanel(QtWidgets.QFrame):
 
         self.step_capture.set_state("done" if capture_done else "next")
         self.step_session.set_state(
-            "done" if session_done else ("next" if capture_done else "todo")
+            "done" if session_done else ("next" if capture_done else "locked")
         )
         self.step_rule.set_state(
-            "done" if rule_done else ("next" if session_done else "todo")
-        )
-        self.step_apply.set_state(
-            "done" if apply_done else ("next" if rule_done else "todo")
+            "done" if rule_done else ("next" if session_done else "locked")
         )
 
         if self.step_capture.button is not None:
             self.step_capture.button.setVisible(not capture_done)
         if self.step_rule.button is not None:
-            self.step_rule.button.setVisible(not rule_done)
-        if self.step_apply.button is not None:
-            self.step_apply.button.setVisible(
-                rule_done and session_done and not apply_done
-            )
+            self.step_rule.button.setVisible(session_done and not rule_done)
 
         self.status.setText(self._status_text())
 
     def _status_text(self) -> str:
-        if self._capture_name is None:
+        if not self._capture_open:
             return self.tr(
                 "Nothing is open yet: the tool reads a capture file (pcap, pcapng "
                 "or the normalized JSON) and a rule that says how to read it."
             )
         parts = [self.tr("capture: {0}").format(self._capture_name)]
-        if self._rule_name is not None:
+        if self._rule_ready:
             parts.append(self.tr("rule: {0}").format(self._rule_name))
         else:
             parts.append(self.tr("no rule yet"))
@@ -225,38 +198,30 @@ class GuidePanel(QtWidgets.QFrame):
             self.tr("Hide the guide; Help - Quick help brings it back")
         )
         self.status.setToolTip(self.tr("What is open right now"))
-        self.step_capture.title.setText(self.tr("Open a capture"))
-        self.step_capture.hint.setText(
-            self.tr("pcap, pcapng or normalized JSON. Ctrl+O.")
+        self.step_capture.title.setText(self.tr("Open a recording"))
+        self.step_capture.setToolTip(
+            self.tr("A pcap, a pcapng or a normalized JSON. Ctrl+O.")
         )
-        self.step_capture.button.setText(self.tr("Open capture..."))
-        self.step_session.title.setText(self.tr("Pick a session and a direction"))
-        self.step_session.hint.setText(
+        self.step_capture.button.setText(self.tr("Open the example"))
+        self.step_capture.button.setToolTip(
+            self.tr("Open the small capture and rule that ship with the tool")
+        )
+        self.step_session.title.setText(self.tr("Pick a conversation"))
+        self.step_session.setToolTip(
             self.tr(
-                "Choose the connection on the left; A to B and B to A are listed under it."
+                "Choose the connection on the left; one way or the other is listed under it."
             )
         )
-        self.step_rule.title.setText(self.tr("Load or build a rule"))
-        self.step_rule.hint.setText(
+        self.step_rule.title.setText(self.tr("Describe and check"))
+        self.step_rule.setToolTip(
             self.tr(
-                "A rule says how the bytes are cut into messages and what each field means. Ctrl+R."
+                "A rule says how the bytes are cut into messages and what each field means."
             )
         )
-        self.step_rule.button.setText(self.tr("Open rule..."))
-        self.step_apply.title.setText(self.tr("Apply the rule and read the verdicts"))
-        self.step_apply.hint.setText(
-            self.tr(
-                "F5 applies it to the current direction, F6 to the whole capture. Mismatches are kept as counterexamples."
-            )
+        self.step_rule.button.setText(self.tr("Check the rule"))
+        self.step_rule.button.setToolTip(
+            self.tr("Apply the rule to the current direction")
         )
-        self.step_apply.button.setText(self.tr("Apply to direction"))
-        for step in (
-            self.step_capture,
-            self.step_session,
-            self.step_rule,
-            self.step_apply,
-        ):
-            step.setToolTip(step.hint.text())
         self._refresh()
 
     def apply_theme(self) -> None:
@@ -292,8 +257,9 @@ class GuidePanel(QtWidgets.QFrame):
             QLabel#guideStepNumber {{ color: {token.text_secondary}; font-size: {FONT_SIZE_BODY}pt; }}
             QLabel#guideStepTitle {{ color: {token.text_primary}; font-size: {FONT_SIZE_BODY}pt; }}
             QLabel#guideStepTitle[state="done"] {{ color: {token.status_matched_text}; }}
-            QLabel#guideStepHint {{ color: {token.text_secondary}; font-size: {FONT_SIZE_CAPTION}pt; }}
+            QLabel#guideStepTitle[state="locked"] {{ color: {token.text_muted}; }}
             QLabel#guideStepMarker {{ color: {token.status_matched_text}; font-size: {FONT_SIZE_BODY}pt; }}
+            QLabel#guideStepMarker[state="next"] {{ color: {token.accent}; }}
             QPushButton#guideStepAction {{
                 background: {token.accent};
                 color: {token.text_on_accent};
@@ -306,13 +272,7 @@ class GuidePanel(QtWidgets.QFrame):
         )
         self.title.setFont(theme.heading_font(FONT_SIZE_BODY + 2))
         self.status.setFont(theme.body_font(FONT_SIZE_CAPTION))
-        for step in (
-            self.step_capture,
-            self.step_session,
-            self.step_rule,
-            self.step_apply,
-        ):
+        for step in (self.step_capture, self.step_session, self.step_rule):
             step.title.setFont(theme.body_font(FONT_SIZE_BODY))
-            step.hint.setFont(theme.body_font(FONT_SIZE_CAPTION))
             step.number.setFont(theme.body_font(FONT_SIZE_BODY))
             step.marker.setFont(theme.body_font(FONT_SIZE_BODY))

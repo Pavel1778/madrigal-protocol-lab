@@ -36,14 +36,26 @@ def test_menu_titles_are_russian(ru):
 
 def test_tab_captions_are_russian(ru):
     tabs = [ru.right_tabs.tabText(i) for i in range(ru.right_tabs.count())]
-    assert tabs == ["Анализ", "Сравн.", "Гип.", "Отчёт", "Диф."]
+    assert tabs == [
+        "Анализ",
+        "Сравнение",
+        "Альтернативные прочтения",
+        "Отчёт",
+        "Различие версий",
+    ]
 
 
 def test_short_tab_captions_keep_full_tooltips(ru):
-    # The captions are shortened so they fit the narrow dock; the full name is
-    # kept in the tooltip so nothing is lost on hover.
+    # The captions name the tab; the tooltip repeats it so nothing is lost on
+    # hover when the dock is narrow.
     full = [ru.right_tabs.tabToolTip(i) for i in range(ru.right_tabs.count())]
-    assert full == ["Интерпретация", "Сравнение", "Гипотезы", "Отчёт", "Различие версий"]
+    assert full == [
+        "Вкладка анализа",
+        "Вкладка сравнения",
+        "Вкладка альтернативных прочтений",
+        "Вкладка отчёта",
+        "Вкладка различия версий",
+    ]
 
 
 def test_group_boxes_are_russian(ru):
@@ -61,7 +73,8 @@ def test_direction_combo_values_are_protocol_names(ru):
 
 
 def test_open_capture_action_is_russian(ru):
-    assert ru._actions["open_capture"].text() == "Открыть &нормализованный захват..."
+    assert ru._actions["open_capture"].text() == "Открыть &запись..."
+    assert ru._actions["open_example"].text() == "Открыть &пример"
 
 
 def test_theme_action_is_russian(ru):
@@ -107,3 +120,13 @@ def test_language_preference_is_ru(ru):
 def test_no_english_leaks_into_the_menu(ru):
     for menu in ru._menus.values():
         assert "File" not in menu.title()
+
+
+def test_start_screen_is_russian(ru):
+    screen = ru.start_screen
+    assert screen.title.text() == "Начните здесь"
+    assert screen.example_button.text() == "Открыть пример"
+    assert screen.capture_button.text() == "Открыть файл..."
+    assert screen.step_capture.title.text() == "Открыть запись"
+    assert screen.step_session.title.text() == "Выберите соединение и направление"
+    assert screen.step_rule.title.text() == "Опишите сообщения и проверьте их"
