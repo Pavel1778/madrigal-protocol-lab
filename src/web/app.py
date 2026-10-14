@@ -24,12 +24,18 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from .engine import WebEngine, WebEngineError
+from .guidance import STEPS, status_meaning
 
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[1]
 TEMPLATES_DIR = HERE / "templates"
 STATIC_DIR = HERE / "static"
 FONTS_DIR = REPO_ROOT / "assets" / "fonts"
+# The same small capture, rule and journal the desktop window ships, so the
+# first click on the web page shows a worked investigation too.
+SAMPLES_DIR = REPO_ROOT / "src" / "ui" / "samples"
+SAMPLE_CAPTURE = SAMPLES_DIR / "demo_capture.normalized.json"
+SAMPLE_RULE = SAMPLES_DIR / "demo_rule.json"
 
 # The byte-annotation and status colours, mirroring the desktop brand so the
 # web page and the application agree on what a verdict looks like.
@@ -49,6 +55,7 @@ def _templates() -> Jinja2Templates:
     templates.env.globals["status_class"] = lambda status: STATUS_CLASSES.get(
         status, "is-uncovered"
     )
+    templates.env.globals["status_meaning"] = status_meaning
     return templates
 
 
@@ -84,12 +91,32 @@ def create_app(
 
     @app.get("/", response_class=HTMLResponse)
     async def index(request: Request) -> HTMLResponse:
-        engine = _require_engine(app)
+        engine = app.state.engine
+        if engine is None:
+            # Without a capture there is still something to do: the welcome page
+            # offers the bundled demo and a file box.
+            return templates.TemplateResponse(
+                request,
+                "welcome.html",
+                {"demo_available": SAMPLE_CAPTURE.is_file(), "steps": STEPS},
+            )
         return templates.TemplateResponse(
             request,
             "sessions.html",
             _session_context(request, engine),
         )
+
+    @app.get("/demo", response_class=HTMLResponse)
+    async def open_demo() -> RedirectResponse:
+        # One click from the welcome page: open the capture and rule the tool
+        # ships and land on the session list with a worked result already there.
+        if not SAMPLE_CAPTURE.is_file():
+            raise WebEngineError(
+                "the bundled demo is not available in this installation"
+            )
+        rule = SAMPLE_RULE if SAMPLE_RULE.is_file() else None
+        app.state.engine = WebEngine.open(SAMPLE_CAPTURE, rule)
+        return RedirectResponse(url="/", status_code=303)
 
     @app.get("/sessions", response_class=HTMLResponse)
     async def sessions(request: Request) -> HTMLResponse:

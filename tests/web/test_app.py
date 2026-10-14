@@ -105,7 +105,7 @@ def test_session_hex_has_highlight(client: TestClient) -> None:
     response = client.get("/session/s1/hex?direction=A_to_B")
     assert response.status_code == 200
     assert "is-matched" in response.text or "is-mismatched" in response.text
-    assert "Apply rule" in response.text
+    assert "Check the rule" in response.text
 
 
 @corpus_required
@@ -224,9 +224,41 @@ def test_capture_with_wrong_shape_is_400() -> None:
 
 
 @corpus_required
-def test_no_capture_open_returns_400() -> None:
+def test_no_capture_open_shows_the_welcome_page() -> None:
+    # With no capture the page is not an error: it is the welcome screen, which
+    # offers the bundled demo and a file box.
     empty = TestClient(create_app(None, None))
     response = empty.get("/")
+    assert response.status_code == 200
+    assert "Welcome to the protocol laboratory" in response.text
+    assert "Open the built-in demo" in response.text
+
+
+@corpus_required
+def test_welcome_page_lists_the_three_steps() -> None:
+    from src.web.guidance import STEPS
+
+    empty = TestClient(create_app(None, None))
+    response = empty.get("/")
+    for title, _body in STEPS:
+        assert title in response.text
+
+
+@corpus_required
+def test_demo_route_opens_the_bundled_capture() -> None:
+    empty = TestClient(create_app(None, None))
+    response = empty.get("/demo", follow_redirects=True)
+    assert response.status_code == 200
+    # The demo capture ships with the tool and loads with its matching rule, so
+    # the page that follows shows a real investigation rather than an empty one.
+    assert "Sessions" in response.text
+    assert "rule" in response.text
+
+
+@corpus_required
+def test_a_route_needing_a_capture_still_reports_the_missing_one() -> None:
+    empty = TestClient(create_app(None, None))
+    response = empty.get("/sessions")
     assert response.status_code == 400
     assert "--capture" in response.text
 

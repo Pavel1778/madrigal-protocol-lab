@@ -1,8 +1,13 @@
 <h2>
-  Hex
+  Bytes
   <span class="muted">{{ session.session_id }} · {{ direction }}
     · {{ session.direction_bytes.get(direction, 0) }} bytes</span>
 </h2>
+<p class="muted">
+  These are the bytes of one direction, put back in order. Click a byte to see
+  which packet it came from. The colour of a byte shows how the current rule
+  reads it.
+</p>
 
 <div class="toolbar">
   {% if has_rule %}
@@ -10,17 +15,17 @@
           hx-post="/apply"
           hx-vals='{"session": "{{ session.session_id }}", "direction": "{{ direction }}"}'
           hx-target="#messages"
-          hx-swap="innerHTML">Apply rule</button>
+          hx-swap="innerHTML">Check the rule</button>
   {% else %}
-  <span class="muted">No rule loaded — every byte is <b>uncovered</b>.</span>
+  <span class="muted">No rule is loaded, so every byte is <b>uncovered</b>.</span>
   {% endif %}
   <span class="spacer"></span>
   <span class="legend">
-    <span class="swatch swatch--matched"></span>matched
-    <span class="swatch swatch--mismatched"></span>mismatched
-    <span class="swatch swatch--gap"></span>gap
-    <span class="swatch swatch--ambiguous"></span>ambiguity
-    <span class="swatch swatch--uncovered"></span>uncovered
+    <span class="swatch swatch--matched" title="{{ status_meaning('matched') }}"></span>matched
+    <span class="swatch swatch--mismatched" title="{{ status_meaning('mismatched') }}"></span>mismatched
+    <span class="swatch swatch--gap" title="{{ status_meaning('incomplete') }}"></span>gap
+    <span class="swatch swatch--ambiguous" title="{{ status_meaning('ambiguous') }}"></span>ambiguity
+    <span class="swatch swatch--uncovered" title="{{ status_meaning('uncovered') }}"></span>uncovered
   </span>
 </div>
 

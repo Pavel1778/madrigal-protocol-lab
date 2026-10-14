@@ -14,7 +14,9 @@
     {% if capture_id %}<span class="chip" title="{{ source_file }}">{{ capture_id[:19] }}</span>{% endif %}
     {% if has_rule %}<span class="chip chip--accent">rule {{ rule_id }} v{{ rule_version }}</span>{% endif %}
     <span class="spacer"></span>
-    <a class="button" href="/export/report" title="Download the interpretation of every session as a self-contained HTML page">Export report (HTML)</a>
+    {% if capture_id %}
+    <a class="button" href="/export/report" title="Download the interpretation of every session as a self-contained HTML page">Save the report</a>
+    {% endif %}
   </header>
   <main>
     {% block content %}{% endblock %}

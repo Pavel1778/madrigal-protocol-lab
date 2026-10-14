@@ -230,7 +230,52 @@ tr:last-child td { border-bottom: none; }
 
 .counters { margin: 0 0 8px; }
 
+/* -- welcome page ------------------------------------------------------- */
+
+.welcome { max-width: 780px; }
+.welcome .lead { font-size: 1.05rem; line-height: 1.6; }
+.welcome-actions {
+  margin: 24px 0;
+  padding: 20px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.button--big {
+  font-size: 1.05rem;
+  padding: 10px 20px;
+  margin-bottom: 8px;
+}
+.open-form {
+  display: grid;
+  gap: 6px;
+  max-width: 480px;
+  margin-bottom: 24px;
+}
+.open-form label { font-size: 0.85rem; color: var(--text-muted); }
+.open-form input {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 8px 10px;
+  font-family: var(--mono);
+}
+.open-form button { justify-self: start; margin-top: 8px; }
+
+.steps { list-style: none; padding: 0; margin: 0; }
+.steps li {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+.steps .step-title { font-weight: 600; color: var(--accent-hi); }
+.steps .step-body { color: var(--text); }
+
 @media (max-width: 760px) {
   .topbar { flex-wrap: wrap; }
   .legend { display: none; }
+  .steps li { grid-template-columns: 1fr; gap: 4px; }
 }

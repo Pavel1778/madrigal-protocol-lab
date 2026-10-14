@@ -23,7 +23,8 @@
     <tr>
       <td><code>{{ message.offset }}</code></td>
       <td>{{ message.length }}</td>
-      <td><span class="chip {{ status_class(message.status) }}">{{ message.status }}</span>
+      <td><span class="chip {{ status_class(message.status) }}"
+                title="{{ status_meaning(message.status) }}">{{ message.status }}</span>
         {% if message.reason %}<span class="muted">{{ message.reason }}</span>{% endif %}</td>
       <td>
         {% for field in message.fields %}

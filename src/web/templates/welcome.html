@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Welcome{% endblock %}
+{% block content %}
+<section class="panel welcome">
+  <h1>Welcome to the protocol laboratory</h1>
+  <p class="lead">
+    This tool helps you work out what an unknown network protocol is saying. You
+    give it a recording of the traffic and a rule that guesses the message
+    format; it checks the guess against every message and shows what disagrees.
+  </p>
+
+  <div class="welcome-actions">
+    {% if demo_available %}
+    <a class="button button--big" href="/demo">Open the built-in demo</a>
+    <p class="muted">Loads a small capture that ships with the tool, plus a matching rule.</p>
+    {% else %}
+    <p class="muted">The bundled demo is not available in this installation.</p>
+    {% endif %}
+  </div>
+
+  <h2>Or open your own capture</h2>
+  <form class="open-form" method="post" action="/open">
+    <label for="capture">Capture file</label>
+    <input id="capture" name="capture" type="text" required
+           placeholder="/path/to/capture.pcapng">
+    <label for="rule">Rule file <span class="muted">(optional)</span></label>
+    <input id="rule" name="rule" type="text"
+           placeholder="/path/to/rule.json">
+    <button class="button" type="submit">Open</button>
+  </form>
+
+  <h2>How it works</h2>
+  <ol class="steps">
+    {% for title, body in steps %}
+    <li>
+      <span class="step-title">{{ title }}</span>
+      <span class="step-body">{{ body }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+{% endblock %}
