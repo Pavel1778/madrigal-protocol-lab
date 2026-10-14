@@ -140,6 +140,21 @@ inspect the bytes with their packet provenance, and open a rule and its results.
 The report and the machine-readable result are the durable output; the interface
 is a viewer over them.
 
+On first launch the window shows a short welcome card with the three steps of an
+investigation, and an `Open the built-in demo` button that loads a small capture,
+a rule and a journal that ship with the application, so the first click shows a
+worked result rather than an empty window. The same guidance is available later
+under `Help -> Quick help` (`F1`).
+
+The right dock groups the work into tabs:
+
+- `Build rule` - frame the selected bytes and describe their fields.
+- `Results` - the per-message verdicts for the current rule.
+- `Compare` - two rule versions side by side.
+- `Hypotheses` - the fields still marked as assumptions.
+- `Report` - the rendered investigation.
+- `Versions` - the rule history, with superseded results marked `outdated`.
+
 ## 7.1 Interface language
 
 The window ships with an English and a Russian interface. Choose the language

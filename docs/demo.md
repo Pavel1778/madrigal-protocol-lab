@@ -33,7 +33,11 @@ python -m src.ui.main_window \
 ```
 
 The window opens whatever capture and rule you pass on the command line or
-through File, Open capture and File, Open rule; it has no bundled example.
+through File, Open capture and File, Open rule. It also ships a small example
+(capture, rule and journal under `src/ui/samples/`), reachable from the welcome
+card's `Open the built-in demo` button or through File, Open demo (`Ctrl+D`);
+the walkthrough below uses the reference corpus so the numbers can be checked
+against `docs/METRICS.md`.
 
 Before the walkthrough, confirm the whole suite is green:
 
