@@ -186,7 +186,7 @@ def test_catalogue_covers_the_navigable_captions():
     known = {message.findtext("source") for message in tree.getroot().iter("message")}
     expected = {
         "&File", "&Rule", "&Report", "&View", "&Help", "&Language",
-        "Interpretation", "Compare", "Hypotheses", "Report", "Version diff",
+        "Interpretation", "Compare", "Alternative readings", "Report", "Version diff",
         "Bytes", "Sessions", "direction", "session", "traffic",
         "&Settings...", "&Quick help", "&About", "&Dark theme", "&Light theme",
         "matched", "mismatched", "gap", "ambiguity", "uncovered", "incomplete",

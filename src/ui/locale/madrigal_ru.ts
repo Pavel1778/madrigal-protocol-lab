@@ -102,50 +102,6 @@
         <source>Apply the rule to the current direction</source>
         <translation>Применить правило к текущему направлению</translation>
     </message>
-    <message>
-        <source>Open a capture</source>
-        <translation type="vanished">Откройте захват</translation>
-    </message>
-    <message>
-        <source>pcap, pcapng or normalized JSON. Ctrl+O.</source>
-        <translation type="vanished">pcap, pcapng или нормализованный JSON. Ctrl+O.</translation>
-    </message>
-    <message>
-        <source>Open capture...</source>
-        <translation type="vanished">Открыть захват...</translation>
-    </message>
-    <message>
-        <source>Pick a session and a direction</source>
-        <translation type="vanished">Выберите сессию и направление</translation>
-    </message>
-    <message>
-        <source>Choose the connection on the left; A to B and B to A are listed under it.</source>
-        <translation type="vanished">Выберите соединение слева; A to B и B to A перечислены под ним.</translation>
-    </message>
-    <message>
-        <source>Load or build a rule</source>
-        <translation type="vanished">Загрузите или соберите правило</translation>
-    </message>
-    <message>
-        <source>A rule says how the bytes are cut into messages and what each field means. Ctrl+R.</source>
-        <translation type="vanished">Правило описывает, как байты делятся на сообщения и что означает каждое поле. Ctrl+R.</translation>
-    </message>
-    <message>
-        <source>Open rule...</source>
-        <translation type="vanished">Открыть правило...</translation>
-    </message>
-    <message>
-        <source>Apply the rule and read the verdicts</source>
-        <translation type="vanished">Примените правило и прочитайте вердикты</translation>
-    </message>
-    <message>
-        <source>F5 applies it to the current direction, F6 to the whole capture. Mismatches are kept as counterexamples.</source>
-        <translation type="vanished">F5 применяет правило к текущему направлению, F6 — ко всему захвату. Несовпадения сохраняются как контрпримеры.</translation>
-    </message>
-    <message>
-        <source>Apply to direction</source>
-        <translation type="vanished">Применить к направлению</translation>
-    </message>
 </context>
 <context>
     <name>HexView</name>
@@ -229,20 +185,6 @@
         <translation>Лаборатория протоколов Мадригал</translation>
     </message>
     <message>
-        <source>no capture loaded
-
-Open a normalized capture (Ctrl+O), pick a session and a direction,
-then load a rule (Ctrl+R) or press Load example in the Rule tab.</source>
-        <translation type="vanished">захват не загружен
-
-Откройте нормализованный захват (Ctrl+O), выберите сессию и направление,
-затем загрузите правило (Ctrl+R) или нажмите «Загрузить пример» на вкладке «Правило».</translation>
-    </message>
-    <message>
-        <source>no rule applied yet</source>
-        <translation type="vanished">правило ещё не применено</translation>
-    </message>
-    <message>
         <location filename="../main_window.py" line="340"/>
         <source>&amp;File</source>
         <translation>&amp;Файл</translation>
@@ -271,10 +213,6 @@ then load a rule (Ctrl+R) or press Load example in the Rule tab.</source>
         <location filename="../main_window.py" line="345"/>
         <source>&amp;Language</source>
         <translation>&amp;Язык</translation>
-    </message>
-    <message>
-        <source>Open &amp;normalized capture...</source>
-        <translation type="vanished">Открыть &amp;нормализованный захват...</translation>
     </message>
     <message>
         <location filename="../main_window.py" line="352"/>
@@ -435,10 +373,6 @@ then load a rule (Ctrl+R) or press Load example in the Rule tab.</source>
         <translation>Вкладка сравнения</translation>
     </message>
     <message>
-        <source>Hypotheses tab</source>
-        <translation type="vanished">Гипотезы</translation>
-    </message>
-    <message>
         <location filename="../main_window.py" line="506"/>
         <source>Report tab</source>
         <translation>Вкладка отчёта</translation>
@@ -447,42 +381,6 @@ then load a rule (Ctrl+R) or press Load example in the Rule tab.</source>
         <location filename="../main_window.py" line="507"/>
         <source>Version diff tab</source>
         <translation>Вкладка различия версий</translation>
-    </message>
-    <message>
-        <source>Order of work
-The Start here panel on the workspace lists the same steps and
-marks the ones already done. Help - Show start guide brings it back.
-1. File - Open capture (Ctrl+O).
-2. Pick a session, then a direction.
-3. Rule - Build rule (Ctrl+B) for a form, Open rule (Ctrl+R), or Load example.
-4. F5 applies the rule to the current direction; F6 to the whole capture.
-5. Read the Counterexamples tab; clicking a row jumps to the bytes.
-
-Keys
-Ctrl+O open capture   Ctrl+B build rule   Ctrl+R open rule   Ctrl+S save result
-F5 apply direction    F6 apply capture   F1 this help
-
-The bytes are the source of truth. A rule is an interpretation; a
-mismatch is a counterexample kept against it, not discarded.</source>
-        <translation type="vanished">Порядок работы
-Панель «Начните здесь» на рабочей области перечисляет те же шаги и
-отмечает уже выполненные. «Справка — Показать подсказку» вернёт её.
-1. Файл — Открыть захват (Ctrl+O).
-2. Выберите сессию, затем направление.
-3. Правило — Собрать правило (Ctrl+B) для формы, Открыть правило (Ctrl+R) или Загрузить пример.
-4. F5 применяет правило к текущему направлению; F6 — ко всему захвату.
-5. Откройте вкладку контрпримеров; щелчок по строке переходит к байтам.
-
-Клавиши
-Ctrl+O открыть захват   Ctrl+B собрать правило   Ctrl+R открыть правило   Ctrl+S сохранить результат
-F5 применить к направлению    F6 применить к захвату   F1 эта справка
-
-Байты — источник истины. Правило — интерпретация; несовпадение — это
-контрпример к нему, который сохраняется, а не отбрасывается.</translation>
-    </message>
-    <message>
-        <source>Hypotheses</source>
-        <translation type="vanished">Гип.</translation>
     </message>
     <message>
         <location filename="../main_window.py" line="499"/>
