@@ -162,6 +162,10 @@ class HexView(QtWidgets.QPlainTextEdit):
 
     byteClicked = QtCore.Signal(int)
     byteHovered = QtCore.Signal(int)
+    # Reported when the user drags out a run of bytes: (start offset, length).
+    # The rule builder uses it to turn a highlight into a field without asking
+    # the reader to type offsets by hand.
+    rangeSelected = QtCore.Signal(int, int)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
@@ -186,6 +190,51 @@ class HexView(QtWidgets.QPlainTextEdit):
         self._header.setText(self._column_header())
         self._style_header()
         self._position_header()
+        self.selectionChanged.connect(self._on_selection_changed)
+
+    def _on_selection_changed(self) -> None:
+        """Report the byte range behind the current text selection.
+
+        The hex grid lays bytes out as characters, so a drag over the hex or the
+        ASCII column maps back to a run of byte offsets. A selection that spans
+        no whole byte, or the whole document, is ignored so the rule builder is
+        not handed a meaningless range.
+        """
+        cursor = self.textCursor()
+        if not cursor.hasSelection() or not self._data:
+            return
+        start = self._offset_at_char(cursor.selectionStart())
+        end = self._offset_at_char(cursor.selectionEnd() - 1)
+        if start is None or end is None:
+            return
+        first, last = sorted((start, end))
+        length = last - first + 1
+        if length <= 0:
+            return
+        self.rangeSelected.emit(first, length)
+
+    def _offset_at_char(self, char_index: int) -> int | None:
+        """Byte offset for a document character index, or ``None``.
+
+        Only positions that land on a hex or ASCII byte cell resolve; the offset
+        column and the spaces between cells do not.
+        """
+        document = self.document()
+        block = document.findBlock(char_index)
+        column = char_index - block.position()
+        line_index = block.blockNumber()
+        prefix = self._prefix if self._show_offset else 0
+        ascii_start = self._ascii_start - (_PREFIX - prefix)
+        if column < prefix:
+            return None
+        if column < ascii_start:
+            byte_in_line = (column - prefix) // 3
+        else:
+            byte_in_line = column - ascii_start
+        if not 0 <= byte_in_line < _BYTES_PER_LINE:
+            return None
+        offset = line_index * _BYTES_PER_LINE + byte_in_line
+        return offset if 0 <= offset < len(self._data) else None
 
     def _position_header(self) -> None:
         """Place the column caption in a strip reserved above the bytes.

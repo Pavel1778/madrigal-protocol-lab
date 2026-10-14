@@ -18,7 +18,7 @@ from pathlib import Path
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..protocol.result import build_result, write_result
-from . import theme
+from . import guidance, theme
 from .compare_view import CompareView
 from .constants import (
     FONT_SIZE_BODY,
@@ -38,6 +38,7 @@ from .hypotheses_view import HypothesesView
 from .i18n import LanguageManager
 from .layout import FlowLayout
 from .model import CaptureModel, CaptureModelError, RuleModel, verify_rule_on_corpus
+from .rule_builder import RuleBuilder
 from .session_tree import SessionTree
 from .settings import (
     APPLICATION,
@@ -47,11 +48,19 @@ from .settings import (
     read_settings,
     write_settings,
 )
+from .timeline_view import TimelineView
 from .validation_view import ValidationView
+from .welcome_panel import WelcomePanel
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_REPORT = REPO_ROOT / "REPORT.md"
 APP_ICON = REPO_ROOT / "assets" / "icons" / "app" / "madrigal-protocol-lab.svg"
+# The small capture and rule that ship with the application, so the first click
+# shows a working investigation instead of an empty window.
+SAMPLE_DIR = Path(__file__).resolve().parent / "samples"
+SAMPLE_CAPTURE = SAMPLE_DIR / "demo_capture.normalized.json"
+SAMPLE_RULE = SAMPLE_DIR / "demo_rule.json"
+SAMPLE_JOURNAL = SAMPLE_DIR / "demo_journal.txt"
 # The desktop id, without the ``.desktop`` suffix Qt expects. The installed file
 # keeps the suffix: /usr/share/applications/madrigal-protocol-lab.desktop.
 APP_DESKTOP_FILE = "madrigal-protocol-lab"
@@ -110,6 +119,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._session_id: str = ""
         self._direction: str = ""
         self._corpus_report = None
+        self._journal: list = []
         self._last_dir: Path | None = None
         self._theme_manager = None
         self._language_manager: LanguageManager | None = None
@@ -127,14 +137,34 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _show_empty_state(self) -> None:
         """Explain the first-run window before a capture is opened."""
+        self._centre_stack.setCurrentWidget(self.welcome_panel)
         self.hex_view.show_hint(
             self.tr(
                 "no capture loaded\n\n"
-                "Open a normalized capture (Ctrl+O), pick a session and a direction,\n"
-                "then load a rule (Ctrl+R) or press Load example in the Rule tab."
+                "Open a capture (Ctrl+O), or press Open the built-in demo on the "
+                "welcome card, to see a worked example."
             )
         )
         self.validation_view.set_rule_status(self.tr("no rule applied yet"))
+        self.timeline_view.clear()
+
+    def open_demo(self) -> None:
+        """Open the small capture, rule and journal that ship with the tool.
+
+        This is the one-click path for a first-time user: a real investigation
+        appears without them having to find a file or write a rule. A missing
+        sample is reported rather than silently ignored.
+        """
+        if not SAMPLE_CAPTURE.is_file():
+            self._notify(self.tr("the built-in demo is not available"))
+            return
+        self.open_capture(SAMPLE_CAPTURE)
+        if SAMPLE_RULE.is_file():
+            self.load_rule(SAMPLE_RULE)
+        if SAMPLE_JOURNAL.is_file():
+            self.load_journal(SAMPLE_JOURNAL)
+        self.apply_to_capture()
+        self._notify(self.tr("opened the built-in demo"))
 
     # -- construction ------------------------------------------------------
 
@@ -149,14 +179,29 @@ class MainWindow(QtWidgets.QMainWindow):
 
         file_menu = bar.addMenu("")
         self._menus["file"] = file_menu
+        self._actions["open_demo"] = self._action(
+            file_menu,
+            "Open &demo",
+            self.open_demo,
+            "Ctrl+D",
+            tip="Load a small capture and rule that ship with the tool, for a first look",
+        )
+        file_menu.addSeparator()
         self._actions["open_capture"] = self._action(
             file_menu,
-            "Open &normalized capture...",
+            "Open &capture...",
             self.open_capture_dialog,
             "Ctrl+O",
-            tip="Open a capture already normalized by src.capture.cli; a raw .pcap/.pcapng is not read here",
+            tip="Open a PCAP, PCAPNG or normalized JSON capture",
         )
         self._actions["open_rule"] = self._action(file_menu, "Open &rule...", self.open_rule_dialog, "Ctrl+R")
+        self._actions["open_journal"] = self._action(
+            file_menu,
+            "Open action &journal...",
+            self.open_journal_dialog,
+            "Ctrl+J",
+            tip="Line your own log of actions up with the messages in the capture",
+        )
         self._actions["save_result"] = self._action(file_menu, "&Save result...", self.save_result_dialog, "Ctrl+S")
         file_menu.addSeparator()
         self._actions["quit"] = self._action(file_menu, "&Quit", self.close, "Ctrl+Q")
@@ -247,8 +292,10 @@ class MainWindow(QtWidgets.QMainWindow):
         for key, label in labels.items():
             self._menus[key].setTitle(label)
         sources = {
-            "open_capture": self.tr("Open &normalized capture..."),
+            "open_demo": self.tr("Open &demo"),
+            "open_capture": self.tr("Open &capture..."),
             "open_rule": self.tr("Open &rule..."),
+            "open_journal": self.tr("Open action &journal..."),
             "save_result": self.tr("&Save result..."),
             "quit": self.tr("&Quit"),
             "apply_direction": self.tr("&Apply to current direction"),
@@ -312,10 +359,30 @@ class MainWindow(QtWidgets.QMainWindow):
             self._legend_chips.append(chip)
         controls.addWidget(self.annotation_legend)
         centre_layout.addLayout(controls)
+
+        # The centre switches between the welcome card (before anything is open)
+        # and the working view, so the first thing a new user sees explains the
+        # tool instead of an empty hex grid.
+        self._centre_stack = QtWidgets.QStackedWidget()
+        self.welcome_panel = WelcomePanel()
+        self.welcome_panel.openDemoRequested.connect(self.open_demo)
+        self.welcome_panel.openCaptureRequested.connect(self.open_capture_dialog)
+        self._centre_stack.addWidget(self.welcome_panel)
+
+        working = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
+        self.timeline_view = TimelineView()
+        self.timeline_view.messageSelected.connect(self.reveal_offset)
+        self._timeline_box = self._wrap(self.tr("Timeline"), self.timeline_view)
+        working.addWidget(self._timeline_box)
+
         self.hex_view = HexView()
-        centre_layout.addWidget(self.hex_view, 1)
-        self._bytes_box = self._wrap(self.tr("Bytes"), centre)
-        splitter.addWidget(self._bytes_box)
+        self._bytes_box = self._wrap(self.tr("Bytes"), self.hex_view)
+        working.addWidget(self._bytes_box)
+        working.setStretchFactor(0, 1)
+        working.setStretchFactor(1, 2)
+        self._centre_stack.addWidget(working)
+        centre_layout.addWidget(self._centre_stack, 1)
+        splitter.addWidget(centre)
 
         self.right_tabs = QtWidgets.QTabWidget()
         # The right dock is narrow and its captions are longer in Russian; elide
@@ -323,6 +390,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # force the splitter wider than the panel can afford.
         self.right_tabs.setElideMode(QtCore.Qt.TextElideMode.ElideRight)
         self.right_tabs.setUsesScrollButtons(True)
+        self.rule_builder = RuleBuilder()
+        self.rule_builder.ruleBuilt.connect(self._on_rule_built)
+        self.right_tabs.addTab(self.rule_builder, "")
         self.validation_view = ValidationView()
         self.right_tabs.addTab(self.validation_view, "")
         self.compare_view = CompareView()
@@ -343,7 +413,7 @@ class MainWindow(QtWidgets.QMainWindow):
         splitter.setStretchFactor(0, 0)
         splitter.setStretchFactor(1, 1)
         splitter.setStretchFactor(2, 0)
-        splitter.setSizes([300, 720, 420])
+        splitter.setSizes([300, 720, 460])
         self.setCentralWidget(splitter)
 
     def _wrap(self, title: str, widget: QtWidgets.QWidget) -> QtWidgets.QGroupBox:
@@ -358,24 +428,30 @@ class MainWindow(QtWidgets.QMainWindow):
 
         The captions are kept short so they fit the narrow dock without eliding;
         the full name is set as the tab tooltip, so nothing is lost on hover.
+        Each caption names the *purpose* of the tab in plain words rather than
+        the engine term, so a reader who has not seen the code knows where to
+        look: build the rule, read the results, weigh the guesses, read the
+        report.
         """
         captions = (
-            self.tr("Interpretation"),
+            self.tr("Build rule"),
+            self.tr("Results"),
             self.tr("Compare"),
             self.tr("Hypotheses"),
             self.tr("Report"),
-            self.tr("Version diff"),
+            self.tr("Versions"),
         )
         tooltips = (
-            self.tr("Interpretation tab"),
-            self.tr("Compare tab"),
-            self.tr("Hypotheses tab"),
-            self.tr("Report tab"),
-            self.tr("Version diff tab"),
+            self.tr("Build a rule by selecting bytes, without writing JSON"),
+            guidance.INTERPRETATION_PANEL,
+            guidance.COMPARE_PANEL,
+            guidance.HYPOTHESES_PANEL,
+            guidance.REPORT_PANEL,
+            guidance.VERSION_DIFF_PANEL,
         )
         for index, (label, tip) in enumerate(zip(captions, tooltips, strict=False)):
             self.right_tabs.setTabText(index, label)
-            self.right_tabs.setTabToolTip(index, tip)
+            self.right_tabs.setTabToolTip(index, self.tr(tip))
 
     def _build_status(self) -> None:
         bar = self.statusBar()
@@ -397,12 +473,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self.session_tree.directionSelected.connect(self._on_direction_selected)
         self.hex_view.byteHovered.connect(self._on_byte_hovered)
         self.hex_view.byteClicked.connect(self._on_byte_clicked)
+        self.hex_view.rangeSelected.connect(self._on_range_selected)
         self.validation_view.applyRequested.connect(self.apply_rule)
         self.validation_view.applyCaptureRequested.connect(self.apply_to_capture)
         self.validation_view.loadExampleRequested.connect(self.load_example_rule)
         self.validation_view.ruleValidityChanged.connect(self.validation_view.show_rule_validity)
         self.validation_view.counterexampleSelected.connect(self._reveal_counterexample)
         self.hypotheses_view.messageSelected.connect(self.reveal_offset)
+
+    def _on_range_selected(self, offset: int, length: int) -> None:
+        """Feed a byte selection from the hex view to the rule builder."""
+        self.rule_builder.set_selection(offset, length)
+
+    def _on_rule_built(self, text: str) -> None:
+        """Adopt a rule built in the visual editor as the current rule.
+
+        The builder only produces text; the same path as a hand-edited rule is
+        used so the version bump and the outdated marking stay in one place.
+        """
+        if self._rule is None:
+            self._rule = RuleModel.from_text(text)
+            self.validation_view.set_rule_text(text)
+        else:
+            self.validation_view.set_rule_text(text)
 
     # -- theme -------------------------------------------------------------
 
@@ -437,6 +530,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.validation_view,
             self.compare_view,
             self.hypotheses_view,
+            self.timeline_view,
+            self.rule_builder,
+            self.welcome_panel,
         ):
             view.apply_theme()
         self.report_view.setFont(theme.mono_font(FONT_SIZE_BODY))
@@ -610,6 +706,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.hypotheses_view.retranslate_ui()
         self.session_tree.retranslate_ui()
         self.hex_view.retranslate_ui()
+        self.welcome_panel.retranslate_ui()
+        self.rule_builder.retranslate_ui()
+        self.timeline_view.retranslate_ui()
+        self._timeline_box.setTitle(self.tr("Timeline"))
         if self._capture_name:
             self._set_provenance_text(self._capture_summary())
 
@@ -647,6 +747,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self._capture_name = Path(path).name
         self._refresh_title()
         self._set_provenance_text(self._capture_summary())
+        # Switch the centre from the welcome card to the working view; a new
+        # capture also clears the timeline, which belonged to the previous one.
+        self._centre_stack.setCurrentIndex(1)
+        self.timeline_view.clear()
         if model.sessions:
             self._on_direction_selected(
                 model.sessions[0].session_id, model.directions(model.sessions[0].session_id)[0]
@@ -725,6 +829,50 @@ class MainWindow(QtWidgets.QMainWindow):
             self.validation_view.set_rule_status(self.tr("no example rule found"), error=True)
             return
         self.load_rule(examples[0])
+
+    def load_journal(self, path: str | Path) -> None:
+        """Load an action journal and line it up with the current messages.
+
+        The journal is the operator's own note of what they did. Pairing it with
+        the decoded messages is what turns a value on the wire into evidence for
+        a field's meaning, so this is offered as a first-class action rather than
+        hidden behind the report.
+        """
+        from ..hypothesis.journal import load_journal as _load
+
+        if self._capture is None or self._rule is None:
+            self._notify(self.tr("open a capture and a rule before a journal"))
+            return
+        try:
+            entries = _load(path)
+        except Exception as exc:
+            self._notify(self.tr("could not read the journal: {0}").format(exc))
+            return
+        messages = self._corpus_messages(())
+        self._journal = entries
+        from ..hypothesis.journal import correlate
+
+        report = correlate(messages, entries)
+        self.timeline_view.show_correlation(report)
+        self._notify(
+            self.tr("journal: {0}").format(report.summary())
+        )
+
+    def open_journal_dialog(self) -> None:
+        """Prompt for an action journal and load it."""
+        path, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self,
+            self.tr("Open action journal"),
+            self._start_dir(SAMPLE_DIR),
+            "Journals (*.txt *.csv *.md);;All files (*)",
+        )
+        if path:
+            self._remember_dir(path)
+            self.load_journal(path)
+
+    def open_demo_action(self) -> None:
+        """Open the built-in demo, the one-click tour of the tool."""
+        self.open_demo()
 
     # -- selection ---------------------------------------------------------
 
@@ -979,16 +1127,23 @@ class MainWindow(QtWidgets.QMainWindow):
             self,
             self.tr("Quick help"),
             self.tr(
-                "Order of work\n"
-                "1. File - Open normalized capture (Ctrl+O).\n"
-                "2. Pick a session, then a direction.\n"
-                "3. Rule - Open rule (Ctrl+R), or Load example in the Rule tab.\n"
-                "4. F5 applies the rule to the current direction; F6 to the whole capture.\n"
-                "5. Read the Counterexamples tab; clicking a row jumps to the bytes.\n"
+                "Three steps\n"
+                "1. Open a capture (Ctrl+O), or press Open the built-in demo (Ctrl+D) "
+                "on the welcome card.\n"
+                "2. Pick a conversation on the left, then a direction.\n"
+                "3. Describe the messages: build a rule by selecting bytes in the "
+                "Build rule tab, or open one (Ctrl+R).\n"
+                "\n"
+                "Reading the colours\n"
+                "Green means the bytes agree with the rule. Red marks a "
+                "counterexample: the bytes break the rule, so the rule is wrong "
+                "there. Grey is a byte no field claims yet. Red hatching is a hole "
+                "in the capture.\n"
                 "\n"
                 "Keys\n"
-                "Ctrl+O open capture   Ctrl+R open rule   Ctrl+S save result\n"
-                "F5 apply direction    F6 apply capture   F1 this help\n"
+                "Ctrl+D demo   Ctrl+O capture   Ctrl+R rule   Ctrl+J journal\n"
+                "Ctrl+S save result   F5 apply to direction   F6 apply to capture\n"
+                "F1 this help\n"
                 "\n"
                 "The bytes are the source of truth. A rule is an interpretation; a\n"
                 "mismatch is a counterexample kept against it, not discarded."

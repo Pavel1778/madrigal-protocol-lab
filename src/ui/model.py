@@ -330,6 +330,17 @@ class RuleModel:
         rule = _rule_from_text(text)
         return cls(rule, text, path=path)
 
+    @classmethod
+    def from_text(cls, text: str, path: Path | None = None) -> RuleModel:
+        """Build a rule model from rule text already in memory.
+
+        Used by the visual builder, which produces the rule document itself
+        rather than reading it from a file; the text is kept so the editor and
+        the version machinery behave the same as for a loaded rule.
+        """
+        rule = _rule_from_text(text)
+        return cls(rule, text, path=path)
+
     def reload(self, text: str) -> None:
         """Adopt edited text as a new rule version; the old run goes outdated.
 
