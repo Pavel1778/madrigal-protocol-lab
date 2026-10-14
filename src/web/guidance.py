@@ -12,8 +12,10 @@ from __future__ import annotations
 STEPS: tuple[tuple[str, str], ...] = (
     (
         "1. Open a capture",
-        "Load a recorded file (PCAP, PCAPNG or a normalized JSON). "
-        "Not sure where to start? Open the built-in demo.",
+        (
+            "Load a recorded file (PCAP, PCAPNG or a normalized JSON). "
+            "Not sure where to start? Open the built-in demo."
+        ),
     ),
     (
         "2. Pick a conversation",
@@ -21,8 +23,10 @@ STEPS: tuple[tuple[str, str], ...] = (
     ),
     (
         "3. Read the messages",
-        "Load a rule, or let the bundled one describe the demo. "
-        "The tool checks the rule against every message and marks what disagrees.",
+        (
+            "Load a rule, or let the bundled one describe the demo. "
+            "The tool checks the rule against every message and marks what disagrees."
+        ),
     ),
 )
 
