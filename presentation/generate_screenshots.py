@@ -7,6 +7,10 @@ presentation frame size (1920x1080). Before each grab any tooltip is hidden and
 the hover flags are cleared, so no tooltip or hover-only affordance appears and
 only widget content is captured.
 
+Thirteen captures are written: the eleven workspace states, the first-run screen
+and one whole-capture run in the light theme. The offscreen render is
+pixel-identical to a grab on a live X display, so a headless run is faithful.
+
 The images feed the slides of the deck. Run with the
 repository root as the working directory:
 
@@ -16,6 +20,7 @@ repository root as the working directory:
 from __future__ import annotations
 
 import os
+import tempfile
 from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -46,6 +51,13 @@ def _grab(widget, name: str) -> Path:
 
 
 def _app() -> QtWidgets.QApplication:
+    # Keep every QSettings read and write in a throwaway store so a capture
+    # cannot inherit the operator's theme, language or editor preferences and
+    # two runs on different machines stay byte-comparable.
+    store = Path(tempfile.mkdtemp(prefix="madrigal-shots-"))
+    for fmt in (QtCore.QSettings.Format.NativeFormat, QtCore.QSettings.Format.IniFormat):
+        for scope in (QtCore.QSettings.Scope.UserScope, QtCore.QSettings.Scope.SystemScope):
+            QtCore.QSettings.setPath(fmt, scope, str(store))
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
     theme.load_fonts(app)
     app.setStyleSheet(theme.build_stylesheet())
@@ -166,7 +178,23 @@ def main() -> int:
     _park(app, window)
     written.append(_grab(window, "11_version_diff.png"))
 
+    # 12 the first-run screen, before any capture is open.
     window.close()
+    empty = open_default_window(app)
+    _show(app, empty)
+    written.append(_grab(empty, "12_welcome.png"))
+    empty.close()
+
+    # 13 the workspace in the light theme: capture, rule and a whole-capture run.
+    light = open_default_window(app, capture=CAPTURE_01, rule=RULE_V1)
+    _show(app, light)
+    light.set_theme_mode("light")
+    light.session_tree.select_direction("s1", "A_to_B")
+    light.apply_to_capture()
+    _park(app, light)
+    written.append(_grab(light, "13_light.png"))
+    light.set_theme_mode("dark")
+    light.close()
     for path in written:
         print(path.relative_to(REPO_ROOT))
     return 0

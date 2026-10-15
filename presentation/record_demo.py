@@ -90,6 +90,11 @@ def main() -> int:
 
     window = open_default_window(app, capture=CAPTURE_01, rule=RULE_V1)
     window.show()
+    # Fill the display so the take matches the frame the grabber records, with
+    # no desktop visible around the window.
+    screen = app.primaryScreen()
+    if screen is not None:
+        window.setGeometry(screen.geometry())
     overlay = Overlay(window)
     _settle(app, 800)
 
