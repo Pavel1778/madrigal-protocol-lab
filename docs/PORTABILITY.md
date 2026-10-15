@@ -29,7 +29,7 @@ for the submitted revision are in "Submission revision" below.
 
 The submission revision is checked from a clean unpack, so the archived tree
 and not the working copy is what runs. The counts below are those of the frozen
-`v1.0.0` archive; the working `main` has since grown to 852 tests, which is
+`v1.0.0` archive; the working `main` has since grown to 883 tests, which is
 expected because it carries work made after the tag. The skip below is the
 archive's only known difference from a checkout: a zip drops the file mode, so
 the one test that reads a script's executable bit is skipped rather than

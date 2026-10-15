@@ -120,7 +120,7 @@ Prints `280 messages, 80 counterexamples` then `280 messages, 0 counterexamples`
 | Qt import error (`libEGL`) | `sudo apt-get install -y libegl1 libgl1 libglib2.0-0 libxkbcommon0 libdbus-1-3 libfontconfig1`, retry; or use the CLI fallback B4. |
 | Web does not start | Skip it; the window and the CLI carry the same point. |
 | Real data unreadable | Use `tests/corpus/reference_export/` instead (the whole of Flow B). |
-| Screen fails entirely | Play `presentation/screencast.mp4` (2:22, committed). |
+| Screen fails entirely | Play `presentation/screencast.mp4` (2:20, committed). |
 
 ## Know by heart
 
@@ -132,8 +132,8 @@ Prints `280 messages, 80 counterexamples` then `280 messages, 0 counterexamples`
 - **Real dataset**: 45 requests + 45 responses, all `matched`, 100 % byte coverage.
 - **Framing**: 10/10 streams framed cleanly by `payload`; the other two
   candidates, 0/10.
-- **Tests**: 852 total; 615 without the UI tests; 584 without the UI and web suites; CI green.
-- **Deck**: 15 slides; final slide has two QR codes, never the word «Вопросы».
+- **Tests**: 883 total; 615 without the UI tests; 584 without the UI and web suites; CI green.
+- **Deck**: 17 slides; final slide has two QR codes, never the word «Вопросы».
 
 Full answers: `docs/DEFENSE_FAQ.md`, `docs/FAQ_FOR_JUDGES.md`,
 `presentation/Q_and_A.md`. Pre-flight list: `docs/DEFENSE_CHECKLIST.md`.

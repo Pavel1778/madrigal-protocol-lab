@@ -118,24 +118,24 @@ seconds.
 
 The six scenes fit the first 3:45; the last thirty seconds are the close. The
 finished file is not committed, and is distinct from
-`presentation/screencast.mp4`, the committed 2:22 recording kept alongside the
+`presentation/screencast.mp4`, the committed 2:20 recording kept alongside the
 deck; the two are separate takes.
 
-`screencast.mp4` is H.264, 1920 by 1080, 15 fps, 142.1 s (2:22), about 1.0 MB.
-The raw take opened and closed on solid black, 2.2 s at the head and 22.0 s at
-the tail. It was trimmed to the first and last frame with content
-(`-ss 2.2 -to 143.933`, stream copy), keeping the frame size and rate;
-`blackdetect` reports no black segment in the committed file.
+`screencast.mp4` is H.264, 1920 by 1080, 15 fps, 220.4 s (2:20), about 1.7 MB.
+The take was recorded against the current window by `record_demo.py` on a
+display the window fills, so the clip matches the deck's frame. The raw take
+opened and closed on solid black (0.6 s at the head, 18.9 s at the tail); it was
+trimmed to the first and last frame with content (`-ss 0.6 -to 221.0`), scaled
+to 1920 by 1080 and re-encoded; `blackdetect` reports no black segment in the
+committed file.
 
 Note: an earlier revision of this file quoted the clip as 1:25 and placed it on
-the team slide. That was wrong on both counts: the clip runs 2:22, and the team
+the team slide. That was wrong on both counts: the clip runs 2:20, and the team
 slide carries no video, only the avatar. The clip is a standalone fallback.
 
-The deck no longer shows the clip as a still. After the 14-slide restructure the
-dedicated «Запись прогона» slide was folded into the demo slide (12), whose
-caption names the clip as the fallback («Резерв — запись полного прогона, 2:22,
-без звука»). The baked poster `presentation/public/screencast-poster.png` stays
-in `public/` unused, so a still frame can be reinstated without re-running
-`make_assets.py`; keeping the frame an image means the deck would render
-identically in the PDF, the PPTX and the built SPA, with no video codec in the
-path.
+The deck no longer shows the clip as a still. After the 17-slide restructure the
+dedicated «Запись прогона» slide was folded into the demo slide (13), whose
+caption names the clip as the fallback («Резерв — запись полного прогона, 2:20,
+без звука»). The baked poster `presentation/public/screencast-poster.png` is the
+poster frame of the demo slide's `<video>`, so the PDF and the PPTX show a still
+frame and no video codec sits in the export path.

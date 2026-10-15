@@ -15,10 +15,10 @@ Reproduce any line below with the command in the same row.
 
 | fact | value | command |
 | --- | --- | --- |
-| pages in the committed PDF (dark) | 14 | `pdfinfo presentation/slide.pdf` |
-| pages in the committed PDF (light) | 14 | `pdfinfo presentation/slide-light.pdf` |
-| slides in the source | 14 | `grep -c 'slide-container' presentation/*.html` |
-| slides in the PPTX | 14 | `python -c "import zipfile;z=zipfile.ZipFile('presentation/slide.pptx');print(len([n for n in z.namelist() if n.startswith('ppt/slides/slide') and n.endswith('.xml')]))"` |
+| pages in the committed PDF (dark) | 17 | `pdfinfo presentation/slide.pdf` |
+| pages in the committed PDF (light) | 17 | `pdfinfo presentation/slide-light.pdf` |
+| slides in the source | 17 | `grep -c 'slide-container' presentation/*.html` |
+| slides in the PPTX | 17 | `python -c "import zipfile;z=zipfile.ZipFile('presentation/slide.pptx');print(len([n for n in z.namelist() if n.startswith('ppt/slides/slide') and n.endswith('.xml')]))"` |
 | page size | 2560 x 1440, 16:9 | `pdfinfo presentation/slide.pdf` |
 | empty pages | 0 | render scan below |
 | DejaVu / fallback glyphs | 0 (fonts are inlined in the HTML) | render scan below |
@@ -42,8 +42,10 @@ Per-page headings, from the source HTML:
      11  Что получилось: 60 из 140 → 140 из 140
      12  Набор организаторов разобран целиком
      13  Демонстрация: живое окно и запись прогона
-     14  Границы применения и итоги
-     15  Инструмент превращает байты в проверяемое знание
+     14  Первый запуск и рабочее окно
+     15  Проверка правила и контрпримеры
+     16  Границы применения и итоги
+     17  Инструмент превращает байты в проверяемое знание
 
 No page is blank; each carries a heading or a section number.
 
@@ -56,10 +58,10 @@ No page is blank; each carries a heading or a section number.
 | 3 | Технический стек | yes | 1 |
 | 4 | Архитектура | yes | 6 |
 | 5 | Функционал и киллер-фичи | yes | 8, 9, 10 |
-| 6 | Скриншоты или скринкаст | yes | 13 |
-| 7 | QR на GitHub | yes | 15 |
+| 6 | Скриншоты или скринкаст | yes | 13, 14, 15 |
+| 7 | QR на GitHub | yes | 17 |
 | 8 | Демонстрация отдельным блоком | yes | 13 |
-| 9 | Направления развития | yes | 14 |
+| 9 | Направления развития | yes | 16 |
 
 Nine of nine present.
 
@@ -67,8 +69,12 @@ Nine of nine present.
   sits on the title slide.
 - Requirement 4: the «Три модуля» slide shows the module breakdown and the JSON
   Schema contracts; the «Путь исследователя» slide shows the pipeline.
-- Requirement 6: the demo slide plays the committed screencast. The deck carries
-  no standalone GUI screenshots; those are added after the UX overhaul.
+- Requirement 6: the demo slide (13) plays the committed screencast, and two
+  further slides carry standalone GUI screenshots: slide 14 pairs the first-run
+  screen with the loaded workspace, slide 15 pairs the counterexample table with
+  the hypothesis panel. The four captures are produced by
+  `presentation/generate_screenshots.py` from the current window and inlined as
+  `data:` URIs by `presentation/inline_media.py`.
 - Requirement 7: `presentation/public/qr_repo.png` and `qr_release.png` are
   referenced by the closing slide and decode to the repository and the `v1.1.0`
   release; the per-member Telegram codes decode to `@Pasha1778` and `@petruan`.
@@ -79,7 +85,7 @@ and prints without a web server and without the rest of the repository.
 
 ## Final slide
 
-Slide 15 is a closing slide, not a "Вопросы" slide. It carries the one-line
+Slide 17 is a closing slide, not a "Вопросы" slide. It carries the one-line
 conclusion «Инструмент превращает байты в проверяемое знание», the repository
 line with its GitHub glyph, the two QR codes (repository and release) with
 captions, and the contact line with both members' Telegram handles. It carries no
@@ -99,7 +105,7 @@ background; on the light theme the dark originals are used.
 
 | fact | value | command |
 | --- | --- | --- |
-| slides | 15, 16:9 | `python -c "import zipfile;print(len([n for n in zipfile.ZipFile('presentation/slide.pptx').namelist() if n.startswith('ppt/slides/slide') and n.endswith('.xml')]))"` |
+| slides | 17, 16:9 | `python -c "import zipfile;print(len([n for n in zipfile.ZipFile('presentation/slide.pptx').namelist() if n.startswith('ppt/slides/slide') and n.endswith('.xml')]))"` |
 | per slide | one full-bleed image, the rendered page | python-pptx scan |
 | zip timestamps | pinned to 1980-01-01 | `python -c "import zipfile;print({i.date_time for i in zipfile.ZipFile('presentation/slide.pptx').infolist()})"` |
 
@@ -121,16 +127,17 @@ same families through `src/ui/theme/fonts.py`.
 | --- | --- | --- |
 | committed file | `presentation/screencast.mp4` | `git ls-files presentation/screencast.mp4` |
 | served copy | `presentation/public/screencast.mp4` is a symlink to it | `ls -l presentation/public/screencast.mp4` |
-| codec, size | H.264, 1920x1080 | `ffprobe presentation/screencast.mp4` |
-| duration | 2:22 | `ffprobe presentation/screencast.mp4` |
-| shown on | slide 12, `<video src="public/screencast.mp4">` | `grep -c '<video' presentation/*.html` |
+| duration | 2:20 | `ffprobe presentation/screencast.mp4` |
+| shown on | slide 13, `<video src="…">` | `grep -c '<video' presentation/*.html` |
 
-The clip is embedded in the demo slide (12): the left card plays
-`presentation/public/screencast.mp4` in a `<video>` element with the poster frame
-`public/screencast-poster.png`, `controls`, `muted`, `loop` and `playsinline`.
-The printed PDF and PPTX therefore show the poster frame, and the HTML deck plays
-the recording in place. The clip stays a committed asset, played from the file
-system if the live window does not come up.
+The clip is embedded in the demo slide (13): the left card plays the
+`screencast.mp4` recording in a `<video>` element with the poster frame
+`screencast-poster.png`, `controls`, `muted`, `loop` and `playsinline`. The take
+is recorded against the current window by `presentation/record_demo.py` and
+trimmed to its first and last frame with content; `blackdetect` reports no black
+segment. The printed PDF and PPTX therefore show the poster frame, and the HTML
+deck plays the recording in place. The clip stays a committed asset, played from
+the file system if the live window does not come up.
 
 ## Demo driver
 

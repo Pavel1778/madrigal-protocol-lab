@@ -54,7 +54,7 @@ Checked on the merged `main` (after the submission README rewrite) against
 provenance. All three directions resolve, the rule reports `matched`, and the
 provenance card shows packet 3, seq 1001, ts 1700000000.004 for byte 0. The
 full suite passed at 781 tests on the frozen `v1.0.0` tag; the current
-`main` has since grown to 852. A capture of that run is in
+`main` has since grown to 883. A capture of that run is in
 [screenshots/verify/web.png](screenshots/verify/web.png).
 
 The web module itself did not change during the merge; only `README.md`

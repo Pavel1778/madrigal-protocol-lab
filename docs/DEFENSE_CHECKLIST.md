@@ -8,14 +8,14 @@ the repository at the final revision; re-run the command if the branch has moved
 
 - [ ] `main = origin/main`, дерево чистое.
       `git fetch --all --prune && git status -sb && git log --oneline -1 origin/main`
-- [ ] Тесты зелёные: `pytest tests/ -q` → **852 passed** на текущем `main`
+- [ ] Тесты зелёные: `pytest tests/ -q` → **883 passed** на текущем `main`
       (на теге `v1.0.0`, который лежит в сдаваемом архиве, — **781 passed**; ≈ 8 min).
       UI-тесты требуют Qt-runtime; в контейнере без `libEGL.so.1` полный набор
       не собирается — там `pytest --ignore=tests/ui` → **615 passed**.
-      Указывайте число с контекстом: 615 без UI, 852 с Qt.
+      Указывайте число с контекстом: 615 без UI, 883 с Qt.
 - [ ] Линт чистый: `ruff check .` → All checks passed.
-- [ ] Дека: `presentation/slide.pdf` и `presentation/slide-light.pdf` — по **15 страниц**;
-      `presentation/slide.pptx` — 15 слайдов.
+- [ ] Дека: `presentation/slide.pdf` и `presentation/slide-light.pdf` — по **17 страниц**;
+      `presentation/slide.pptx` — 17 слайдов.
       `pdfinfo presentation/slide.pdf | grep Pages` (нужен `poppler-utils`);
       без него слайды PPTX считаются стандартной библиотекой:
       `python -c "import zipfile;z=zipfile.ZipFile('presentation/slide.pptx');print(len([n for n in z.namelist() if n.startswith('ppt/slides/slide') and n.endswith('.xml')]))"`
@@ -34,7 +34,7 @@ the repository at the final revision; re-run the command if the branch has moved
       (бюджет ≈ 3:57).
 - [ ] `presentation/defense_script.md`, 10-минутный маршрут прогнан с таймером
       (бюджет ≈ 5:44).
-- [ ] Резервное видео `presentation/screencast.mp4` (2:22, H.264) проигрывается
+- [ ] Резервное видео `presentation/screencast.mp4` (2:20, H.264) проигрывается
       без звука и без сети.
 - [ ] `docs/demo.md` и `docs/demo_cli.md` пройдены вслух, окно поднимается на
       эталонном экспорте.
@@ -64,6 +64,6 @@ git fetch --all --prune && git status -sb \
   && gh release view v1.0.0 --json isDraft,assets
 ```
 
-Expected: a clean tree at `origin/main`, 852 passed on the current `main`
-(781 on the `v1.0.0` tag), lint clean, 15 pages, a published release with 12
+Expected: a clean tree at `origin/main`, 883 passed on the current `main`
+(781 on the `v1.0.0` tag), lint clean, 17 pages, a published release with 12
 assets.

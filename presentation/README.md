@@ -9,25 +9,26 @@ repository's own code. Every number is from `docs/METRICS.md`.
 
 | Path | What it is |
 | --- | --- |
-| `Презентация Madrigal Protocol Lab.html` | the deck source, 15 slides, dark theme, all images inlined |
+| `Презентация Madrigal Protocol Lab.html` | the deck source, 17 slides, dark theme, all images inlined |
 | `Презентация Madrigal Protocol Lab (светлая).html` | the same deck in the light theme |
-| `slide.pdf` | the printed export, 15 pages, 2560×1440 |
+| `slide.pdf` | the printed export, 17 pages, 2560×1440 |
 | `slide-light.pdf` | the same deck exported for a washed-out projector |
 | `slide.pptx` | the deck as a PPTX, one full-bleed image per slide, zip timestamps pinned to 1980-01-01 |
 | `slide-light.pptx` | the light variant as a PPTX |
-| `screenshots/` | 11 real GUI captures at 1920×1080 (`generate_screenshots.py`) |
+| `screenshots/` | 13 real GUI captures at 1920×1080 (`generate_screenshots.py`) |
 | `assets/` | 8 branded SVG visualisations, dark and light, plus PNG copies |
 | `assets/madrigal-logo.png` | the case owner's «Мадригал» wordmark, shown on the cover and closing slides |
 | `assets/madrigal-mark.png` | the square monogram used as a watermark |
 | `assets/brand/` | three abstract background textures from the case owner's site |
 | `public/` | assets the deck serves: fonts, logo, QR codes, member photos |
-| `public/screencast-poster.png` | the poster frame shown on slide 12 under `screencast.mp4` |
+| `public/screencast-poster.png` | the poster frame shown on slide 13 under `screencast.mp4` |
 | `defense_script.md` | the 5- and 10-minute speaker routes, one section per slide |
 | `Q_and_A.md` | the questions asked after the talk and the prepared answers |
 | `VIDEO.md` | shot list for the reserve screen recording |
-| `screencast.mp4` | the reserve recording of a full run (2:22, H.264, no sound), embedded on slide 12 |
+| `screencast.mp4` | the reserve recording of a full run (2:20, H.264, no sound), embedded on slide 13 |
 | `record_demo.py` | drives the real window through the demo scenario for the recording |
-| `generate_screenshots.py` | renders the eleven window captures offscreen |
+| `generate_screenshots.py` | renders the thirteen window captures offscreen |
+| `inline_media.py` | folds the screenshots, the poster and the clip into the two HTML sources |
 | `make_assets.py` | panel crops, QR codes and the round member photos |
 | `make_brand.py` | builds the «Мадригал» wordmark and monogram |
 | `generate_qr.py` | writes the repository and release QR codes |
@@ -67,7 +68,15 @@ python -m presentation.make_assets
 
 # the «Мадригал» wordmark and monogram
 python -m presentation.make_brand
+
+# fold the fresh screenshots, poster and clip into the two HTML sources
+python -m presentation.inline_media
 ```
+
+`inline_media.py` rewrites the value of each `data:` URI in place, so it is
+idempotent: after a re-render or a re-record it refreshes the deck, and a second
+run changes nothing. Run it before the PDF and PPTX builds so the exports carry
+the new media.
 
 ## Notes
 

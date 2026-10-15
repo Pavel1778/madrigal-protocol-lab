@@ -9,7 +9,7 @@
 ## How it was checked
 
 <!-- The command you ran and what it printed. Example:
-     QT_QPA_PLATFORM=offscreen pytest tests/ -q -> 852 passed
+     QT_QPA_PLATFORM=offscreen pytest tests/ -q -> 883 passed
 -->
 
 ## Checklist

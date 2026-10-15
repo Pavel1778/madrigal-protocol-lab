@@ -334,11 +334,11 @@ the loop is meant to expose. The full record is in
 | `docs/RULE_V1_V2.md` | the version record for the two corpus rules |
 | `docs/GUI_VERIFICATION.md` | what the window was driven to show, and the defects found |
 | `docs/PRESENTATION_VERIFICATION.md` | each deck claim mapped to its evidence |
-| `presentation/slide.pdf` | the deck, fourteen slides, with the real screenshots |
-| `presentation/slide-light.pdf` | the same deck in the light theme, fourteen slides |
+| `presentation/slide.pdf` | the deck, seventeen slides, with the real screenshots |
+| `presentation/slide-light.pdf` | the same deck in the light theme, seventeen slides |
 | `presentation/slide.pptx` | the same deck as a portable PPTX, one rendered page per slide |
 | `presentation/defense_script.md` | the 5- and 10-minute speaker routes for the defense |
-| `presentation/screenshots/` | the eleven window captures |
+| `presentation/screenshots/` | the thirteen window captures |
 | `tests/ui/test_e2e.py` | the scenario as fourteen offscreen tests |
 
 The section above is produced by `render_hypothesis_narrative`; the figures are

@@ -61,3 +61,18 @@ Daily checkpoint of the work. One entry per day: done, broken, next.
   run 852 passed, `ruff check .` clean; the counters in the docs moved from
   846/613 to 852/615.
 - Next: hold for review; the branch `ux/full-overhaul` (PR #65) is green.
+
+## 2026-10-15 (deck media refresh)
+
+- Done: the deck's GUI captures were re-rendered from the current window and
+  folded back into both HTML sources. `generate_screenshots.py` gained a
+  throwaway `QSettings` store so a capture cannot inherit the operator's theme
+  or language, plus two captures: the first-run screen and a light-theme
+  workspace run (thirteen in total). `record_demo.py` fills the display so the
+  reserve take matches the deck frame; `inline_media.py` folds the screenshots,
+  the poster and the clip into the two `data:` URIs idempotently. The slide
+  counts and the clip length were resynced across the documentation.
+- Broken: none. `ruff check .` clean; the offline suite (no UI/web extras)
+  passes. The deck is 17 slides; `slide.pdf`/`slide-light.pdf` are 17 pages and
+  both PPTX are 17 slides.
+- Next: hold for review; open a PR against `main`.
