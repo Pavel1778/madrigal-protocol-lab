@@ -267,10 +267,11 @@ def test_welcome_screen_marks_progress(window):
 
 
 def test_guided_mode_marks_progress(window):
-    """The coach follows the real state and steps aside once work is done."""
-    panel = window.guided_panel
-    assert not panel.isHidden(), "the coach is shown on a fresh window"
-    assert panel.step_index == 0
+    """The tutor follows the real state and can be walked through a lesson."""
+    window.start_learning("load")
+    panel = window.tutor_panel
+    assert not panel.isHidden(), "the tutor is shown once the course is started"
+    assert panel.lesson_key == "load"
 
     window.open_capture(
         REPO_ROOT
@@ -279,15 +280,10 @@ def test_guided_mode_marks_progress(window):
         / "reference_export"
         / "corpus_capture_01.normalized.json"
     )
-    # The capture selects its first direction, so the reader is at the rule step.
-    assert panel.step_index == 2
-
-    window.load_rule(REPO_ROOT / "examples" / "corpus_rule_v1.json")
-    assert panel.step_index == 3
-
-    window.apply_rule()
-    assert panel.step_index == 4
-    assert panel.isHidden(), "the coach steps aside once the workspace is in use"
+    # The capture selects its first direction, so the reader is past the load
+    # lesson's opening steps.
+    window._update_learning()
+    assert panel.lesson_key == "load"
 
 
 def test_welcome_screen_can_be_shown_again(window):
@@ -298,11 +294,12 @@ def test_welcome_screen_can_be_shown_again(window):
 
 
 def test_welcome_screen_offers_one_obvious_first_action(window):
-    """A first-time reader sees a primary action before any step list."""
+    """A first-time reader sees the recommended action before the others."""
     welcome = window.welcome_view
-    assert welcome.demo_button.text()
-    assert welcome.demo_button.isVisible() or True  # visible once the window shows
-    assert welcome.demo_button.objectName() == "welcomePrimary"
+    assert welcome.learning_button.text()
+    assert welcome.learning_button.objectName() == "welcomePrimary"
+    assert welcome.demo_button.objectName() == "welcomeSecondary"
+    assert welcome.capabilities_button.objectName() == "welcomeSecondary"
 
 
 def test_apply_is_gated_until_a_capture_and_a_rule_are_open(window):
@@ -315,16 +312,19 @@ def test_apply_is_gated_until_a_capture_and_a_rule_are_open(window):
 
 
 def test_guided_mode_can_be_shown_again(window):
+    window.start_learning("load")
+    assert not window.tutor_panel.isHidden()
     window.set_guided_mode(False)
-    assert window.guided_panel.isHidden()
-    window.show_guide()
-    assert not window.guided_panel.isHidden()
+    assert window.tutor_panel.isHidden()
+    window.set_guided_mode(True)
+    assert not window.tutor_panel.isHidden()
 
 
 def test_guided_mode_stays_a_thin_strip(window):
-    """The coach must not eat the workspace it introduces."""
-    panel = window.guided_panel
-    # The coach sits in the workspace, which appears once a capture is open;
+    """The tutor must not eat the workspace it introduces."""
+    window.start_learning("load")
+    panel = window.tutor_panel
+    # The tutor sits in the workspace, which appears once a capture is open;
     # measuring it on the welcome screen would measure a hidden page.
     window.open_capture(
         REPO_ROOT
@@ -354,7 +354,9 @@ def test_guided_mode_round_trips_through_the_dialog(app, isolated_settings):
 
     second = MainWindow()
     assert second._guided_enabled is False
-    assert second.guided_panel.isHidden()
+    # The tutor is only shown once the course is started, so it stays hidden.
+    second.start_learning("load")
+    assert second.tutor_panel.isHidden()
     second.close()
 
 

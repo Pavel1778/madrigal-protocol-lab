@@ -8,22 +8,22 @@ the repository at the final revision; re-run the command if the branch has moved
 
 - [ ] `main = origin/main`, дерево чистое.
       `git fetch --all --prune && git status -sb && git log --oneline -1 origin/main`
-- [ ] Тесты зелёные: `pytest tests/ -q` → **883 passed** на текущем `main`
-      (`a7c119e`; Python 3.13, PySide6 6.8.1, `QT_QPA_PLATFORM=offscreen`;
+- [ ] Тесты зелёные: `pytest tests/ -q` → **957 passed** на текущем `main`
+      (`8de1cc8`; Python 3.13, PySide6 6.8.1, `QT_QPA_PLATFORM=offscreen`;
       на теге `v1.0.0`, который лежит в сдаваемом архиве, — **794 passed**; ≈ 8 min).
       UI-тесты требуют Qt-runtime; в контейнере без `libEGL.so.1` полный набор
-      не собирается — там `pytest --ignore=tests/ui` → **615 passed**.
-      Указывайте число с контекстом: 615 без UI, 883 с Qt.
+      не собирается — там `pytest --ignore=tests/ui` → **620 passed**.
+      Указывайте число с контекстом: 620 без UI, 957 с Qt.
 - [ ] Линт чистый: `ruff check .` → All checks passed.
-- [ ] Дека: `presentation/slide.pdf` и `presentation/slide-light.pdf` — по **15 страниц**;
+- [ ] Дека: `presentation/slides.pdf` и `presentation/slide-light.pdf` — по **15 страниц**;
       `presentation/slide.pptx` — 15 слайдов.
-      `pdfinfo presentation/slide.pdf | grep Pages` (нужен `poppler-utils`);
+      `pdfinfo presentation/slides.pdf | grep Pages` (нужен `poppler-utils`);
       без него слайды PPTX считаются стандартной библиотекой:
       `python -c "import zipfile;z=zipfile.ZipFile('presentation/slide.pptx');print(len([n for n in z.namelist() if n.startswith('ppt/slides/slide') and n.endswith('.xml')]))"`
 - [ ] QR открываются: `zbarimg -q presentation/public/qr_repo.png` и
       `qr_release.png` декодируются в репозиторий и в релиз `v1.2.0`.
 - [ ] Релиз `v1.2.0` опубликован (не draft): 14 ассетов, включая
-      `submission_*.zip`, `slide.pdf` и `.deb`.
+      `submission_*.zip`, `slides.pdf` и `.deb`.
       `gh release view v1.2.0 --json isDraft,assets`
 - [ ] Ссылки в форме сдачи открываются в инкогнито (без входа в аккаунт).
 - [ ] Числа сверены с `docs/METRICS.md`, `docs/REAL_CORPUS_ANALYSIS.md`,
@@ -61,10 +61,10 @@ the repository at the final revision; re-run the command if the branch has moved
 git fetch --all --prune && git status -sb \
   && pytest tests/ -q \
   && ruff check . \
-  && pdfinfo presentation/slide.pdf | grep Pages \
+  && pdfinfo presentation/slides.pdf | grep Pages \
   && gh release view v1.2.0 --json isDraft,assets
 ```
 
-Expected: a clean tree at `origin/main`, 883 passed on the current `main`
+Expected: a clean tree at `origin/main`, 957 passed on the current `main`
 (794 on the `v1.0.0` tag), lint clean, 15 pages, a published `v1.2.0` release
 with 14 assets.

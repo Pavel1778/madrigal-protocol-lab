@@ -5,6 +5,14 @@ what is known about them: a gap is hatched red, an ambiguity is amber, a byte
 covered by a matched field is green, an uncovered byte is grey. A click reports
 the byte offset so the window can show where the byte came from.
 
+The right-hand column is a *printable* rendering, not a protocol verdict: a byte
+outside the printable ASCII range (0x20-0x7e) is shown as ``.`` so the column
+keeps its fixed 16-cell width and the byte grid stays aligned. The ``.`` is a
+conventional stand-in for a non-printable byte and never an error; the byte's
+value and status are always available in the hex column, the tooltip and the
+status line. The column caption is drawn in the same fixed-pitch font as the
+bytes, so it lines up with the columns it names.
+
 Only the text is handed to ``QPlainTextEdit``, which lays out and scrolls large
 streams efficiently; annotations are applied as extra selections over the
 already-rendered text rather than by drawing the bytes by hand.
@@ -142,6 +150,41 @@ def legend_label(kind: str) -> str:
     return labels.get(kind, kind)
 
 
+def legend_tooltip(kind: str) -> str:
+    """One sentence explaining the byte ``kind`` a legend swatch stands for.
+
+    The explanation says what the colour means on the bytes, so a reader who
+    does not know the vocabulary can still read the shading without guessing.
+    """
+    tips = {
+        GAP: QtCore.QCoreApplication.translate(
+            "HexView",
+            "Missing bytes: the capture has a hole here (a segment was never seen).",
+        ),
+        AMBIGUITY: QtCore.QCoreApplication.translate(
+            "HexView",
+            "Ambiguous bytes: two reassemblies of the same bytes disagree.",
+        ),
+        MATCHED: QtCore.QCoreApplication.translate(
+            "HexView",
+            "Matched: the rule read these bytes consistently with its declared layout.",
+        ),
+        MISMATCHED: QtCore.QCoreApplication.translate(
+            "HexView",
+            "Mismatched: a counterexample, the bytes break the rule here.",
+        ),
+        INCOMPLETE: QtCore.QCoreApplication.translate(
+            "HexView",
+            "Incomplete: the message is cut short by a gap in the capture.",
+        ),
+        UNCOVERED: QtCore.QCoreApplication.translate(
+            "HexView",
+            "Uncovered: no field of the rule claims these bytes yet.",
+        ),
+    }
+    return tips.get(kind, kind)
+
+
 def legend_swatch(kind: str) -> QtGui.QPixmap:
     """A swatch painted with the exact brush used for ``kind``.
 
@@ -172,6 +215,7 @@ class HexView(QtWidgets.QPlainTextEdit):
         self._prefix = _PREFIX
         self._ascii_start = _ASCII_START
         self.setFont(theme.mono_font(self._font_size))
+        self._style_view()
         self.setLineWrapMode(QtWidgets.QPlainTextEdit.LineWrapMode.NoWrap)
         self.setWordWrapMode(QtGui.QTextOption.WrapMode.NoWrap)
         self.setTextInteractionFlags(
@@ -198,7 +242,16 @@ class HexView(QtWidgets.QPlainTextEdit):
         self._header.setFixedHeight(height)
         self.setViewportMargins(0, height, 0, 0)
         viewport = self.viewport().geometry()
-        self._header.setGeometry(viewport.left(), self.contentsRect().top(), viewport.width(), height)
+        # The byte text starts at the document's own left margin, so the caption
+        # is shifted by the same amount; without it the caption sits a few pixels
+        # left of the column it names.
+        margin = int(self.document().documentMargin())
+        self._header.setGeometry(
+            viewport.left() + margin,
+            self.contentsRect().top(),
+            viewport.width() - margin,
+            height,
+        )
         self._header.raise_()
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
@@ -219,12 +272,40 @@ class HexView(QtWidgets.QPlainTextEdit):
         self._ascii_start = self._prefix + _HEX_WIDTH
 
     def _header_font(self) -> QtGui.QFont:
-        return theme.body_font(max(7, self._font_size - 3))
+        # The caption must be the same fixed pitch *and the same size* as the
+        # bytes: it sits in a strip above the byte rows and names the columns,
+        # so its character grid has to land on the same columns as the rows
+        # underneath. A smaller or proportional body font drifted the "ascii"
+        # caption away from the column it labels.
+        return theme.mono_font(self._font_size)
 
     def _style_header(self) -> None:
         token = theme.current()
+        # The application style sheet sets a family on every QWidget, and a
+        # style-sheet rule outranks ``setFont`` on this QLabel, so at larger
+        # sizes the caption silently fell back to the proportional body face.
+        # The fixed-pitch family and the size are therefore restated here, in
+        # the same face and size as the bytes, so the caption stays on the byte
+        # grid instead of drifting away from the column it names.
+        font = self._header_font()
         self._header.setStyleSheet(
-            f"color: {token.text_secondary}; background: {token.surface};"
+            f'color: {token.text_secondary}; background: {token.surface};'
+            f' font-family: "{font.family()}"; font-size: {font.pixelSize()}px;'
+        )
+
+    def _style_view(self) -> None:
+        """Pin the byte area to the fixed-pitch face.
+
+        The application style sheet sets ``font-family`` on every ``QWidget``,
+        and a style-sheet rule outranks ``setFont`` on this ``QPlainTextEdit``.
+        Setting the font with ``setFont`` alone therefore left the bytes painted
+        in the proportional body face: the hex columns did not line up and the
+        ASCII column did not sit on a fixed grid. The family and size are set
+        here, on the view itself, where they win over the global rule.
+        """
+        font = theme.mono_font(self._font_size)
+        self.setStyleSheet(
+            f'font-family: "{font.family()}"; font-size: {font.pixelSize()}px;'
         )
 
     def _column_header(self) -> str:
@@ -243,7 +324,9 @@ class HexView(QtWidgets.QPlainTextEdit):
         """Set the byte font size, re-reading the header font to match."""
         self._font_size = max(6, int(size))
         self.setFont(theme.mono_font(self._font_size))
+        self._style_view()
         self._header.setFont(self._header_font())
+        self._style_header()
         self._position_header()
         if self._data:
             self._apply_annotations()
@@ -252,6 +335,15 @@ class HexView(QtWidgets.QPlainTextEdit):
     def font_size(self) -> int:
         """The current byte font size."""
         return self._font_size
+
+    @property
+    def ascii_start(self) -> int:
+        """Character column where the ASCII column begins on a line.
+
+        Exposed so a caller that wants to align a caption with the ASCII column
+        can read the geometry the view actually uses rather than recompute it.
+        """
+        return self._ascii_start
 
     def set_show_offset(self, show: bool) -> None:
         """Show or hide the offset column and re-render the bytes."""
@@ -384,11 +476,21 @@ class HexView(QtWidgets.QPlainTextEdit):
         return None
 
     def byte_tooltip(self, offset: int) -> str:
-        """A tooltip for byte ``offset``: offset, hex, kind and origin."""
+        """A tooltip for byte ``offset``: offset, hex, printable reading, kind.
+
+        The printable reading is spelled out — a printable byte shows the
+        character, a non-printable one says so — so the ``.`` in the ASCII
+        column is never read as an error.
+        """
         if not 0 <= offset < len(self._data):
             return ""
+        byte = self._data[offset]
         annotation = self.annotation_at(offset)
-        parts = [f"offset {offset}", f"0x{self._data[offset]:02x}"]
+        parts = [f"offset {offset}", f"0x{byte:02x}"]
+        if 32 <= byte < 127:
+            parts.append(self.tr("ASCII {0}").format(repr(chr(byte))))
+        else:
+            parts.append(self.tr("non-printable 0x{0:02x}").format(byte))
         if annotation is not None:
             parts.append(annotation.kind)
             if annotation.label:

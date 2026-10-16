@@ -114,3 +114,45 @@ def test_invalid_cases():
 def test_field_expected_normalised_to_list():
     field = FieldSpec.from_dict({"name": "cmd", "offset": 0, "type": "uint8", "expected": 4})
     assert field.expected == [4]
+
+
+def test_rule_text_round_trips(tmp_path):
+    """A rule written as text parses back to the same document."""
+    import json
+
+    from src.protocol.rule import load_rule, rule_text, save_rule
+
+    rule = parse_rule(_sample_rule())
+    text = rule_text(rule)
+    assert parse_rule(json.loads(text)).to_dict() == rule.to_dict()
+
+    path = tmp_path / "rule.json"
+    save_rule(rule, path)
+    assert load_rule(path).to_dict() == rule.to_dict()
+
+
+def test_rule_text_is_valid_json_document():
+    """The saved text is a JSON object the loader accepts, not a repr."""
+    import json
+
+    from src.protocol.rule import rule_text
+
+    rule = parse_rule(_sample_rule())
+    decoded = json.loads(rule_text(rule))
+    assert decoded["rule_id"] == "r1"
+    assert decoded["rule_version"] == 3
+    assert decoded["name"] == "set_parameter_request"
+
+
+def test_named_version_round_trips(tmp_path):
+    """Naming a version keeps the identity and raises the version number."""
+    from src.protocol.rule import load_rule, save_rule
+
+    rule = parse_rule(_sample_rule())
+    named = rule.bump_version(name="set_parameter_request_v2")
+    path = tmp_path / "named.json"
+    save_rule(named, path)
+    reloaded = load_rule(path)
+    assert reloaded.rule_id == rule.rule_id
+    assert reloaded.rule_version == rule.rule_version + 1
+    assert reloaded.name == "set_parameter_request_v2"

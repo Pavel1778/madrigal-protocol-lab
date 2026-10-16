@@ -33,7 +33,7 @@ the boundary and defect fixtures; coverage is 90 % over `src/`, and the
 remaining lines are error branches that need a real I/O failure. More tests
 would not raise the claim, which is "confirmed in scope", not "proven". See
 `docs/AUDIT.md` sections 4 and 11. The figure is the count at the archived
-`v1.0.0` submission; the working `main` has since grown to 883 (at `a7c119e`).
+`v1.0.0` submission; the working `main` has since grown to 957.
 
 ## 5. What happens on a conflicting overlap?
 
@@ -64,8 +64,10 @@ counterexamples on `corpus_capture_01` are what widened the rule to v2. See
 
 ## 9. What did you not do, and why?
 
-No `B_to_A` field-by-field interpretation, no live-device capture, and no
-project menu in the window; each is stated as a limit, not hidden. The organizer
+No `B_to_A` field-by-field interpretation in the shipped demo rule, and no
+live-device capture; each is stated as a limit, not hidden. The window's Project
+menu covers the portable project, and the engine honours a `B_to_A` scope, but
+the demo rule scopes only `A_to_B`. The organizer
 set was generated framing over real application bytes, so a passive capture is
 the next check. See `REPORT.md` section 12, `docs/REAL_CORPUS_ANALYSIS.md`
 section 9.

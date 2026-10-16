@@ -120,7 +120,7 @@ bumped from `v1.1.0`. No product code changed.
 - The presentation screenshots were regenerated from the current theme, and the
   deck PDFs and PPTX were rebuilt (15 slides).
 - The release QR and the deck's release text now point at `v1.2.0`.
-- The test count across the documentation is the measured 883 on the current
+- The test count across the documentation is the measured 898 on the current
   `main` (794 on the frozen `v1.0.0` archive).
 - The raw pcap/pcapng open path is documented in `README.md`, `docs/demo.md` and
   `docs/GUI_VERIFICATION.md`; the verification environment is recorded there too.
@@ -132,6 +132,11 @@ is the merge of PR #14 (`f637644`); the entries below are the work that followed
 
 ### Added
 
+- A `Project` menu that manages a portable project directory: create, open,
+  write the manifest, add a capture, store a named rule version, and export or
+  import the project as a zip. `rule_text`/`save_rule` let the window write the
+  same JSON document the CLI reads, and the new strings are translated in both
+  catalogues.
 - Interface test coverage and a CI matrix for it: locale, snapshot,
   state-isolation and layout suites, and the `ui` job (PR #18).
 - A perceptual snapshot comparison for the interface, replacing the exact-pixel
@@ -166,6 +171,9 @@ is the merge of PR #14 (`f637644`); the entries below are the work that followed
   `public/screencast.mp4` in a `<video>` element (poster frame, controls,
   autoplay, loop, muted, playsinline) inlined as a `data:video/mp4` URI, and the
   printed PDF/PPTX carry the poster frame.
+- A byte-state legend strip above the hex view (`src/ui/legend.py`): a
+  collapsible row of painted swatches whose captions and swatches carry an
+  explanatory tooltip, with a Settings switch to hide the strip.
 
 ### Changed
 
@@ -185,6 +193,14 @@ is the merge of PR #14 (`f637644`); the entries below are the work that followed
 - The README, the audit, the portability report and the presentation
   verification now quote the v1.0.0 test counts and the published `v1.0.0` archive
   (PR #26).
+- The ASCII column caption is drawn in the same fixed-pitch face and size as the
+  bytes and shifted by the document margin, so it lines up with the column it
+  names instead of drifting left; the byte-state legend is now a compact strip
+  above the hex view that folds onto further lines and collapses, instead of a
+  row beside the direction selector.
+- The documented test counts are the measured 957 total on the current `main`
+  (620 without the interface suite, 589 without the interface and web suites),
+  across the living docs and the deck Q&A.
 
 ### Fixed
 
@@ -197,6 +213,16 @@ is the merge of PR #14 (`f637644`); the entries below are the work that followed
   and one slide per page, and the slides fill 92% of the height instead of 69%.
 - The stale "organizer captures not available" limit was replaced with the
   received-and-analysed state (PR #20, PR #26).
+- Marker-based framing no longer drops the bytes that precede a start marker.
+  A run that belongs to no framed message (leading synchronisation noise, or
+  debris between two messages) is now returned as an incomplete range instead of
+  being discarded, matching the module contract that an un-framed range is
+  reported rather than silently lost. Regression tests cover both the leading
+  and the between-message case, and the whole stream is accounted for.
+- The hex bytes were painted in the proportional body face: the application
+  style sheet sets a family on every `QWidget`, which outranks `setFont`, so the
+  hex columns did not line up and the ASCII column was not on a fixed grid. The
+  byte area and its column caption now pin the fixed-pitch family themselves.
 
 ### Removed
 

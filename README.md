@@ -345,6 +345,7 @@ v2 на том же корпусе: 140 matched, 0 mismatched, точность 
 - [docs/PORTABILITY.md](docs/PORTABILITY.md) — проверенные окружения.
 - [docs/AUDIT.md](docs/AUDIT.md) — трассировка и замечания линтера и типизации.
 - [docs/SUBMISSION.md](docs/SUBMISSION.md) — сведения о сдаче.
+- [docs/ru/README.md](docs/ru/README.md) — русские версии документов из `docs/`; английский оригинал остаётся источником правды.
 
 ## Форматы поставки
 

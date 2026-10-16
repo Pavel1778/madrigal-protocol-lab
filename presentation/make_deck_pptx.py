@@ -6,7 +6,7 @@ one rendered page at 13.333x7.5 in (16:9), so the PPTX reproduces the HTML
 exactly. Zip entry timestamps are pinned to 1980-01-01 so a rebuild is
 byte-identical.
 
-    python -m presentation.make_deck_pptx slide.pdf slide.pptx
+    python -m presentation.make_deck_pptx slides.pdf slide.pptx
 """
 
 from __future__ import annotations

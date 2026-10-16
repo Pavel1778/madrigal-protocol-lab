@@ -288,6 +288,20 @@ def _marker_based(data: bytes, strategy: FramingStrategy) -> list[Message]:
                     Message(pos, total - pos, complete=False, reason="start_marker_not_found")
                 )
                 break
+            if begin > pos:
+                # The run before this start marker belongs to no framed message
+                # (leading synchronisation noise, or debris between messages).
+                # It is reported as an incomplete range rather than dropped, so
+                # no stream byte is lost and the caller classifies it like any
+                # other residue instead of the frame silently starting mid-stream.
+                messages.append(
+                    Message(
+                        pos,
+                        begin - pos,
+                        complete=False,
+                        reason="bytes_before_start_marker",
+                    )
+                )
         else:
             begin = pos
         if end:
@@ -298,12 +312,16 @@ def _marker_based(data: bytes, strategy: FramingStrategy) -> list[Message]:
                 )
                 break
             body_end = stop + len(end) if strategy.include_markers else stop
+            # Consume the end marker even when it is not part of the message, so
+            # the delimiter is not re-scanned as stray bytes on the next pass.
+            advance = stop + len(end)
         else:
             body_end = total
+            advance = total
         messages.append(Message(begin, body_end - begin, complete=True))
         # Always advance past the current message so an empty marker match
         # cannot loop forever.
-        pos = body_end if body_end > pos else pos + 1
+        pos = advance if advance > pos else pos + 1
     return messages
 
 

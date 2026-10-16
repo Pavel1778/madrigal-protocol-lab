@@ -320,7 +320,7 @@ def test_help_action_has_the_f1_shortcut(app):
     help_menu = next(
         m for m in window.menuBar().findChildren(QtWidgets.QMenu) if "Help" in m.title()
     )
-    quick = [a for a in help_menu.actions() if "help" in a.text().lower()]
+    quick = [a for a in help_menu.actions() if "quick help" in a.text().lower()]
     assert quick
     assert quick[0].shortcut().toString() == "F1"
     window.close()

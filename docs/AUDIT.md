@@ -84,7 +84,7 @@ strings in the public API.
 start of the audit (119 tests, 1 skipped); the second is the state after the
 boundary tests added in this iteration (177 tests, 1 skipped). The counts in
 this section are the historical ones from that iteration; the suite has since
-grown to 883 tests on the current `main` (794 on the archived `v1.0.0` tag;
+grown to 957 tests on the current `main` (794 on the archived `v1.0.0` tag;
 section 11).
 
 Before:
@@ -165,7 +165,7 @@ at their pinned versions: the specification fixes the versions, and moving
 - `git log --all -p | grep -iE 'ghp_|github_pat_'` returns no token. The only
   lines that match are the audit text itself, which quotes the search string.
 - `git ls-files | grep -i cache` finds no tracked cache directory.
-- The largest tracked files are the presentation media — `slide.pdf`,
+- The largest tracked files are the presentation media — `slides.pdf`,
   `slide-light.pdf`, `slide.pptx`, `slide-light.pptx` and
   `presentation/screencast.mp4`. Nothing tracked exceeds 5 MiB. `.git` is 31 MiB.
 
@@ -183,7 +183,7 @@ and every command in `README.md` and `docs/USAGE.md` was run:
 - `python -m src.project.cli create/add-capture/open/export/import` round trip
   reports `"broken": []`.
 - `pytest tests/ -q` gives 177 passed, 1 skipped (the historical count of that
-  iteration; the suite is 883 tests on the current `main`, 794 on the archived
+  iteration; the suite is 957 tests on the current `main`, 794 on the archived
   `v1.0.0` tag, section 11).
 
 At the time of this check the rule path in sections 4 and 6 of
@@ -259,7 +259,7 @@ nothing.
 After the merge:
 
 - `pytest tests/ -q` reports 385 passed (the historical count at that merge;
-  the suite is 883 tests on the current `main`, 794 on the archived `v1.0.0`
+  the suite is 957 tests on the current `main`, 794 on the archived `v1.0.0`
   tag, section 11).
 - `ruff check . --select "E4,E7,E9,F" --ignore E501` reports All checks passed.
 - CI run 37983669575 is green: the test matrix (3.12 and 3.13 on
@@ -280,7 +280,7 @@ the perceptual baseline comparison and the repository hygiene were merged into
 | Lint | `ruff check . --select "E4,E7,E9,F" --ignore E501`: All checks passed |
 | Coverage | 90% over `src/` (`pytest --cov=src`); the largest gap is `src/ui/` wiring |
 | CI | green on `main`: test matrix (3.12 and 3.13), `ui` matrix, `code-quality`, `dependency-audit` |
-| Largest tracked file | `presentation/screencast.mp4`, 1.0 MiB, well under 5 MiB |
+| Largest tracked file | `presentation/screencast.mp4`, 1.9 MiB, well under 5 MiB |
 | Submission archive | `submission_20261012_1944.zip`, the published `v1.0.0` asset |
 | Fresh unpack | 793 passed, 1 skipped from a clean unpack of that asset |
 
@@ -411,11 +411,11 @@ sync guard had to be taught to read.
 
 | Check | Result |
 | --- | --- |
-| `pytest tests/ -q` (LANG=en_US.UTF-8, `QT_QPA_PLATFORM=offscreen`) | 883 passed, 0 failed |
+| `pytest tests/ -q` (LANG=en_US.UTF-8, `QT_QPA_PLATFORM=offscreen`) | 957 passed, 0 failed |
 | `ruff check .` | All checks passed |
 | `ruff format --check .` | 100 files would be reformatted (still deferred) |
 | `mypy src/` | 114 findings in 13 files (still deferred) |
-| `presentation/slide.pdf`, `slide-light.pdf` | 15 pages, no blank page |
+| `presentation/slides.pdf`, `slide-light.pdf` | 15 pages, no blank page |
 
 The `mypy` findings are concentrated in three files: `src/protocol/engine.py`
 (75), `src/ui/main_window.py` (17) and `src/protocol/rule.py` (6). The engine

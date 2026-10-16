@@ -31,7 +31,7 @@ reference exports re-included explicitly.
 
 Large generated binaries stay out of history: `presentation/video.mp4` is
 ignored and rebuilt from `presentation/VIDEO.md`. The committed artefacts
-(`slide.pdf`, `slide.pptx`, `screencast.mp4`) are intentional deliverables.
+(`slides.pdf`, `slide.pptx`, `screencast.mp4`) are intentional deliverables.
 
 ## .gitattributes
 

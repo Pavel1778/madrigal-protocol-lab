@@ -198,6 +198,40 @@ def test_marker_based_missing_end_marker_is_incomplete():
     assert messages[0].reason == "end_marker_not_found"
 
 
+def test_marker_based_reports_bytes_before_the_first_start_marker():
+    # Leading synchronisation noise must not be dropped silently: it is
+    # returned as an incomplete range so no stream byte is lost.
+    strategy = FramingStrategy.from_dict(
+        {"type": "marker_based", "start_bytes": "hex:aa55", "end_bytes": "hex:0d0a"}
+    )
+    data = b"JUNK" + bytes.fromhex("aa550102030d0a")
+    messages = frame_stream(data, strategy)
+    assert [(m.offset, m.length, m.complete, m.reason) for m in messages] == [
+        (0, 4, False, "bytes_before_start_marker"),
+        (4, 7, True, None),
+    ]
+    # Every byte of the stream is accounted for by exactly one message.
+    assert sum(m.length for m in messages) == len(data)
+
+
+def test_marker_based_reports_debris_between_messages():
+    strategy = FramingStrategy.from_dict(
+        {"type": "marker_based", "start_bytes": "hex:aa55", "end_bytes": "hex:0d0a"}
+    )
+    data = (
+        bytes.fromhex("aa550102030d0a")
+        + b"XY"
+        + bytes.fromhex("aa55090d0a")
+    )
+    messages = frame_stream(data, strategy)
+    assert [(m.offset, m.length, m.complete, m.reason) for m in messages] == [
+        (0, 7, True, None),
+        (7, 2, False, "bytes_before_start_marker"),
+        (9, 5, True, None),
+    ]
+    assert sum(m.length for m in messages) == len(data)
+
+
 def test_manual():
     strategy = FramingStrategy.from_dict(
         {"type": "manual", "messages": [{"offset": 0, "length": 4}, {"offset": 6, "length": 8}]}

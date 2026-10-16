@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, replace
+from pathlib import Path
 
 RULE_SCHEMA_VERSION = 1
 
@@ -557,6 +558,28 @@ def load_rule(path: str) -> Rule:
     with open(path, encoding="utf-8") as handle:
         text = handle.read()
     return parse_rule(load_rule_text(text))
+
+
+def rule_text(rule: Rule) -> str:
+    """Serialise ``rule`` to the JSON document its loader reads.
+
+    The output round-trips through :func:`load_rule_text`, so a rule saved from
+    the window is the same document the command line reads.
+    """
+    return json.dumps(rule.to_dict(), ensure_ascii=False, indent=2) + "\n"
+
+
+def save_rule(rule: Rule, path: str | Path) -> None:
+    """Write ``rule`` to ``path`` as JSON, replacing any existing file.
+
+    Args:
+        rule: The rule to serialise.
+        path: Destination file path.
+
+    Raises:
+        OSError: If the file cannot be written.
+    """
+    Path(path).write_text(rule_text(rule), encoding="utf-8")
 
 
 def load_rule_text(text: str) -> dict:

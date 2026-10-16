@@ -240,9 +240,9 @@ def test_step09_version_diff_reports_resolved_and_introduced(window):
 
 @corpus_required
 def test_step10_project_moves_and_reproduces_state(app, tmp_path):
-    # The GUI has no project menu; the portable project container carries the
-    # capture. This test moves the capture through the project container and
-    # reopens the window on it, checking the verdicts reproduce.
+    # The project menu drives the portable project from the window; this test
+    # moves the capture through the project container directly and reopens the
+    # window on it, checking the verdicts reproduce.
     project_dir = tmp_path / "project.madrigal"
     project = Project.create(project_dir, "e2e")
     if not SOURCE_PCAP.is_file():

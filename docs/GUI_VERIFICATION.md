@@ -34,8 +34,8 @@ clicked through the window; every step below is automated.
   while Import PCAP reads a raw capture and writes its `*.normalized.json` first.
 - Central splitter, three columns:
   - left: the session tree, group box "Sessions";
-  - centre: a direction selector, a colour-chip annotation legend, and the hex
-    view, group box "Bytes";
+  - centre: a direction selector, a compact collapsible byte-state legend strip
+    above the hex view, and the hex view, group box "Bytes";
   - right: a tab widget with Interpretation, Compare, Report and Version diff.
 - Status bar: the byte provenance label on the left, a progress bar on the
   right (hidden while idle), and a transient message area.
@@ -46,7 +46,18 @@ clicked through the window; every step below is automated.
 
 The legend is not a text label. Each byte kind is a swatch painted with the same
 brush the hex view uses, so `gap` and `ambiguity` show their hatch and the names
-sit next to their colour; the legend cannot drift from the bytes it explains.
+sit next to their colour; the legend cannot drift from the bytes it explains. It
+is a strip of its own above the hex view, so it cannot overlap the bytes or take
+width from the ASCII column; its chips fold onto further lines when the window is
+narrow, and the strip collapses to its title. Each swatch and caption carries an
+explanatory tooltip, and the whole strip can be hidden from Settings.
+
+The ASCII column shows printable bytes as characters and every byte outside
+`0x20`-`0x7e` as a `.`. The dot is a conventional stand-in for a non-printable
+byte, never a protocol error; the byte's value, printable reading and status are
+always available in the hex column, the byte tooltip and the status line. The
+column caption is drawn in the same fixed-pitch face and size as the bytes, so it
+stays aligned with the columns it names.
 
 ## Session tree (step 1-2)
 
@@ -147,13 +158,13 @@ but not changed.
 3. Re-applying the same rule marked its own previous run outdated, because
    `RuleModel.reload` bumped the version on every call. `reload` is now a no-op
    when the text is unchanged.
-4. Limit, not changed: the window has no project menu. A portable project
-   (`src.project`) can be created and moved, but only from the command line; the
-   window opens a capture file, not a project directory. Scenario step 10 is
-   therefore verified at the project level (`Project.export` / `Project.import_`
-   round trip with matching capture digests) plus a window reopen on the same
-   capture reproducing the same counts, which is what `tests/ui/test_e2e.py`
-   checks. A project menu remains open work.
+4. The window now has a Project menu. A portable project (`src.project`) can be
+   created, opened, extended with the open capture and rule, saved, exported,
+   imported and verified from the menu bar, so scenario step 10 no longer needs
+   the command line. `tests/ui/test_project_management.py` drives the menu and
+   the project format through the real window; the command-line path
+   (`Project.export` / `Project.import_` round trip with matching capture
+   digests) is still covered by `tests/ui/test_e2e.py`.
 
 A later interaction pass over the same window raised further items; the ones
 closed on this branch are: the corpus run now refreshes the Messages and
@@ -182,14 +193,15 @@ directory.
   shows a stale fraction of a previous run.
 - The rule editor gives live parse feedback (a red status on invalid text, a
   plain one when the rule parses) and completes field types as they are typed.
+- The Project menu creates, opens, saves, extends, exports, imports and verifies
+  a portable project, and names and stores the current rule version, all
+  delegating to `src.project`.
 
 ## What requires further work
 
-- A project menu in the window (open/save a portable project, not just a file).
-- Response (`B_to_A`) interpretation field by field; today the window frames the
-  response stream but the rule scopes only `A_to_B`.
-- Editing a rule in the Rule tab creates a new version but the window does not
-  yet offer to name or save the edited rule to disk.
+- Response (`B_to_A`) interpretation field by field in the shipped demo rule;
+  the window frames the response stream and the engine honours a `B_to_A`
+  scope, but the demo rule scopes only `A_to_B`.
 
 ## Traffic column and status line fixes
 
@@ -305,8 +317,9 @@ version diff, the hypotheses scores, the byte provenance and the section on
 
 ## Portable project on the command line
 
-The window still has no project menu (limit 4 above), so the portable project
-was verified through `src.project.cli` on the reference capture:
+The portable project is also verified through `src.project.cli` on the
+reference capture, which exercises the same format the window's Project menu
+now drives:
 
 ```
 python -m src.project.cli pipeline \

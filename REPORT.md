@@ -271,8 +271,9 @@ Open:
   set would not be found by this analysis.
 - The corpus was generated, and its generator is not derived from a real device,
   so the corpus protocol may not match any deployed one.
-- The window opens a capture file, not a project directory: the portable project
-  is exercised from the command line, not from a project menu.
+- The window opens a capture file, and the Project menu creates, opens, saves,
+  exports and imports a portable project directory; the command-line
+  `src.project.cli` drives the same format.
 
 ## 13. Verification
 
@@ -334,8 +335,8 @@ the loop is meant to expose. The full record is in
 | `docs/RULE_V1_V2.md` | the version record for the two corpus rules |
 | `docs/GUI_VERIFICATION.md` | what the window was driven to show, and the defects found |
 | `docs/PRESENTATION_VERIFICATION.md` | each deck claim mapped to its evidence |
-| `presentation/slide.pdf` | the deck, fourteen slides, with the real screenshots |
-| `presentation/slide-light.pdf` | the same deck in the light theme, fourteen slides |
+| `presentation/slides.pdf` | the deck, fifteen slides, with the real screenshots |
+| `presentation/slide-light.pdf` | the same deck in the light theme, fifteen slides |
 | `presentation/slide.pptx` | the same deck as a portable PPTX, one rendered page per slide |
 | `presentation/defense_script.md` | the 5- and 10-minute speaker routes for the defense |
 | `presentation/screenshots/` | the eleven window captures |

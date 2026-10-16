@@ -182,8 +182,8 @@ See: the report in the panel and the exported file.
 Say: the investigation is written up with its counterexamples, its versions and
 its limits. The project directory can be copied elsewhere and opened again.
 
-The portable project itself is driven from the command line, not from the
-window; the window has no project menu. To show it, run:
+The portable project is driven from the Project menu in the window, and from
+the command line when a script is preferred. To show the CLI path, run:
 
 ```
 python -m src.project.cli pipeline \

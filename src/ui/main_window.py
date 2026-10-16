@@ -11,35 +11,35 @@ separate concern.
 
 from __future__ import annotations
 
+import json
 import logging
 import sys
+import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from ..project.manifest import ManifestError
+from ..project.project import Project, ProjectError
 from ..protocol.result import build_result, write_result
-from ..protocol.rule import load_rule_text
-from . import theme
+from ..protocol.rule import load_rule_text, rule_text
+from . import help as reference
+from . import learning, theme
 from .compare_view import CompareView
 from .constants import (
     FONT_SIZE_BODY,
-    FONT_SIZE_CAPTION,
-    LEGEND_SWATCH_PX,
     PROGRESS_BAR_WIDTH,
 )
-from .guided import GuidedPanel
+from .help_dialog import HelpCard, LearningCentre
 from .hex_view import (
-    LEGEND_KINDS,
     HexView,
     annotations_from_application,
     annotations_from_stream,
-    legend_label,
-    legend_swatch,
 )
 from .hypotheses_view import HypothesesView
 from .i18n import LanguageManager
-from .layout import FlowLayout
+from .legend import AnnotationLegend
 from .model import CaptureModel, CaptureModelError, RuleModel, verify_rule_on_corpus
 from .session_tree import SessionTree
 from .settings import (
@@ -50,7 +50,9 @@ from .settings import (
     read_settings,
     write_settings,
 )
+from .spotlight import LearningSpotlight
 from .timeline_view import TimelineView
+from .tutor import TutorPanel
 from .validation_view import ValidationView
 from .welcome_view import WelcomeView
 
@@ -85,7 +87,26 @@ TREE_MIN_FONT = 7
 TREE_MAX_FONT = 26
 HEX_TREE_OFFSET = 2
 
+# The widget a lesson step points at, mapped to the reference entry its help
+# button opens. The keys are the names the steps use, so the course and the
+# reference stay linked in one place.
+_HELP_TARGETS: dict[str, str] = {
+    "sessions_box": "sessions_box",
+    "hex_view": "hex_view",
+    "right_tabs": "right_tabs",
+    "status_bar": "status_bar",
+    "direction_combo": "direction",
+    "validation_view": "validation_view",
+    "session_tree": "session",
+}
+
 logger = logging.getLogger(__name__)
+
+
+def _slug(text: str) -> str:
+    """Reduce a project or rule name to a safe file-name stem."""
+    cleaned = [c if c.isalnum() or c in "-_" else "-" for c in text.strip()]
+    return "".join(cleaned).strip("-_") or "project"
 
 
 def app_icon() -> QtGui.QIcon:
@@ -124,6 +145,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self._corpus_report = None
         self._last_dir: Path | None = None
         self._rule_applied = False
+        # The portable project behind the window, if one was created or opened.
+        # Its path identifies it in the title; the manifest is the on-disk state
+        # the project API writes, so the window keeps no second copy of it.
+        self._project: Project | None = None
+        self._project_path: Path | None = None
         self._theme_manager = None
         self._language_manager: LanguageManager | None = None
         self._capture_name: str = ""
@@ -139,6 +165,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self._guided_enabled: bool = bool(
             self._settings.get("general", {}).get("guided_mode", True)
         )
+        # Learning state. The course position is tracked by lesson key and step
+        # index; the completion markers record which lessons were finished, so
+        # the course can be continued or a single lesson replayed. The tutor is
+        # only shown while it is active and the expert mode is off.
+        self._learning_active: bool = False
+        self._learning_lesson: str = learning.LESSONS[0].key
+        self._learning_step: int = 0
+        self._completed_lessons: set[str] = {
+            key
+            for key in str(
+                self._settings.get("learning", {}).get("completed", "")
+            ).split(",")
+            if key
+        }
+        self._help_card: HelpCard | None = None
+        self._learning_centre: LearningCentre | None = None
+        self._pointer_clear = QtCore.QTimer(self)
+        self._pointer_clear.setSingleShot(True)
+        self._pointer_clear.setInterval(2600)
+        self._pointer_clear.timeout.connect(self._clear_pointer)
 
         self._build_menu()
         self._build_central()
@@ -227,6 +273,60 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         file_menu.addSeparator()
         self._actions["quit"] = self._action(file_menu, "&Quit", self.close, "Ctrl+Q")
+
+        project_menu = bar.addMenu("")
+        self._menus["project"] = project_menu
+        self._actions["project_new"] = self._action(
+            project_menu,
+            "&New project...",
+            self.new_project_dialog,
+            None,
+            tip=self.tr("Create a portable project directory that holds captures, rules and results"),
+        )
+        self._actions["project_open"] = self._action(
+            project_menu,
+            "&Open project...",
+            self.open_project_dialog,
+            None,
+            tip=self.tr("Open an existing portable project directory"),
+        )
+        self._actions["project_save"] = self._action(
+            project_menu,
+            "&Save project",
+            self.save_project,
+            None,
+            tip=self.tr("Write the project manifest, refreshing its timestamp"),
+        )
+        project_menu.addSeparator()
+        self._actions["project_add_capture"] = self._action(
+            project_menu,
+            "&Add capture...",
+            self.add_capture_to_project_dialog,
+            None,
+            tip=self.tr("Copy a capture into the open project and register it"),
+        )
+        self._actions["project_save_rule_version"] = self._action(
+            project_menu,
+            "Save rule &version...",
+            self.save_rule_version_dialog,
+            None,
+            tip=self.tr("Name the current rule version and store it in the project"),
+        )
+        project_menu.addSeparator()
+        self._actions["project_export"] = self._action(
+            project_menu,
+            "&Export project...",
+            self.export_project_dialog,
+            None,
+            tip=self.tr("Write the whole project to a zip archive"),
+        )
+        self._actions["project_import"] = self._action(
+            project_menu,
+            "&Import project...",
+            self.import_project_dialog,
+            None,
+            tip=self.tr("Unpack a project archive into a new directory and open it"),
+        )
 
         rule_menu = bar.addMenu("")
         self._menus["rule"] = rule_menu
@@ -334,8 +434,24 @@ class MainWindow(QtWidgets.QMainWindow):
 
         help_menu = bar.addMenu("")
         self._menus["help"] = help_menu
+        self._actions["start_learning"] = self._action(
+            help_menu, "Start the &interactive course", self.start_learning
+        )
+        self._actions["learning_centre"] = self._action(
+            help_menu, "Learning and &help...", self.open_learning_centre
+        )
+        self._actions["toggle_learning_mode"] = QtGui.QAction(
+            self.tr("&Learning mode"), self
+        )
+        self._actions["toggle_learning_mode"].setCheckable(True)
+        self._actions["toggle_learning_mode"].setToolTip(
+            self.tr("Show the guided hints and the tutor; off is the expert mode")
+        )
+        self._actions["toggle_learning_mode"].toggled.connect(self.set_guided_mode)
+        help_menu.addAction(self._actions["toggle_learning_mode"])
+        help_menu.addSeparator()
         self._actions["show_guide"] = self._action(
-            help_menu, "Show &start guide", self.show_guide
+            help_menu, "Show the &start screen", self.show_guide
         )
         self._actions["quick_help"] = self._action(
             help_menu, "&Quick help", self.show_help, "F1"
@@ -364,6 +480,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """Translate every menu, action and language item in place."""
         labels = {
             "file": self.tr("&File"),
+            "project": self.tr("&Project"),
             "rule": self.tr("&Rule"),
             "report": self.tr("&Report"),
             "view": self.tr("&View"),
@@ -380,6 +497,13 @@ class MainWindow(QtWidgets.QMainWindow):
             "save_result": self.tr("&Save result..."),
             "import_pcap": self.tr("&Import PCAP..."),
             "quit": self.tr("&Quit"),
+            "project_new": self.tr("&New project..."),
+            "project_open": self.tr("&Open project..."),
+            "project_save": self.tr("&Save project"),
+            "project_add_capture": self.tr("&Add capture..."),
+            "project_save_rule_version": self.tr("Save rule &version..."),
+            "project_export": self.tr("&Export project..."),
+            "project_import": self.tr("&Import project..."),
             "apply_direction": self.tr("&Apply to current direction"),
             "apply_capture": self.tr("Apply to &whole capture"),
             "compare_versions": self.tr("&Compare versions"),
@@ -396,7 +520,10 @@ class MainWindow(QtWidgets.QMainWindow):
             "zoom_out": self.tr("Zoom &out"),
             "zoom_reset": self.tr("&Reset zoom"),
             "settings": self.tr("&Settings..."),
-            "show_guide": self.tr("Show &start guide"),
+            "start_learning": self.tr("Start the &interactive course"),
+            "learning_centre": self.tr("Learning and &help..."),
+            "toggle_learning_mode": self.tr("&Learning mode"),
+            "show_guide": self.tr("Show the &start screen"),
             "quick_help": self.tr("&Quick help"),
             "about": self.tr("&About"),
         }
@@ -420,8 +547,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # the workspace. Only one is ever visible. A fresh window shows the welcome
         # screen alone; the workspace appears once a capture is open.
         self.welcome_view = WelcomeView()
+        self.welcome_view.learningRequested.connect(self._start_course_from_welcome)
         self.welcome_view.demoRequested.connect(self.open_demo)
-        self.welcome_view.fileRequested.connect(self.open_capture_dialog)
+        self.welcome_view.capabilitiesRequested.connect(self.open_learning_centre)
 
         self.workspace = QtWidgets.QWidget()
         self._build_workspace(self.workspace)
@@ -454,23 +582,16 @@ class MainWindow(QtWidgets.QMainWindow):
         controls.addWidget(self._direction_label)
         controls.addWidget(self.direction_combo)
         controls.addStretch(1)
-        self.annotation_legend = QtWidgets.QWidget()
-        legend_layout = FlowLayout(self.annotation_legend, margin=0, spacing=8)
-        self._legend_chips: list[QtWidgets.QLabel] = []
-        for kind, _name in LEGEND_KINDS:
-            label = legend_label(kind)
-            chip = QtWidgets.QLabel(label)
-            chip.setFont(theme.body_font(FONT_SIZE_CAPTION))
-            chip.setProperty("role", "secondary")
-            chip.setToolTip(label)
-            swatch = QtWidgets.QLabel()
-            swatch.setPixmap(legend_swatch(kind))
-            swatch.setFixedSize(LEGEND_SWATCH_PX, LEGEND_SWATCH_PX)
-            legend_layout.addWidget(swatch)
-            legend_layout.addWidget(chip)
-            self._legend_chips.append(chip)
-        controls.addWidget(self.annotation_legend)
         centre_layout.addLayout(controls)
+
+        # The byte-state legend is its own strip above the hex view, not a
+        # widget beside the direction selector: a strip cannot overlap the
+        # bytes or take width from the ASCII column, and it folds or collapses
+        # when the window is narrow.
+        self.annotation_legend = AnnotationLegend()
+        self._legend_chips: list[QtWidgets.QLabel] = self.annotation_legend.chips
+        centre_layout.addWidget(self.annotation_legend)
+
         self.hex_view = HexView()
         centre_layout.addWidget(self.hex_view, 1)
         self._bytes_box = self._wrap(self.tr("Bytes"), centre)
@@ -515,16 +636,27 @@ class MainWindow(QtWidgets.QMainWindow):
         splitter.setStretchFactor(3, 0)
         self._splitter = splitter
 
-        # The guided-mode coach sits above the workspace: one plain-language
-        # strip that names the current step. It is a view only; the window wires
-        # each step to its own slot. The welcome screen remains the first-run
-        # screen, so the two never compete.
-        self.guided_panel = GuidedPanel()
-        self.guided_panel.nextRequested.connect(self._guided_next)
-        self.guided_panel.dismissRequested.connect(self._dismiss_guided)
+        # The tutor sits above the workspace: one lesson step at a time, with a
+        # pointer at the element it describes. It is a view only; the window
+        # wires each button to its own slot. The welcome screen remains the
+        # first-run screen, so the two never compete.
+        self.tutor_panel = TutorPanel()
+        self.tutor_panel.backRequested.connect(self._learning_back)
+        self.tutor_panel.nextRequested.connect(self._learning_next)
+        self.tutor_panel.skipRequested.connect(self._learning_skip)
+        self.tutor_panel.finishRequested.connect(self._learning_finish)
+        self.tutor_panel.hideRequested.connect(self._learning_hide)
+        self.tutor_panel.helpRequested.connect(self._learning_help)
+        self.tutor_panel.setVisible(False)
 
-        layout.addWidget(self.guided_panel)
+        layout.addWidget(self.tutor_panel)
         layout.addWidget(splitter, 1)
+
+        # The spotlight dims the workspace columns around the element a lesson
+        # step names, so the target stands out on a busy window. It is bounded
+        # by the splitter, so it never covers the tutor strip; the overlay is
+        # transparent to the mouse, so the lit element stays clickable.
+        self._spotlight = LearningSpotlight(container, bounds=splitter)
 
     def _wrap(self, title: str, widget: QtWidgets.QWidget) -> QtWidgets.QGroupBox:
         box = QtWidgets.QGroupBox(title)
@@ -659,11 +791,16 @@ class MainWindow(QtWidgets.QMainWindow):
         ):
             view.apply_theme()
         self.welcome_view.apply_theme()
-        self.guided_panel.apply_theme()
+        self.tutor_panel.apply_theme()
+        self.annotation_legend.apply_theme()
         self.report_view.setFont(theme.mono_font(FONT_SIZE_BODY))
         self.diff_view.setFont(theme.mono_font(FONT_SIZE_BODY))
 
     # -- zoom --------------------------------------------------------------
+
+    def set_legend_visible(self, visible: bool) -> None:
+        """Show or hide the byte-state legend strip above the hex view."""
+        self.annotation_legend.setVisible(bool(visible))
 
     def zoom_in(self) -> None:
         """Enlarge the bytes and the tree by one step."""
@@ -778,6 +915,7 @@ class MainWindow(QtWidgets.QMainWindow):
             int(editor.get("tree_font_size", DEFAULTS["editor"]["tree_font_size"]))
         )
         self.hex_view.set_show_diagnostics(bool(advanced.get("show_diagnostics", True)))
+        self.set_legend_visible(bool(advanced.get("show_legend", True)))
         self.set_guided_mode(
             bool(general.get("guided_mode", DEFAULTS["general"]["guided_mode"]))
         )
@@ -835,10 +973,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._bytes_box.setTitle(self.tr("Bytes"))
         self._sessions_box.setTitle(self.tr("Sessions"))
         self._direction_label.setText(self.tr("direction"))
-        for chip, (kind, _name) in zip(self._legend_chips, LEGEND_KINDS, strict=False):
-            label = legend_label(kind)
-            chip.setText(label)
-            chip.setToolTip(label)
+        self.annotation_legend.retranslate_ui()
         self.validation_view.retranslate_ui()
         self.compare_view.retranslate_ui()
         self.hypotheses_view.retranslate_ui()
@@ -847,7 +982,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.timeline_view.retranslate_ui()
         self._timeline_box.setTitle(self.tr("Timeline"))
         self.welcome_view.retranslate_ui()
-        self.guided_panel.retranslate_ui()
+        self.tutor_panel.retranslate_ui()
         self._refresh_rule_status()
         # The empty-state hint is built text, so a language change must rebuild
         # it; without this it stays in the language it was created in.
@@ -859,11 +994,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self._set_provenance_text(self._capture_summary())
 
     def _refresh_title(self) -> None:
-        """Set the window title, including the open capture's name."""
+        """Set the window title, including the open project and capture names."""
+        parts = [self._base_title]
+        if self._project_path is not None:
+            parts.append(self._project_path.name)
         if self._capture_name:
-            self.setWindowTitle(f"{self._base_title} - {self._capture_name}")
-        else:
-            self.setWindowTitle(self._base_title)
+            parts.append(self._capture_name)
+        self.setWindowTitle(" - ".join(parts))
 
     def _capture_summary(self) -> str:
         """The status-line summary of the open capture, in the active language."""
@@ -916,67 +1053,294 @@ class MainWindow(QtWidgets.QMainWindow):
         self.compare_view.clear()
         self.hypotheses_view.clear()
 
-    # -- guided mode -------------------------------------------------------
+    # -- learning mode -----------------------------------------------------
 
-    def _update_guided(self) -> None:
-        """Show the coach at the step the workspace is actually at."""
-        if not self._guided_enabled:
-            self.guided_panel.setVisible(False)
-            return
-        self.guided_panel.set_step(self._guided_index())
-        # The workspace is self-describing once a capture, a rule and an applied
-        # rule are all present; the coach steps aside rather than repeat it.
-        self.guided_panel.setVisible(
-            not (self._capture is not None and self._rule is not None and self._rule_applied)
+    def _learning_state(self, name: str) -> bool:
+        """Whether the named completion condition currently holds.
+
+        The course advances on these, not on button presses: a step whose
+        condition is already true is not repeated, and a step whose condition is
+        false cannot be passed with Next. The conditions read the window's own
+        state, so no second model of the application is kept for the course.
+        """
+        if name == "capture_open":
+            return self._capture is not None
+        if name == "direction_chosen":
+            return bool(self._session_id and self._direction)
+        if name == "byte_selected":
+            return self._last_offset is not None
+        if name == "compare_open":
+            return self.right_tabs.currentWidget() is self.compare_view
+        if name == "rule_open":
+            return self._rule is not None
+        if name == "rule_applied":
+            return bool(self._rule_applied)
+        if name == "corpus_applied":
+            return self._corpus_report is not None
+        return False
+
+    def _current_lesson(self) -> learning.Lesson:
+        """The lesson the tutor is on."""
+        return learning.LESSON_BY_KEY.get(
+            self._learning_lesson, learning.LESSONS[0]
         )
 
-    def _guided_index(self) -> int:
-        """The stage that matches the window state, 0-based."""
-        if self._capture is None:
-            return 0
-        if not (self._session_id and self._direction):
-            return 1
-        if self._rule is None:
-            return 2
-        if not self._rule_applied:
-            return 3
-        return 4
+    def _update_learning(self) -> None:
+        """Show the tutor at the current lesson step, or hide it.
 
-    def _guided_next(self) -> None:
-        """Run the action the coach is currently offering."""
-        index = self._guided_index()
-        if index == 0:
-            self.open_demo()
-        elif index == 1:
-            if self._capture is not None and self._capture.sessions:
-                session = self._capture.sessions[0]
-                directions = self._capture.directions(session.session_id)
-                if directions:
-                    self.session_tree.select_direction(session.session_id, directions[0])
-        elif index == 2:
-            self.build_rule()
-        elif index == 3:
-            self.apply_rule()
-        else:
-            self.apply_to_capture()
-        self._update_guided()
-
-    def _dismiss_guided(self) -> None:
-        """Turn the hints off from the strip and remember the choice.
-
-        The same preference the settings dialog writes is persisted here, so the
-        strip does not reappear on the next start after it was dismissed.
+        The tutor is visible only while it is active and the expert mode is on
+        for hints; in the expert mode nothing is shown. Within a lesson, if the
+        reader has already reached a later step's condition, the tutor moves to
+        it rather than making them repeat what is done.
         """
-        self.set_guided_mode(False)
+        if not (self._guided_enabled and self._learning_active):
+            self.tutor_panel.setVisible(False)
+            return
+        lesson = self._current_lesson()
+        step = lesson.steps[self._learning_step]
+        while (
+            step.requires is not None
+            and self._learning_state(step.requires)
+            and self._learning_step + 1 < len(lesson.steps)
+        ):
+            self._learning_step += 1
+            step = lesson.steps[self._learning_step]
+        done = step.requires is None or self._learning_state(step.requires)
+        self.tutor_panel.show_step(lesson, self._learning_step, done)
+        self.tutor_panel.setVisible(True)
+        self._point_at(step)
+
+    def start_learning(self, lesson_key: str | None = None) -> None:
+        """Start or resume the course, optionally at a chosen lesson."""
+        self._learning_active = True
+        if isinstance(lesson_key, str) and lesson_key in learning.LESSON_BY_KEY:
+            self._learning_lesson = lesson_key
+            self._learning_step = 0
+        self._update_learning()
+        self.tutor_panel.raise_()
+
+    def _start_course_from_welcome(self) -> None:
+        """The first-run path: load the example, then start the course.
+
+        The course teaches on real data, so the example is opened first; the
+        reader is not asked to find a file before the first lesson.
+        """
+        if self._capture is None:
+            self.open_demo()
+        self.start_learning(learning.LESSONS[0].key)
+
+    def _learning_next(self) -> None:
+        """Advance one step, running the step's action when it offers one."""
+        lesson = self._current_lesson()
+        step = lesson.steps[self._learning_step]
+        if step.requires is not None and not self._learning_state(step.requires):
+            # The reader has not done what the step asks: offer the action and
+            # say so rather than moving on silently.
+            if not self._learning_offer(step):
+                self._notify(self.tr("finish this step first, or use Skip"))
+            self._update_learning()
+            return
+        if self._learning_step + 1 < len(lesson.steps):
+            self._learning_step += 1
+            self._update_learning()
+            return
+        # The lesson is finished: record it and move to the next one, or leave
+        # the course when this was the last lesson.
+        self._complete_current_lesson()
+        index = learning.lesson_index(self._learning_lesson)
+        if index + 1 < len(learning.LESSONS):
+            self._learning_lesson = learning.LESSONS[index + 1].key
+            self._learning_step = 0
+            self._update_learning()
+        else:
+            self._learning_finish()
+
+    def _learning_offer(self, step: learning.Step) -> bool:
+        """Run the action a step offers, if it has one; return whether it did."""
+        show = step.show_me
+        if show == "open_demo":
+            self.open_demo()
+        elif show == "select_direction":
+            self._select_first_direction()
+        elif show == "build_rule":
+            self.build_rule()
+        elif show == "apply_rule":
+            self.apply_rule()
+        elif show == "apply_to_capture":
+            self.apply_to_capture()
+        elif show == "show_compare":
+            self.right_tabs.setCurrentWidget(self.compare_view)
+        else:
+            return False
+        return True
+
+    def _select_first_direction(self) -> None:
+        """Pick the first session and its first direction, as the course asks."""
+        if self._capture is None or not self._capture.sessions:
+            return
+        session = self._capture.sessions[0]
+        directions = self._capture.directions(session.session_id)
+        if directions:
+            self.session_tree.select_direction(session.session_id, directions[0])
+
+    def _learning_back(self) -> None:
+        """Return to the previous step, or the previous lesson at the first."""
+        if self._learning_step > 0:
+            self._learning_step -= 1
+            self._update_learning()
+            return
+        index = learning.lesson_index(self._learning_lesson)
+        if index > 0:
+            previous = learning.LESSONS[index - 1]
+            self._learning_lesson = previous.key
+            self._learning_step = len(previous.steps) - 1
+            self._update_learning()
+
+    def _learning_skip(self) -> None:
+        """Skip the rest of the current lesson and go to the next one."""
+        self._complete_current_lesson()
+        index = learning.lesson_index(self._learning_lesson)
+        if index + 1 < len(learning.LESSONS):
+            self._learning_lesson = learning.LESSONS[index + 1].key
+            self._learning_step = 0
+            self._update_learning()
+        else:
+            self._learning_finish()
+
+    def _learning_finish(self) -> None:
+        """Finish the course and leave the tutor."""
+        self._complete_current_lesson()
+        self._learning_active = False
+        self.tutor_panel.setVisible(False)
+        self._clear_pointer()
+        self._notify(self.tr("course finished"))
+
+    def _learning_hide(self) -> None:
+        """Hide the tutor without losing the position in the course."""
+        self._learning_active = False
+        self.tutor_panel.setVisible(False)
+        self._clear_pointer()
+
+    def _complete_current_lesson(self) -> None:
+        """Record the current lesson as done and persist the progress."""
+        self._completed_lessons.add(self._learning_lesson)
+        self._settings.setdefault("learning", {})["completed"] = ",".join(
+            sorted(self._completed_lessons)
+        )
+        write_settings(self._settings)
+
+    def reset_learning(self) -> None:
+        """Forget the course progress; the reader's work is untouched."""
+        self._completed_lessons = set()
+        self._learning_lesson = learning.LESSONS[0].key
+        self._learning_step = 0
+        self._settings.setdefault("learning", {})["completed"] = ""
+        write_settings(self._settings)
+        self._update_learning()
+
+    def _learning_help(self, target: str) -> None:
+        """Open the reference card for the element a step points at."""
+        key = _HELP_TARGETS.get(target)
+        if key:
+            self.show_help_for(key)
+
+    # -- contextual help ---------------------------------------------------
+
+    def show_help_for(self, key: str) -> None:
+        """Show the reference card for *key*, reusing the open card."""
+        entry = reference.lookup(key)
+        if entry is None:
+            return
+        if self._help_card is None:
+            self._help_card = HelpCard(entry, self)
+        else:
+            self._help_card.set_entry(entry)
+        self._help_card.show()
+        self._help_card.raise_()
+
+    def open_learning_centre(self) -> None:
+        """Open the learning centre, reusing the open one."""
+        if self._learning_centre is None:
+            self._learning_centre = LearningCentre(
+                completed=self._completed_lessons,
+                current_lesson=self._learning_lesson,
+                parent=self,
+            )
+            self._learning_centre.lessonChosen.connect(self.start_learning)
+            self._learning_centre.resetRequested.connect(self.reset_learning)
+            self._learning_centre.helpRequested.connect(self.show_help_for)
+        else:
+            self._learning_centre._completed = set(self._completed_lessons)
+            self._learning_centre._current = self._learning_lesson
+            self._learning_centre.retranslate_ui()
+        self._learning_centre.show()
+        self._learning_centre.raise_()
+
+    # -- the pointer -------------------------------------------------------
+
+    def _point_at(self, step: learning.Step) -> None:
+        """Outline and light the element a step describes, when it names one.
+
+        The element is outlined with the accent property and, on the workspace
+        columns, spotlit: the rest is dimmed so the target stands out. A step
+        with no target clears both.
+        """
+        self._clear_pointer()
+        widget = self._pointer_targets().get(step.target or "")
+        if widget is None:
+            return
+        widget.setProperty("learningPointer", True)
+        self._repolish(widget)
+        self._spotlight.set_target(widget)
+        self._pointer_clear.start()
+
+    def _clear_pointer(self) -> None:
+        """Remove the outline from every element it could have been set on."""
+        self._spotlight.clear()
+        for widget in self._pointer_targets().values():
+            if widget.property("learningPointer"):
+                widget.setProperty("learningPointer", False)
+                self._repolish(widget)
+
+    def _pointer_targets(self) -> dict[str, QtWidgets.QWidget]:
+        """The elements a lesson step can point at, by the name a step uses."""
+        return {
+            "sessions_box": self._sessions_box,
+            "hex_view": self.hex_view,
+            "right_tabs": self.right_tabs,
+            "status_bar": self.statusBar(),
+            "direction_combo": self.direction_combo,
+            "validation_view": self.validation_view,
+            "session_tree": self.session_tree,
+        }
+
+    @staticmethod
+    def _repolish(widget: QtWidgets.QWidget) -> None:
+        """Re-apply the style sheet so a dynamic property takes effect."""
+        style = widget.style()
+        style.unpolish(widget)
+        style.polish(widget)
+
+    # -- hints (the former guided mode) ------------------------------------
+
+    def _update_guided(self) -> None:
+        """Keep the hint preference and the tutor in step."""
+        self._update_learning()
 
     def set_guided_mode(self, enabled: bool) -> None:
-        """Show or hide the coach, and remember the choice in the settings."""
+        """Show or hide the hints, and remember the choice in the settings."""
         self._guided_enabled = bool(enabled)
         self._settings.setdefault("general", {})["guided_mode"] = self._guided_enabled
         write_settings(self._settings)
-        self._update_guided()
-        if self._guided_enabled:
-            self.guided_panel.raise_()
+        action = self._actions.get("toggle_learning_mode")
+        if action is not None and action.isChecked() != self._guided_enabled:
+            # Keep the menu check in step without re-entering through toggled.
+            action.blockSignals(True)
+            action.setChecked(self._guided_enabled)
+            action.blockSignals(False)
+        self._update_learning()
+        if self._guided_enabled and self._learning_active:
+            self.tutor_panel.raise_()
 
     def open_demo(self) -> None:
         """Open the small capture, rule and journal that ship with the tool.
@@ -1146,6 +1510,253 @@ class MainWindow(QtWidgets.QMainWindow):
         self._refresh_welcome_progress()
         self.validation_view.set_ready(capture=self._capture is not None, rule=True)
         self._update_guided()
+
+    # -- portable project --------------------------------------------------
+
+    def new_project_dialog(self) -> None:
+        """Ask for a directory and name, then create a project there."""
+        if not self._confirm_discard_unsaved():
+            return
+        parent = QtWidgets.QFileDialog.getExistingDirectory(
+            self, self.tr("Choose a folder for the project"), self._output_dir(REPO_ROOT)
+        )
+        if not parent:
+            return
+        name, accepted = QtWidgets.QInputDialog.getText(
+            self, self.tr("New project"), self.tr("Project name:")
+        )
+        if not accepted:
+            return
+        name = name.strip()
+        if not name:
+            self._notify(self.tr("a project name is required"))
+            return
+        target = Path(parent) / _slug(name)
+        try:
+            project = Project.create(target, name)
+        except (ProjectError, ManifestError) as exc:
+            self._report_error(self.tr("could not create the project"), exc)
+            return
+        self._remember_dir(target)
+        self._adopt_project(project)
+        self._notify(self.tr("created project {0}").format(target.name))
+
+    def open_project_dialog(self) -> None:
+        """Ask for a project directory and open it without losing the current one."""
+        if not self._confirm_discard_unsaved():
+            return
+        path = QtWidgets.QFileDialog.getExistingDirectory(
+            self, self.tr("Open project"), self._output_dir(REPO_ROOT)
+        )
+        if not path:
+            return
+        try:
+            project = Project.open(path)
+        except (ProjectError, ManifestError) as exc:
+            # A failed open leaves the window on the project it already had, so a
+            # mistyped folder never costs the researcher the open investigation.
+            self._report_error(self.tr("could not open the project"), exc)
+            return
+        self._remember_dir(path)
+        self._adopt_project(project)
+        self._notify(self.tr("opened project {0}").format(project.name))
+
+    def save_project(self) -> None:
+        """Write the open project's manifest back to disk."""
+        if self._project is None:
+            self._notify(self.tr("no project is open"))
+            return
+        try:
+            self._project.save()
+        except OSError as exc:
+            self._report_error(self.tr("could not save the project"), exc)
+            return
+        self._refresh_title()
+        self._notify(self.tr("saved project {0}").format(self._project.name))
+
+    def add_capture_to_project_dialog(self) -> None:
+        """Copy a capture file into the open project and register it."""
+        if self._project is None:
+            self._notify(self.tr("open or create a project first"))
+            return
+        path, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self,
+            self.tr("Add capture"),
+            self._start_dir(REPO_ROOT),
+            "Captures (*.pcap *.pcapng *.json)",
+        )
+        if not path:
+            return
+        self._remember_dir(path)
+        try:
+            relative = self._project.add_capture(Path(path))
+            self._project.save()
+        except (ProjectError, OSError) as exc:
+            self._report_error(self.tr("could not add the capture"), exc)
+            return
+        self._notify(self.tr("added {0} to the project").format(relative))
+
+    def save_rule_version_dialog(self) -> None:
+        """Name the current rule version and store it.
+
+        With a project open the version is copied into ``rules/`` and recorded
+        in the manifest by the project API, which never overwrites an existing
+        version. Without one the researcher picks a file to write. The name is
+        carried in the rule document itself, so it survives in the report and
+        the version list.
+        """
+        rule = self._current_rule()
+        if rule is None:
+            self._notify(self.tr("open or build a rule first"))
+            return
+        default = rule.rule.name or rule.rule.rule_id
+        name, accepted = QtWidgets.QInputDialog.getText(
+            self, self.tr("Save rule version"), self.tr("Version name:"), text=default
+        )
+        if not accepted:
+            return
+        name = name.strip()
+        if not name:
+            self._notify(self.tr("a version name is required"))
+            return
+        named = rule.rule if name == rule.rule.name else rule.rule.bump_version(name=name)
+        if self._project is None:
+            path, _ = QtWidgets.QFileDialog.getSaveFileName(
+                self,
+                self.tr("Save rule version"),
+                self._output_dir(REPO_ROOT) + f"/{_slug(name)}.json",
+                "JSON (*.json)",
+            )
+            if not path:
+                return
+            self._remember_dir(path)
+            self._write_rule_file(named, Path(path))
+            return
+        temporary = Path(tempfile.mkdtemp()) / f"{_slug(name)}.json"
+        try:
+            self._write_rule_file(named, temporary)
+            relative = self._project.add_rule(
+                temporary, named.rule_id, named.rule_version
+            )
+            self._project.save()
+        except (ProjectError, OSError) as exc:
+            self._report_error(self.tr("could not save the rule version"), exc)
+            return
+        self._notify(self.tr("saved {0}").format(relative))
+
+    def _write_rule_file(self, rule, path: Path) -> None:
+        """Write ``rule`` to ``path`` and adopt it as the current rule."""
+        from ..protocol.rule import save_rule
+
+        try:
+            save_rule(rule, path)
+        except OSError as exc:
+            self._report_error(self.tr("could not save the rule version"), exc)
+            return
+        if self._rule is not None:
+            self._rule.rule = rule
+            self._rule.text = rule_text(rule)
+            self.validation_view.set_rule_text(self._rule.text)
+        self._notify(self.tr("wrote {0}").format(path))
+
+    def export_project_dialog(self) -> None:
+        """Write the open project to a zip archive."""
+        if self._project is None:
+            self._notify(self.tr("no project is open"))
+            return
+        path, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self,
+            self.tr("Export project"),
+            self._output_dir(REPO_ROOT) + f"/{self._project.name}.zip",
+            "Zip (*.zip)",
+        )
+        if not path:
+            return
+        self._remember_dir(path)
+        try:
+            self._project.export(Path(path))
+        except OSError as exc:
+            self._report_error(self.tr("could not export the project"), exc)
+            return
+        self._notify(self.tr("wrote {0}").format(path))
+
+    def import_project_dialog(self) -> None:
+        """Unpack a project archive into a new directory and open it."""
+        if not self._confirm_discard_unsaved():
+            return
+        path, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self,
+            self.tr("Import project"),
+            self._output_dir(REPO_ROOT),
+            "Zip (*.zip)",
+        )
+        if not path:
+            return
+        parent = QtWidgets.QFileDialog.getExistingDirectory(
+            self, self.tr("Choose a folder for the project"), str(Path(path).parent)
+        )
+        if not parent:
+            return
+        target = Path(parent) / _slug(Path(path).stem)
+        try:
+            project = Project.import_(Path(path), target)
+        except (ProjectError, ManifestError) as exc:
+            self._report_error(self.tr("could not import the project"), exc)
+            return
+        self._remember_dir(target)
+        self._adopt_project(project)
+        self._notify(self.tr("imported project {0}").format(project.name))
+
+    def _adopt_project(self, project: Project) -> None:
+        """Make ``project`` the open project and reflect it in the title."""
+        self._project = project
+        self._project_path = project.root
+        self._refresh_title()
+
+    def _confirm_discard_unsaved(self) -> bool:
+        """Ask before leaving a project whose manifest has uncommitted edits.
+
+        Returns ``True`` when the caller may proceed. A window with no open
+        project, or one whose in-memory manifest matches the file on disk,
+        proceeds without a dialog, so the common path is not interrupted.
+        """
+        if self._project is None:
+            return True
+        if not self._project_is_dirty():
+            return True
+        answer = QtWidgets.QMessageBox.question(
+            self,
+            self.tr("Unsaved project changes"),
+            self.tr(
+                "The open project has changes that were not saved. "
+                "Save them before continuing?"
+            ),
+            QtWidgets.QMessageBox.StandardButton.Save
+            | QtWidgets.QMessageBox.StandardButton.Discard
+            | QtWidgets.QMessageBox.StandardButton.Cancel,
+            QtWidgets.QMessageBox.StandardButton.Save,
+        )
+        if answer == QtWidgets.QMessageBox.StandardButton.Cancel:
+            return False
+        if answer == QtWidgets.QMessageBox.StandardButton.Save:
+            self.save_project()
+        return True
+
+    def _project_is_dirty(self) -> bool:
+        """Whether the open project's manifest differs from the file on disk."""
+        if self._project is None:
+            return False
+        path = self._project.path("manifest.json")
+        try:
+            on_disk = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return True
+        return on_disk != self._project.manifest.to_dict()
+
+    def _report_error(self, headline: str, exc: Exception) -> None:
+        """Show a failed operation with its reason, and mirror it in the status."""
+        self._notify(f"{headline}: {exc}")
+        QtWidgets.QMessageBox.warning(self, headline, str(exc))
 
     def _current_rule(self) -> RuleModel | None:
         """The rule to run: the loaded model, or the text the editor holds.
@@ -1448,6 +2059,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def _on_byte_clicked(self, offset: int) -> None:
         self._last_offset = offset
         self._show_provenance(offset)
+        # A lesson step that waits for a byte selection completes here.
+        if self._learning_active:
+            self._update_learning()
 
     def _on_byte_hovered(self, offset: int) -> None:
         self._last_offset = offset
@@ -1718,6 +2332,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _notify(self, text: str) -> None:
         self.statusBar().showMessage(text, 6000)
+
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        """Give the researcher a chance to save the project before quitting.
+
+        The project is the only thing the window writes to disk, so the prompt
+        is tied to it; declining keeps the window open and the work intact.
+        """
+        if self._confirm_discard_unsaved():
+            event.accept()
+        else:
+            event.ignore()
 
 
 def _markdown_to_html(text: str) -> str:

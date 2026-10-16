@@ -215,6 +215,12 @@ def build_stylesheet(theme: Theme | None = None) -> str:
     }}
     QProgressBar::chunk {{ background-color: {theme.accent}; }}
     QSplitter::handle {{ background-color: {theme.border}; }}
+    /* The learning pointer: a temporary outline the tutor puts on the element a
+       step describes. Set as a dynamic property so it never changes layout. */
+    QWidget[learningPointer="true"] {{
+        border: 2px solid {theme.accent};
+        border-radius: {theme.radius}px;
+    }}
     """
 
 

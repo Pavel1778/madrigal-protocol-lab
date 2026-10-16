@@ -42,6 +42,13 @@ DEFAULTS: dict[str, dict[str, Any]] = {
     "advanced": {
         "log_level": "INFO",
         "show_diagnostics": True,
+        "show_legend": True,
+    },
+    "learning": {
+        # Completed lesson keys, comma-separated. A string so the settings
+        # reader and writer, which handle scalars, need no special case.
+        "completed": "",
+        "welcome_seen": False,
     },
 }
 
@@ -248,11 +255,18 @@ class SettingsDialog(QtWidgets.QDialog):
         self._set_combo(level, get(self._initial, "advanced", "log_level"))
         show_diagnostics = QtWidgets.QCheckBox()
         show_diagnostics.setChecked(bool(get(self._initial, "advanced", "show_diagnostics")))
+        show_legend = QtWidgets.QCheckBox()
+        show_legend.setChecked(bool(get(self._initial, "advanced", "show_legend")))
+        show_legend.setToolTip(
+            self.tr("Show the byte-state legend above the hex view")
+        )
         form.addRow(self.tr("Logging level"), level)
         form.addRow(self.tr("Show diagnostics in UI"), show_diagnostics)
+        form.addRow(self.tr("Show the byte-state legend"), show_legend)
         self._widgets["advanced"] = {
             "log_level": level,
             "show_diagnostics": show_diagnostics,
+            "show_legend": show_legend,
         }
         return page
 
@@ -271,6 +285,7 @@ class SettingsDialog(QtWidgets.QDialog):
         relative = self._widgets["paths"]["relative_paths"]
         level = self._widgets["advanced"]["log_level"]
         diagnostics = self._widgets["advanced"]["show_diagnostics"]
+        legend = self._widgets["advanced"]["show_legend"]
         return {
             "general": {
                 "theme": theme.currentData(),
@@ -290,6 +305,7 @@ class SettingsDialog(QtWidgets.QDialog):
             "advanced": {
                 "log_level": level.currentData(),
                 "show_diagnostics": diagnostics.isChecked(),
+                "show_legend": legend.isChecked(),
             },
         }
 

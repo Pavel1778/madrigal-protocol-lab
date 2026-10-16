@@ -16,7 +16,7 @@ line up with the six stages the deck names on the «Ход работы» slide
 - ffmpeg with the X11 grabber:
 
 ```
-ffmpeg -f x11grab -framerate 25 -video_size 1440x880 -i :0.0+0,0 \
+ffmpeg -f x11grab -framerate 25 -video_size 1920x1080 -i :0.0+0,0 \
   -c:v libx264 -pix_fmt yuv420p presentation/video.mp4
 ```
 
@@ -30,7 +30,7 @@ prints at start-up:
 python presentation/record_demo.py     # under a display, prints its geometry
 ```
 
-Before recording, set the window to 1440 by 880, hide the terminal, and mute
+Before recording, set the window to 1920 by 1080, hide the terminal, and mute
 notifications. Keep the pointer still while the narration runs.
 
 ## Recording script (run once before pressing record)

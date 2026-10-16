@@ -76,7 +76,7 @@ investigation from the command line, used as the fallback, is in
 | IP fragmentation | Reassembled for IPv4 and IPv6; an incomplete datagram is reported, never guessed. |
 | Encrypted payloads | Out of scope; the bytes are reported as they appear. |
 | Checksum offloading | Off by default; reordering is treated as a diagnostic. |
-| Window project menu | Not present; the pipeline CLI drives project export and import. |
+| Window project menu | Present; the Project menu creates, opens, saves, extends, exports, imports and verifies a portable project, and names and stores the current rule version, all delegating to `src.project`. |
 | Organizer captures | Received and analysed; committed under `tests/corpus/real/`. Results are in `docs/REAL_CORPUS_ANALYSIS.md`. |
 
 ## Contact

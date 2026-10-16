@@ -73,10 +73,11 @@ class _Step(QtWidgets.QWidget):
 
 
 class WelcomeView(QtWidgets.QWidget):
-    """The empty-state screen: a title, one question and the first steps."""
+    """The first-run screen: a title, what the tool is, and three choices."""
 
+    learningRequested = QtCore.Signal()
     demoRequested = QtCore.Signal()
-    fileRequested = QtCore.Signal()
+    capabilitiesRequested = QtCore.Signal()
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
@@ -93,24 +94,35 @@ class WelcomeView(QtWidgets.QWidget):
         outer.addSpacing(_TITLE_TO_QUESTION)
         self.question = QtWidgets.QLabel()
         self.question.setObjectName("welcomeQuestion")
+        self.question.setWordWrap(True)
         self.question.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         outer.addWidget(self.question)
 
         outer.addSpacing(_QUESTION_TO_BUTTON)
+        self.learning_button = QtWidgets.QPushButton()
+        self.learning_button.setObjectName("welcomePrimary")
+        self.learning_button.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
+        self.learning_button.setMinimumSize(_PRIMARY_WIDTH, _PRIMARY_HEIGHT)
+        self.learning_button.clicked.connect(self.learningRequested.emit)
+        outer.addWidget(self.learning_button, 0, QtCore.Qt.AlignmentFlag.AlignHCenter)
+
+        outer.addSpacing(_BETWEEN_BUTTONS)
         self.demo_button = QtWidgets.QPushButton()
-        self.demo_button.setObjectName("welcomePrimary")
+        self.demo_button.setObjectName("welcomeSecondary")
         self.demo_button.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
-        self.demo_button.setMinimumSize(_PRIMARY_WIDTH, _PRIMARY_HEIGHT)
+        self.demo_button.setMinimumSize(_PRIMARY_WIDTH, _SECONDARY_HEIGHT)
         self.demo_button.clicked.connect(self.demoRequested.emit)
         outer.addWidget(self.demo_button, 0, QtCore.Qt.AlignmentFlag.AlignHCenter)
 
         outer.addSpacing(_BETWEEN_BUTTONS)
-        self.file_button = QtWidgets.QPushButton()
-        self.file_button.setObjectName("welcomeSecondary")
-        self.file_button.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
-        self.file_button.setMinimumSize(_PRIMARY_WIDTH, _SECONDARY_HEIGHT)
-        self.file_button.clicked.connect(self.fileRequested.emit)
-        outer.addWidget(self.file_button, 0, QtCore.Qt.AlignmentFlag.AlignHCenter)
+        self.capabilities_button = QtWidgets.QPushButton()
+        self.capabilities_button.setObjectName("welcomeSecondary")
+        self.capabilities_button.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
+        self.capabilities_button.setMinimumSize(_PRIMARY_WIDTH, _SECONDARY_HEIGHT)
+        self.capabilities_button.clicked.connect(self.capabilitiesRequested.emit)
+        outer.addWidget(
+            self.capabilities_button, 0, QtCore.Qt.AlignmentFlag.AlignHCenter
+        )
 
         outer.addSpacing(_BUTTONS_TO_STEPS)
         self.step_capture = _Step(1, "", "")
@@ -164,14 +176,24 @@ class WelcomeView(QtWidgets.QWidget):
     def retranslate_ui(self) -> None:
         """Re-apply every caption in the active interface language."""
         self.title.setText(self.tr("Madrigal protocol laboratory"))
-        self.question.setText(self.tr("What do you want to do?"))
-        self.demo_button.setText(self.tr("Open example"))
-        self.demo_button.setToolTip(
-            self.tr("Load the small capture and rule that ship with the tool")
+        self.question.setText(
+            self.tr(
+                "A laboratory for reading a protocol that was never written down. "
+                "Study the bytes, form a hypothesis, write it as a rule, and check "
+                "it against the recording."
+            )
         )
-        self.file_button.setText(self.tr("Open file..."))
-        self.file_button.setToolTip(
-            self.tr("Open a capture: pcap, pcapng or normalized JSON")
+        self.learning_button.setText(self.tr("Take the interactive course"))
+        self.learning_button.setToolTip(
+            self.tr("A guided tour that uses the built-in example, step by step")
+        )
+        self.demo_button.setText(self.tr("Go straight to work"))
+        self.demo_button.setToolTip(
+            self.tr("Open the built-in example and the usual interface")
+        )
+        self.capabilities_button.setText(self.tr("What can Madrigal do?"))
+        self.capabilities_button.setToolTip(
+            self.tr("Open the reference and the list of capabilities")
         )
         self.step_capture.title.setText(self.tr("Open a traffic record"))
         self.step_capture.set_pending(self.tr("not done"))

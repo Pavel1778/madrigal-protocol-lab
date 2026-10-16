@@ -57,11 +57,13 @@ and takes precedence.
 | --- | --- | --- |
 | Logging level | DEBUG, INFO, WARNING, ERROR | INFO |
 | Show diagnostics in UI | on / off | on |
+| Show the byte-state legend | on / off | on |
 
 The logging level reconfigures the root logger. Turning diagnostics off hides the
 gap and ambiguity shading in the hex view so the raw bytes read without it; the
 diagnostics themselves remain attached to the stream and stay reachable through
-the provenance line.
+the provenance line. Turning the byte-state legend off hides the strip above the
+hex view; the bytes keep their colour, only the explanatory row is removed.
 
 ## Buttons
 
@@ -84,6 +86,7 @@ the provenance line.
 | paths | `relative_paths` | bool |
 | advanced | `log_level` | string |
 | advanced | `show_diagnostics` | bool |
+| advanced | `show_legend` | bool |
 
 The defaults are declared once in `src/ui/settings.py`; a reset simply clears the
 `madrigal/protocol-lab` settings scope.
